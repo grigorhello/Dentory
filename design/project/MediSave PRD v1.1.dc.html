@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/colors.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/typography.css">
+<script src="./doc-page.js"></script>
+<style>body{margin:0}doc-page:not(:defined){visibility:hidden}a{color:#1a63d6;text-decoration:none}a:hover{color:#1554ba;text-decoration:underline}</style>
+</helmet>
+<doc-page margin="0.75in">
+<div style="font:14px/1.6 Inter,system-ui,sans-serif;color:var(--text-body)">
+
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)">MediSave · Product requirements</div>
+<h1 style="font:500 36px/1.1 Outfit,sans-serif;color:var(--color-ink);margin:10px 0 8px;letter-spacing:.5px">Dental inventory app, V1.1 (iPhone and iPad)</h1>
+<p style="margin:0 0 6px">Version 1.1 · October 14, 2026 · Status: ready for development. Supersedes PRD v1.0 (October 1, 2026) wherever the two differ. Written from the approved design; every rule below is visible in a screen.</p>
+<div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:4px 16px;padding:14px 16px;border-radius:12px;background:var(--surface-card);margin:16px 0 8px;font-size:13px">
+<span style="color:var(--text-secondary)">Design board</span><span><a href="MediSave%20Board.dc.html">MediSave Board</a> · every screen, Admin and Staff versions, grouped by flow</span>
+<span style="color:var(--text-secondary)">Clickable demo</span><span><a href="MediSave%20Mobile.dc.html">MediSave Mobile</a> · tap through all flows; Tweaks switch role, device and start screen</span>
+<span style="color:var(--text-secondary)">Design system</span><span>MediSave Design System (tokens, Button, Badge, Input, Select, Switch, Card, Icon, Dialog, Toast)</span>
+<span style="color:var(--text-secondary)">Source PRD</span><span>uploads/dental_inventory_saas_sellable_mvp_prd.pdf</span>
+</div>
+<p style="margin:8px 0 0;font-size:13px;color:var(--text-secondary)">The screens embedded in this document are live previews of the demo. Frame numbers (f1…f38) match the board.</p>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">1. Summary</h2>
+<p style="margin:0 0 10px">MediSave tells a small dental clinic what it has, what is running low and what is expiring, without constant counting or scanning. Stock moves through five events only: a procedure takes supplies out, a delivery brings them in, a count or an adjustment corrects, a disposal removes, a cancelled procedure returns. Every event is recorded with who and when.</p>
+<p style="margin:0 0 10px">V1.1 is a native-feeling mobile app for iPhone and iPad with two roles. The daily user is the dental assistant: pick a procedure, start it, done. The admin receives deliveries, maintains products and templates, and buys.</p>
+<h3 style="font:600 15px/1.4 Inter,sans-serif;color:var(--color-ink);margin:22px 0 6px">What changed since v1.0</h3>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Two roles: Admin and Staff. Inventory Manager is merged into Admin.</li>
+<li>No Prepared state. Starting a procedure deducts immediately; past procedures are edited or cancelled from history.</li>
+<li>Multi-use products (bottles, syringes, kits) are tracked as unopened count + open items (who, when). No percentage estimates.</li>
+<li>No Quick count feature. Counting lives inside Inventory as Count stock.</li>
+<li>To buy is a shopping list, not ordering. The clinic orders from its supplier outside the app.</li>
+<li>Accounts are created by the clinic admin; staff join by invitation only.</li>
+<li>Billing: 3-month free trial, then $99 per clinic per month; some clinics get a 50% lifetime promotion.</li>
+</ul>
+<h3 style="font:600 15px/1.4 Inter,sans-serif;color:var(--color-ink);margin:22px 0 6px">Out of scope for V1.1</h3>
+<p style="margin:0 0 10px">Ordering through the app or supplier integrations, barcode scanning, patient or appointment data, multi-location clinics, practice-management integrations, Android.</p>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">2. Users and roles</h2>
+<p style="margin:0 0 10px"><b style="color:var(--color-ink)">Admin</b>: practice owner, office manager or the person who owns inventory. <b style="color:var(--color-ink)">Staff</b>: dental assistants and hygienists. A clinic has at least one Admin. Where a screen differs by role, the board shows the Staff version directly below the Admin one; identical screens are tagged Admin/Staff.</p>
+<table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
+<thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Capability</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:80px">Admin</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:80px">Staff</th></tr></thead>
+<tbody>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Sign up, create the clinic, invite teammates, set roles</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">No</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Start a procedure, edit its usage later, cancel it with a note</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Create and edit procedure templates (default supplies)</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">No</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Browse, search and filter inventory; open product detail</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Count stock and apply corrections</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Adjust a quantity with a reason</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Add expiry; edit a batch (date, lot, quantity)</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Open a new bottle, mark a bottle finished</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Add to To buy, change suggested quantities</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Select items and mark them as ordered</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">No</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Receive a delivery (invoice or manual)</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">No</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Create, edit, delete products</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">No</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Mark expiring stock disposed</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">No</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Clinic settings, billing, CSV export</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">No</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">View the team list</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Yes</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Read-only</td></tr>
+</tbody></table>
+<p style="margin:0 0 10px">Role gating hides controls; it never shows a disabled control. Staff screens therefore have fewer buttons, never greyed ones.</p>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">3. Navigation</h2>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li><b style="color:var(--color-ink)">Four tabs</b>: Home · Inventory · Procedures · To buy. The To buy tab carries a red count badge equal to the number of items in the To buy list.</li>
+<li><b style="color:var(--color-ink)">Home header</b>: date eyebrow, clinic name, bell (opens Activity; red dot when there are unread alerts) and a generic profile icon (opens Account).</li>
+<li><b style="color:var(--color-ink)">Root screens</b> show a 32px display title and the tab bar. <b style="color:var(--color-ink)">Pushed screens</b> show a 44px back chevron, a 24px title, no tab bar, and pin their primary action to the bottom.</li>
+<li><b style="color:var(--color-ink)">Sheets</b> (bottom, grab handle, dim scrim) hold short forms, pickers and confirmations. <b style="color:var(--color-ink)">Toasts</b> confirm completed actions. No full-screen dialogs.</li>
+<li>Receive delivery, Expiring soon, Activity and Account are one tap from Home, not tabs.</li>
+</ul>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">4. Data model</h2>
+<table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
+<thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:150px">Entity</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Fields and rules</th></tr></thead>
+<tbody>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">Clinic</b></td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Name, logo (optional), city, country, expiry warning window (30/60/90 options), weekly email digest on/off, billing plan, billing emails (one or more; the admin's is first and cannot be removed).</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">User</b></td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Name, email (unique per clinic), role Admin or Staff, status Active or Invited (with invite date).</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">Product</b></td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Name (as written on the box), category, <i>counted-in</i> unit (e.g. cartridges), optional <i>received-as</i> pack (e.g. box) with pack size (1 box = 50 cartridges), minimum, target, supplier (optional, set from the first invoice), location (optional, free text), tracking mode: <b style="color:var(--color-ink)">countable</b> or <b style="color:var(--color-ink)">multi-use</b>. Quantity is the sum of its batches. Last unit cost from receiving. Deleting archives: the product leaves Inventory, To buy and templates; its history stays.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">Batch</b></td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Expiry date (month precision), quantity, lot (optional, free text; the clinic decides what it writes there). Quantity without an expiry date is flagged Missing expiry.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">Open item</b> (multi-use only)</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">One record per open bottle, syringe or kit: opened by, opened on. Quantity shown = unopened + open. Finished removes the record.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">Procedure template</b></td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Name, list of products with default quantity. Multi-use products in a template default to 0 (use the open one). Admin-only.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">Procedure</b> (event)</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Template, started by, started at, supplies used [product, quantity], items opened [product]. Editable at any time; editing writes the difference as a transaction. Cancelling requires a note and returns everything.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">To buy item</b></td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Product, quantity to buy (default target − current, editable), status To buy → Ordered (date) → Received (date). Added automatically when quantity ≤ minimum, or by anyone by hand.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)"><b style="color:var(--color-ink)">Transaction</b></td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Append-only. Type Receiving, Procedure, Count, Adjustment, Disposal or Cancellation; product; delta; by; at; reference (invoice no., procedure); reason or note. Nothing is ever deleted; reversals are new transactions.</td></tr>
+</tbody></table>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">5. Status and alert rules</h2>
+<table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
+<thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:130px">Status</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Rule</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:90px">Color</th></tr></thead>
+<tbody>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Out of stock</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Quantity is 0 (multi-use: no unopened and no open).</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);color:var(--color-danger)">Danger</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Low</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Quantity ≤ minimum (multi-use: unopened ≤ minimum).</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);color:var(--color-warning)">Warning</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Expiring</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Any batch expires within the clinic's warning window. ≤ 30 days renders in danger text, 31–90 in warning.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);color:var(--color-warning)">Warning</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Missing expiry</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Some quantity has no expiry date.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);color:var(--color-info)">Info</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Healthy</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">None of the above.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);color:var(--color-success)">Success</td></tr>
+</tbody></table>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>One badge per product. Priority: Out of stock › Low › Expiring › Missing expiry › Healthy.</li>
+<li>To buy auto-add fires when a product becomes Low or Out of stock; suggested quantity = target − current, recalculated until the item is marked Ordered. Receiving the product marks the item Received.</li>
+<li>Inventory value = Σ quantity × last unit cost. Value at risk = Σ expiring batch quantity × last unit cost, for the selected window.</li>
+<li>Alerts (bell): Out of stock, Low, Expiring within the window, Missing expiry, Delivery read and waiting for review. Each alert deep-links to the product or list that resolves it and clears when the condition clears.</li>
+</ul>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">6. Flows</h2>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.1 Sign in, sign up and clinic setup <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f1–f5</span></h3>
+<p style="margin:0 0 10px">The admin creates the account and the clinic; staff only ever accept an invitation.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f1 }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li><b style="color:var(--color-ink)">Sign in</b>: email, password, Forgot password. Footer: "Setting up a new clinic? Sign up as admin" starts admin sign-up; "Staff join through the invitation email." No public self-service for staff.</li>
+<li><b style="color:var(--color-ink)">Step 1 · Account</b>: name, email, password. <b style="color:var(--color-ink)">Step 2 · Clinic</b>: logo (tap the placeholder to upload; optional), clinic name, city, country. No currency or time zone questions; they derive from the device and country. <b style="color:var(--color-ink)">Step 3 · Invite team</b>: rows of name, email, role (Staff or Admin); Skip for now is allowed. Continue lands on Home.</li>
+<li><b style="color:var(--color-ink)">Accept invitation</b> (Staff): the email link opens the app on a screen showing the clinic name and who invited; the user sets a password and lands on Home. Links expire after 7 days; an admin can resend from Team.</li>
+<li>Sessions persist on the device. Sign out lives in Account.</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.2 Home <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f6–f10</span></h3>
+<p style="margin:0 0 10px">Home answers "what needs me today" and makes starting a procedure one tap.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f2 }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li><b style="color:var(--color-ink)">Attention tiles</b> (three, equal width): To buy, Expiring soon, Missing expiry. Big number in the status color (ink when 0), short label. Tap opens the matching list.</li>
+<li><b style="color:var(--color-ink)">Procedure card</b> (dark ink): primary button <i>Start a procedure</i> opens the Procedures list. Below a divider, <i>Latest procedure</i>: name, when, "N supplies · by", and <i>Edit usage</i>, which opens that procedure in editing mode. The latest procedure is always visible so quantities can be corrected during or right after treatment.</li>
+<li><b style="color:var(--color-ink)">Value tiles</b>: Inventory value (tap → breakdown by category) and At risk, 90 days (tap → Expiring soon).</li>
+<li><b style="color:var(--color-ink)">Receive delivery row</b> (Admin only): one tappable card "Receive delivery · Photo, PDF or manual. You confirm every line." with a chevron → Receive delivery (6.5), where the three options live. Hidden for Staff.</li>
+<li>Order on screen: tiles, procedure card, value tiles, receive row. Nothing else; no feed, no charts.</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.3 Procedures <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f11–f15</span></h3>
+<p style="margin:0 0 10px">The core daily flow. The assistant picks a procedure, corrects the list, starts. Stock changes immediately; mistakes are fixed from history, never blocked up front.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f3 }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<p style="margin:0 0 6px"><b style="color:var(--color-ink)">Procedures list</b></p>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>One row per template: name, item count, and a warning line only when something is short ("1 not available" in danger, "2 will run out" in warning). Nothing is shown when all is fine.</li>
+<li>Admin: <i>+ Template</i> in the header and a pencil per row open <b style="color:var(--color-ink)">Edit defaults</b> (name, items with steppers, + add item, Save). Staff see neither.</li>
+<li>Note under the list: "Starting a procedure deducts its supplies right away. Starter quantities are templates, not clinical recommendations."</li>
+<li><b style="color:var(--color-ink)">History · tap to edit usage</b>: every past procedure, newest first; name, "date · N items · by".</li>
+</ul>
+<p style="margin:0 0 6px"><b style="color:var(--color-ink)">Adjust, then start</b></p>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Header: template name. Summary line "N supplies" plus a shortage count when relevant.</li>
+<li><b style="color:var(--color-ink)">Supplies for this procedure</b>: each row has −/+ steppers (40px), the quantity in blue when it differs from the default, and a remove X. A sub-line appears only when the item would run out ("0 will remain", warning) or is not available ("Not available · 2 in stock", danger). A round + button at the bottom right of the list opens <b style="color:var(--color-ink)">Add item</b>: a searchable, scrollable list of all products.</li>
+<li><b style="color:var(--color-ink)">Opened a new one?</b> section with an (i) icon (tap → toast: "Tap Take new when you open a fresh bottle, syringe or kit from stock. Using an already open one changes nothing."). It lists the template's multi-use products with "N open · N unopened". <i>Take new</i> is an outlined button; tapping it fills it blue, adds the product to the supplies list above with quantity 1, and the sub-line becomes "Will take 1 from stock · N unopened left". Tapping again removes it. If nothing is unopened, a toast says "Out of stock" and nothing changes. Which products appear here is defined by the admin in the template; there is no remove X.</li>
+<li>Primary button pinned at the bottom: <i>Start procedure · N items</i> (count only, no breakdown). Start deducts every countable row, moves each Take-new product from unopened to open tagged with the user and today, records the procedure, returns to Procedures and shows a toast. Stock may go negative; it is shown as Out of stock, never blocked.</li>
+<li>Cancel procedure (text button) before starting simply goes back; nothing was changed.</li>
+</ul>
+<p style="margin:0 0 6px"><b style="color:var(--color-ink)">From history</b></p>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Read-only view: banner "N items deducted · date · by"; list titled <i>Supplies used</i> with a <i>Used</i> column; multi-use rows read "Opened a new bottle" or "Used from open bottle".</li>
+<li><i>Edit usage</i> (tertiary, pencil) switches to editing: steppers, remove, + add item. <i>Save changes</i> writes only the difference to stock and to Activity ("Edited usage · name"). <i>Discard</i> leaves everything as recorded.</li>
+<li><i>Cancel procedure</i> (danger text) opens a sheet: title "Cancel {name}?", warning box "N items will be returned to inventory. Stock levels update immediately.", a required note "Why is it cancelled?" (placeholder "e.g. Logged by mistake, patient cancelled"), micro "Recorded in Activity with your name." The red button stays disabled until the note has text. Keep closes the sheet. Cancelling returns countables and reverses any bottle opened by this procedure.</li>
+<li>Both roles see the same detail screens. Staff differ only in the list (no + Template, no pencil).</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.4 Inventory, counting and product detail <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f16–f21</span></h3>
+<p style="margin:0 0 10px">One list serves browsing and counting. Expiry is the headline of every product page; lot is free text the clinic owns.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f4 }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<p style="margin:0 0 6px"><b style="color:var(--color-ink)">Inventory list</b></p>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Header: title, <i>Count stock</i> button (clipboard-list icon). Search field. Filter chips: All, Low, Expiring, Missing expiry, Healthy (Low includes Out of stock).</li>
+<li>Rows: name, "54 cartridges · Anesthetic" (multi-use: "1 unopened · 2 open · Sterilization"), status badge. Tap opens Product detail.</li>
+<li>Admin: a round + button bottom right opens <b style="color:var(--color-ink)">New product</b>. Staff: no + button.</li>
+<li>Empty search: "No products match."</li>
+</ul>
+<p style="margin:0 0 6px"><b style="color:var(--color-ink)">Count stock</b></p>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Same list, title becomes <i>Count</i>, header shows an X to cancel. Every row turns into −/+ steppers around the current quantity; sub-line "est. 54 cartridges · location". Changed values turn blue. Multi-use rows count unopened only ("Count unopened only").</li>
+<li>Search and filters stay available, so a drawer or a category can be counted alone.</li>
+<li>Bottom button <i>Review · N corrections</i> is disabled until at least one quantity changed. It opens <b style="color:var(--color-ink)">Review corrections</b>: each change as "43 → 41" with Undo, then <i>Apply count · N corrections</i> and <i>Back to counting</i>. Applying writes one Count transaction per changed product ("Physical count · by") and shows a toast without Undo.</li>
+<li>Cancel with unsaved changes asks "Discard this count?" (N changes · "Inventory stays as it is.") with Discard count / Keep counting. Without changes it exits silently.</li>
+</ul>
+<p style="margin:0 0 6px"><b style="color:var(--color-ink)">Product detail</b></p>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Header: back, "Category · unit tracked", <i>Edit</i> (Admin). Title row: name and status badge.</li>
+<li><b style="color:var(--color-ink)">Quantity card</b>: large number with unit labelled "System estimate", Minimum, Target, then one line "N units used in 30 days · Counted {date}". When Low: "Recommended: add N units".</li>
+<li><b style="color:var(--color-ink)">Actions</b>: <i>Adjust</i> and <i>Add to buy</i> (Staff label: <i>Report low stock</i>; same effect). Add to buy puts the product on the list with the suggested quantity and shows a toast with Undo.</li>
+<li><b style="color:var(--color-ink)">Expiry card</b> (the headline): rows sorted soonest first, each with the date in bold and "in N days" (danger ≤ 30, warning ≤ 90, "Expired" when past), quantity, lot in monospace. Total line underneath. Tapping a row opens <b style="color:var(--color-ink)">Edit batch</b> (Expires month picker, How many, Lot optional free text, Save). <i>Add expiry</i> is always available under the card and adds a new batch; the total line reads "N of M tracked" so undated quantity is visible. Both roles.</li>
+<li><b style="color:var(--color-ink)">Bottles card</b> (multi-use only): "N unopened · N open"; one row per open item: "Open · {who}" / "opened N days ago" with <i>Finished</i>. <i>Open a new bottle</i> (disabled when none unopened) moves one from unopened to open under the current user. Several people can each have one open.</li>
+<li><b style="color:var(--color-ink)">History</b>: last transactions as delta, reason, when.</li>
+<li>Admin only: <i>Delete product</i> (danger text at the bottom) → sheet "Delete {name}?" explaining stock still held and that the product is archived, not erased.</li>
+</ul>
+<p style="margin:0 0 6px"><b style="color:var(--color-ink)">Sheets on this flow</b></p>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li><b style="color:var(--color-ink)">Adjust inventory</b>: "System estimate N unit. A reason is recorded in history." Actual quantity, Reason (Physical count, Expired, Damaged, Waste, Missing, Returned, Data correction, Other), <i>Save adjustment</i>. Toast with Undo.</li>
+<li><b style="color:var(--color-ink)">New / Edit product</b>: Name ("As written on the box"), Category. Units: <i>Counted in</i> (e.g. cartridges) and <i>Received as</i> (e.g. box); when a pack is given, "How many cartridges in 1 box?" and a plain sentence confirming the conversion ("Receive in boxes, count and use in cartridges. 1 box adds 50 cartridges."). A <i>Multi-use</i> switch marks bottles, syringes and kits (see gap G1). Stock levels: Minimum ("Alert below"), Target ("Reorder up to"). Micro: "Quantity, expiry and lot are entered on the receiving form." Button reads Create product, Save changes, or Create and use for this line (from an invoice). Disabled until a name is entered.</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.5 Receive a delivery <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f22–f24 · Admin</span></h3>
+<p style="margin:0 0 10px">The invoice is the input; the admin confirms every line. Nothing touches inventory before Confirm.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f5 }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li><b style="color:var(--color-ink)">Receive delivery</b>: three options as cards: Take a photo (dark), Upload PDF or image, Receive manually. Micro: "Nothing affects inventory until you confirm." Below, <i>Waiting for delivery</i> lists items marked Ordered with supplier and date, for reference only.</li>
+<li><b style="color:var(--color-ink)">Reading state</b>: document placeholder, "Reading invoice", "Usually under 20 seconds", link <i>Receive manually instead</i>. Extraction runs server-side; the user may leave and gets an alert when it is ready.</li>
+<li><b style="color:var(--color-ink)">Review invoice</b>: header "Supplier · invoice no. · total". Banner: "AI read N lines. Check each one, then confirm." One card per line: the raw description in monospace, a state badge, and a one-line question. States and actions:
+<ul style="margin:4px 0 0;padding-left:18px">
+<li><i>Matched</i>: product name, "5 boxes · $49.80", Lot and Expiry inputs (month). Micro: "Skip now → listed under Missing expiry."</li>
+<li><i>Possible match</i> (hairline border): "Name differs slightly from your product." Buttons <i>Yes, match</i> / <i>No, create new</i>.</li>
+<li><i>New product</i> (hairline border): "No product with this name exists yet." <i>Add new</i> opens New product prefilled (banner "From invoice: {raw line}. Name and unit are suggested. Check them and add the rest."); <i>Pick existing</i> opens <b style="color:var(--color-ink)">Which product is this?</b>, a searchable list.</li>
+<li><i>Needs review</i> (hairline border; fees, surcharges): "Fees and surcharges should not become stock." <i>Ignore</i> / <i>Pick product</i>.</li>
+<li>Resolved lines become <i>Matched</i>, <i>Created</i> or <i>Skipped</i>, lose the border, and show Lot and Expiry.</li>
+</ul></li>
+<li>Footer: "N of M lines will increase inventory." or "Resolve every line to continue." <i>Confirm &amp; receive</i> is disabled until every line is resolved. Confirm converts packs to counted units (5 boxes → 250 cartridges), stores unit cost, creates batches, marks matching To buy items Received, opens Inventory and shows "Delivery received · Inventory increased for N products." with Undo.</li>
+<li><b style="color:var(--color-ink)">Receive manually</b>: Choose product (searchable sheet with <i>New</i>), Quantity in the received unit with the conversion shown ("Current 1 → after 5 kits"), Cost per unit, Lot (optional), Expiry (month). <i>Receive</i> shows a toast without Undo.</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.6 To buy <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f25–f26</span></h3>
+<p style="margin:0 0 10px">A shopping list the clinic takes to its supplier. The app never places orders; the wording avoids implying it does.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f6 }}" as="s" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Segments with counts: <i>To buy · N</i>, <i>Ordered · N</i>, <i>Received · N</i>.</li>
+<li><b style="color:var(--color-ink)">To buy</b> rows: name, "Current 1 · target 5 · Patterson" (supplier only when known), quantity stepper. Admin rows have a checkbox. All items start selected; a bar reads "N of M selected · Clear" so the admin can untick what is not being ordered this time. The pinned button reads <i>Mark N as ordered</i>, N following the selection, and is disabled only when nothing is selected. A text <i>Add item</i> opens a searchable sheet of products not yet on the list.</li>
+<li><b style="color:var(--color-ink)">Ordered</b> rows: "N ordered Oct 1 · Patterson". No per-row receive: deliveries are received from the invoice (6.5), which moves items to Received automatically.</li>
+<li><b style="color:var(--color-ink)">Received</b>: history with date and supplier.</li>
+<li>Staff: same screen without checkboxes and without Mark as ordered; they can add items and change quantities.</li>
+<li>Empty segment: "Nothing here yet."</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.7 Expiring soon <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f27–f28</span></h3>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f7 }}" as="s" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Segments 30 / 60 / 90 days. Summary: "N products · $X at risk within 90 days."</li>
+<li>One card per batch: name, "quantity · lot · date", days left in danger (≤ 30) or warning, value. Buttons: <i>View product</i>; Admin also <i>Mark disposed</i>.</li>
+<li><b style="color:var(--color-ink)">Mark disposed</b> sheet: "{name} · lot X. Removed with reason Expired." Quantity disposed (default: the batch), red <i>Mark disposed</i>, <i>Keep</i>. Writes a Disposal transaction; toast with Undo.</li>
+<li>Empty: "Nothing expires in this window."</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.8 Activity: alerts and history <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f8–f9</span></h3>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>Opened from the bell. Two segments: <b style="color:var(--color-ink)">Alerts</b> and <b style="color:var(--color-ink)">History</b>.</li>
+<li><b style="color:var(--color-ink)">Alerts</b>: colored dot, one sentence ("Rubber dam latex-free is out of stock."), when. Tap deep-links to the product or list. Alerts clear themselves when the condition is gone.</li>
+<li><b style="color:var(--color-ink)">History</b>: filter chips All, Receiving, Procedures, Counts, Adjustments; grouped by day. Each row: product or procedure, reason line ("Invoice INV-10092", "Physical count", "Damaged"), then "Name · time" on its own line, and the delta on the right (+ in success, − in danger, "43 → 41" in ink). No undo from history; reversals are done by editing the procedure, adjusting, or receiving again.</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.9 Account, team, settings and billing <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f29–f35</span></h3>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f9 }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+</sc-for></div>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li><b style="color:var(--color-ink)">Account</b>: user card (generic profile icon, name, "Role · Clinic"). Admin groups: Team, Clinic settings, Billing, Export CSV; Help; Sign out (red). Staff: Team, Help, Sign out.</li>
+<li><b style="color:var(--color-ink)">Team</b>: rows with initials, name, email, role; pending rows read "Invited · date". Admin: <i>Invite</i> opens a sheet (Name, Email, Role Staff/Admin, <i>Send invitation</i>; toast "Invitation sent · They get a link by email."). Admin can resend or revoke an invitation and change a role from the row.</li>
+<li><b style="color:var(--color-ink)">Clinic settings</b> (Admin): logo (tap to replace), clinic name, city, country. Alerts: Expiry warning (30, 60 and 90 days · 60 and 90 · 90 only), Email digest switch (weekly, Monday 7 am). <i>Save</i> in the header; toast "Settings saved".</li>
+<li><b style="color:var(--color-ink)">Billing</b> (Admin): dark card "Free trial · N days left · Ends {date}". Price line "$99 per clinic / month after the trial", or "$49.50 · 50% lifetime promotion" when granted (flag set by MediSave, not editable in the app). Rows: Payment method (opens the secure card form), Invoices (→ Invoices screen; empty state "No invoices yet"), Billing emails (count; sheet to add or remove addresses; the admin's is first and not removable). Billing is per clinic, unlimited users.</li>
+<li><b style="color:var(--color-ink)">Export CSV</b>: products, batches and transactions, sent to the admin's email. Toast "Export started".</li>
+</ul>
+
+<h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.10 iPad <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f36–f38</span></h3>
+<p style="margin:0 0 10px">Same screens and the same bottom tabs. Content is capped at 720px and centred; sheets are centred at the same width. Both orientations are supported; nothing becomes a sidebar or a two-pane layout in V1.1.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
+<sc-for list="{{ f10 }}" as="s" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:317px;height:454px;overflow:hidden;border-radius:17px"><div style="width:834px;height:1194px;transform:scale(.38);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" device="ipad" embedded="{{ t }}" hint-size="834px,1194px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:317px">{{ s.label }}</div></div>
+</sc-for></div>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">7. UX and UI standards</h2>
+<p style="margin:0 0 10px">These rules keep every screen consistent and are the acceptance criteria for new screens. Tokens and components come from the MediSave Design System; do not introduce new colors, radii or type sizes.</p>
+<table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
+<thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:150px">Area</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Rule</th></tr></thead>
+<tbody>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Page</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Cream page (#fffefb), 20px side padding, content max 720px. Root title Outfit 500 32px with a date or context eyebrow above; pushed title 24px with a 44px back chevron. Status bar area 54px.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Lists</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Cream-soft card (#f8f4f0), 12px radius, 16px side padding, rows 12–14px tall padding, 1px line dividers (#e6e1d6). Row = title (14px ink), one caption line (12px secondary), right-side value or badge. Chevrons only on rows that navigate.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Primary action</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">One blue primary per screen, 48px, full width, pinned to the bottom in a bar with a hairline top. Label is a verb plus the count when it changes stock: "Start procedure · 6 items", "Apply count · 2 corrections", "Confirm &amp; receive". Disabled until the action is valid; never hidden.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Secondary actions</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Tertiary (hairline) buttons for Adjust, Count stock, View product; text buttons for Edit, Cancel, Undo. Icon + label at 20px Lucide, 1.75 stroke. Round 56px + button bottom right for "add" on lists.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Destructive</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Red danger button only inside a confirmation sheet, always paired with a Keep text button, always preceded by one sentence stating the inventory effect. Actions that change stock backwards (cancel procedure) require a note.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Sheets</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Bottom sheet, 20px top radius, 36×4 grab handle, scrim rgba(32,21,21,.4), 180ms fade, tap scrim to close. Title 24px, one caption line, fields, primary button last (full width). Lists inside sheets are 360px tall, scroll, and have a search field on top.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Toasts</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Dark ink card above the tab bar, title + one detail line, 3.2 seconds. Undo only for single reversible actions: adjustment, invoice received, disposed, added to To buy. No Undo for counts, manual receive, start procedure.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Steppers</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">40×40 −/+ with hairline, 6px radius, value 36–44px wide centred. A value that differs from default or estimate is primary blue. Minimum 0.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Segments and chips</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Segmented control in a cream-soft track for 2–3 views (To buy · Ordered · Received, 30 / 60 / 90). Chips for filters: ink fill when active, cream-soft otherwise, horizontal scroll.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Status</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Badge pill, text + soft tint, never a large fill. Status words: Healthy, Low, Out of stock, Expiring, Missing expiry; invoice lines: Matched, Possible match, New product, Needs review, Created, Skipped.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Emphasis</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Ink hairline border on items that need a decision (invoice lines, soonest batch). Dark ink card for the one featured block per screen (procedure card, trial card). Soft tinted boxes for one-line notices (info, warning, success).</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Copy</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Sentence case. Numbers first. One line per idea; captions ≤ 60 characters. State the consequence ("Stock levels update immediately."). Label estimates ("est. 54"). No exclamation marks, no emoji, no "please". UPPERCASE only for eyebrows.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Empty and loading</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Empty: hairline frame with one caption ("Nothing expires in this window."). Loading: cream placeholder rows; long tasks name themselves ("Reading invoice · Usually under 20 seconds").</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Errors</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Field errors inline under the field in danger text. Save failures as a toast "Couldn't save. Try again." keeping the user's input. Offline: a one-line banner under the header; reading is allowed, writes are queued and retried.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Motion</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">120–180ms, cubic-bezier(.2,0,0,1), fades and color only; sheets slide ≤ 8px with the fade. No bounces.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Accessibility</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Hit targets ≥ 44px. Text ≥ 12px; body 14px. Contrast ≥ 4.5:1. Status always text + color. Supports iOS Dynamic Type up to the Large step without truncation.</td></tr>
+</tbody></table>
+<h3 style="font:600 15px/1.4 Inter,sans-serif;color:var(--color-ink);margin:22px 0 6px">Vocabulary (use exactly these)</h3>
+<p style="margin:0 0 10px">To buy · Mark as ordered · Receive delivery · Confirm &amp; receive · Receive manually · Count stock · Review corrections · Apply count · Adjust · Add to buy · Add expiry · Edit batch · Open a new bottle · Finished · Start procedure · Edit usage · Cancel procedure · Opened a new one? · Take new · Mark disposed · Expiring soon · Missing expiry · Alerts · History · Account · Team · Clinic settings · Billing.</p>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">8. Notifications</h2>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li>In-app alerts (bell) are the source of truth; push and email mirror them.</li>
+<li>Push (opt-in at first launch): Out of stock, Expiring within 30 days, Invoice read and ready to review (admin only).</li>
+<li>Email digest (admin toggle, Monday 7 am clinic time): To buy count, items expiring in the window, missing expiry count, procedures last week.</li>
+<li>Invitation and password emails are transactional and always sent.</li>
+</ul>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">9. Non-functional requirements</h2>
+<ul style="margin:0 0 10px;padding-left:18px">
+<li><b style="color:var(--color-ink)">Platforms</b>: iOS 17+, iPhone and iPad, one codebase. Portrait on iPhone; both orientations on iPad.</li>
+<li><b style="color:var(--color-ink)">Performance</b>: lists of 500 products scroll without jank; starting a procedure or applying a count completes under 1 s on a normal connection; invoice reading target under 20 s with progress state.</li>
+<li><b style="color:var(--color-ink)">Concurrency</b>: several users act at once (two assistants each opening a bottle). All stock changes are transactions applied server-side; screens refresh on return to foreground.</li>
+<li><b style="color:var(--color-ink)">Audit</b>: every change carries user, time and reference; nothing is hard-deleted; products are archived.</li>
+<li><b style="color:var(--color-ink)">Privacy</b>: no patient or appointment fields exist anywhere. Invoice images belong to the clinic and can be deleted by an admin. Data is isolated per clinic.</li>
+<li><b style="color:var(--color-ink)">Invoice reading</b>: AI extraction proposes lines; nothing is written until the admin confirms. Low-confidence lines are shown as Possible match or Needs review, never auto-applied.</li>
+<li><b style="color:var(--color-ink)">Billing</b>: Stripe; trial starts at clinic creation; after 3 months the app keeps reading access and blocks writes until a payment method is added (admin sees it on Billing and Home).</li>
+</ul>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">10. Gaps to close before development</h2>
+<table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
+<thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:50px">ID</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Gap</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:220px">Proposed answer</th></tr></thead>
+<tbody>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">G1</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">The New product sheet has no control to mark a product multi-use; the data model needs it.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Add a <i>Multi-use (bottle, syringe, kit)</i> switch under Units; one design change.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">G2</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Staff button reads "Report low stock", Admin "Add to buy", same action.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Use "Add to buy" for both unless testing shows staff hesitate.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">G3</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Low threshold for multi-use products: unopened only, or unopened + open?</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Unopened only (an open bottle is already partly used).</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">G4</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Forgot-password, invitation expiry and resend screens are not drawn.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Standard email-link flows; 7-day link; resend from Team.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">G5</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Trial-ended state (read-only mode) is not drawn.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Banner on Home + Billing card; writes show a sheet pointing to Billing.</td></tr>
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">G6</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Onboarding checklist (first 10 products, first procedure) from v1.0 was removed from the design.</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line)">Keep removed; the first Receive delivery seeds products.</td></tr>
+</tbody></table>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">Appendix · Screen index</h2>
+<table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
+<thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:80px">Frame</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Screen</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:110px">Role</th></tr></thead>
+<tbody>
+<sc-for list="{{ index }}" as="r" hint-placeholder-count="10">
+<tr><td style="padding:6px 10px;border-bottom:1px solid var(--color-line);font-family:ui-monospace,Menlo,monospace;font-size:12px">{{ r.id }}</td><td style="padding:6px 10px;border-bottom:1px solid var(--color-line)">{{ r.label }}</td><td style="padding:6px 10px;border-bottom:1px solid var(--color-line);color:var(--text-secondary)">{{ r.role }}</td></tr>
+</sc-for>
+</tbody></table>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">Appendix B · Screen specifications</h2>
+<p style="margin:0 0 10px">One block per screen: route key, parameters, where it is reached from, and every interactive element with a stable id. Element ids are the contract between design, code and QA: use them as <code style="font:12px ui-monospace,Menlo,monospace;background:var(--surface-card);padding:1px 5px;border-radius:4px">data-testid</code> / accessibility identifiers and in analytics events. Format: <code style="font:12px ui-monospace,Menlo,monospace;background:var(--surface-card);padding:1px 5px;border-radius:4px">screen.element</code>; list rows add the entity id at runtime (<code style="font:12px ui-monospace,Menlo,monospace;background:var(--surface-card);padding:1px 5px;border-radius:4px">inv.row[productId]</code>).</p>
+<sc-for list="{{ screens }}" as="sc" hint-placeholder-count="6">
+<div style="break-inside:avoid;margin:0 0 18px;border-radius:12px;background:var(--surface-card);padding:14px 16px">
+<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font:600 13px ui-monospace,Menlo,monospace;color:var(--color-ink)">{{ sc.key }}</span><span style="font:600 14px Inter,sans-serif;color:var(--color-ink)">{{ sc.title }}</span><span style="font:11px Inter,sans-serif;color:var(--text-secondary)">{{ sc.frames }} · {{ sc.role }}</span></div>
+<div style="display:grid;grid-template-columns:90px minmax(0,1fr);gap:3px 12px;margin-top:8px;font-size:12.5px">
+<span style="color:var(--text-secondary)">Params</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">{{ sc.params }}</span>
+<span style="color:var(--text-secondary)">Reached from</span><span>{{ sc.entry }}</span>
+<span style="color:var(--text-secondary)">Sheets</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px">{{ sc.sheets }}</span>
+</div>
+<table style="width:100%;border-collapse:collapse;margin:10px 0 0;font-size:12.5px">
+<thead><tr><th style="text-align:left;padding:5px 8px 5px 0;border-bottom:1px solid var(--color-line);color:var(--text-secondary);font-weight:600;width:190px">Element id</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--color-line);color:var(--text-secondary);font-weight:600">Behaviour</th></tr></thead>
+<tbody>
+<sc-for list="{{ sc.elements }}" as="el" hint-placeholder-count="6">
+<tr><td style="padding:5px 8px 5px 0;border-bottom:1px solid rgba(230,225,214,.6);font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--color-ink);vertical-align:top">{{ el.id }}</td><td style="padding:5px 8px;border-bottom:1px solid rgba(230,225,214,.6);vertical-align:top">{{ el.text }}</td></tr>
+</sc-for>
+</tbody></table>
+</div>
+</sc-for>
+
+<h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">Appendix C · Sheets</h2>
+<table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
+<thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:170px">Sheet key</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Fields and actions</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:120px">Result</th></tr></thead>
+<tbody>
+<sc-for list="{{ sheets }}" as="sh" hint-placeholder-count="8">
+<tr><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--color-ink);vertical-align:top">{{ sh.key }}</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);vertical-align:top">{{ sh.text }}</td><td style="padding:7px 10px;border-bottom:1px solid var(--color-line);vertical-align:top;color:var(--text-secondary)">{{ sh.result }}</td></tr>
+</sc-for>
+</tbody></table>
+</div>
+</doc-page>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const S = (label, screen, o) => { o = o || {}; return { label, screen, procState: o.procState || "new", mode: o.mode || "browse", filter: o.filter || "All", step: o.step || 0, role: o.role || "admin", roleTag: o.roleTag || o.role || "admin", actSeg: o.actSeg || "alerts" }; };
+    const f1 = [S("f1 · Sign in","signin",{roleTag:"both"}), S("f2 · Admin · account","onboard"), S("f3 · Admin · clinic","onboard",{step:1}), S("f4 · Admin · invite team","onboard",{step:2}), S("f5 · Accept invitation","invite",{role:"staff"})];
+    const f2 = [S("f6 · Home · Admin","home"), S("f7 · Home · Staff","home",{role:"staff"}), S("f8 · Activity · alerts","activity",{roleTag:"both"}), S("f9 · Activity · history","activity",{actSeg:"history",roleTag:"both"}), S("f10 · Inventory value","value",{roleTag:"both"})];
+    const f3 = [S("f11 · Procedures · Admin","proc"), S("f12 · Procedures · Staff","proc",{role:"staff"}), S("f13 · Adjust, then start","procDetail",{roleTag:"both"}), S("f14 · From history · edit usage","procDetail",{procState:"done",roleTag:"both"}), S("f15 · Edit defaults","procEdit")];
+    const f4 = [S("f16 · Inventory · Admin","inv"), S("f17 · Inventory · Staff","inv",{role:"staff"}), S("f18 · Count stock","inv",{mode:"count",roleTag:"both"}), S("f19 · Low filter","inv",{filter:"Low"}), S("f20 · Product detail · Admin","product"), S("f21 · Product detail · Staff","product",{role:"staff"})];
+    const f5 = [S("f22 · Receive delivery","receive"), S("f23 · Review invoice","invoice"), S("f24 · Receive manually","manual")];
+    const f6 = [S("f25 · To buy · Admin","order"), S("f26 · To buy · Staff","order",{role:"staff"})];
+    const f7 = [S("f27 · Expiring soon · Admin","expiring"), S("f28 · Expiring soon · Staff","expiring",{role:"staff"})];
+    const f9 = [S("f29 · Account · Admin","more"), S("f30 · Account · Staff","more",{role:"staff"}), S("f31 · Team · Admin","team"), S("f32 · Team · Staff","team",{role:"staff"}), S("f33 · Clinic settings","settings"), S("f34 · Billing","billing"), S("f35 · Invoices","invoices")];
+    const f10 = [S("f36 · iPad · Home","home"), S("f37 · iPad · Procedure","procDetail",{roleTag:"both"}), S("f38 · iPad · Review invoice","invoice")];
+    const roleName = s => s.roleTag === "both" ? "Admin / Staff" : s.role === "staff" ? "Staff" : "Admin";
+    const index = [...f1, ...f2, ...f3, ...f4, ...f5, ...f6, ...f7, ...f9, ...f10].map(s => { const i = s.label.indexOf(" · "); return { id: s.label.slice(0, i), label: s.label.slice(i + 3), role: roleName(s) }; });
+    const E = (id, text) => ({ id, text });
+    const SC = (key, title, frames, role, params, entry, sheets, elements) => ({ key, title, frames, role, params: params || "—", entry, sheets: sheets || "—", elements });
+    const screens = [
+      SC("signin", "Sign in", "f1", "Admin / Staff", null, "App launch when signed out; Account › Sign out", null, [
+        E("signin.email", "Email field. Inline error on unknown email."), E("signin.password", "Password field, show/hide toggle."), E("signin.submit", "Primary. Disabled until both fields filled. → home"), E("signin.forgot", "Text button → password reset email (G4)."), E("signin.signUpAdmin", "Footer 'Setting up a new clinic? Sign up as admin' → onboard.account"), E("signin.staffNote", "Static: 'Staff join through the invitation email.'")]),
+      SC("onboard.account", "Create account · step 1 of 3", "f2", "Admin", null, "signin.createClinic", null, [
+        E("onboard.name", "Full name."), E("onboard.email", "Email, unique across MediSave."), E("onboard.password", "Password, min 8 characters."), E("onboard.continue", "Primary → onboard.clinic")]),
+      SC("onboard.clinic", "Create clinic · step 2 of 3", "f3", "Admin", null, "onboard.account", null, [
+        E("onboard.logo", "72px tap-to-upload placeholder; optional; square crop."), E("onboard.clinicName", "Required."), E("onboard.city", "Required."), E("onboard.country", "Select; drives currency and date format."), E("onboard.continue", "Primary → onboard.invite. Creates the clinic and starts the trial.")]),
+      SC("onboard.invite", "Invite team · step 3 of 3", "f4", "Admin", null, "onboard.clinic", null, [
+        E("onboard.inviteRow[n].name / .email / .role", "Repeating rows; role Staff (default) or Admin."), E("onboard.addRow", "Adds an empty row."), E("onboard.sendInvites", "Primary. Sends one email per valid row → home"), E("onboard.skip", "Text button → home without inviting.")]),
+      SC("invite.accept", "Accept invitation", "f5", "Staff", "token", "Email link (valid 7 days)", null, [
+        E("invite.clinic", "Clinic name and 'Invited by {admin}'."), E("invite.name", "Prefilled from the invitation, editable."), E("invite.password", "New password."), E("invite.submit", "Primary → home. Expired token shows 'Ask your admin to resend.'")]),
+      SC("home", "Home", "f6 · f7 · f36", "Admin / Staff", null, "Tab 1; after sign-in", null, [
+        E("home.header.date / .clinic", "Eyebrow date, clinic name (display title)."), E("home.header.bell", "→ activity?seg=alerts. Red dot when unread alerts > 0."), E("home.header.account", "Generic profile icon → more"), E("home.tile.toBuy", "Count of To buy items; warning color, ink when 0 → order"), E("home.tile.expiring", "Batches within the clinic window; danger → expiring"), E("home.tile.missingExpiry", "Products with undated quantity; info → inv?filter=Missing expiry"), E("home.procedure.start", "Primary button on dark card → proc"), E("home.procedure.latest", "Name, when, 'N supplies · by' of the most recent procedure event."), E("home.procedure.editUsage", "→ procDetail?eventId=…&mode=editing"), E("home.tile.inventoryValue", "Σ qty × unit cost → value"), E("home.tile.atRisk", "Value expiring within 90 days → expiring"), E("home.receive", "Admin only. Row 'Receive delivery · Photo, PDF or manual. You confirm every line.' → receive")]),
+      SC("activity", "Activity", "f8 · f9", "Admin / Staff", "seg = alerts | history; filter", "home.header.bell", null, [
+        E("activity.seg", "Segmented Alerts / History."), E("activity.alert[id]", "Dot (status color), sentence, when. Tap deep-links; clears when resolved."), E("activity.filter", "Chips All, Receiving, Procedures, Counts, Adjustments (history only)."), E("activity.day", "Day group eyebrow (Today, Yesterday, date)."), E("activity.row[txId]", "Subject, reason line, 'Name · time', delta right-aligned. Read-only.")]),
+      SC("value", "Inventory value", "f10", "Admin / Staff", null, "home.tile.inventoryValue", null, [
+        E("value.total", "Large total with 'at last unit cost'."), E("value.row[category]", "Category, product count, value. Tap → inv filtered by category.")]),
+      SC("proc", "Procedures", "f11 · f12", "Admin / Staff", null, "Tab 3; home.procedure.start", null, [
+        E("proc.addTemplate", "Admin only, header → procEdit?new"), E("proc.template[id]", "Name, 'N items', warning line only when short → procDetail?templateId"), E("proc.template[id].edit", "Admin only pencil → procEdit?templateId"), E("proc.note", "Static note under the list."), E("proc.history[eventId]", "Newest first: name, 'date · N items · by' → procDetail?eventId")]),
+      SC("procDetail", "Procedure", "f13 · f14 · f37", "Admin / Staff", "templateId | eventId; mode = new | done | editing", "proc.template, proc.history, home.procedure.editUsage", "addItem, cancelProcedure", [
+        E("procDetail.summary", "'N supplies' + shortage count (new) or 'N items deducted · date · by' (done)."), E("procDetail.item[productId].dec / .inc", "40px steppers; min 0; value blue when ≠ default."), E("procDetail.item[productId].remove", "X removes the row (new/editing)."), E("procDetail.item[productId].warning", "'0 will remain' (warning) or 'Not available · N in stock' (danger); otherwise absent."), E("procDetail.addItem", "Round + bottom-right of the list → sheet addItem"), E("procDetail.bottles.info", "(i) → toast explaining Take new."), E("procDetail.bottle[productId].takeNew", "Toggle. On: adds product to supplies with qty 1, sub 'Will take 1 from stock · N unopened left'. None unopened → toast 'Out of stock'."), E("procDetail.start", "mode new. 'Start procedure · N items'. Deducts, opens bottles, records event → proc + toast"), E("procDetail.editUsage", "mode done → mode editing"), E("procDetail.save", "mode editing. Writes the difference → mode done + toast"), E("procDetail.discard", "mode editing → mode done, no change"), E("procDetail.cancel", "mode done, danger text → sheet cancelProcedure")]),
+      SC("procEdit", "Edit defaults", "f15", "Admin", "templateId | new", "proc.addTemplate, proc.template.edit", "addItem", [
+        E("procEdit.name", "Template name; 'Untitled procedure' if empty."), E("procEdit.item[productId].dec / .inc / .remove", "Default quantity; multi-use products default 0."), E("procEdit.addItem", "Round + → sheet addItem"), E("procEdit.save", "Primary → proc + toast"), E("procEdit.delete", "Text danger (existing template) → confirm; past events keep their data.")]),
+      SC("inv", "Inventory / Count", "f16 – f19", "Admin / Staff", "mode = browse | count; filter; q", "Tab 2; home.tile.missingExpiry; product.count", "newProduct, reviewCount, cancelCount", [
+        E("inv.countStock", "Header button (clipboard-list) → mode count"), E("inv.search", "Filters rows by name as you type."), E("inv.filter", "Chips All, Low, Expiring, Missing expiry, Healthy."), E("inv.row[productId]", "Name, caption, status badge → product?productId (browse)"), E("inv.newProduct", "Admin, browse only. Round + bottom-right → sheet newProduct"), E("inv.count.cancel", "Header X. Changes pending → sheet cancelCount, else → mode browse"), E("inv.count.row[productId].dec / .inc / .value", "Counted quantity; blue when ≠ estimate; multi-use counts unopened only."), E("inv.count.review", "'Review · N corrections'; disabled when N = 0 → sheet reviewCount")]),
+      SC("product", "Product detail", "f20 · f21", "Admin / Staff", "productId", "inv.row, alerts, expiring.viewProduct, order rows", "adjust, batch, newProduct(edit), deleteProduct", [
+        E("product.edit", "Admin, header text → sheet newProduct (edit mode)"), E("product.status", "Badge per §5."), E("product.quantity", "'System estimate' number + unit; Minimum, Target; 'N used in 30 days · Counted date'; 'Recommended: add N' when Low."), E("product.adjust", "Tertiary → sheet adjust"), E("product.addToBuy", "Primary (Staff label 'Report low stock'). Adds with suggested qty; toast with Undo."), E("product.batch[batchId]", "Date bold, 'in N days' colored, qty, lot mono. Tap → sheet batch (edit)"), E("product.addExpiry", "Always shown under the Expiry card → sheet batch (new). Total line 'N of M tracked'."), E("product.bottle[openId].finished", "Removes the open item; toast."), E("product.openNewBottle", "Disabled when unopened = 0. Moves 1 unopened → open under current user."), E("product.history[txId]", "Delta, reason, when."), E("product.delete", "Admin, danger text → sheet deleteProduct")]),
+      SC("receive", "Receive delivery", "f22", "Admin", null, "home.receive.scan; order (Ordered segment)", null, [
+        E("receive.photo", "Dark card → camera → invoice?source=camera"), E("receive.upload", "File picker (PDF, image) → invoice?source=file"), E("receive.manual", "→ manual"), E("receive.waiting[itemId]", "Ordered items: name, 'supplier · ordered date', qty. Reference only.")]),
+      SC("invoice", "Review invoice", "f23 · f38", "Admin", "invoiceId; state = reading | review", "receive.photo / upload; alert 'Invoice ready'", "newProduct(invoice), match", [
+        E("invoice.header", "'Supplier · number · total' once read."), E("invoice.reading", "Placeholder, 'Reading invoice', 'Usually under 20 seconds', link → manual"), E("invoice.banner", "'AI read N lines. Check each one, then confirm.'"), E("invoice.line[n].raw / .state", "Raw text (mono) and badge Matched · Possible match · New product · Needs review · Created · Skipped. Unresolved lines have an ink hairline."), E("invoice.line[n].a / .b", "Primary / tertiary pair: Yes, match · No, create new; Add new · Pick existing; Ignore · Pick product."), E("invoice.line[n].lot / .expiry", "On Matched and Created lines; optional; skipping flags Missing expiry."), E("invoice.summary", "'N of M lines will increase inventory.' or 'Resolve every line to continue.'"), E("invoice.confirm", "'Confirm & receive'. Disabled until all lines resolved. Converts packs, stores cost, creates batches, marks To buy items Received → inv + toast (Undo)")]),
+      SC("manual", "Receive manually", "f24", "Admin", "productId (optional)", "receive.manual; product (Admin); invoice.reading", "pickProduct, newProduct", [
+        E("manual.product", "Tap → sheet pickProduct. Empty state before a pick."), E("manual.qty", "In the received unit; caption shows conversion 'Current 1 → after 5 kits'."), E("manual.cost", "Cost per received unit; optional."), E("manual.lot / .expiry", "Optional; expiry month picker."), E("manual.receive", "Primary; disabled until product and qty → inv + toast (no Undo)")]),
+      SC("order", "To buy", "f25 · f26", "Admin / Staff", "seg = toBuy | ordered | received", "Tab 4; home.tile.toBuy; product.addToBuy", "addOrder", [
+        E("order.seg", "'To buy · N', 'Ordered · N', 'Received · N'."), E("order.row[itemId].select", "Admin, To buy segment. Checkbox; all selected by default."), E("order.selectionBar", "'N of M selected · Clear'."), E("order.row[itemId].dec / .inc", "Quantity to buy; both roles."), E("order.row[itemId].remove", "Swipe or X removes a manually added item."), E("order.add", "Text 'Add item' → sheet addOrder"), E("order.markOrdered", "Admin. 'Mark N as ordered' (N = selected); disabled only when 0 selected → selected items move to Ordered with today's date; toast"), E("order.ordered[itemId]", "'N ordered date · supplier'. No action; received via invoice."), E("order.received[itemId]", "History row.")]),
+      SC("expiring", "Expiring soon", "f27 · f28", "Admin / Staff", "window = 30 | 60 | 90", "home.tile.expiring / .atRisk; alerts", "dispose", [
+        E("expiring.seg", "30 / 60 / 90 days."), E("expiring.summary", "'N products · $X at risk within W days.'"), E("expiring.card[batchId]", "Name, 'qty · lot · date', days (danger ≤ 30), value."), E("expiring.card[batchId].view", "→ product?productId"), E("expiring.card[batchId].dispose", "Admin → sheet dispose")]),
+      SC("more", "Account", "f29 · f30", "Admin / Staff", null, "home.header.account", null, [
+        E("more.user", "Profile icon, name, 'Role · Clinic'."), E("more.team", "→ team"), E("more.settings", "Admin → settings"), E("more.billing", "Admin → billing"), E("more.export", "Admin. Starts CSV export; toast."), E("more.help", "Opens help centre."), E("more.signOut", "Danger text → signin")]),
+      SC("team", "Team", "f31 · f32", "Admin / Staff", null, "more.team", "invite", [
+        E("team.invite", "Admin, header → sheet invite"), E("team.member[userId]", "Initials, name, email, role. Pending: 'Invited · date'."), E("team.member[userId].menu", "Admin: Change role, Resend invitation, Remove. Last Admin cannot be removed.")]),
+      SC("settings", "Clinic settings", "f33", "Admin", null, "more.settings", null, [
+        E("settings.logo", "Tap to replace."), E("settings.clinicName / .city / .country", "Editable."), E("settings.expiryWarning", "Select: 30, 60 and 90 days · 60 and 90 days · 90 days only."), E("settings.digest", "Switch; weekly Monday 7 am."), E("settings.save", "Header text → toast 'Settings saved'")]),
+      SC("billing", "Billing", "f34", "Admin", null, "more.billing", "billingEmails", [
+        E("billing.trial", "Dark card: 'Free trial', 'N days left', 'Ends date'."), E("billing.price", "'$99 per clinic / month after the trial' or '$49.50 · 50% lifetime promotion'."), E("billing.paymentMethod", "→ Stripe card form; shows last 4 digits when set."), E("billing.invoices", "→ invoices"), E("billing.emails", "Count → sheet billingEmails")]),
+      SC("invoices", "Invoices", "f35", "Admin", null, "billing.invoices", null, [
+        E("invoices.empty", "'No invoices yet' until the first charge."), E("invoices.row[id]", "Date, amount, status, PDF.")])
+    ];
+    const SH = (key, text, result) => ({ key, text, result });
+    const sheets = [
+      SH("adjust", "Title 'Adjust inventory'. Caption 'System estimate N unit. A reason is recorded in history.' Actual quantity (number, unit suffix); Reason select: Physical count, Expired, Damaged, Waste, Missing, Returned, Data correction, Other; 'Save adjustment'.", "Adjustment transaction; toast with Undo"),
+      SH("batch", "Title 'Add expiry' or 'Edit batch'; product name. Expires (month); How many (unit suffix); Lot (optional, free text); 'Save'. Both roles.", "Batch created or updated"),
+      SH("newProduct", "Title 'New product' / 'Edit product'. From an invoice: info banner 'From invoice: {raw}. Name and unit are suggested.' Name; Category; Units: Counted in, Received as, pack size question + conversion sentence; Multi-use switch (G1); Minimum; Target; micro 'Quantity, expiry and lot are entered on the receiving form.' CTA: Create product · Save changes · Create and use for this line. Back chevron when opened from pickProduct.", "Product created or updated"),
+      SH("deleteProduct", "'Delete {name}?' 'N units still in stock. The product and its history are archived, not erased. It disappears from Inventory, To buy and procedures.' Danger 'Delete product' · 'Keep'.", "Archived → inv + toast"),
+      SH("addItem", "'Add item'. Search; 360px scrolling list: name, 'N unit in stock' (multi-use: 'N unopened · N open'); + per row. Already-added products hidden.", "Row appended with qty 1"),
+      SH("cancelProcedure", "'Cancel {name}?' Warning box 'N items will be returned to inventory. Stock levels update immediately.' Required note 'Why is it cancelled?'; micro 'Recorded in Activity with your name.' Danger 'Cancel procedure' disabled until note · 'Keep'.", "Cancellation transactions → proc + toast"),
+      SH("reviewCount", "'Review corrections'. Rows 'name · location · 43 → 41' each with Undo; empty text when none. 'Apply count · N corrections' · 'Back to counting'.", "Count transactions → browse + toast (no Undo)"),
+      SH("cancelCount", "'Discard this count?' 'N changes. Inventory stays as it is.' Danger 'Discard count' · 'Keep counting'.", "mode browse, nothing written"),
+      SH("pickProduct", "'Choose product' + 'New' text button. Search; 360px list with check on the selected row.", "manual.product set"),
+      SH("match", "'Which product is this?' Raw invoice text (mono). Search; 360px list; tap picks.", "Line becomes Matched"),
+      SH("addOrder", "'Add to To buy'. Search; list of products not already on the list; + per row.", "Item added with suggested qty"),
+      SH("dispose", "'Mark disposed'. '{name} · lot X. Removed with reason Expired.' Quantity disposed (default batch qty). Danger 'Mark disposed' · 'Keep'.", "Disposal transaction; toast with Undo"),
+      SH("invite", "'Invite a teammate'. Name; Email; Role (Staff, Admin); 'Send invitation'.", "Pending member; toast"),
+      SH("billingEmails", "'Billing emails'. 'Invoices and receipts go to every address here.' List (first = Admin, not removable; X on others); Add email + 'Add'; 'Done'.", "Clinic billing emails updated")
+    ];
+    return { t: true, f1, f2, f3, f4, f5, f6, f7, f9, f10, index, screens, sheets };
+  }
+}
+</script>
+</body>
+</html>

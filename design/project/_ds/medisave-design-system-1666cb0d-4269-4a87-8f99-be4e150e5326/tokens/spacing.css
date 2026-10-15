@@ -1,0 +1,6 @@
+:root{
+--space-xxs:2px;--space-xs:4px;--space-sm:8px;--space-md:12px;--space-lg:16px;--space-xl:24px;--space-2xl:32px;--space-3xl:48px;--space-4xl:64px;
+--container-max:1280px;
+--sidebar-width:240px;
+--control-height-sm:36px;--control-height-md:44px;--control-height-lg:51px;
+}

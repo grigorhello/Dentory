@@ -1,0 +1,43 @@
+:root{
+/* Brand accent — clinical blue replaces the source kit's orange; one chromatic accent only */
+--color-primary:#1a63d6;
+--color-primary-hover:#1554ba;
+--color-primary-active:#11479e;
+--color-primary-soft:#e8effc;
+--color-on-primary:#fffefb;
+/* Warm ink ladder (coffee, never cool grey) */
+--color-ink:#201515;
+--color-ink-soft:#2f2a26;
+--color-ink-mid:#36342e;
+--color-body:#605d52;
+--color-body-mid:#939084;
+--color-mute:#c5c0b1;
+--color-line:#e6e1d6;
+/* Warm surfaces */
+--color-canvas:#fffefb;
+--color-canvas-soft:#f8f4f0;
+--color-canvas-sunken:#f1ece5;
+/* Inventory semantics (added for the product; not in the source kit) */
+--color-success:#1f8a4c;
+--color-success-soft:#e3f3e9;
+--color-warning:#b86a00;
+--color-warning-soft:#fdf0dc;
+--color-danger:#c93a2d;
+--color-danger-soft:#fbe6e3;
+--color-info:#1a63d6;
+--color-info-soft:#e8effc;
+/* Semantic aliases */
+--text-heading:var(--color-ink);
+--text-body:var(--color-body);
+--text-secondary:var(--color-body-mid);
+--text-disabled:var(--color-mute);
+--text-on-dark:var(--color-canvas-soft);
+--text-link:var(--color-primary);
+--surface-page:var(--color-canvas);
+--surface-card:var(--color-canvas-soft);
+--surface-raised:var(--color-canvas);
+--surface-dark:var(--color-ink);
+--border-default:var(--color-line);
+--border-strong:var(--color-ink);
+--border-focus:var(--color-primary);
+}

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/colors.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/typography.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/radius.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/elevation.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/tokens/base.css">
+<link rel="stylesheet" href="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/styles.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{background:#f1ece5}button{font-family:inherit}input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}input,select{min-width:0;max-width:100%}.ms-scroll::-webkit-scrollbar{display:none}@keyframes msfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}</style>
+</helmet>
+<div style="display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box;padding:{{ outerPad }}px;min-height:{{ outerMin }}">
+<div data-screen-label="{{ screen }}" style="position:relative;overflow:hidden;background:var(--surface-page);border-radius:44px;box-shadow:0 0 0 1px rgba(32,21,21,.18),0 24px 60px rgba(32,21,21,.14);display:flex;flex-direction:column;font:var(--type-body-sm);color:var(--text-body);width:{{ devW }}px;height:{{ devH }}px">
+
+<div style="position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:14px 32px 0;font:600 15px/1 var(--font-body);color:var(--color-ink);z-index:5;pointer-events:none"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Wifi" size="16" hint-size="16px,16px"></x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="BatteryFull" size="18" hint-size="18px,18px"></x-import></span></div>
+
+<sc-if value="{{ showRole }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;z-index:6;pointer-events:none"><span style="margin-top:2px;padding:2px 10px;border-radius:0 0 8px 8px;box-shadow:inset 0 0 0 1px var(--color-line);font:600 10px/16px var(--font-body);letter-spacing:.6px;text-transform:uppercase;background:{{ roleBg }};color:{{ roleFg }}">{{ roleLabel }}</span></div></sc-if>
+
+<!-- SIGN IN -->
+<sc-if value="{{ s.signin }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:120px 24px 40px;max-width:520px;width:100%;margin:0 auto;box-sizing:border-box;min-height:0">
+<div style="font:500 32px/1 var(--font-display);color:var(--color-ink)">MediSave</div>
+<div style="margin-top:10px;color:var(--text-body)">Sign in to your clinic.</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:40px">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Email" type="email" default-value="sarah@smiledental.ca" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Password" type="password" default-value="••••••••••" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" onClick="{{ goHome }}" hint-size="100%,48px">Sign in</x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" full-width="{{ t }}" hint-size="100%,32px">Forgot password</x-import>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--text-secondary);font:var(--type-caption)"><span style="flex:1;height:1px;background:var(--color-line)"></span>or<span style="flex:1;height:1px;background:var(--color-line)"></span></div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="tertiary" full-width="{{ t }}" onClick="{{ goHome }}" hint-size="100%,48px">Continue with Google</x-import>
+<div style="margin-top:auto;text-align:center;font:var(--type-caption);color:var(--text-body)">Setting up a new clinic? <a href="#" onClick="{{ goOnboard }}" style="font-weight:600">Sign up as admin</a><br><span style="color:var(--text-secondary)">Staff join through the invitation email.</span></div>
+</div>
+</sc-if>
+
+<!-- ACCEPT INVITE (staff) -->
+<sc-if value="{{ s.invite }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:120px 24px 40px;max-width:520px;width:100%;margin:0 auto;box-sizing:border-box;min-height:0">
+<div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)">Invitation</div>
+<h1 style="font:var(--type-display-md);letter-spacing:1px;margin-top:10px">Join Smile Dental</h1>
+<div style="margin-top:8px;color:var(--text-body)">Sarah Mitchell invited you as Staff. Set a password to finish.</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:28px">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Full name" placeholder="Your name" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Email" type="email" default-value="priya@smiledental.ca" disabled="{{ t }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Password" type="password" placeholder="At least 8 characters" hint-size="100%,72px"></x-import>
+</div>
+<div style="margin-top:auto;padding-top:24px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" onClick="{{ goHome }}" hint-size="100%,48px">Join clinic</x-import></div>
+</div>
+</sc-if>
+
+<!-- ONBOARDING -->
+<sc-if value="{{ s.onboard }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;padding:70px 24px 32px;max-width:560px;width:100%;margin:0 auto;overflow:auto;box-sizing:border-box;min-height:0" class="ms-scroll">
+<button onClick="{{ onbBack }}" style="all:unset;cursor:pointer;width:44px;height:44px;margin:-10px 0 4px -12px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button>
+<div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)">{{ onbEyebrow }}</div>
+<sc-if value="{{ onb0 }}" hint-placeholder-val="{{ true }}">
+<h1 style="font:var(--type-display-md);letter-spacing:1px;margin-top:10px">Create your admin account</h1>
+<div style="margin-top:8px;color:var(--text-body)">You will own the clinic workspace and invite the team.</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:28px">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Full name" placeholder="Dr. Sarah Mitchell" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Work email" type="email" placeholder="name@clinic.com" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Password" type="password" placeholder="At least 8 characters" hint-size="100%,72px"></x-import>
+</div>
+<div style="margin-top:auto;padding-top:24px;display:grid;gap:8px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon-right="ArrowRight" onClick="{{ onbNext }}" hint-size="100%,48px">Continue</x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="tertiary" full-width="{{ t }}" onClick="{{ onbNext }}" hint-size="100%,48px">Continue with Google</x-import></div>
+</sc-if>
+<sc-if value="{{ onb1 }}" hint-placeholder-val="{{ false }}">
+<h1 style="font:var(--type-display-md);letter-spacing:1px;margin-top:10px">Create your clinic</h1>
+<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:28px">
+<div style="display:flex;gap:14px;align-items:center"><div style="width:72px;height:72px;flex:none;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--color-line);background:var(--surface-card)"><image-slot id="clinic-logo" shape="rounded" radius="12" placeholder="Logo" style="width:72px;height:72px"></image-slot></div><div style="flex:1;min-width:0"><div style="font:var(--type-body-sm-strong);color:var(--color-ink)">Clinic logo</div><div style="font:var(--type-caption);color:var(--text-body);margin-top:2px">Tap to upload. Optional, square works best.</div></div></div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Clinic name" placeholder="Smile Dental" hint-size="100%,72px"></x-import>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="City" placeholder="Toronto" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Country" options="{{ countries }}" hint-size="100%,72px"></x-import></div>
+</div>
+<div style="margin-top:auto;padding-top:24px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon-right="ArrowRight" onClick="{{ onbNext }}" hint-size="100%,48px">Create clinic</x-import></div>
+</sc-if>
+<sc-if value="{{ onb2 }}" hint-placeholder-val="{{ false }}">
+<h1 style="font:var(--type-display-md);letter-spacing:1px;margin-top:10px">Invite your team</h1>
+<div style="margin-top:8px;color:var(--text-body)">Each person gets an email with a link to set their password. You can add more later under Team.</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:28px">
+<sc-for list="{{ invites }}" as="iv" hint-placeholder-count="2">
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1;min-width:0"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="{{ iv.label }}" type="email" placeholder="name@clinic.com" value="{{ iv.email }}" onChange="{{ iv.set }}" hint-size="100%,72px"></x-import></div><div style="width:120px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Role" options="{{ roles }}" hint-size="100%,72px"></x-import></div></div>
+</sc-for>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" icon="Plus" onClick="{{ addInvite }}" hint-size="auto,32px">Another person</x-import>
+</div>
+<div style="margin-top:auto;padding-top:24px;display:grid;gap:8px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon="Send" onClick="{{ sendInvites }}" hint-size="100%,48px">{{ sendInvitesLabel }}</x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" full-width="{{ t }}" onClick="{{ goHome }}" hint-size="100%,44px">Skip for now</x-import></div>
+</sc-if>
+</sc-if>
+</div>
+</sc-if>
+
+<!-- HOME -->
+<sc-if value="{{ s.home }}" hint-placeholder-val="{{ true }}">
+<div style="flex:none;padding:62px 20px 10px;display:flex;align-items:flex-end;gap:12px;max-width:760px;width:100%;margin:0 auto">
+<sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;margin-left:-12px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button></sc-if>
+<div style="flex:1"><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)">Thursday, October 2</div><h1 style="font:var(--type-display-md);letter-spacing:1px;margin-top:6px">Smile Dental</h1></div>
+<div style="display:flex;gap:8px"><button onClick="{{ goNotif }}" style="all:unset;cursor:pointer;position:relative;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:var(--surface-card);color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Bell" size="20" hint-size="20px,20px"></x-import><span style="position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:50%;background:var(--color-danger);box-shadow:0 0 0 2px var(--surface-card)"></span></button><button onClick="{{ goMore }}" aria-label="Account" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:var(--surface-card);color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="User" size="20" hint-size="20px,20px"></x-import></button></div>
+</div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:6px 20px 110px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px;margin:0 auto">
+<div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 -6px">Needs attention</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<sc-for list="{{ attention }}" as="a" hint-placeholder-count="3">
+<button onClick="{{ a.go }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;background:var(--surface-card);box-sizing:border-box"><span style="font:var(--type-display-lg);color:{{ a.color }}">{{ a.n }}</span><span style="font:var(--type-caption-strong);color:var(--color-ink)">{{ a.label }}</span></button>
+</sc-for></div>
+<div style="background:var(--surface-dark);color:var(--text-on-dark);border-radius:12px;padding:20px"><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--color-mute)">Procedure</div><div style="margin-top:12px"></div><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" icon="ClipboardCheck" onClick="{{ goProcTab }}" hint-size="auto,44px">Start a procedure</x-import>
+<sc-if value="{{ hasLast }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,254,251,.14)"><div style="display:flex;align-items:baseline;gap:8px"><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--color-mute);flex:1">Latest</div><span style="font:var(--type-caption);color:var(--color-mute)">{{ last.when }}</span></div>
+<div style="display:flex;align-items:center;gap:12px;margin-top:8px"><span style="flex:1;min-width:0"><span style="display:block;font:var(--type-body-sm-strong);color:var(--text-on-dark)">{{ last.name }}</span><span style="display:block;font:var(--type-caption);color:var(--color-mute)">{{ last.sub }}</span></span><button onClick="{{ last.edit }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(255,254,251,.4);color:var(--text-on-dark);font:var(--type-button-sm);letter-spacing:0.144px;white-space:nowrap"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Pencil" size="16" hint-size="16px,16px"></x-import>Edit usage</button></div></div>
+</sc-if></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
+<button onClick="{{ goValue }}" style="all:unset;cursor:pointer;background:var(--surface-card);border-radius:12px;padding:16px;box-sizing:border-box"><div style="font:var(--type-caption);color:var(--text-secondary)">Inventory value</div><div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink);margin-top:4px">$12,420</div></button>
+<button onClick="{{ goExpiring }}" style="all:unset;cursor:pointer;background:var(--surface-card);border-radius:12px;padding:16px;box-sizing:border-box"><div style="font:var(--type-caption);color:var(--text-secondary)">At risk, 90 days</div><div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink);margin-top:4px">$186</div></button>
+</div>
+<sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goReceive }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;background:var(--surface-card);border-radius:12px;padding:16px;box-sizing:border-box"><span style="width:44px;height:44px;border-radius:50%;background:var(--surface-page);display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Truck" size="22" hint-size="22px,22px"></x-import></span><span style="flex:1"><span style="display:block;font:var(--type-body-sm-strong);color:var(--color-ink)">Receive delivery</span><span style="display:block;font:var(--type-caption);color:var(--text-body)">Photo, PDF or manual. You confirm every line.</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button></sc-if>
+</div></div>
+</sc-if>
+
+<!-- INVENTORY VALUE -->
+<sc-if value="{{ s.value }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Inventory value</h1></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:4px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px;margin:0 auto">
+<div style="background:var(--surface-card);border-radius:12px;padding:20px"><div style="font:var(--type-display-lg);color:var(--color-ink)">$12,420</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--color-line)"><div><div style="font:var(--type-caption);color:var(--text-secondary)">Expiring ≤ 90 d</div><div style="font:var(--type-body-sm-strong);color:var(--color-warning);margin-top:2px">$186</div></div><div><div style="font:var(--type-caption);color:var(--text-secondary)">Used, 30 d</div><div style="font:var(--type-body-sm-strong);color:var(--color-ink);margin-top:2px">$2,140</div></div><div><div style="font:var(--type-caption);color:var(--text-secondary)">Received, 30 d</div><div style="font:var(--type-body-sm-strong);color:var(--color-ink);margin-top:2px">$1,890</div></div></div></div>
+<div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 10px">By category</div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ valueCats }}" as="c" hint-placeholder-count="5">
+<div style="padding:12px 0;border-bottom:1px solid var(--color-line)"><div style="display:flex;gap:12px;align-items:center"><span style="flex:1;color:var(--color-ink)">{{ c.name }}</span><span style="font:var(--type-body-sm-strong);color:var(--color-ink)">{{ c.value }}</span><span style="font:var(--type-caption);color:var(--text-secondary);min-width:36px;text-align:right">{{ c.pct }}%</span></div><div style="height:4px;border-radius:2px;background:var(--color-line);margin-top:8px;overflow:hidden"><div style="height:100%;background:var(--color-ink);width:{{ c.pct }}%"></div></div></div>
+</sc-for></div></div>
+<div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 10px">Highest value products</div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ valueTop }}" as="v" hint-placeholder-count="5">
+<button onClick="{{ v.open }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ v.sub }}</span></span><span style="font:var(--type-body-sm-strong);color:var(--color-ink)">{{ v.value }}</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button>
+</sc-for></div></div>
+<div style="font:var(--type-micro);color:var(--text-secondary)">Value = quantity × last cost per unit from invoices. Products without a cost are not included.</div>
+</div></div>
+</sc-if>
+
+<!-- INVENTORY -->
+<sc-if value="{{ s.inv }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:62px 20px 8px;max-width:760px;width:100%;margin:0 auto"><div style="display:flex;align-items:center;gap:12px"><sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;margin-left:-12px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button></sc-if><h1 style="font:var(--type-display-md);letter-spacing:1px;flex:1">{{ invTitle }}</h1><sc-if value="{{ invBrowseMode }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="tertiary" size="sm" icon="Calculator" onClick="{{ startInvCount }}" hint-size="auto,36px">Count stock</x-import></sc-if><sc-if value="{{ invCountMode }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" onClick="{{ cancelInvCount }}" hint-size="auto,36px">Cancel</x-import></sc-if></div>
+<div style="margin-top:12px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" icon="Search" placeholder="Search products" value="{{ q }}" onChange="{{ setQ }}" hint-size="100%,48px"></x-import></div></div>
+<div class="ms-scroll" style="flex:none;display:flex;gap:8px;overflow:auto;padding:8px 20px 4px;max-width:760px;width:100%;margin:0 auto;box-sizing:border-box">
+<sc-for list="{{ invFilters }}" as="f" hint-placeholder-count="5">
+<button onClick="{{ f.pick }}" style="all:unset;cursor:pointer;flex:none;padding:8px 12px;border-radius:6px;font:var(--type-caption-strong);white-space:nowrap;color:{{ f.color }};background:{{ f.bg }}">{{ f.label }}</button>
+</sc-for></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 110px"><div style="max-width:720px;margin:0 auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ invRows }}" as="p" hint-placeholder-count="8">
+<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--color-line)"><button onClick="{{ p.open }}" style="all:unset;cursor:pointer;flex:1;min-width:0;padding:4px 0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ p.sub }}</span></button><sc-if value="{{ p.isBrowse }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Badge" size="sm" hint-size="auto,20px">{{ p.status }}</x-import></sc-if><sc-if value="{{ p.isCountBulk }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" variant="tertiary" onClick="{{ p.openLevel }}" hint-size="auto,36px">{{ p.bulkCountText }}</x-import></sc-if>
+<sc-if value="{{ p.isCountUnit }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:2px"><button onClick="{{ p.dec }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Minus" size="16" hint-size="16px,16px"></x-import></button><span style="width:40px;text-align:center;font:var(--type-body-sm-strong);color:{{ p.actColor }}">{{ p.actual }}</span><button onClick="{{ p.inc }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Plus" size="16" hint-size="16px,16px"></x-import></button></span></sc-if></div>
+</sc-for>
+<sc-if value="{{ invEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 0;text-align:center;color:var(--text-secondary)">No products match.</div></sc-if>
+</div></div>
+<sc-if value="{{ invCountMode }}" hint-placeholder-val="{{ false }}"><div style="flex:none;padding:12px 20px 100px;border-top:1px solid var(--color-line);background:var(--surface-page)"><div style="max-width:720px;margin:0 auto"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon="Check" disabled="{{ noCountChanges }}" onClick="{{ openReviewCount }}" hint-size="100%,48px">{{ invReviewLabel }}</x-import></div></div></sc-if>
+<sc-if value="{{ showInvFab }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openNewProductInv }}" aria-label="Add product" style="all:unset;cursor:pointer;position:absolute;right:20px;bottom:{{ fabBottom }}px;width:56px;height:56px;border-radius:50%;background:var(--color-primary);color:var(--color-on-primary);display:grid;place-items:center;box-shadow:var(--shadow-md);z-index:6"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Plus" size="24" hint-size="24px,24px"></x-import></button></sc-if>
+</sc-if>
+
+<!-- PRODUCT -->
+<sc-if value="{{ s.product }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><span style="flex:1;font:var(--type-caption);color:var(--text-secondary)">{{ P.cat }} · {{ P.unitLine }}</span><sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" onClick="{{ openEditProduct }}" hint-size="auto,32px">Edit</x-import></sc-if></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:0 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px;margin:0 auto">
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px">{{ P.name }}</h1><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Badge" dot="{{ t }}" hint-size="auto,24px">{{ P.status }}</x-import></div>
+<div style="background:var(--surface-card);border-radius:12px;padding:16px"><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+<div><div style="font:var(--type-caption);color:var(--text-secondary)">Available</div><div style="font:var(--type-display-md);color:var(--color-ink);margin-top:4px">{{ P.avail }}</div><div style="font:var(--type-micro);color:var(--text-secondary)">{{ P.unit }}</div></div>
+<div><div style="font:var(--type-caption);color:var(--text-secondary)">Minimum</div><div style="font:var(--type-display-md);color:var(--color-ink);margin-top:4px">{{ P.min }}</div></div>
+<div><div style="font:var(--type-caption);color:var(--text-secondary)">Target</div><div style="font:var(--type-display-md);color:var(--color-ink);margin-top:4px">{{ P.target }}</div></div></div>
+<div style="display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--color-line);font:var(--type-caption);color:var(--text-body)"><span>System estimate · {{ P.usage30 }} {{ P.usageUnit }} used in 30 days</span><span style="margin-left:auto">Counted {{ P.counted }}</span></div>
+<sc-if value="{{ P.needsOrder }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;padding:10px 12px;border-radius:6px;background:var(--color-warning-soft);color:var(--color-warning);font:var(--type-caption-strong)">Recommended reorder: {{ P.reorder }} {{ P.reorderUnit }}</div></sc-if></div>
+<div style="display:grid;grid-template-columns:{{ prodBtnCols }};gap:8px">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="tertiary" icon="SlidersHorizontal" onClick="{{ openAdjust }}" hint-size="100%,44px">Adjust</x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" icon="ShoppingCart" onClick="{{ addToOrder }}" hint-size="100%,44px">{{ addToBuyLabel }}</x-import></div>
+<sc-if value="{{ P.isBulk }}" hint-placeholder-val="{{ false }}">
+<div style="background:var(--surface-card);border-radius:12px;padding:16px"><div style="display:flex;align-items:baseline;gap:8px"><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);flex:1">Bottles</div><span style="font:var(--type-caption);color:var(--text-body)">{{ P.bottleLine }}</span></div>
+<div style="display:grid;gap:2px;margin-top:10px">
+<sc-for list="{{ P.openList }}" as="o" hint-placeholder-count="1">
+<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--color-line)"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-primary)"></span><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink)">Open · {{ o.by }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ o.when }}</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" variant="text" onClick="{{ o.finish }}" hint-size="auto,32px">Finished</x-import></div>
+</sc-for>
+<sc-if value="{{ P.noOpen }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 0;border-top:1px solid var(--color-line);font:var(--type-caption);color:var(--text-secondary)">No bottle open.</div></sc-if></div>
+<div style="margin-top:8px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" variant="tertiary" icon="Plus" onClick="{{ openNewBottle }}" disabled="{{ P.noUnopened }}" hint-size="auto,36px">Open a new bottle</x-import></div></div>
+</sc-if>
+<div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 10px">Expiry</div>
+<sc-if value="{{ P.hasBatches }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<div style="display:grid;grid-template-columns:minmax(0,1.2fr) 64px minmax(0,1fr);gap:12px;padding:10px 0 6px;border-bottom:1px solid var(--color-line);font:var(--type-caption-strong);color:var(--text-secondary)"><span>Expires</span><span style="text-align:right">Qty</span><span style="text-align:right">Lot</span></div>
+<sc-for list="{{ P.batches }}" as="b" hint-placeholder-count="2">
+<button onClick="{{ b.edit }}" style="all:unset;cursor:{{ b.cursor }};width:100%;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1.2fr) 64px minmax(0,1fr);gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--color-line)"><span style="min-width:0"><span style="display:block;font:var(--type-body-sm-strong);color:var(--color-ink)">{{ b.exp }}</span><span style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;font:var(--type-micro);font-weight:600;color:{{ b.color }};background:{{ b.soft }}">{{ b.inText }}</span></span><span style="text-align:right;font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">{{ b.qty }}</span><span style="text-align:right;font:var(--type-mono-sm);color:var(--text-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.lot }}</span></button>
+</sc-for>
+<div style="display:flex;justify-content:space-between;padding:10px 0;font:var(--type-caption);color:var(--text-body)"><span>{{ P.expTotalLine }}</span><span style="color:var(--text-secondary)">{{ P.unit }}</span></div></div>
+<div style="font:var(--type-micro);color:var(--text-secondary);margin-top:6px">Tap a batch to edit its expiry, lot or quantity.</div>
+</sc-if>
+<sc-if value="{{ P.noBatches }}" hint-placeholder-val="{{ false }}"><div style="border-radius:12px;padding:14px 16px;background:var(--color-warning-soft);color:var(--color-warning);font:var(--type-caption-strong)">No expiry recorded. Add one so this product shows in Expiring soon.</div></sc-if>
+<div style="margin-top:8px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" icon="Plus" onClick="{{ openAddExpiry }}" hint-size="auto,32px">Add expiry</x-import></div></div>
+<div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 10px">History</div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ P.history }}" as="h" hint-placeholder-count="3">
+<div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);font:var(--type-caption)"><span style="font:var(--type-body-sm-strong);min-width:64px;color:{{ h.color }}">{{ h.delta }}</span><span style="flex:1;color:var(--text-body)">{{ h.reason }}</span><span style="color:var(--text-secondary)">{{ h.when }}</span></div>
+</sc-for></div></div>
+<sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><div style="display:flex;justify-content:center;padding-top:8px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" icon="Trash2" onClick="{{ openDeleteProduct }}" style="{{ dangerText }}" hint-size="auto,32px">Delete product</x-import></div></sc-if>
+</div></div>
+</sc-if>
+
+<!-- PROCEDURES LIST -->
+<sc-if value="{{ s.proc }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:62px 20px 8px;max-width:760px;width:100%;margin:0 auto;display:flex;align-items:center;gap:12px"><sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;margin-left:-12px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button></sc-if><h1 style="font:var(--type-display-md);letter-spacing:1px;flex:1">Procedures</h1><sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="tertiary" size="sm" icon="Plus" onClick="{{ newTemplate }}" hint-size="auto,36px">Procedure</x-import></sc-if></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 110px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px;margin:0 auto">
+<div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ templates }}" as="tp" hint-placeholder-count="5">
+<div style="display:flex;gap:4px;align-items:center;padding:8px 0;border-bottom:1px solid var(--color-line)"><button onClick="{{ tp.open }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;flex:1;min-width:0;padding:6px 0"><span style="flex:1"><span style="display:block;color:var(--color-ink);font:var(--type-body-sm-strong)">{{ tp.name }}</span><span style="display:block;font:var(--type-caption);color:{{ tp.availColor }}">{{ tp.availText }}</span></span><span style="font:var(--type-caption);color:var(--text-secondary)">{{ tp.count }} items</span></button><sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tp.edit }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;color:var(--text-secondary)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Pencil" size="18" hint-size="18px,18px"></x-import></button></sc-if></div>
+</sc-for></div>
+<div style="font:var(--type-micro);color:var(--text-secondary)">{{ procListNote }}</div>
+<div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 10px">History · tap to edit usage</div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ procHistory }}" as="h" hint-placeholder-count="3">
+<button onClick="{{ h.open }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box"><span style="flex:1"><span style="display:block;color:var(--color-ink)">{{ h.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ h.sub }}</span></span><span style="font:var(--type-caption);color:var(--text-secondary)">{{ h.count }} items</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button>
+</sc-for></div></div>
+</div></div>
+</sc-if>
+
+<!-- PROCEDURE DETAIL -->
+<sc-if value="{{ s.procDetail }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">{{ T.name }}</h1></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:4px 20px 20px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px;margin:0 auto">
+<sc-if value="{{ procNew }}" hint-placeholder-val="{{ true }}"><div style="font:var(--type-caption);color:var(--text-body)">{{ T.summary }}</div></sc-if>
+<sc-if value="{{ procDone }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 14px;border-radius:6px;background:var(--color-success-soft);color:var(--color-success);font:var(--type-caption-strong)">{{ T.consumedText }}</div></sc-if>
+<sc-if value="{{ procEditing }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 14px;border-radius:6px;background:var(--color-info-soft);color:var(--color-info);font:var(--type-caption-strong)">Changes adjust inventory and are recorded in Activity.</div></sc-if>
+<div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<div style="display:flex;padding:10px 0 6px;font:var(--type-caption-strong);color:var(--text-secondary);border-bottom:1px solid var(--color-line)"><span style="flex:1">{{ itemsHeader }}</span><span style="text-align:right">{{ qtyHeader }}</span></div>
+<sc-for list="{{ T.countables }}" as="it" hint-placeholder-count="6">
+<div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line)"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink)">{{ it.name }}</span><span style="display:block;font:var(--type-caption);color:{{ it.availColor }}">{{ it.availText }}</span></span>
+<sc-if value="{{ it.isBulk }}" hint-placeholder-val="{{ false }}"><span style="font:var(--type-body-sm-strong);color:var(--color-ink);white-space:nowrap">{{ it.bulkText }}</span><sc-if value="{{ it.editable }}" hint-placeholder-val="{{ false }}"><button onClick="{{ it.remove }}" style="all:unset;cursor:pointer;width:36px;height:40px;display:grid;place-items:center;color:var(--text-secondary)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="X" size="16" hint-size="16px,16px"></x-import></button></sc-if></sc-if>
+<sc-if value="{{ it.editableUnit }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:2px"><button onClick="{{ it.dec }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Minus" size="16" hint-size="16px,16px"></x-import></button><span style="width:40px;text-align:center;font:var(--type-body-sm-strong);color:{{ it.actualColor }}">{{ it.actual }}</span><button onClick="{{ it.inc }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Plus" size="16" hint-size="16px,16px"></x-import></button></span><button onClick="{{ it.remove }}" style="all:unset;cursor:pointer;width:36px;height:40px;display:grid;place-items:center;color:var(--text-secondary)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="X" size="16" hint-size="16px,16px"></x-import></button></sc-if>
+<sc-if value="{{ it.readonlyUnit }}" hint-placeholder-val="{{ false }}"><sc-if value="{{ it.notBulk }}" hint-placeholder-val="{{ true }}"><span style="width:80px;text-align:right;font:var(--type-body-sm-strong);color:var(--color-ink)">{{ it.actual }}</span></sc-if></sc-if>
+</div>
+</sc-for>
+<sc-if value="{{ procEditable }}" hint-placeholder-val="{{ true }}"><div style="padding:8px 0"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" icon="Plus" onClick="{{ openAddItem }}" hint-size="auto,32px">Add item</x-import></div></sc-if></div>
+<sc-if value="{{ T.hasBottles }}" hint-placeholder-val="{{ true }}">
+<div><div style="display:flex;align-items:center;gap:6px;margin:4px 0 10px"><span style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)">Opened a new one?</span><button onClick="{{ toggleBottleInfo }}" aria-label="What is this?" style="all:unset;cursor:pointer;width:24px;height:24px;margin:-6px 0;display:grid;place-items:center;border-radius:50%;color:var(--text-secondary)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Info" size="13" hint-size="13px,13px"></x-import></button></div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ T.bottles }}" as="bt" hint-placeholder-count="2">
+<div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line)"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink)">{{ bt.name }}</span><span style="display:block;font:var(--type-caption);color:{{ bt.subColor }}">{{ bt.sub }}</span></span><sc-if value="{{ bt.canToggle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ bt.toggle }}" style="all:unset;cursor:pointer;height:36px;padding:0 12px;border-radius:12px;font:var(--type-button-sm);letter-spacing:0.144px;white-space:nowrap;color:{{ bt.btnColor }};background:{{ bt.btnBg }};box-shadow:{{ bt.btnRing }}">{{ bt.btnLabel }}</button></sc-if></div>
+</sc-for></div>
+</div>
+</sc-if>
+</div></div>
+<div style="flex:none;padding:12px 20px 34px;border-top:1px solid var(--color-line);background:var(--surface-page)"><div style="display:grid;gap:8px;max-width:720px;margin:0 auto">
+<sc-if value="{{ procNew }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon="ClipboardCheck" onClick="{{ startProc }}" hint-size="100%,48px">{{ startLabel }}</x-import></sc-if>
+<sc-if value="{{ procEditing }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon="Check" onClick="{{ saveUsage }}" hint-size="100%,48px">Save changes</x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="text" onClick="{{ cancelEdit }}" hint-size="100%,44px">Discard</x-import></sc-if>
+<sc-if value="{{ procDone }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="tertiary" icon="Pencil" onClick="{{ editUsage }}" hint-size="100%,48px">Edit usage</x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="text" onClick="{{ openRemove }}" hint-size="100%,44px">Cancel procedure</x-import></sc-if>
+</div></div>
+</sc-if>
+
+<!-- PROCEDURE EDIT (admin) -->
+<sc-if value="{{ s.procEdit }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">{{ editTitle }}</h1><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" onClick="{{ saveTemplate }}" hint-size="auto,36px">Save</x-import></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:4px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px;margin:0 auto">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Procedure name" placeholder="e.g. Root canal" value="{{ editName }}" onChange="{{ setEditName }}" hint-size="100%,72px"></x-import>
+<div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 10px">Default supplies</div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ editItems }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--color-line)"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.name }}</span><sc-if value="{{ e.isBottle }}" hint-placeholder-val="{{ false }}"><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">Multi-use · listed under Opened a new one?</span></sc-if></span><sc-if value="{{ e.isUnit }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:2px"><button onClick="{{ e.dec }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Minus" size="16" hint-size="16px,16px"></x-import></button><span style="width:40px;text-align:center;font:var(--type-body-sm-strong);color:var(--color-ink)">{{ e.q }}</span><button onClick="{{ e.inc }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Plus" size="16" hint-size="16px,16px"></x-import></button></span></sc-if><button onClick="{{ e.remove }}" style="all:unset;cursor:pointer;width:36px;height:40px;display:grid;place-items:center;color:var(--text-secondary)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="X" size="16" hint-size="16px,16px"></x-import></button></div>
+</sc-for>
+<sc-if value="{{ editEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:20px 0;color:var(--text-secondary);font:var(--type-caption)">No supplies yet.</div></sc-if>
+<div style="padding:8px 0"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" icon="Plus" onClick="{{ openAddItem }}" hint-size="auto,32px">Add item</x-import></div></div></div>
+<div style="font:var(--type-micro);color:var(--text-secondary)">These are defaults. Staff can add or remove items for each procedure they perform.</div>
+</div></div>
+</sc-if>
+
+<!-- RECEIVE CHOICE -->
+<sc-if value="{{ s.receive }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Receive delivery</h1></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:720px;margin:0 auto">
+<sc-for list="{{ rxOptions }}" as="o" hint-placeholder-count="3">
+<button onClick="{{ o.go }}" style="all:unset;cursor:pointer;display:flex;gap:14px;align-items:center;padding:18px 16px;border-radius:12px;background:{{ o.bg }};color:{{ o.fg }};box-sizing:border-box"><span style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:{{ o.iconBg }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="{{ o.icon }}" size="22" hint-size="22px,22px"></x-import></span><span style="flex:1"><span style="display:block;font:var(--type-body-sm-strong)">{{ o.title }}</span><span style="display:block;font:var(--type-caption);opacity:.8">{{ o.sub }}</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" hint-size="18px,18px"></x-import></button>
+</sc-for>
+<sc-if value="{{ hasOrdered }}" hint-placeholder-val="{{ true }}"><div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:14px 0 10px">Waiting for delivery</div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ orderedRows }}" as="o" hint-placeholder-count="3"><div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line)"><span style="flex:1"><span style="display:block;color:var(--color-ink)">{{ o.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ o.sub }}</span></span><span style="font:var(--type-body-sm-strong);color:var(--color-ink)">{{ o.qty }}</span></div></sc-for></div></div></sc-if>
+</div></div>
+</sc-if>
+
+<!-- INVOICE REVIEW -->
+<sc-if value="{{ s.invoice }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><span style="flex:1"><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px">Review invoice</h1><span style="font:var(--type-caption);color:var(--text-secondary)">Patterson Dental · INV-10092 · $449.00</span></span></div>
+<sc-if value="{{ scanning }}" hint-placeholder-val="{{ false }}"><div style="flex:1;display:grid;place-items:center;padding:0 20px"><div style="text-align:center"><div style="width:120px;height:160px;border-radius:12px;background:var(--color-canvas-sunken);margin:0 auto 20px;display:grid;place-items:center;color:var(--color-mute)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="FileText" size="36" hint-size="36px,36px"></x-import></div><div style="font:var(--type-body-sm-strong);color:var(--color-ink)">Reading invoice</div><div style="font:var(--type-caption);color:var(--text-secondary);margin-top:4px">Usually under 20 seconds.</div><div style="margin-top:20px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" onClick="{{ goManual }}" hint-size="auto,32px">Receive manually instead</x-import></div></div></div></sc-if>
+<sc-if value="{{ notScanning }}" hint-placeholder-val="{{ true }}">
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:4px 20px 20px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:720px;margin:0 auto">
+<div style="padding:10px 14px;border-radius:6px;background:var(--color-info-soft);color:var(--color-info);font:var(--type-caption-strong)">AI read 4 lines. Check each one, then confirm.</div>
+<sc-for list="{{ lines }}" as="l" hint-placeholder-count="4">
+<div style="border-radius:12px;padding:14px 16px;background:{{ l.bg }};box-shadow:{{ l.ring }}">
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font:var(--type-mono-sm);color:var(--text-body);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.desc }}</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Badge" size="sm" hint-size="auto,20px">{{ l.state }}</x-import></div>
+<div style="display:flex;gap:12px;align-items:center;margin-top:8px"><span style="flex:1;color:var(--color-ink);font:var(--type-body-sm-strong)">{{ l.matchText }}</span><span style="font:var(--type-caption);color:var(--text-body);white-space:nowrap">{{ l.qtyText }}</span></div>
+<sc-if value="{{ l.showActions }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font:var(--type-caption);color:var(--text-body)">{{ l.question }}</div><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:10px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" full-width="{{ t }}" variant="{{ l.aVariant }}" onClick="{{ l.actA }}" hint-size="100%,36px">{{ l.aLabel }}</x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" full-width="{{ t }}" variant="tertiary" onClick="{{ l.actB }}" hint-size="100%,36px">{{ l.bLabel }}</x-import></div></sc-if>
+<sc-if value="{{ l.showLot }}" hint-placeholder-val="{{ false }}"><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" size="sm" label="Expiry" type="month" hint-size="100%,62px"></x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" size="sm" label="Lot (optional)" placeholder="Free text" hint-size="100%,62px"></x-import></div><div style="font:var(--type-micro);color:var(--text-secondary);margin-top:6px">No expiry → listed under Missing expiry.</div></sc-if>
+</div>
+</sc-for></div></div>
+<div style="flex:none;padding:12px 20px 34px;border-top:1px solid var(--color-line);background:var(--surface-page)"><div style="max-width:720px;margin:0 auto;display:grid;gap:6px"><div style="font:var(--type-caption);color:var(--text-body);text-align:center">{{ linesSummary }}</div><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon="Check" disabled="{{ linesNotReady }}" onClick="{{ confirmReceive }}" hint-size="100%,48px">Confirm &amp; receive</x-import></div></div>
+</sc-if>
+</sc-if>
+
+<!-- MANUAL RECEIVE -->
+<sc-if value="{{ s.manual }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Receive manually</h1></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 20px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:720px;margin:0 auto">
+<div><div style="font:var(--type-caption-strong);color:var(--text-body);margin-bottom:6px">Product</div><button onClick="{{ openPickProduct }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:6px;background:var(--surface-page);box-shadow:inset 0 0 0 1px var(--color-ink)"><span style="flex:1;min-width:0"><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ manualProduct.color }}">{{ manualProduct.name }}</span><sc-if value="{{ manualPicked }}" hint-placeholder-val="{{ false }}"><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ manualProduct.sub }}</span></sc-if></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronDown" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Quantity" type="number" placeholder="0" suffix="{{ manualProduct.recvUnit }}" value="{{ manualQty }}" onChange="{{ setManualQty }}" hint-size="100%,72px"></x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Cost per unit" icon="DollarSign" placeholder="0.00" hint-size="100%,72px"></x-import></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Lot" placeholder="Optional" hint-size="100%,72px"></x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Expiry" type="month" hint-size="100%,72px"></x-import></div>
+<sc-if value="{{ manualPicked }}" hint-placeholder-val="{{ false }}"><div style="font:var(--type-caption);color:var(--text-body)">{{ manualAfter }}</div></sc-if>
+</div></div>
+<div style="flex:none;padding:12px 20px 34px;border-top:1px solid var(--color-line);background:var(--surface-page)"><div style="max-width:720px;margin:0 auto"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" disabled="{{ manualNotReady }}" onClick="{{ manualReceive }}" hint-size="100%,48px">Receive</x-import></div></div>
+</sc-if>
+
+<!-- NEED TO ORDER -->
+<sc-if value="{{ s.order }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:62px 20px 8px;max-width:760px;width:100%;margin:0 auto"><div style="display:flex;align-items:center;gap:12px"><sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;margin-left:-12px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button></sc-if><h1 style="font:var(--type-display-md);letter-spacing:1px;flex:1">To buy</h1></div>
+<div style="display:flex;gap:4px;margin-top:14px;padding:4px;border-radius:12px;background:var(--surface-card)">
+<sc-for list="{{ orderTabs }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;flex:1;text-align:center;padding:10px 0;border-radius:8px;font:var(--type-caption-strong);color:{{ o.color }};background:{{ o.bg }}">{{ o.label }}</button></sc-for></div></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 20px"><div style="max-width:720px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:12px">
+<sc-if value="{{ orderNeedsAdmin }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;justify-content:space-between;font:var(--type-caption);color:var(--text-body)"><span>{{ selSummary }}</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" onClick="{{ toggleAll }}" hint-size="auto,32px">{{ toggleAllLabel }}</x-import></div></sc-if>
+<div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ orderRows }}" as="o" hint-placeholder-count="3">
+<div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line)"><sc-if value="{{ o.selectable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ o.toggle }}" aria-label="Select" style="all:unset;cursor:pointer;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;flex:none;background:{{ o.boxBg }};box-shadow:{{ o.boxRing }};color:var(--color-on-primary)"><sc-if value="{{ o.checked }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Check" size="16" hint-size="16px,16px"></x-import></sc-if></button></sc-if><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink)">{{ o.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ o.sub }}</span></span>
+<sc-if value="{{ o.editable }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:2px"><button onClick="{{ o.dec }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Minus" size="16" hint-size="16px,16px"></x-import></button><span style="width:36px;text-align:center;font:var(--type-body-sm-strong);color:var(--color-ink)">{{ o.qty }}</span><button onClick="{{ o.inc }}" style="all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--surface-page);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-line)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Plus" size="16" hint-size="16px,16px"></x-import></button></span></sc-if>
+<sc-if value="{{ o.notEditable }}" hint-placeholder-val="{{ false }}"><span style="font:var(--type-body-sm-strong);color:var(--color-ink)">{{ o.qty }}</span></sc-if>
+</div>
+</sc-for>
+<sc-if value="{{ orderEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 0;text-align:center;color:var(--text-secondary)">Nothing here yet.</div></sc-if>
+</div>
+<sc-if value="{{ orderIsNeeds }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" icon="Plus" onClick="{{ openAddOrder }}" hint-size="auto,32px">Add item</x-import></sc-if>
+</div></div>
+<sc-if value="{{ orderNeedsAdmin }}" hint-placeholder-val="{{ true }}"><div style="flex:none;padding:12px 20px 100px;border-top:1px solid var(--color-line);background:var(--surface-page)"><div style="max-width:720px;margin:0 auto"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" disabled="{{ noneSelected }}" onClick="{{ markOrdered }}" hint-size="100%,48px">{{ markOrderedLabel }}</x-import></div></div></sc-if>
+<sc-if value="{{ orderOrderedAdmin }}" hint-placeholder-val="{{ false }}"><div style="flex:none;padding:12px 20px 100px;border-top:1px solid var(--color-line);background:var(--surface-page)"><div style="max-width:720px;margin:0 auto"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon="Truck" onClick="{{ goReceive }}" hint-size="100%,48px">Receive delivery</x-import></div></div></sc-if>
+<sc-if value="{{ orderSpacer }}" hint-placeholder-val="{{ false }}"><div style="flex:none;height:90px"></div></sc-if>
+</sc-if>
+
+<!-- EXPIRING -->
+<sc-if value="{{ s.expiring }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Expiring soon</h1></div>
+<div style="flex:none;padding:4px 20px 0;max-width:760px;width:100%;margin:0 auto;box-sizing:border-box"><div style="display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface-card)">
+<sc-for list="{{ expWins }}" as="w" hint-placeholder-count="3"><button onClick="{{ w.pick }}" style="all:unset;cursor:pointer;flex:1;text-align:center;padding:10px 0;border-radius:8px;font:var(--type-caption-strong);color:{{ w.color }};background:{{ w.bg }}">{{ w.label }}</button></sc-for></div></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:14px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:720px;margin:0 auto">
+<div style="color:var(--text-body)">{{ expSummary }}</div>
+<sc-for list="{{ expRows }}" as="e" hint-placeholder-count="2">
+<div style="background:var(--surface-card);border-radius:12px;padding:14px 16px"><div style="display:flex;gap:12px;align-items:flex-start"><span style="flex:1"><span style="display:block;color:var(--color-ink);font:var(--type-body-sm-strong)">{{ e.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-body);margin-top:2px">{{ e.sub }}</span></span><span style="text-align:right"><span style="display:block;font:var(--type-body-sm-strong);color:{{ e.color }}">{{ e.days }} days</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ e.value }}</span></span></div><div style="display:flex;gap:8px;margin-top:12px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" variant="tertiary" onClick="{{ e.open }}" hint-size="auto,36px">View product</x-import><sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" variant="text" onClick="{{ e.dispose }}" hint-size="auto,36px">Mark disposed</x-import></sc-if></div></div>
+</sc-for>
+<sc-if value="{{ expEmpty }}" hint-placeholder-val="{{ false }}"><div style="border-radius:12px;padding:32px;box-shadow:inset 0 0 0 1px var(--color-line);text-align:center;color:var(--text-secondary)">Nothing expires in this window.</div></sc-if>
+</div></div>
+</sc-if>
+
+<!-- ACTIVITY -->
+<sc-if value="{{ s.activity }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Activity</h1></div>
+<div style="flex:none;padding:4px 20px 0;max-width:760px;width:100%;margin:0 auto;box-sizing:border-box"><div style="display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface-card)">
+<sc-for list="{{ actSegs }}" as="g" hint-placeholder-count="2"><button onClick="{{ g.pick }}" style="all:unset;cursor:pointer;flex:1;text-align:center;padding:10px 0;border-radius:8px;font:var(--type-caption-strong);color:{{ g.color }};background:{{ g.bg }}">{{ g.label }}</button></sc-for></div></div>
+<sc-if value="{{ actIsAlerts }}" hint-placeholder-val="{{ true }}">
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:14px 20px 40px"><div style="max-width:720px;margin:0 auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ notifs }}" as="n" hint-placeholder-count="3">
+<button onClick="{{ n.go }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box"><span style="width:8px;height:8px;border-radius:50%;margin-top:7px;background:{{ n.color }}"></span><span style="flex:1"><span style="display:block;color:var(--color-ink)">{{ n.text }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ n.when }}</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button>
+</sc-for></div></div>
+</sc-if>
+<sc-if value="{{ actIsHistory }}" hint-placeholder-val="{{ false }}">
+<div class="ms-scroll" style="flex:none;display:flex;gap:8px;overflow:auto;padding:12px 20px 4px;max-width:760px;width:100%;margin:0 auto;box-sizing:border-box">
+<sc-for list="{{ actFilters }}" as="f" hint-placeholder-count="5"><button onClick="{{ f.pick }}" style="all:unset;cursor:pointer;flex:none;padding:8px 12px;border-radius:6px;font:var(--type-caption-strong);white-space:nowrap;color:{{ f.color }};background:{{ f.bg }}">{{ f.label }}</button></sc-for></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 40px"><div style="max-width:720px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:14px">
+<sc-for list="{{ actGroups }}" as="g" hint-placeholder-count="2">
+<div><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:4px 0 8px">{{ g.day }}</div><div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line)"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.product }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ r.sub }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ r.who }}</span></span><span style="font:var(--type-body-sm-strong);white-space:nowrap;color:{{ r.color }}">{{ r.delta }}</span></div>
+</sc-for></div></div>
+</sc-for></div></div>
+</sc-if>
+</sc-if>
+
+<!-- MORE -->
+<sc-if value="{{ s.more }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Account</h1></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:720px;margin:0 auto">
+<div style="display:flex;gap:12px;align-items:center;background:var(--surface-card);border-radius:12px;padding:16px"><span style="width:44px;height:44px;border-radius:50%;background:var(--color-ink);color:var(--text-on-dark);display:grid;place-items:center;font:var(--type-caption-strong)">{{ meIni }}</span><span style="flex:1"><span style="display:block;color:var(--color-ink);font:var(--type-body-sm-strong)">{{ meName }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ meRole }} · Smile Dental</span></span></div>
+<sc-for list="{{ moreGroups }}" as="g" hint-placeholder-count="3">
+<div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ g.rows }}" as="m" hint-placeholder-count="3">
+<button onClick="{{ m.go }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box;color:{{ m.color }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="{{ m.icon }}" size="20" hint-size="20px,20px"></x-import><span style="flex:1">{{ m.label }}</span><span style="font:var(--type-caption);color:var(--text-secondary)">{{ m.meta }}</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button>
+</sc-for></div>
+</sc-for>
+</div></div>
+</sc-if>
+
+<!-- SETTINGS -->
+<sc-if value="{{ s.settings }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Clinic settings</h1><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" onClick="{{ toastSaved }}" hint-size="auto,32px">Save</x-import></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:720px;margin:0 auto">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Clinic name" default-value="Smile Dental" hint-size="100%,72px"></x-import>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Currency" options="{{ currencies }}" hint-size="100%,72px"></x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Time zone" options="{{ zones }}" hint-size="100%,72px"></x-import></div>
+<div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin-top:12px">Alerts</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Expiry warning" options="{{ expiryOpts }}" hint-size="100%,72px"></x-import>
+<div style="background:var(--surface-card);border-radius:12px;padding:4px 16px">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0"><span style="flex:1"><span style="display:block;color:var(--color-ink)">Email digest</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">Weekly, Monday 7 am</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Switch" checked="{{ t }}" hint-size="44px,24px"></x-import></div></div>
+</div></div>
+</sc-if>
+
+<!-- TEAM -->
+<sc-if value="{{ s.team }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Team</h1><sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" icon="UserPlus" onClick="{{ openInvite }}" hint-size="auto,36px">Invite</x-import></sc-if></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 40px"><div style="max-width:720px;margin:0 auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ team }}" as="m" hint-placeholder-count="4">
+<div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line)"><span style="width:36px;height:36px;border-radius:50%;background:var(--color-canvas-sunken);color:var(--color-ink);display:grid;place-items:center;font:var(--type-micro)">{{ m.ini }}</span><span style="flex:1"><span style="display:block;color:var(--color-ink)">{{ m.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ m.email }}</span></span><span style="font:var(--type-caption);color:{{ m.roleColor }}">{{ m.role }}</span></div>
+</sc-for></div></div>
+</sc-if>
+
+<!-- BILLING -->
+<sc-if value="{{ s.billing }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Billing</h1></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:720px;margin:0 auto">
+<div style="background:var(--surface-dark);color:var(--text-on-dark);border-radius:12px;padding:20px"><div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--color-mute)">Free trial</div><div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><span style="font:var(--type-display-md);color:var(--text-on-dark)">3 months</span><span style="font:var(--type-caption);color:var(--color-mute)">free</span></div><div style="font:var(--type-caption);color:var(--color-mute);margin-top:6px">Ends January 6, 2027</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,254,251,.14)"><span style="flex:1;font:var(--type-caption);color:var(--color-mute)">After trial</span><span style="font:var(--type-caption);color:var(--color-mute);text-decoration:line-through">$99</span><span style="font:var(--type-body-sm-strong);color:var(--text-on-dark)">$49.50 / month</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Badge" size="sm" tone="success" hint-size="auto,20px">50% off for life</x-import></div></div>
+<div style="background:var(--surface-card);border-radius:12px;padding:4px 16px"><div style="display:flex;gap:12px;align-items:center;padding:12px 0;color:var(--color-ink)"><span style="flex:1">Payment method</span><span style="font:var(--type-caption);color:var(--text-secondary)">Visa ·· 4242</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" variant="text" onClick="{{ toastBilling }}" hint-size="auto,32px">Change</x-import></div></div>
+<div style="background:var(--surface-card);border-radius:12px;padding:4px 16px"><button onClick="{{ goInvoices }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);color:var(--color-ink);width:100%;box-sizing:border-box"><span style="flex:1">Invoices</span><span style="font:var(--type-caption);color:var(--text-secondary)">None yet</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button><button onClick="{{ openBillingEmails }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;color:var(--color-ink);width:100%;box-sizing:border-box"><span style="flex:1">Billing emails</span><span style="font:var(--type-caption);color:var(--text-secondary)">{{ billingEmailsMeta }}</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button></div>
+</div></div>
+</sc-if>
+
+<!-- BILLING INVOICES -->
+<sc-if value="{{ s.invoices }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;padding:60px 12px 8px;display:flex;align-items:center;gap:4px;max-width:760px;width:100%;margin:0 auto"><button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="22" hint-size="22px,22px"></x-import></button><h1 style="font:var(--type-display-xs);letter-spacing:-0.5px;flex:1">Invoices</h1></div>
+<div class="ms-scroll" style="flex:1;min-width:0;overflow:auto;padding:8px 20px 40px"><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:720px;margin:0 auto">
+<div style="border-radius:12px;padding:32px 24px;box-shadow:inset 0 0 0 1px var(--color-line);text-align:center"><div style="color:var(--color-ink);font:var(--type-body-sm-strong)">No invoices yet</div><div style="font:var(--type-caption);color:var(--text-body);margin-top:4px">Your first invoice is issued when the trial ends on January 6, 2027. Each one appears here as a PDF.</div></div>
+</div></div>
+</sc-if>
+
+<!-- TAB BAR -->
+<sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;left:0;right:0;bottom:0;height:84px;padding:8px 8px 24px;border-top:1px solid var(--color-line);background:var(--surface-card);display:flex;justify-content:center;gap:4px;box-sizing:border-box">
+<sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="5">
+<button onClick="{{ tb.go }}" style="all:unset;cursor:pointer;flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;position:relative;color:{{ tb.color }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="{{ tb.icon }}" size="22" hint-size="22px,22px"></x-import><span style="font:var(--type-micro)">{{ tb.label }}</span><sc-if value="{{ tb.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:0;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--color-danger);color:var(--color-canvas);font:600 10px/16px var(--font-body);text-align:center">{{ tb.badge }}</span></sc-if></button>
+</sc-for></div>
+</sc-if>
+
+<!-- SHEETS -->
+<sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(32,21,21,.4);z-index:20"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--surface-page);border-radius:20px 20px 0 0;padding:12px 20px 34px;box-shadow:var(--shadow-lg);animation:msfade .18s cubic-bezier(.2,0,0,1)"><div style="width:36px;height:4px;border-radius:2px;background:var(--color-line);margin:0 auto 16px"></div><div style="max-width:720px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:12px">
+<sc-if value="{{ sheetAdjust }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Adjust inventory</div>
+<div style="font:var(--type-caption);color:var(--text-body)">System estimate <b style="color:var(--color-ink)">{{ P.avail }}</b> {{ P.unit }}. A reason is recorded in history.</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Actual quantity" type="number" default-value="{{ P.adjDefault }}" suffix="{{ P.unit }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Reason" options="{{ reasons }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" onClick="{{ saveAdjust }}" hint-size="100%,48px">Save adjustment</x-import>
+</sc-if>
+<sc-if value="{{ sheetDispose }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Mark disposed</div>
+<div style="color:var(--text-body)">{{ disposeText }}</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Quantity disposed" type="number" default-value="{{ disposeQty }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="danger" onClick="{{ confirmDispose }}" hint-size="100%,48px">Mark disposed</x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="text" onClick="{{ closeSheet }}" hint-size="100%,44px">Keep</x-import>
+</sc-if>
+<sc-if value="{{ sheetRemove }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Cancel {{ T.name }}?</div>
+<div style="padding:12px 14px;border-radius:6px;background:var(--color-warning-soft);color:var(--color-warning);font:var(--type-caption-strong)">{{ removeText }}</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Why is it cancelled?" placeholder="e.g. Logged by mistake, patient cancelled" value="{{ removeNote }}" onChange="{{ setRemoveNote }}" hint-size="100%,72px"></x-import>
+<div style="font:var(--type-micro);color:var(--text-secondary)">Recorded in Activity with your name.</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="danger" disabled="{{ removeDisabled }}" onClick="{{ confirmRemove }}" hint-size="100%,48px">Cancel procedure</x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="text" onClick="{{ closeSheet }}" hint-size="100%,44px">Keep</x-import>
+</sc-if>
+<sc-if value="{{ sheetBillingEmails }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Billing emails</div>
+<div style="font:var(--type-caption);color:var(--text-body)">Invoices and receipts go to every address here.</div>
+<div style="background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ billingEmails }}" as="b" hint-placeholder-count="2">
+<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--color-line)"><span style="flex:1;min-width:0;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.email }}</span><sc-if value="{{ b.primary }}" hint-placeholder-val="{{ false }}"><span style="font:var(--type-caption);color:var(--text-secondary)">Admin</span></sc-if><sc-if value="{{ b.removable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ b.remove }}" style="all:unset;cursor:pointer;width:36px;height:40px;display:grid;place-items:center;color:var(--text-secondary)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="X" size="16" hint-size="16px,16px"></x-import></button></sc-if></div>
+</sc-for></div>
+<div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1;min-width:0"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Add email" type="email" placeholder="accounting@clinic.com" value="{{ newBillingEmail }}" onChange="{{ setNewBillingEmail }}" hint-size="100%,72px"></x-import></div><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="tertiary" disabled="{{ newBillingEmailEmpty }}" onClick="{{ addBillingEmail }}" hint-size="auto,44px">Add</x-import></div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" onClick="{{ closeSheet }}" hint-size="100%,48px">Done</x-import>
+</sc-if>
+<sc-if value="{{ sheetAddOrder }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Add to To buy</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" icon="Search" placeholder="Search products" value="{{ addQ }}" onChange="{{ setAddQ }}" hint-size="100%,48px"></x-import>
+<div class="ms-scroll" style="height:360px;overflow:auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ addOrderRows }}" as="r" hint-placeholder-count="5">
+<button onClick="{{ r.add }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ r.sub }}</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Plus" size="18" color="var(--color-primary)" hint-size="18px,18px"></x-import></button>
+</sc-for>
+<sc-if value="{{ addOrderEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 0;text-align:center;color:var(--text-secondary)">No products match.</div></sc-if></div>
+</sc-if>
+<sc-if value="{{ sheetNewProduct }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:12px"><sc-if value="{{ npFromPick }}" hint-placeholder-val="{{ true }}"><button onClick="{{ backToPick }}" style="all:unset;cursor:pointer;width:36px;height:36px;margin-left:-8px;display:grid;place-items:center;color:var(--color-ink)"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronLeft" size="20" hint-size="20px,20px"></x-import></button></sc-if><div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink);flex:1">{{ npTitle }}</div></div>
+<sc-if value="{{ npFromInvoice }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:6px;background:var(--color-info-soft);color:var(--color-info);font:var(--type-caption-strong)">From invoice: {{ npSource }}. Name and unit are suggested. Check them and add the rest.</div></sc-if>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Name" placeholder="As written on the box" value="{{ npName }}" onChange="{{ setNpName }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Category" options="{{ categories }}" default-value="{{ npCat }}" onChange="{{ setNpCat }}" hint-size="100%,72px"></x-import>
+<div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin-top:4px">Units</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Counted in" placeholder="e.g. cartridges" value="{{ npUnit }}" onChange="{{ setNpUnit }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Received as" placeholder="e.g. box" value="{{ npPack }}" onChange="{{ setNpPack }}" hint-size="100%,72px"></x-import></div>
+<sc-if value="{{ npHasPack }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="{{ npPackLabel }}" type="number" placeholder="e.g. 50" value="{{ npPackSize }}" onChange="{{ setNpPackSize }}" hint-size="100%,72px"></x-import>
+<div style="font:var(--type-caption);color:var(--text-body)">{{ npPackLine }}</div></sc-if>
+<div style="font:var(--type-eyebrow);letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin-top:4px">Stock levels</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Minimum" type="number" placeholder="Alert below" value="{{ npMin }}" onChange="{{ setNpMin }}" suffix="{{ npUnitShort }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Target" type="number" placeholder="Reorder up to" value="{{ npTarget }}" onChange="{{ setNpTarget }}" suffix="{{ npUnitShort }}" hint-size="100%,72px"></x-import></div>
+<sc-if value="{{ npIsNew }}" hint-placeholder-val="{{ true }}"><div style="font:var(--type-micro);color:var(--text-secondary)">Quantity, expiry and lot are entered on the receiving form.</div></sc-if>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" disabled="{{ npDisabled }}" onClick="{{ createProduct }}" hint-size="100%,48px">{{ npCta }}</x-import>
+</sc-if>
+<sc-if value="{{ sheetPickProduct }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:12px"><div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink);flex:1">Choose product</div><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" variant="text" size="sm" icon="Plus" onClick="{{ openNewProduct }}" hint-size="auto,32px">New</x-import></div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" icon="Search" placeholder="Search products" value="{{ addQ }}" onChange="{{ setAddQ }}" hint-size="100%,48px"></x-import>
+<div class="ms-scroll" style="height:360px;overflow:auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ pickRows }}" as="r" hint-placeholder-count="5">
+<button onClick="{{ r.pick }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ r.sub }}</span></span><sc-if value="{{ r.on }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Check" size="18" color="var(--color-primary)" hint-size="18px,18px"></x-import></sc-if></button>
+</sc-for>
+<sc-if value="{{ pickEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 0;text-align:center;color:var(--text-secondary)">No products match.</div></sc-if></div>
+</sc-if>
+<sc-if value="{{ sheetMatch }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Which product is this?</div>
+<div style="font:var(--type-mono-sm);color:var(--text-body)">{{ matchDesc }}</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" icon="Search" placeholder="Search products" value="{{ addQ }}" onChange="{{ setAddQ }}" hint-size="100%,48px"></x-import>
+<div class="ms-scroll" style="height:360px;overflow:auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ matchRows }}" as="r" hint-placeholder-count="5">
+<button onClick="{{ r.pick }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ r.sub }}</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="ChevronRight" size="18" color="var(--text-secondary)" hint-size="18px,18px"></x-import></button>
+</sc-for>
+<sc-if value="{{ matchEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 0;text-align:center;color:var(--text-secondary)">No products match.</div></sc-if></div>
+</sc-if>
+<sc-if value="{{ sheetAddExpiry }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">{{ expirySheetTitle }}</div>
+<div style="font:var(--type-caption);color:var(--text-body)">{{ P.name }}</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Expires" type="month" hint-size="100%,72px"></x-import>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px"><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="How many" type="number" default-value="{{ P.avail }}" suffix="{{ P.unit }}" hint-size="100%,72px"></x-import><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Lot (optional)" placeholder="Free text" hint-size="100%,72px"></x-import></div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" onClick="{{ saveExpiry }}" hint-size="100%,48px">Save</x-import>
+</sc-if>
+<sc-if value="{{ sheetDeleteProduct }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Delete {{ P.name }}?</div>
+<div style="color:var(--text-body)">{{ deleteText }}</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="danger" onClick="{{ confirmDeleteProduct }}" hint-size="100%,48px">Delete product</x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="text" onClick="{{ closeSheet }}" hint-size="100%,44px">Keep</x-import>
+</sc-if>
+<sc-if value="{{ sheetReviewCount }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Review corrections</div>
+<div class="ms-scroll" style="max-height:360px;overflow:auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ countChanges }}" as="c" hint-placeholder-count="3">
+<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--color-line)"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ c.loc }}</span></span><span style="font:var(--type-body-sm-strong);white-space:nowrap;color:{{ c.color }}">{{ c.delta }}</span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" size="sm" variant="text" onClick="{{ c.undo }}" hint-size="auto,32px">Undo</x-import></div>
+</sc-for>
+<sc-if value="{{ noCountChanges }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 0;text-align:center;font:var(--type-caption);color:var(--text-secondary)">No corrections. All items confirmed at their current quantity.</div></sc-if></div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" icon="Check" onClick="{{ applyInvCount }}" hint-size="100%,48px">{{ invApplyLabel }}</x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="text" onClick="{{ closeSheet }}" hint-size="100%,44px">Back to counting</x-import>
+</sc-if>
+<sc-if value="{{ sheetCancelCount }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Discard this count?</div>
+<div style="color:var(--text-body)">{{ cancelCountText }} Inventory stays as it is.</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="danger" onClick="{{ discardCount }}" hint-size="100%,48px">Discard count</x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" variant="text" onClick="{{ closeSheet }}" hint-size="100%,44px">Keep counting</x-import>
+</sc-if>
+<sc-if value="{{ sheetAddItem }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Add item</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" icon="Search" placeholder="Search products" value="{{ addQ }}" onChange="{{ setAddQ }}" hint-size="100%,48px"></x-import>
+<div class="ms-scroll" style="height:360px;overflow:auto;background:var(--surface-card);border-radius:12px;padding:0 16px">
+<sc-for list="{{ addRows }}" as="r" hint-placeholder-count="5">
+<button onClick="{{ r.add }}" style="all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--color-line);width:100%;box-sizing:border-box"><span style="flex:1;min-width:0"><span style="display:block;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><span style="display:block;font:var(--type-caption);color:var(--text-secondary)">{{ r.sub }}</span></span><x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Icon" name="Plus" size="18" color="var(--color-primary)" hint-size="18px,18px"></x-import></button>
+</sc-for>
+<sc-if value="{{ addEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 0;text-align:center;color:var(--text-secondary)">No products match.</div></sc-if></div>
+</sc-if>
+<sc-if value="{{ sheetInvite }}" hint-placeholder-val="{{ false }}">
+<div style="font:var(--type-display-xs);letter-spacing:-0.5px;color:var(--color-ink)">Invite a teammate</div>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Name" placeholder="Full name" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Input" style="min-width:0;width:100%" input-style="{{ inputFull }}" label="Email" type="email" placeholder="name@clinic.com" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Select" style="min-width:0;width:100%" label="Role" options="{{ roles }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="MediSaveDesignSystem_1666cb.Button" full-width="{{ t }}" onClick="{{ sendInvite }}" hint-size="100%,48px">Send invitation</x-import>
+</sc-if>
+</div></div>
+</sc-if>
+
+<!-- TOAST -->
+<sc-if value="{{ toastOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:16px;right:16px;bottom:{{ toastBottom }}px;z-index:30;background:var(--surface-dark);color:var(--text-on-dark);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow-md);animation:msfade .18s cubic-bezier(.2,0,0,1)"><span style="flex:1;min-width:0"><span style="display:block;font:var(--type-caption-strong)">{{ toast.title }}</span><span style="display:block;font:var(--type-caption);color:var(--color-mute)">{{ toast.desc }}</span></span><sc-if value="{{ toast.undo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ closeToast }}" style="all:unset;cursor:pointer;font:var(--type-caption-strong);color:var(--text-on-dark);padding:8px">Undo</button></sc-if></div>
+</sc-if>
+
+</div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;admin&quot;,&quot;options&quot;:[&quot;admin&quot;,&quot;staff&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;showRole&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;home&quot;,&quot;options&quot;:[&quot;signin&quot;,&quot;onboard&quot;,&quot;invite&quot;,&quot;home&quot;,&quot;inv&quot;,&quot;product&quot;,&quot;proc&quot;,&quot;procDetail&quot;,&quot;procEdit&quot;,&quot;receive&quot;,&quot;invoice&quot;,&quot;manual&quot;,&quot;order&quot;,&quot;value&quot;,&quot;expiring&quot;,&quot;activity&quot;,&quot;more&quot;,&quot;settings&quot;,&quot;team&quot;,&quot;billing&quot;,&quot;invoices&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;iphone&quot;,&quot;options&quot;:[&quot;iphone&quot;,&quot;ipad&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;blindCount&quot;:{&quot;editor&quot;:null,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onboardStep&quot;:{&quot;editor&quot;:null,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;},&quot;procState&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;invMode&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;invFilter&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;actSeg&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;embedded&quot;:{&quot;editor&quot;:null,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const P = [
+      { id:1, name:"Septocaine 4% 1:100,000", cat:"Anesthetic", supplier:"Patterson", mode:"Unit", unit:"cartridges", pack:"box", packSize:50, avail:54, min:20, target:60, status:"Healthy", lots:[{lot:"A112",qty:20,exp:"Dec 1, 2026",days:60},{lot:"B441",qty:34,exp:"Dec 5, 2026",days:64}], usage30:38, counted:"Oct 1", loc:"Operatory 1 · Drawer A" },
+      { id:2, name:"Endo file kit #15-40", cat:"Endodontics", supplier:"Patterson", mode:"Unit", unit:"kits", avail:1, min:3, target:5, status:"Low", lots:[], usage30:6, counted:"Sep 24", loc:"Operatory 2 · Drawer B" },
+      { id:3, name:"Composite A2", cat:"Restorative", supplier:"Patterson", mode:"Container", unit:"syringes", avail:2, unopened:1, open:[{by:"Dr. Kim",days:7}], min:3, target:6, status:"Low", lots:[{lot:"C09",qty:2,exp:"Mar 2027",days:530}], usage30:9, counted:"Sep 20", loc:"Operatory 1 · Drawer C" },
+      { id:4, name:"Bonding agent", cat:"Restorative", supplier:"Patterson", mode:"Container", unit:"bottles", open:[{by:"Dr. Kim",days:8}], avail:1, min:1, target:2, status:"Expiring", lots:[{lot:"BA7",qty:1,exp:"Nov 3, 2026",days:32}], usage30:1, counted:"Sep 30", loc:"Operatory 1 · Drawer C", unopened:0 },
+      { id:5, name:"Nitrile gloves M", cat:"PPE", supplier:"Benco", mode:"Package", unit:"boxes", pack:"case", packSize:10, avail:14, min:6, target:20, status:"Healthy", lots:[], usage30:11, counted:"Sep 28", loc:"Sterilization · Shelf 2" },
+      { id:6, name:"Surface disinfectant", cat:"Sterilization", supplier:"Benco", mode:"Container", unit:"bottles", open:[{by:"Michael",days:24},{by:"Sarah",days:3}], avail:3, min:2, target:4, status:"Healthy", lots:[], usage30:2, counted:"Sep 2", loc:"Sterilization · Cabinet", unopened:1 },
+      { id:7, name:"Rubber dam latex-free", cat:"Endodontics", supplier:"Henry Schein", mode:"Unit", unit:"sheets", avail:0, min:10, target:36, status:"Out of stock", lots:[], usage30:14, counted:"Sep 25", loc:"Operatory 2 · Drawer A" },
+      { id:8, name:"Gutta percha F2", cat:"Endodontics", supplier:"Henry Schein", mode:"Unit", unit:"packs", avail:7, min:3, target:10, status:"Missing expiry", lots:[], usage30:4, counted:"Sep 25", loc:"Operatory 2 · Drawer B" },
+      { id:9, name:"Suction tips", cat:"Disposable", supplier:"Benco", mode:"Package", unit:"bags", pack:"case", packSize:4, avail:9, min:4, target:12, status:"Healthy", lots:[], usage30:5, counted:"Sep 28", loc:"Sterilization · Shelf 1" },
+      { id:10, name:"Alginate impression", cat:"Impression", supplier:"Patterson", mode:"Container", unit:"bags", avail:4, unopened:3, open:[{by:"Michael",days:5}], min:2, target:6, status:"Healthy", lots:[{lot:"AL3",qty:4,exp:"Aug 2027",days:680}], usage30:3, counted:"Sep 10", loc:"Lab · Shelf 1" },
+      { id:11, name:"Composite A3", cat:"Restorative", supplier:"Patterson", mode:"Container", unit:"syringes", avail:3, unopened:2, open:[{by:"Dr. Kim",days:12}], min:2, target:5, status:"Healthy", lots:[{lot:"C11",qty:3,exp:"Feb 2027",days:500}], usage30:1, counted:"Sep 20", loc:"Operatory 1 · Drawer C" },
+      { id:12, name:"Etch gel 37%", cat:"Restorative", supplier:"Patterson", mode:"Container", unit:"syringes", avail:2, unopened:1, open:[{by:"Sarah",days:30}], min:1, target:3, status:"Healthy", lots:[], usage30:1, counted:"Sep 20", loc:"Operatory 1 · Drawer C" },
+      { id:13, name:"Topical anesthetic gel", cat:"Anesthetic", supplier:"Henry Schein", mode:"Container", unit:"jars", avail:2, unopened:1, open:[{by:"Michael",days:16}], min:1, target:3, status:"Healthy", lots:[{lot:"TG2",qty:2,exp:"May 2027",days:590}], usage30:1, counted:"Sep 28", loc:"Operatory 1 · Drawer A" },
+      { id:14, name:"Fluoride varnish", cat:"Preventive", supplier:"Henry Schein", mode:"Container", unit:"tubes", avail:3, unopened:2, open:[{by:"Michael",days:9}], min:1, target:4, status:"Healthy", lots:[{lot:"FV8",qty:3,exp:"Jan 2027",days:470}], usage30:1, counted:"Sep 28", loc:"Hygiene · Drawer B" },
+      { id:15, name:"Prophy paste jar", cat:"Preventive", supplier:"Benco", mode:"Container", unit:"jars", avail:2, unopened:1, open:[{by:"Michael",days:20}], min:1, target:3, status:"Healthy", lots:[], usage30:1, counted:"Sep 28", loc:"Hygiene · Drawer B" },
+      { id:16, name:"Sodium hypochlorite", cat:"Endodontics", supplier:"Henry Schein", mode:"Container", unit:"bottles", avail:2, unopened:1, open:[{by:"Dr. Kim",days:14}], min:1, target:3, status:"Healthy", lots:[], usage30:1, counted:"Sep 25", loc:"Operatory 2 · Drawer B" },
+      { id:17, name:"Root canal sealer", cat:"Endodontics", supplier:"Henry Schein", mode:"Container", unit:"kits", avail:1, unopened:0, open:[{by:"Dr. Kim",days:60}], min:1, target:2, status:"Low", lots:[{lot:"RS4",qty:1,exp:"Apr 2027",days:560}], usage30:0, counted:"Sep 25", loc:"Operatory 2 · Drawer B" },
+      { id:18, name:"Impression material PVS", cat:"Impression", supplier:"Patterson", mode:"Container", unit:"cartridges", avail:6, unopened:5, open:[{by:"Dr. Kim",days:4}], min:2, target:8, status:"Healthy", lots:[{lot:"PV1",qty:6,exp:"Sep 2027",days:710}], usage30:2, counted:"Sep 10", loc:"Lab · Shelf 1" },
+      { id:19, name:"Temporary cement", cat:"Restorative", supplier:"Patterson", mode:"Container", unit:"kits", avail:1, unopened:0, open:[{by:"Sarah",days:45}], min:1, target:2, status:"Low", lots:[], usage30:0, counted:"Sep 10", loc:"Lab · Shelf 1" },
+      { id:20, name:"Hemostatic gel", cat:"Surgical", supplier:"Benco", mode:"Container", unit:"syringes", avail:2, unopened:2, open:[], min:1, target:3, status:"Healthy", lots:[{lot:"HG3",qty:2,exp:"Oct 2027",days:740}], usage30:0, counted:"Sep 25", loc:"Operatory 2 · Drawer A" }
+    ];
+    this.P = P;
+    this.T = [
+      { id:"root", name:"Root canal", items:[["Septocaine 4% 1:100,000",2],["Needle 27g short",1],["Nitrile gloves M",2],["Rubber dam latex-free",1],["Endo file kit #15-40",1],["Gutta percha F2",1],["Paper points",1],["Suction tips",1],["Topical anesthetic gel",0],["Sodium hypochlorite",0],["Root canal sealer",0],["Surface disinfectant",0]] },
+      { id:"clean", name:"Cleaning", items:[["Prophy angle",1],["Nitrile gloves M",2],["Suction tips",1],["Patient bib",1],["Prophy paste jar",0],["Fluoride varnish",0],["Surface disinfectant",0]] },
+      { id:"fill", name:"Filling", items:[["Septocaine 4% 1:100,000",1],["Needle 27g short",1],["Nitrile gloves M",2],["Suction tips",1],["Matrix band",1],["Microbrushes",2],["Topical anesthetic gel",0],["Etch gel 37%",0],["Bonding agent",0],["Composite A2",0],["Composite A3",0],["Surface disinfectant",0]] },
+      { id:"crown", name:"Crown", items:[["Septocaine 4% 1:100,000",2],["Needle 27g short",1],["Nitrile gloves M",2],["Suction tips",1],["Retraction cord",1],["Topical anesthetic gel",0],["Impression material PVS",0],["Alginate impression",0],["Temporary cement",0],["Surface disinfectant",0]] },
+      { id:"ext", name:"Extraction", items:[["Septocaine 4% 1:100,000",2],["Needle 27g short",1],["Nitrile gloves M",2],["Gauze",4],["Suture",1],["Topical anesthetic gel",0],["Hemostatic gel",0],["Surface disinfectant",0]] }
+    ];
+    const mk = arr => arr.map(([name,q]) => ({ name, exp:q, act:q }));
+    this.state = {
+      screen: props.screen ?? "home", stack: [], pid: 1, invFilter: props.invFilter ?? "All", q:"", invMode: props.invMode ?? "browse", invCounts:{},
+      proc:"root", procStatus: props.procState ?? "new", procItems:null, eventId: props.procState==="done" ? "e1" : null, editItems: props.screen==="procEdit" ? this.T[0].items.map(([name,q])=>({name,q})) : [], editName: props.screen==="procEdit" ? this.T[0].name : "", addQ:"",
+      events: [
+        { id:"e1", tid:"root", name:"Root canal", when:"Oct 1 · 3:14 PM", by:"Sarah", items: mk(this.T[0].items) },
+        { id:"e2", tid:"clean", name:"Cleaning", when:"Oct 1 · 11:20 AM", by:"Michael", items: mk(this.T[1].items) },
+        { id:"e3", tid:"fill", name:"Filling", when:"Sep 30 · 2:05 PM", by:"Sarah", items: mk(this.T[2].items).map(i => i.name==="Composite A2" ? {...i, exp:1, act:1} : i) }
+      ],
+      sheet:null, toast:null, scanning:false,
+      lines:[{desc:"SEPTO 4% 1:100K 50/BX",match:"Septocaine 4% 1:100,000",state:"Matched",qty:5,unit:"boxes",price:49.80},{desc:"ENDO FILE KIT 15-40 21MM",match:"Endo file kit #15-40",state:"Possible match",qty:4,unit:"boxes",price:45},{desc:"TEMPBOND NE 1PK",match:"Temp-Bond NE",state:"New product",qty:1,unit:"pack",price:26.40},{desc:"HANDLING / FUEL SURCHARGE",match:"",state:"Needs review",qty:1,unit:"",price:4.80}],
+      blind: props.blindCount ?? false,
+      orderTab:"Needs order", orders:[
+        {id:1,name:"Endo file kit #15-40",cur:1,target:5,qty:4,status:"Needs order",supplier:"Patterson"},
+        {id:2,name:"Composite A2",cur:2,target:6,qty:4,status:"Needs order",supplier:"Patterson"},
+        {id:3,name:"Rubber dam latex-free",cur:0,target:36,qty:36,status:"Needs order",supplier:"Henry Schein"},
+        {id:7,name:"Needle 27g short",cur:40,target:100,qty:2,status:"Ordered",supplier:"Patterson",date:"Oct 1"},
+        {id:8,name:"Gauze 2x2",cur:3,target:10,qty:5,status:"Ordered",supplier:"Patterson",date:"Oct 1"},
+        {id:9,name:"Prophy angles",cur:30,target:100,qty:1,status:"Ordered",supplier:"Patterson",date:"Oct 1"},
+        {id:10,name:"Alginate impression",cur:4,target:6,qty:2,status:"Received",supplier:"Patterson",date:"Sep 26"}],
+      expWin:90, expiring:[{pid:4,name:"Bonding agent",qty:"1 bottle",lot:"BA7",days:32,date:"Nov 3",value:82,disposed:false},{pid:1,name:"Septocaine 4% 1:100,000",qty:"34 cartridges",lot:"B441",days:64,date:"Dec 5",value:104,disposed:false}],
+      actFilter:"All", actSeg: props.actSeg ?? "alerts", onbStep: props.onboardStep ?? 0, setup:"invoice", disposeIdx:null
+    };
+    this.lastScreen = props.screen;
+  }
+  componentDidUpdate() {
+    if (this.props.screen !== this.lastScreen) { this.lastScreen = this.props.screen; this.setState({ screen: this.props.screen ?? "home", stack: [] }); }
+  }
+  go(screen, extra) { this.setState(s => ({ screen, stack: [...s.stack, s.screen], sheet:null, ...(extra||{}) })); }
+  back() { this.setState(s => { const st = [...s.stack]; const prev = st.pop() || "home"; return { screen: prev, stack: st, sheet:null }; }); }
+  toast(title, desc, undo) { clearTimeout(this._tt); this.setState({ toast:{title,desc,undo} }); this._tt = setTimeout(() => this.setState({toast:null}), 3200); }
+  renderVals() {
+    const isAdmin = ((this.props.role) ?? "admin") !== "staff";
+    const S = this.state, props = this.props, ink="var(--color-ink)", sec="var(--text-secondary)", prim="var(--color-primary)";
+    const device = props.device ?? "iphone";
+    const isRoot = ["home","inv","proc","order"].includes(S.screen);
+    const chip = (label, on, pick) => ({ label, pick, color: on ? "var(--color-on-primary)" : ink, bg: on ? ink : "var(--surface-card)" });
+    const seg = (label, on, pick) => ({ label, pick, color: on ? ink : "var(--text-body)", bg: on ? "var(--surface-page)" : "transparent" });
+    const toastFn = (t,d,u) => () => this.toast(t,d,u);
+    const un = (n, u) => n === 1 && /s$/.test(u) ? u.slice(0,-1) : u;
+    const availOf = name => { const p = this.P.find(x => x.name === name); return p ? p.avail : 12; };
+    // product
+    const p = this.P.find(x => x.id === S.pid) || this.P[0];
+    const isCont = x => x && x.mode === "Container"; const openOf = x => (x.open || []); const when = d => d === 0 ? "opened today" : d === 1 ? "opened yesterday" : "opened " + d + " days ago";
+    const contLine = x => (x.unopened||0) + " unopened · " + openOf(x).length + " open";
+    const P = { ...p, reorderUnit: un(p.target - p.avail, p.unit), usageUnit: un(p.usage30, p.unit), bottleLine: contLine(p), noOpen: openOf(p).length===0, noUnopened: (p.unopened||0)===0, openList: openOf(p).map((o,i) => ({ by:o.by, when: when(o.days), finish: () => { p.open.splice(i,1); this.forceUpdate(); this.toast("Bottle finished", p.name + " · " + contLine(p)); } })), unitLine: p.pack ? "1 " + p.pack + " = " + p.packSize + " " + p.unit : "counted in " + p.unit, needsOrder: p.avail <= p.min, reorder: p.target - p.avail, isBulk: p.mode === "Container",  hasLots: p.lots.length > 0, noLots: p.lots.length === 0,
+      adjDefault: String(Math.max(p.avail - 2, 0)),
+      hasBatches: p.lots.length > 0, noBatches: p.lots.length === 0,
+      batches: [...p.lots].sort((a,b) => a.days - b.days).map(l => { const d = l.days; const color = d <= 30 ? "var(--color-danger)" : d <= 90 ? "var(--color-warning)" : "var(--color-success)"; const pos = d <= 30 ? d/30*25 : d <= 90 ? 25 + (d-30)/60*25 : d <= 365 ? 50 + (d-90)/275*35 : Math.min(85 + (d-365)/365*13, 98); const soft = d <= 30 ? "var(--color-danger-soft)" : d <= 90 ? "var(--color-warning-soft)" : "var(--color-success-soft)"; return { edit: () => this.setState({sheet:"addExpiry", editBatch: l.lot}), cursor: "pointer", lot:l.lot, qty:l.qty, exp:l.exp, inText: d <= 0 ? "Expired" : d <= 90 ? "in " + d + " days" : "in " + Math.round(d/30) + " months", color, soft }; }),
+      expTotalLine: p.lots.reduce((n,l)=>n+l.qty,0) + " of " + p.avail + " tracked" + (p.lots.some(l=>l.days<=90) ? " · " + p.lots.filter(l=>l.days<=90).reduce((n,l)=>n+l.qty,0) + " expire within 90 days" : ""),
+      history: [{delta:"43 → 41",reason:"Physical count · Michael",when:"Oct 1",color:ink},{delta:"−2",reason:"Root canal · Sarah",when:"Oct 1",color:"var(--color-danger)"},{delta:"+" + Math.max(p.target - p.min, 4),reason:"Invoice INV-10092 · Michael",when:"Sep 30",color:"var(--color-success)"}] };
+    // procedure
+    const ev = S.eventId ? S.events.find(x => x.id===S.eventId) : null;
+    const t = ev ? { id: ev.tid, name: ev.name, items: ev.items.map(i => [i.name, i.exp]) } : (this.T.find(x => x.id === S.proc) || this.T[0]);
+    const defaults = tt => tt.items.map(([name,q]) => { const c = isCont(this.P.find(x=>x.name===name)); return { name, exp: c ? 0 : q, act: c ? 0 : q }; });
+    const pItems = S.procItems || (ev ? ev.items : defaults(t));
+    const isNew = S.procStatus === "new", isEditing = S.procStatus === "editing", isDone = S.procStatus === "done";
+    const editable = isNew || isEditing;
+    const setItems = fn => this.setState(s => ({ procItems: fn(s.procItems || (ev ? ev.items : defaults(t))) }));
+    const items = pItems.filter(it => { const x = this.P.find(y=>y.name===it.name); return !isCont(x) || it.act === 1; }).map(it => { const x = this.P.find(y=>y.name===it.name); const isBulkItem = isCont(x); const a = isBulkItem ? (x.unopened||0) : availOf(it.name), remain = a - it.act;
+      return { name: it.name, editable, readonly: !editable, isBulk: isBulkItem, editableUnit: editable && !isBulkItem, readonlyUnit: !editable, notBulk: !isBulkItem, actual: it.act, bulkText: isBulkItem ? "New " + un(1, x.unit) + " · 1" : "", actualColor: it.act !== it.exp ? prim : ink,
+        availText: isBulkItem ? (isNew ? (a - 1) + " left in stock after" : "Taken from stock") : isNew ? (remain < 0 ? "Not available · " + a + " in stock" : remain === 0 ? "0 will remain" : "") : it.act !== it.exp ? "Recorded " + it.exp : "",
+        availColor: isNew ? (remain < 0 ? "var(--color-danger)" : "var(--color-warning)") : sec,
+        inc: () => setItems(l => l.map(x => x.name===it.name ? { ...x, act:x.act+1, exp: isNew ? x.act+1 : x.exp } : x)),
+        dec: () => setItems(l => l.map(x => x.name===it.name ? { ...x, act:Math.max(x.act-1,0), exp: isNew ? Math.max(x.act-1,0) : x.exp } : x)),
+        remove: () => isBulkItem ? setItems(l => l.map(y => y.name===it.name ? {...y, act:0, exp: isNew ? 0 : y.exp} : y)) : setItems(l => l.filter(y => y.name!==it.name)) }; });
+    const short = pItems.filter(it => availOf(it.name) - it.act < 0).length, tight = pItems.filter(it => availOf(it.name) - it.act === 0).length;
+    const total = pItems.reduce((n,i)=>n + i.act,0);
+    const bottles = pItems.filter(it => isCont(this.P.find(x=>x.name===it.name)) && it.act !== 1).map(it => { const x = this.P.find(y=>y.name===it.name); const opened = it.act === 1; const opens = openOf(x).length, un = x.unopened||0;
+      return { name: it.name, editable, canToggle: editable, remove: () => setItems(l => l.filter(y => y.name!==it.name)),
+        sub: !editable ? (opened ? "1 taken from stock" : "Used from open") : opened ? "1 checked out · " + (un-1) + " left in stock" : opens ? opens + " open · " + un + " in stock" : un ? "None open · " + un + " in stock" : "None open · none in stock",
+        subColor: editable && !opens && !opened ? "var(--color-warning)" : sec,
+        btnLabel: "Take new", btnColor: opened ? "var(--color-on-primary)" : ink, btnBg: opened ? prim : "transparent", btnRing: opened ? "none" : "inset 0 0 0 1px " + ink,
+        toggle: () => { if (!opened && un === 0) { this.toast("Out of stock", x.name); return; } setItems(l => l.map(y => y.name===it.name ? {...y, act: opened ? 0 : 1, exp: isNew ? (opened ? 0 : 1) : y.exp} : y)); } }; });
+    const newBottles = pItems.filter(it => isCont(this.P.find(x=>x.name===it.name)) && it.act === 1).length;
+    const T = { name: t.name, items, countables: items, bottles, hasBottles: bottles.length > 0 && editable, summary: pItems.length + " supplies · " + (short ? short + " not available" : tight ? tight + " will reach 0" : "all in stock") + ". Add or remove items before you start.", consumedText: (ev ? total + " items deducted" : total + " items deducted from inventory") + (ev ? " · " + ev.when + " · " + ev.by : ".") };
+    const templates = this.T.map(x => { const sh = x.items.filter(([n,q]) => availOf(n)-q < 0).length;
+      return { name:x.name, count:x.items.length, availText: sh ? sh + " not available" : "", availColor: "var(--color-danger)",
+        open: () => this.go("procDetail", { proc:x.id, procStatus:"new", procItems:null, eventId:null }),
+        edit: () => this.go("procEdit", { proc:x.id, editItems: x.items.map(([name,q]) => ({name,q})), editName:x.name }) }; });
+    const procHistory = S.events.map(e => ({ name:e.name, sub: e.when + " · " + e.by, count: e.items.length, open: () => this.go("procDetail", { proc:e.tid, procStatus:"done", procItems:null, eventId:e.id }) }));
+    const addQ = S.addQ.toLowerCase();
+    const addable = this.P.filter(pp => !isCont(pp) && !pItems.some(i => i.name===pp.name) && pp.name.toLowerCase().includes(addQ)).map(pp => ({ name:pp.name, sub: isCont(pp) ? contLine(pp) : pp.avail + " " + pp.unit + " in stock", add: () => { const bulk = pp.mode==="Container"; setItems(l => [...l, { name:pp.name, exp: bulk ? 0 : (isNew ? 1 : 0), act: bulk ? 0 : 1 }]); this.setState({sheet:null}); } }));
+    const editItems = S.editItems.map(it => ({ name:it.name, q:it.q, isBottle: isCont(this.P.find(x=>x.name===it.name)), isUnit: !isCont(this.P.find(x=>x.name===it.name)), inc: () => this.setState(s => ({ editItems: s.editItems.map(x => x.name===it.name ? {...x,q:x.q+1} : x) })), dec: () => this.setState(s => ({ editItems: s.editItems.map(x => x.name===it.name ? {...x,q:Math.max(x.q-1,1)} : x) })), remove: () => this.setState(s => ({ editItems: s.editItems.filter(x => x.name!==it.name) })) }));
+    const editAddable = this.P.filter(pp => !S.editItems.some(i => i.name===pp.name) && pp.name.toLowerCase().includes(addQ)).map(pp => ({ name:pp.name, sub: isCont(pp) ? pp.cat + " · multi-use" : pp.cat, add: () => this.setState(s => ({ editItems:[...s.editItems, {name:pp.name,q: isCont(pp) ? 0 : 1}], sheet:null })) }));
+    const editIsNew = S.proc === "new";
+    // invoice lines
+    const lines = S.lines.map((l,i) => { const set = patch => this.setState(s => ({ lines: s.lines.map((x,j) => j===i ? {...x,...patch} : x) }));
+      const st = l.state; return { desc:l.desc, state:st, bg: st==="Needs review"||st==="Possible match"||st==="New product" ? "var(--surface-page)" : "var(--surface-card)", ring: st==="Needs review"||st==="Possible match"||st==="New product" ? "inset 0 0 0 1px "+ink : "none",
+        matchText: st==="Skipped" ? "Ignored · not added to inventory" : st==="Created" ? l.match + " · new product" : st==="Needs review" ? "Looks like a fee, not a product" : st==="Possible match" ? "Is this " + l.match + "?" : st==="New product" ? "Not in your inventory" : l.match,
+        question: st==="Possible match" ? "Name differs slightly from your product." : st==="New product" ? "No product with this name exists yet." : st==="Needs review" ? "Fees and surcharges should not go into stock." : "", qtyText: l.qty + (l.unit ? " " + l.unit : "") + " · $" + l.price.toFixed(2),
+        showActions: st==="Possible match" || st==="New product" || st==="Needs review", showLot: st==="Matched" || st==="Created",
+        aLabel: st==="Possible match" ? "Yes, match" : st==="New product" ? "Add new" : "Ignore", aVariant: st==="Needs review" ? "tertiary" : "primary",
+        actA: () => st==="New product" ? this.setState({sheet:"newProduct", npFrom:"invoice", matchIdx:i, npName:l.match || "", npUnit:l.unit || ""}) : set(st==="Needs review" ? {state:"Skipped"} : {state:"Matched"}),
+        bLabel: st==="Possible match" ? "No, create new" : st==="New product" ? "Pick existing" : "Pick product", actB: () => st==="Possible match" ? this.setState({sheet:"newProduct", npFrom:"invoice", matchIdx:i, npName:"", npUnit:l.unit || ""}) : this.setState({sheet:"match", matchIdx:i, addQ:""}) }; });
+    const mp = S.manualPid ? this.P.find(x => x.id === S.manualPid) : null; const mq = Number(S.manualQty) || 0;
+    const mLine = S.matchIdx != null ? S.lines[S.matchIdx] : null;
+    const matchRows = this.P.filter(pp => pp.name.toLowerCase().includes(addQ)).map(pp => ({ name:pp.name, sub: pp.cat + " · " + pp.avail + " " + pp.unit, pick: () => this.setState(s => ({ sheet:null, lines: s.lines.map((x,j) => j===s.matchIdx ? {...x, match:pp.name, state:"Matched"} : x) })) }));
+    const receiving = S.lines.filter(l => l.state==="Matched" || l.state==="Created").length, ready = S.lines.every(l => ["Matched","Created","Skipped"].includes(l.state));
+    // orders
+    const sel = S.orderSel || {}; const isSel = o => sel[o.id] !== false;
+    const orderRows = S.orders.filter(o => o.status === S.orderTab).map(o => ({ name:o.name, qty:o.qty, editable: o.status==="Needs order", notEditable: o.status!=="Needs order", checked: isSel(o), boxBg: isSel(o) ? prim : "var(--surface-page)", boxRing: isSel(o) ? "none" : "inset 0 0 0 1px var(--color-line)", toggle: () => this.setState(s => ({ orderSel: {...(s.orderSel||{}), [o.id]: !isSel(o)} })), isOrdered: o.status==="Ordered", isReceived: o.status==="Received",
+      sub: o.status==="Needs order" ? "Current " + o.cur + " · target " + o.target + " · " + o.supplier : o.status==="Ordered" ? o.qty + " ordered " + o.date + " · " + o.supplier : "Received " + o.date + " · " + o.supplier,
+      inc: () => this.setState(s => ({ orders: s.orders.map(x => x.id===o.id ? {...x, qty:x.qty+1} : x) })), dec: () => this.setState(s => ({ orders: s.orders.map(x => x.id===o.id ? {...x, qty:Math.max(x.qty-1,0)} : x) })) }));
+    const needRows = S.orders.filter(o => o.status==="Needs order"), selRows = needRows.filter(isSel); const needs = needRows.length, ordered = S.orders.filter(o => o.status==="Ordered");
+    // expiring
+    const expRows = S.expiring.filter(e => !e.disposed && e.days <= S.expWin).map(e => ({ ...e, sub: e.qty + " · lot " + e.lot + " · " + e.date, value: "$" + e.value, color: e.days <= 30 ? "var(--color-danger)" : "var(--color-warning)", open: () => this.go("product", {pid:e.pid}), dispose: () => this.setState({ sheet:"dispose", disposeIdx: S.expiring.indexOf(e) }) }));
+    const dispE = S.disposeIdx !== null ? S.expiring[S.disposeIdx] : null;
+    // activity
+    const act = [
+      {day:"Today",product:"Endo file kit #15-40",delta:"+4",type:"Receiving",sub:"Invoice INV-10092",who:"Michael · 9:02 AM",color:"var(--color-success)"},
+      {day:"Today",product:"Root canal",delta:"−6",type:"Procedures",sub:"Procedure started",who:"Sarah · 8:40 AM",color:"var(--color-danger)"},
+      {day:"Yesterday",product:"Septocaine 4% 1:100,000",delta:"43 → 41",type:"Counts",sub:"Physical count",who:"Michael · 4:22 PM",color:ink},
+      {day:"Yesterday",product:"Septocaine 4% 1:100,000",delta:"−2",type:"Procedures",sub:"Root canal",who:"Sarah · 3:14 PM",color:"var(--color-danger)"},
+      {day:"Yesterday",product:"Bonding agent",delta:"Full → 50%",type:"Adjustments",sub:"Update level",who:"Sarah · 9:10 AM",color:ink},
+      {day:"Sep 30",product:"Composite A2",delta:"−1",type:"Adjustments",sub:"Damaged",who:"Sarah · 2:05 PM",color:"var(--color-danger)"}
+    ].filter(a => S.actFilter==="All" || a.type===S.actFilter);
+    const actGroups = [...new Set(act.map(a=>a.day))].map(day => ({ day, rows: act.filter(a=>a.day===day) }));
+    const notifs = [
+      {text:"Rubber dam latex-free is out of stock.",when:"Today · 8:40 AM",color:"var(--color-danger)",go:()=>this.go("product",{pid:7})},
+      {text:"Bonding agent expires in 32 days.",when:"Yesterday",color:"var(--color-warning)",go:()=>this.go("expiring")},
+      {text:"Gutta percha F2 is missing expiry information.",when:"Yesterday",color:"var(--color-warning)",go:()=>this.go("product",{pid:8})}
+    ];
+    const tabs = [["home","LayoutDashboard","Home"],["inv","Package","Inventory"],["proc","ClipboardCheck","Procedures"],["order","ClipboardList","To buy",needs]].map(([id,icon,label,badge]) => ({ id, icon, label, badge: badge || null, color: S.screen===id || (id==="inv"&&S.screen==="product") ? prim : "var(--text-body)", go: () => this.setState({ screen:id, stack:[], sheet:null }) }));
+    // inventory
+    const invCountMode = S.invMode === "count";
+    const invRows = this.P.filter(x => (S.invFilter==="All" || x.status===S.invFilter || (S.invFilter==="Low" && x.status==="Out of stock")) && x.name.toLowerCase().includes(S.q.toLowerCase())).map(x => { const base = isCont(x) ? (x.unopened||0) : x.avail; const a = S.invCounts[x.id] ?? base, changed = S.invCounts[x.id] !== undefined && a !== base;
+      const xb = isCont(x);
+      return { name:x.name, status:x.status, isCount: invCountMode, isBrowse: !invCountMode, isCountBulk: false, isCountUnit: invCountMode, bulkCountText: xb ? openOf(x).length + " open" : "", openLevel: () => this.go("product", {pid:x.id}), actual: a, actColor: changed ? prim : ink,
+        sub: invCountMode ? (xb ? "Count unopened only · " + x.loc : "est. " + x.avail + " " + x.unit + " · " + x.loc) : (xb ? contLine(x) + " · " + x.cat : x.avail + " " + x.unit + " · " + x.cat),
+        open: invCountMode ? () => {} : () => this.go("product", {pid:x.id}),
+        inc: () => this.setState(s => ({ invCounts: {...s.invCounts, [x.id]: (s.invCounts[x.id] ?? base) + 1} })), dec: () => this.setState(s => ({ invCounts: {...s.invCounts, [x.id]: Math.max((s.invCounts[x.id] ?? base) - 1, 0)} })) }; });
+    const baseOf = x => isCont(x) ? (x.unopened||0) : x.avail;
+    const invChanges = this.P.filter(x => S.invCounts[x.id] !== undefined && S.invCounts[x.id] !== baseOf(x)).length;
+    return {
+      t:true, inputFull:{ width:'100%', minWidth:0 }, outerPad: props.embedded ? 0 : 24, outerMin: props.embedded ? '0' : '100vh', screen:S.screen, devW: device==="ipad" ? 834 : 402, devH: device==="ipad" ? 1194 : 874,
+      s: { [S.screen]: true }, showTabs: isRoot, tabs, hasBack: S.stack.length > 0,
+      goHome: () => this.setState({screen:"home",stack:[],sheet:null}), goOnboard: e => { e && e.preventDefault(); this.setState({screen:"onboard",stack:[],onbStep:0}); }, back: () => this.back(),
+      goNotif: () => this.go("activity", {actSeg:"alerts"}), goMore: () => this.go("more"), actSegs: [["alerts","Alerts · " + notifs.length],["history","History"]].map(([id,label]) => seg(label, (S.actSeg||"alerts")===id, () => this.setState({actSeg:id}))), actIsAlerts: (S.actSeg||"alerts")==="alerts", actIsHistory: S.actSeg==="history", goValue: () => this.go("value"), goInvoices: () => this.go("invoices"),
+      valueCountLine: this.P.length + " products · 8 with cost",
+      valueCats: [["Anesthetic",4860],["Restorative",2410],["Endodontics",2180],["PPE",1540],["Sterilization",830],["Other",600]].map(([name,v]) => ({ name, value: "$" + v.toLocaleString(), pct: Math.round(v/12420*100) })),
+      valueTop: [[1,"54 × $1.80",97],[3,"2 × $42.00",84],[4,"1 × $82.00",82],[5,"14 × $5.60",78],[2,"1 × $45.00",45]].map(([id,sub,v]) => { const pp = this.P.find(x=>x.id===id); return { name: pp.name, sub, value: "$" + v, open: () => this.go("product", {pid:id}) }; }), goReceive: () => this.go("receive"), goManual: () => this.go("manual"), goExpiring: () => this.go("expiring"), goOrder: () => this.go("order"), goProcTab: () => this.go("proc"), goInvCount: () => this.go("inv", {invMode:"count", invCounts:{}}),
+      // onboarding
+      onbEyebrow: "Admin sign-up · step " + (S.onbStep+1) + " of 3", onb0: S.onbStep===0, onb1: S.onbStep===1, onb2: S.onbStep===2, onbNext: () => this.setState(s => ({onbStep: Math.min(s.onbStep+1, 2)})), onbBack: () => this.setState(s => s.onbStep > 0 ? {onbStep: s.onbStep-1} : {screen:"signin", stack:[]}),
+      countries:["Canada","United States"], toastLogo: toastFn("Choose a logo","Opens your photo library or files."), invites: (S.invites || [{email:""},{email:""}]).map((iv,i) => ({ label: i===0 ? "Email" : "Email", email: iv.email, set: e => this.setState(s => ({ invites: (s.invites || [{email:""},{email:""}]).map((x,j) => j===i ? {email:e.target.value} : x) })) })), addInvite: () => this.setState(s => ({ invites: [...(s.invites || [{email:""},{email:""}]), {email:""}] })), sendInvitesLabel: "Send " + ((S.invites || [{email:""},{email:""}]).filter(x => x.email.trim()).length || "") + " invitation" + ((S.invites || []).filter(x => x.email.trim()).length === 1 ? "" : "s"), sendInvites: () => { const n = (S.invites || []).filter(x => x.email.trim()).length; this.setState({screen:"home",stack:[]}); this.toast(n ? n + " invitation" + (n===1?"":"s") + " sent" : "No invitations sent", n ? "They appear under Team as Invited." : "Invite later from More → Team."); }, currencies:["CAD","USD"], zones:["America/Toronto","America/Vancouver","America/New_York"],
+      setupOptions: [["sheet","Table","Upload a spreadsheet","Fastest if you already track inventory."],["invoice","FileText","Upload a recent invoice","AI suggests products. You review."],["manual","PenLine","Start manually","Add products one by one."]].map(([id,icon,title,sub]) => ({ icon, title, sub, pick: () => this.setState({setup:id}), ring: S.setup===id ? "inset 0 0 0 1px "+ink : "none" })),
+      checklist: [["Create clinic",1],["Add first 10 products",1],["Configure one procedure",0],["Receive first invoice",0],["Invite teammate",0],["Complete first procedure",0]].map(([label,d]) => ({ label, icon: d ? "CheckCircle2" : "Circle", color: d ? "var(--color-success)" : "var(--color-mute)", text: d ? sec : ink, deco: d ? "line-through" : "none" })),
+      // home
+      attention: [[String(needs),"To buy","var(--color-warning)",()=>this.go("order")],["2","Expiring soon","var(--color-danger)",()=>this.go("expiring")],["1","Missing expiry","var(--color-info)",()=>this.go("inv",{invFilter:"Missing expiry"})]].map(([n,label,color,go]) => ({n,label,color,go})),
+      notifs, hasLast: S.events.length > 0, last: S.events.length ? { name: S.events[0].name, when: S.events[0].when, sub: S.events[0].items.length + " supplies · " + S.events[0].by, edit: () => this.go("procDetail", { proc:S.events[0].tid, procStatus:"editing", eventId:S.events[0].id, procItems: S.events[0].items.map(x => ({...x})) }) } : {},
+      // inventory
+      q:S.q, setQ: e => this.setState({q:e.target.value}), invRows, invEmpty: invRows.length===0, invCountMode, invBrowseMode: !invCountMode, invTitle: invCountMode ? "Count" : "Inventory", fabBottom: invCountMode ? 176 : 100,
+      startInvCount: () => this.setState({invMode:"count", invCounts:{}}), cancelInvCount: () => invChanges ? this.setState({sheet:"cancelCount"}) : this.setState({invMode:"browse", invCounts:{}}), discardCount: () => this.setState({invMode:"browse", invCounts:{}, sheet:null}), sheetCancelCount: S.sheet==="cancelCount", cancelCountText: invChanges + (invChanges===1 ? " correction" : " corrections") + " will be lost.",
+      invApplyLabel: invChanges ? "Apply count · " + invChanges + (invChanges===1 ? " correction" : " corrections") : "Apply count · all confirmed",
+      openReviewCount: () => this.setState({sheet:"reviewCount"}), sheetReviewCount: S.sheet==="reviewCount", invReviewLabel: invChanges ? "Review · " + invChanges + (invChanges===1 ? " correction" : " corrections") : "Review count",
+      reviewCountText: invChanges ? "These quantities will replace the system estimate. Undo any you are not sure about." : "", noCountChanges: invChanges===0,
+      countChanges: this.P.filter(x => S.invCounts[x.id] !== undefined && S.invCounts[x.id] !== baseOf(x)).map(x => ({ name:x.name, loc:x.loc, delta: baseOf(x) + " → " + S.invCounts[x.id] + (isCont(x) ? " unopened" : ""), color: S.invCounts[x.id] > baseOf(x) ? "var(--color-success)" : "var(--color-danger)", undo: () => this.setState(s => { const c = {...s.invCounts}; delete c[x.id]; return { invCounts:c }; }) })),
+      applyInvCount: () => { this.P.forEach(x => { if (S.invCounts[x.id] !== undefined) { if (isCont(x)) { x.unopened = S.invCounts[x.id]; x.avail = x.unopened + openOf(x).length; } else x.avail = S.invCounts[x.id]; } }); this.setState({invMode:"browse", invCounts:{}, sheet:null}); this.toast("Count applied", invChanges + " corrected · " + (this.P.length - invChanges) + " confirmed · Physical count"); },
+      invFilters: ["All","Low","Expiring","Missing expiry","Healthy"].map(f => chip(f, S.invFilter===f, () => this.setState({invFilter:f}))),
+      showInvFab: isAdmin && !invCountMode, openNewProductInv: () => this.setState({sheet:"newProduct", npFrom:"inv", npName:"", npUnit:"", npPack:"", npPackSize:"", npMin:"", npTarget:"", npCat:"Other"}), toastEdit: e => { e && e.preventDefault && e.preventDefault(); this.toast("Edit product","Name, tracking mode, reorder levels."); },
+      // product
+      P, openNewBottle: () => { if ((p.unopened||0) === 0) return; p.unopened -= 1; p.avail = Math.max(p.avail-1,0); p.open = [...openOf(p), {by:"Sarah", days:0}]; this.forceUpdate(); this.toast("New bottle opened", p.name + " · " + contLine(p)); },
+      openAdjust: () => this.setState({sheet:"adjust"}), openAddExpiry: () => this.setState({sheet:"addExpiry", editBatch:null}), sheetAddExpiry: S.sheet==="addExpiry", expirySheetTitle: S.editBatch != null ? "Edit batch" : "Add expiry", addToBuyLabel: isAdmin ? "Add to buy" : "Report low stock", dangerText: { color:"var(--color-danger)" },
+      openDeleteProduct: () => this.setState({sheet:"deleteProduct"}), sheetDeleteProduct: S.sheet==="deleteProduct", deleteText: p.avail > 0 ? p.avail + " " + p.unit + " still in stock. The product and its history are archived, not erased. It disappears from Inventory, To buy and procedures." : "The product and its history are archived, not erased. It disappears from Inventory, To buy and procedures.",
+      confirmDeleteProduct: () => { const idx = this.P.indexOf(p); if (idx >= 0) this.P.splice(idx,1); this.setState({ sheet:null, screen:"inv", stack:[], pid: this.P[0].id }); this.toast("Product deleted", p.name + " · archived"); }, sheetMatch: S.sheet==="match", matchDesc: mLine ? mLine.desc : "", matchRows, matchEmpty: matchRows.length===0, saveExpiry: () => { this.setState({sheet:null}); this.toast("Expiry saved", p.name + " · now tracked in Expiring soon"); }, addToOrder: () => this.toast("Added to To buy", p.name + " · suggested " + Math.max(p.target-p.avail,0) + " " + p.unit, true),
+      saveAdjust: () => { this.setState({sheet:null}); this.toast("Inventory adjusted", p.name + " · " + p.avail + " → " + P.adjDefault + " · Physical count", true); },
+      // procedures
+      templates, procHistory,
+      newTemplate: () => this.go("procEdit", { proc:"new", editItems:[], editName:"" }), editItems, editEmpty: editItems.length===0, editName: S.editName, setEditName: e => this.setState({editName:e.target.value}), editTitle: editIsNew ? "New procedure" : "Edit procedure",
+      saveTemplate: () => { const items = S.editItems.map(i => [i.name, i.q]); const name = S.editName.trim() || "Untitled procedure"; if (editIsNew) this.T.push({ id:"t"+Date.now(), name, items }); else { const tpl = this.T.find(x => x.id===S.proc); if (tpl) { tpl.name = name; tpl.items = items; } } this.back(); this.toast("Procedure saved", name + " · " + items.length + " default supplies"); },
+      addRows: S.screen==="procEdit" ? editAddable : addable, openAddItem: () => this.setState({sheet:"addItem", addQ:""}), addQ: S.addQ, setAddQ: e => this.setState({addQ:e.target.value}), addEmpty: (S.screen==="procEdit" ? editAddable : addable).length===0, sheetAddItem: S.sheet==="addItem",
+      toggleBottleInfo: () => this.toast("Opened a new one?", "Tap Take new when you open a fresh bottle, syringe or kit from stock. Using an already open one changes nothing."),
+      isAdmin, procListNote: isAdmin ? "Starting a procedure deducts its supplies right away. Pencil edits the default supplies. Starter quantities are templates, not clinical recommendations." : "Starting a procedure deducts its supplies right away. Only an admin can add or edit procedure templates.",
+      openRemove: () => this.setState({sheet:"remove", removeNote:""}), sheetRemove: S.sheet==="remove", removeNote: S.removeNote || "", setRemoveNote: e => this.setState({removeNote:e.target.value}), removeDisabled: !(S.removeNote || "").trim(),
+      removeText: total + " items will be returned to inventory. Stock levels update immediately.",
+      confirmRemove: () => { const id = S.eventId; this.setState(s => ({ sheet:null, events: s.events.filter(e => e.id!==id), screen:"proc", stack:[] })); this.toast("Procedure cancelled", t.name + " · " + total + " items returned to inventory", true); },
+      T, procNew: isNew, procDone: isDone, procEditing: isEditing, procHasStatus: !isNew, procEditable: editable,
+      procStatusLabel: isEditing ? "Editing" : "Completed", qtyHeader: isNew ? "Qty" : "Used", itemsHeader: isNew ? "Supplies for this procedure" : "Supplies used",
+      startLabel: "Start procedure · " + total + " items",
+      startProc: () => { pItems.forEach(it => { const x = this.P.find(y=>y.name===it.name); if (isCont(x) && it.act === 1 && (x.unopened||0) > 0) { x.unopened -= 1; x.avail = Math.max(x.avail-1,0); x.open = [...openOf(x), {by:"Sarah", days:0}]; } }); const id = "e" + Date.now(); this.setState(s => ({ procStatus:"done", eventId:id, procItems:null, events:[{ id, tid:t.id, name:t.name, when:"Today · now", by:"Sarah", items:pItems }, ...s.events] })); this.toast(t.name + " started", total + " items deducted from inventory.", true); },
+      editUsage: () => this.setState({ procStatus:"editing", procItems: pItems.map(x => ({...x})) }),
+      cancelEdit: () => this.setState({ procStatus:"done", procItems:null }),
+      saveUsage: () => { const diff = total - (ev ? ev.items.reduce((n,i)=>n+i.act,0) : 0); this.setState(s => ({ procStatus:"done", procItems:null, events: s.events.map(e => e.id===S.eventId ? {...e, items: pItems.map(x => ({...x, exp:x.act}))} : e) })); this.toast("Usage updated", (diff > 0 ? diff + " more items deducted" : diff < 0 ? (-diff) + " items returned to inventory" : "No quantity change") + " · recorded in Activity.", true); },
+      // receive
+      rxOptions: [["Camera","Take a photo","Invoice or packing slip.",ink,"var(--text-on-dark)","rgba(255,254,251,.12)",()=>{ this.go("invoice",{scanning:true}); setTimeout(()=>this.setState({scanning:false}),1400); }],["Upload","Upload PDF or image","From files or email.","var(--surface-card)",ink,"var(--surface-page)",()=>{ this.go("invoice",{scanning:true}); setTimeout(()=>this.setState({scanning:false}),1400); }],["PenLine","Receive manually","No invoice, or a single item.","var(--surface-card)",ink,"var(--surface-page)",()=>this.go("manual")]].map(([icon,title,sub,bg,fg,iconBg,go]) => ({icon,title,sub,bg,fg,iconBg,go})),
+      hasOrdered: ordered.length>0, orderedRows: ordered.map(o => ({ name:o.name, sub: o.supplier + " · ordered " + o.date, qty:o.qty })),
+      scanning: S.scanning, notScanning: !S.scanning, lines, linesSummary: ready ? receiving + " of " + S.lines.length + " lines will increase inventory." : "Resolve every line to continue.", linesNotReady: !ready,
+      confirmReceive: () => { this.setState({screen:"inv",stack:["home"],invFilter:"All"}); this.toast("Delivery received","Inventory increased for " + receiving + " products.", true); },
+      manualPicked: !!mp, manualNotPicked: !mp, manualQty: S.manualQty || "", setManualQty: e => this.setState({manualQty:e.target.value}), manualProduct: mp ? { name: mp.name, unit: mp.unit, recvUnit: mp.pack || mp.unit, color: ink, sub: mp.cat + " · " + mp.avail + " " + mp.unit + " in stock" } : { name: "Choose a product", unit: "", recvUnit: "", color: "var(--text-secondary)" }, manualAfter: mp ? (mq ? (mp.pack ? mq + " " + mp.pack + (mq>1?"es":"") + " = " + (mq*mp.packSize) + " " + mp.unit + " · stock " + mp.avail + " → " + (mp.avail + mq*mp.packSize) : "Stock " + mp.avail + " → " + (mp.avail + mq) + " " + mp.unit) : "Current " + mp.avail + " " + mp.unit + (mp.pack ? " · 1 " + mp.pack + " = " + mp.packSize + " " + mp.unit : "")) : "",
+      openPickProduct: () => this.setState({sheet:"pickProduct", addQ:""}), sheetPickProduct: S.sheet==="pickProduct",
+      openNewProduct: () => this.setState({sheet:"newProduct", npFrom:"pick", npName: S.addQ || "", npUnit:"", npPack:"", npPackSize:"", npMin:"", npTarget:"", npCat:"Other"}),
+      openEditProduct: () => this.setState({sheet:"newProduct", npFrom:"edit", npName:p.name, npUnit:p.unit, npPack:p.pack||"", npPackSize:p.packSize ? String(p.packSize) : "", npMin:String(p.min), npTarget:String(p.target), npCat:p.cat}),
+      npIsNew: S.npFrom!=="edit", npTitle: S.npFrom==="edit" ? "Edit product" : "New product",
+      npCat: S.npCat || "Other", setNpCat: e => this.setState({npCat:e.target.value}), npPack: S.npPack || "", setNpPack: e => this.setState({npPack:e.target.value}), npPackSize: S.npPackSize || "", setNpPackSize: e => this.setState({npPackSize:e.target.value}),
+      npMin: S.npMin || "", setNpMin: e => this.setState({npMin:e.target.value}), npTarget: S.npTarget || "", setNpTarget: e => this.setState({npTarget:e.target.value}),
+      npHasPack: !!(S.npPack||"").trim(), npPackLabel: "How many " + ((S.npUnit||"").trim() || "units") + " in 1 " + (S.npPack||"").trim() + "?", npUnitShort: (S.npUnit||"").trim(),
+      npPackLine: (S.npPackSize && S.npUnit) ? "Receive in " + (S.npPack||"").trim() + "es, count and use in " + (S.npUnit||"").trim() + ". 1 " + (S.npPack||"").trim() + " adds " + S.npPackSize + " " + (S.npUnit||"").trim() + "." : "Stock is counted in the smaller unit.", npFromPick: S.npFrom==="pick", npFromInvoice: S.npFrom==="invoice", npSource: mLine ? mLine.desc : "", npCta: S.npFrom==="edit" ? "Save changes" : S.npFrom==="inv" ? "Create product" : S.npFrom==="invoice" ? "Create and use for this line" : "Create and select", backToPick: () => this.setState({sheet:"pickProduct"}), sheetNewProduct: S.sheet==="newProduct",
+      npName: S.npName || "", setNpName: e => this.setState({npName:e.target.value}), npUnit: S.npUnit || "", setNpUnit: e => this.setState({npUnit:e.target.value}), npDisabled: !(S.npName || "").trim(),
+      categories: ["Anesthetic","Endodontics","Restorative","PPE","Sterilization","Disposable","Impression","Other"],
+      createProduct: () => { const name = (S.npName||"").trim(); const unit = (S.npUnit||"").trim() || "units", pack = (S.npPack||"").trim() || undefined, packSize = Number(S.npPackSize) || undefined, min = Number(S.npMin)||0, target = Number(S.npTarget)||0, cat = S.npCat || "Other"; if (S.npFrom==="edit") { Object.assign(p, { name, unit, pack, packSize, min, target, cat }); this.setState({sheet:null}); this.toast("Product updated", name + " · " + (pack ? "1 " + pack + " = " + packSize + " " + unit : "counted in " + unit)); return; } const id = Date.now(); this.P.push({ id, name, cat, supplier: S.npFrom==="invoice" ? "Patterson" : undefined, mode:"Unit", unit, pack, packSize, avail:0, min, target, status:"Out of stock", lots:[], usage30:0, counted:"—", loc:"—" }); if (S.npFrom==="invoice") { this.setState(s => ({ sheet:null, lines: s.lines.map((x,j) => j===s.matchIdx ? {...x, match:name, state:"Created"} : x) })); this.toast("Product created", name + " · add expiry on the line"); } else if (S.npFrom==="inv") { this.setState(s => ({ sheet:null, screen:"product", pid:id, stack:[...s.stack, "inv"], q:"" })); this.toast("Product created", name + " · receive stock to add quantity"); } else { this.setState({ manualPid:id, sheet:null }); this.toast("Product created", name + " · now choose quantity and expiry"); } },
+      pickRows: this.P.filter(pp => pp.name.toLowerCase().includes(addQ)).map(pp => ({ name:pp.name, sub: pp.cat + " · " + pp.avail + " " + pp.unit, on: !!mp && pp.id===mp.id, pick: () => this.setState({ manualPid: pp.id, sheet:null }) })), pickEmpty: this.P.filter(pp => pp.name.toLowerCase().includes(addQ)).length===0, manualNotReady: !mp || !mq, manualReceive: () => { if (!mp || !mq) return; const add = mp.pack ? mq*mp.packSize : mq; mp.avail += add; this.setState({screen:"inv",stack:["home"],manualPid:null,manualQty:""}); this.toast("Delivery received", mp.name + " · +" + add + " " + mp.unit); },
+      blind:S.blind, setBlind: v => this.setState({blind:v}),
+      // order
+      orderTabs: [["Needs order", needs, "To buy"],["Ordered", ordered.length, "Ordered"],["Received", S.orders.filter(o=>o.status==="Received").length, "Received"]].map(([l,n,lab]) => seg(lab + " · " + n, S.orderTab===l, () => this.setState({orderTab:l}))),
+      orderRows: orderRows.map(o => ({ ...o, selectable: o.editable && isAdmin })), orderEmpty: orderRows.length===0, orderIsNeeds: S.orderTab==="Needs order", orderIsOrdered: S.orderTab==="Ordered", orderIsReceived: S.orderTab==="Received", orderNeedsAdmin: S.orderTab==="Needs order" && isAdmin, orderOrderedAdmin: S.orderTab==="Ordered" && isAdmin, orderSpacer: S.orderTab==="Received" || !isAdmin, prodBtnCols: "minmax(0,1fr) minmax(0,1fr)", markOrderedLabel: "Mark " + selRows.length + " as ordered", noneSelected: selRows.length===0, selSummary: selRows.length + " of " + needs + " selected", toggleAllLabel: selRows.length===needs ? "Clear" : "Select all", toggleAll: () => this.setState({ orderSel: Object.fromEntries(needRows.map(o => [o.id, selRows.length!==needs])) }),
+      markOrdered: () => { const n = selRows.length; this.setState(s => ({ orders: s.orders.map(o => o.status==="Needs order" && isSel(o) ? {...o, status:"Ordered", date:"Oct 6"} : o), orderSel:{}, orderTab:"Ordered" })); this.toast("Moved to Ordered", n + " items · Receive them when the delivery arrives."); },
+      openAddOrder: () => this.setState({sheet:"addOrder", addQ:""}), sheetAddOrder: S.sheet==="addOrder",
+      addOrderRows: this.P.filter(pp => !S.orders.some(o => o.name===pp.name && o.status==="Needs order") && pp.name.toLowerCase().includes(addQ)).map(pp => ({ name:pp.name, sub: pp.avail + " " + pp.unit + " · target " + pp.target, add: () => { this.setState(s => ({ sheet:null, orders:[...s.orders, { id:Date.now(), name:pp.name, cur:pp.avail, target:pp.target, qty:Math.max(pp.target - pp.avail, 1), status:"Needs order", supplier: pp.supplier || "No supplier yet" }] })); this.toast("Added to To buy", pp.name + " · suggested " + Math.max(pp.target - pp.avail, 1) + " " + pp.unit); } })),
+      addOrderEmpty: this.P.filter(pp => !S.orders.some(o => o.name===pp.name && o.status==="Needs order") && pp.name.toLowerCase().includes(addQ)).length===0,
+      // expiring
+      expWins: [30,60,90].map(w => seg(w + " days", S.expWin===w, () => this.setState({expWin:w}))), expRows, expEmpty: expRows.length===0,
+      expSummary: expRows.length ? expRows.length + (expRows.length===1 ? " product" : " products") + " · $" + expRows.reduce((n,e)=>n+S.expiring.find(x=>x.name===e.name).value,0) + " at risk within " + S.expWin + " days." : "",
+      disposeText: dispE ? dispE.name + " · lot " + dispE.lot + ". Removed with reason Expired." : "", disposeQty: dispE ? dispE.qty.split(" ")[0] : "1",
+      confirmDispose: () => { const i = S.disposeIdx; this.setState(s => ({ sheet:null, expiring: s.expiring.map((e,j) => j===i ? {...e, disposed:true} : e) })); this.toast("Marked disposed", (dispE ? dispE.name : "") + " · reason Expired", true); },
+      // activity
+      actFilters: ["All","Receiving","Procedures","Counts","Adjustments"].map(f => chip(f, S.actFilter===f, () => this.setState({actFilter:f}))), actGroups, toastUndo: toastFn("Reversed","An opposite transaction was recorded. History kept."),
+      // more
+      showRole: !!props.showRole, roleLabel: props.roleTag === "both" ? "Admin / Staff" : isAdmin ? "Admin" : "Staff", roleBg: props.roleTag === "both" ? "var(--surface-card)" : isAdmin ? ink : "var(--color-info-soft)", roleFg: props.roleTag === "both" ? ink : isAdmin ? "var(--text-on-dark)" : "var(--color-info)",
+      meName: isAdmin ? "Sarah Mitchell" : "Michael Reyes", meRole: isAdmin ? "Admin" : "Staff", meIni: isAdmin ? "SM" : "MR",
+      moreGroups: [
+        { rows: isAdmin ? [["Users","Team","3 people",()=>this.go("team")],["Settings","Clinic settings","",()=>this.go("settings")],["CreditCard","Billing","",()=>this.go("billing")],["Download","Export CSV","",toastFn("Export started","Products, lots and transactions. Sent to your email.")]] : [["Users","Team","3 people",()=>this.go("team")]] },
+        { rows: [["LifeBuoy","Help","",toastFn("Help","Opens the help centre.")],["LogOut","Sign out","",()=>this.setState({screen:"signin",stack:[]})]] }
+      ].map(g => ({ rows: g.rows.map(([icon,label,meta,go]) => ({ icon,label,meta,go, color: label==="Sign out" ? "var(--color-danger)" : ink })) })),
+      expiryOpts:["30, 60 and 90 days","60 and 90 days","90 days only"], toastSaved: toastFn("Settings saved",""),
+      team: [["SM","Sarah Mitchell","sarah@smiledental.ca","Admin"],["DK","Dr. Daniel Kim","daniel@smiledental.ca","Admin"],["MR","Michael Reyes","michael@smiledental.ca","Staff"],["—","priya@smiledental.ca","Invited · Oct 1","Staff"]].map(([ini,name,email,role]) => ({ini,name,email,role, roleColor: role==="Admin" ? prim : "var(--text-body)"})),
+      roles:["Staff","Admin"], openInvite: () => this.setState({sheet:"invite"}), sendInvite: () => { this.setState({sheet:null}); this.toast("Invitation sent","They get a link by email."); },
+      toastBilling: toastFn("Payment method","Opens secure card form."),
+      openBillingEmails: () => this.setState({sheet:"billingEmails", newBillingEmail:""}), sheetBillingEmails: S.sheet==="billingEmails",
+      billingEmails: (S.billingEmails || ["owner@smiledental.ca"]).map((em,i) => ({ email:em, primary: i===0, removable: i>0, remove: () => this.setState(s => ({ billingEmails: (s.billingEmails || ["owner@smiledental.ca"]).filter((x,j) => j!==i) })) })),
+      billingEmailsMeta: (S.billingEmails || ["owner@smiledental.ca"]).length === 1 ? (S.billingEmails || ["owner@smiledental.ca"])[0] : (S.billingEmails || []).length + " addresses",
+      newBillingEmail: S.newBillingEmail || "", setNewBillingEmail: e => this.setState({newBillingEmail:e.target.value}), newBillingEmailEmpty: !(S.newBillingEmail || "").includes("@"),
+      addBillingEmail: () => this.setState(s => ({ billingEmails: [...(s.billingEmails || ["owner@smiledental.ca"]), s.newBillingEmail.trim()], newBillingEmail:"" })),
+      reasons:["Physical count","Expired","Damaged","Waste","Missing","Returned","Data correction","Other"],
+      // overlays
+      sheetOpen: !!S.sheet, sheetAdjust: S.sheet==="adjust", sheetDispose: S.sheet==="dispose", sheetInvite: S.sheet==="invite", closeSheet: () => this.setState({sheet:null}),
+      toastOpen: !!S.toast, toast: S.toast || {}, toastBottom: isRoot ? 96 : 40, closeToast: () => this.setState({toast:null})
+    };
+  }
+}
+</script>
+</body>
+</html>
