@@ -1,0 +1,6 @@
+// Supabase settings, read into Info.plist. Real values live in Secrets.xcconfig (git-ignored):
+// copy Secrets.example.xcconfig to Secrets.xcconfig and fill it in.
+SUPABASE_URL =
+SUPABASE_ANON_KEY =
+
+#include? "Secrets.xcconfig"

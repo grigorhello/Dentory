@@ -22,4 +22,9 @@ Native iOS: Swift 6, SwiftUI, Observation, iOS 17+, iPhone and iPad, project gen
 - No patient or appointment data anywhere.
 
 ## Commands
-To be filled in by MS-101 (app, database, tests, e2e).
+- `make project`: generate `MediSave.xcodeproj` from `project.yml` (generated and git-ignored except `Package.resolved`, which pins package versions; rerun after adding files).
+- `make build`: build for the iOS Simulator. Add `WARNINGS_AS_ERRORS=YES` to fail on warnings, as CI does.
+- `make test`: unit tests (Swift Testing) on the iPhone 16 simulator. `make uitest`: XCUITest flows.
+- `make lint`: SwiftLint, strict. Raw colors and fonts outside `Core/DesignSystem` fail it.
+- Supabase keys: copy `Config/Secrets.example.xcconfig` to `Config/Secrets.xcconfig` (git-ignored).
+- Database commands: to be added by MS-153.
