@@ -59,6 +59,7 @@ struct MSPicker<Value: Hashable & Sendable>: View {
                 )
                 .contentShape(Rectangle())
             }
+            .accessibilityLabel(label ?? placeholder)
             .accessibilityValue(selection.map(title) ?? "")
             if let error {
                 Text(error).textStyle(.caption12).foregroundStyle(Color.ms.danger)

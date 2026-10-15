@@ -23,11 +23,11 @@ struct SkeletonRow: View {
             }
         }
         .opacity(isDimmed ? 0.45 : 1)
+        // Scoped to the opacity: a `withAnimation` here would leak the repeating animation into the surrounding layout.
+        .animation(.easeInOut(duration: Motion.pulse).repeatForever(autoreverses: true), value: isDimmed)
         .onAppear {
             guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
-                isDimmed = true
-            }
+            isDimmed = true
         }
         .accessibilityLabel("Loading")
     }

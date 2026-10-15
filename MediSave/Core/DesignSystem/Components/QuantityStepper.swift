@@ -26,7 +26,7 @@ struct QuantityStepper: View {
                 model.decrement()
                 value = model.value
             }
-            Text("\(value)")
+            Text("\(model.value)")
                 .textStyle(.bodyStrong16)
                 .monospacedDigit()
                 .foregroundStyle(model.differsFromReference ? Color.ms.primary : Color.ms.ink)

@@ -4,6 +4,8 @@ import SwiftUI
 nonisolated enum Motion {
     static let fast: TimeInterval = 0.12
     static let base: TimeInterval = 0.18
+    /// Half a breath of a loading placeholder; the one motion slower than an interaction.
+    static let pulse: TimeInterval = 0.9
 
     /// The standard easing curve at any duration.
     static func ease(duration: TimeInterval) -> Animation {

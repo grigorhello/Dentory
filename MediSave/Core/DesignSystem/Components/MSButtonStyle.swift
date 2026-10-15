@@ -78,6 +78,7 @@ struct MSButtonSurface<Label: View>: View {
         .frame(minHeight: ControlHeight.hitTarget)
         .animation(Motion.fastAnimation, value: isPressed)
         .allowsHitTesting(!isLoading)
+        .accessibilityValue(isLoading ? "Loading" : "")
     }
 
     private var isFilled: Bool {

@@ -14,7 +14,7 @@ struct EmptyStateView: View {
             .foregroundStyle(Color.ms.textSecondary)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
-            .padding(Spacing.xl)
+            .padding(Spacing.xxl)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
                     .strokeBorder(Color.ms.line, lineWidth: 1)

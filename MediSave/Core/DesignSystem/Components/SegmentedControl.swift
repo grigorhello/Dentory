@@ -23,7 +23,6 @@ nonisolated struct SegmentOption<Value: Hashable & Sendable>: Identifiable, Send
 struct SegmentedControl<Value: Hashable & Sendable>: View {
     @Binding var selection: Value
     let options: [SegmentOption<Value>]
-    @Namespace private var selectionNamespace
 
     var body: some View {
         HStack(spacing: 0) {
@@ -33,12 +32,14 @@ struct SegmentedControl<Value: Hashable & Sendable>: View {
         }
         .padding(Spacing.xs)
         .background(Color.ms.surfaceCard, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+        // The selected pill fades in place (PRD §7: fades and color only, nothing slides).
+        .animation(Motion.baseAnimation, value: selection)
     }
 
     private func segment(_ option: SegmentOption<Value>) -> some View {
         let isSelected = option.value == selection
         return Button {
-            withAnimation(Motion.baseAnimation) { selection = option.value }
+            selection = option.value
         } label: {
             Text(option.text)
                 .textStyle(isSelected ? .bodyStrong16 : .body16)
@@ -48,12 +49,10 @@ struct SegmentedControl<Value: Hashable & Sendable>: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 40)
                 .background {
-                    if isSelected {
-                        RoundedRectangle(cornerRadius: Radius.md - Spacing.xs, style: .continuous)
-                            .fill(Color.ms.surfacePage)
-                            .msShadow(Shadow.soft)
-                            .matchedGeometryEffect(id: "selection", in: selectionNamespace)
-                    }
+                    RoundedRectangle(cornerRadius: Radius.md - Spacing.xs, style: .continuous)
+                        .fill(Color.ms.surfacePage)
+                        .msShadow(Shadow.soft)
+                        .opacity(isSelected ? 1 : 0)
                 }
                 .contentShape(Rectangle())
         }

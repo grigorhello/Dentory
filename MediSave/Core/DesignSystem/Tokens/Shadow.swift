@@ -35,6 +35,17 @@ extension View {
                 .strokeBorder(color, lineWidth: 1)
         )
     }
+
+    /// The focus ring (`--focus-ring`): 3 pt of soft blue outside a 1 pt blue edge, shown while `isVisible`.
+    func msFocusRing(_ isVisible: Bool, cornerRadius: CGFloat = Radius.sm) -> some View {
+        overlay {
+            if isVisible {
+                RoundedRectangle(cornerRadius: cornerRadius + 2, style: .continuous)
+                    .stroke(Color.ms.primarySoft, lineWidth: 3)
+                    .padding(-2.5)
+            }
+        }
+    }
 }
 
 private struct ShadowModifier: ViewModifier {

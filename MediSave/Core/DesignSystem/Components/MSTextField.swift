@@ -66,6 +66,7 @@ struct MSTextField: View {
             input
                 .textStyle(.body16)
                 .foregroundStyle(Color.ms.ink)
+                .accessibilityLabel(label ?? placeholder)
                 .focused($isFocused)
                 .keyboardType(keyboard)
                 .textContentType(contentType)
@@ -87,7 +88,7 @@ struct MSTextField: View {
             RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
                 .strokeBorder(borderColor, lineWidth: 1)
         )
-        .overlay(focusRing)
+        .msFocusRing(isFocused)
     }
 
     @ViewBuilder private var input: some View {
@@ -100,14 +101,6 @@ struct MSTextField: View {
 
     private var prompt: Text {
         Text(placeholder).foregroundStyle(Color.ms.textSecondary)
-    }
-
-    @ViewBuilder private var focusRing: some View {
-        if isFocused {
-            RoundedRectangle(cornerRadius: Radius.sm + 2, style: .continuous)
-                .stroke(Color.ms.primarySoft, lineWidth: 3)
-                .padding(-2.5)
-        }
     }
 
     private var borderColor: Color {

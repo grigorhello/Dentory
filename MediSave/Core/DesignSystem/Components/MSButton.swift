@@ -34,14 +34,15 @@ struct MSButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Spacing.sm) {
-                if let icon {
+                // The spinner takes the icon's place while loading; the button keeps its colors and only stops responding.
+                if let icon, !isLoading {
                     IconView(icon, size: size.iconSize)
                 }
                 Text(title)
             }
         }
         .buttonStyle(.ms(variant, size: size, fullWidth: isFullWidth, loading: isLoading))
-        .disabled(isDisabled || isLoading)
+        .disabled(isDisabled)
     }
 }
 
