@@ -9,6 +9,7 @@ Dental inventory app for small clinics: iPhone and iPad, two roles (Admin, Staff
 - Decisions that override or fill gaps in the PRD are in issue `MS-100`. When the frame and the PRD text disagree and MS-100 is silent: layout and copy follow the frame, business rules follow the PRD.
 - Use the PRD Appendix B element ids (e.g. `procDetail.start`) verbatim as `.accessibilityIdentifier` and analytics event names.
 - One branch and one PR per ticket; PR body says `Closes #N`.
+- Review loop: once CI has finished on the PR, run the `pr-reviewer` agent (`.claude/agents/pr-reviewer.md`) on it. It squash-merges when nothing blocks. On `CHANGES_REQUESTED` the developer fixes every finding on the same branch, pushes, waits for CI and runs the reviewer again. After 3 rounds without a merge, or on `NEEDS_OWNER`, stop and ask Grigor. After a merge, move the ticket's Notion card to Feature QA.
 
 ## Stack (MS-100 D1)
 Native iOS: Swift 6, SwiftUI, Observation, iOS 17+, iPhone and iPad, project generated with XcodeGen, packages via Swift Package Manager (`supabase-swift`). Supabase (Postgres with RLS, Auth, Storage, Edge Functions, pg_cron), Claude API for invoice reading (server side), Stripe billing (hosted pages), Resend email, APNs push.
