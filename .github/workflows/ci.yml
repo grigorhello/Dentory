@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -25,8 +28,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .build/spm
-          key: spm-${{ runner.os }}-${{ hashFiles('project.yml') }}
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
           restore-keys: spm-${{ runner.os }}-
 
       - name: Generate, lint, build and test
-        run: make project lint build test WARNINGS_AS_ERRORS=YES
+        run: make project lint build test WARNINGS_AS_ERRORS=YES SPM_FLAGS=-onlyUsePackageVersionsFromResolvedFile

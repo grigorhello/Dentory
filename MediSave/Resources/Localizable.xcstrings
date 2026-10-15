@@ -1,7 +1,10 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-
+    "Home" : {},
+    "Inventory" : {},
+    "Procedures" : {},
+    "To buy" : {}
   },
   "version" : "1.0"
 }

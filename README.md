@@ -5,7 +5,7 @@ Dental inventory app for small clinics, native SwiftUI for iPhone and iPad (iOS 
 ## Setup
 1. Install Xcode 26 or later, then `brew install xcodegen swiftlint`.
 2. `cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig` and fill in the Supabase URL and anon key (optional until the app talks to Supabase).
-3. `make project` and open `MediSave.xcodeproj`. The project file is generated from `project.yml` and not committed; rerun `make project` after pulling or adding files.
+3. `make project` and open `MediSave.xcodeproj`. The project file is generated from `project.yml` and not committed, except `Package.resolved`, which pins the Swift package versions (commit it when they change). Rerun `make project` after pulling or adding files.
 
 ## Commands
 | Command | What it does |
@@ -16,6 +16,6 @@ Dental inventory app for small clinics, native SwiftUI for iPhone and iPad (iOS 
 | `make uitest` | Run the UI tests (XCUITest) on the iPhone 16 simulator |
 | `make lint` | Run SwiftLint in strict mode |
 
-Add `WARNINGS_AS_ERRORS=YES` to fail on any compiler warning (CI does). `SIM_NAME="iPad Pro 11-inch (M4)"` runs the tests on another simulator.
+Add `WARNINGS_AS_ERRORS=YES` to fail on any compiler warning (CI does). `SIM_NAME="iPad Pro 11-inch (M4)"` runs the tests on another simulator. CI adds `SPM_FLAGS=-onlyUsePackageVersionsFromResolvedFile` so it builds exactly the committed package versions.
 
 CI (`.github/workflows/ci.yml`) runs `make project lint build test WARNINGS_AS_ERRORS=YES` on every pull request.
