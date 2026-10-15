@@ -7,6 +7,15 @@ opt_in_rules:
   - force_unwrapping
   - implicitly_unwrapped_optional
 
+# Design-token names come from the CSS variables (Spacing.lg, Radius.md, Color.ms); the Lucide "x" icon and a shadow's y offset.
+identifier_name:
+  min_length: 2
+  excluded: [x, y]
+
+line_length:
+  ignores_comments: true
+  ignores_urls: true
+
 file_length:
   warning: 400
   error: 400
@@ -20,5 +29,7 @@ custom_rules:
     name: "Design system only"
     message: "Use Core/DesignSystem tokens instead of raw colors or fonts."
     regex: '(Color\(red:|Color\(hex:|UIColor\(|Font\.custom\()'
-    excluded: 'MediSave/Core/DesignSystem/'
+    excluded:
+      - 'MediSave/Core/DesignSystem/'
+      - 'MediSaveTests/Core/DesignSystem/'
     severity: error

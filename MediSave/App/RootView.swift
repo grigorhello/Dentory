@@ -8,7 +8,7 @@ struct RootView: View {
         TabView(selection: $selection) {
             ForEach(AppTab.allCases) { tab in
                 NavigationStack {
-                    Text(tab.title)
+                    TabPlaceholderView(tab: tab)
                         .navigationTitle(tab.title)
                 }
                 .tabItem { Label(tab.title, systemImage: tab.systemImage) }

@@ -6,5 +6,15 @@
 	<string>$(SUPABASE_URL)</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Outfit-Regular.ttf</string>
+		<string>Outfit-Medium.ttf</string>
+		<string>Outfit-SemiBold.ttf</string>
+		<string>Inter-Regular.ttf</string>
+		<string>Inter-Medium.ttf</string>
+		<string>Inter-SemiBold.ttf</string>
+		<string>Inter-Bold.ttf</string>
+	</array>
 </dict>
 </plist>
