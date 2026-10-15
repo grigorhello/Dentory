@@ -1,0 +1,24 @@
+included:
+  - MediSave
+  - MediSaveTests
+  - MediSaveUITests
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+
+file_length:
+  warning: 400
+  error: 400
+
+type_body_length:
+  warning: 300
+  error: 300
+
+custom_rules:
+  design_system_only:
+    name: "Design system only"
+    message: "Use Core/DesignSystem tokens instead of raw colors or fonts."
+    regex: '(Color\(red:|Color\(hex:|UIColor\(|Font\.custom\()'
+    excluded: 'MediSave/Core/DesignSystem/'
+    severity: error
