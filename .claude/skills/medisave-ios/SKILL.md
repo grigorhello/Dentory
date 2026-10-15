@@ -22,6 +22,7 @@ Other skills in this repo, load them when the task calls for it:
 7. Run `make lint test` (or the commands in `CLAUDE.md`). Build for the iPhone 16 and iPad Pro 11" simulators.
 8. Run the `swiftui-pro` review on your diff and fix genuine findings.
 9. Open the PR: title `MS-1NN · …`, body `Closes #N`, simulator screenshots next to the frame images, and a note for any place you followed the frame over the PRD.
+10. When CI finishes, run the `pr-reviewer` agent on the PR and follow the review loop in `CLAUDE.md`: fix its findings on the same branch until it merges, at most 3 rounds.
 
 ## 2. Project layout (feature folders)
 
