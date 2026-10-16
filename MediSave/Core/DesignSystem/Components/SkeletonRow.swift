@@ -1,12 +1,20 @@
 import SwiftUI
 
-/// A loading placeholder row: cream-sunken bars that fade in and out (no shimmer, no motion when Reduce Motion is on).
+/// A loading placeholder row: cream-sunken bars that breathe between full and dim opacity.
+/// The pulse is a function of time drawn by a `TimelineView`, not a SwiftUI animation, so it can never
+/// leak into the layout around it. It holds still when Reduce Motion is on.
 struct SkeletonRow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isDimmed = false
     var showsDivider = true
 
     var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+            row.opacity(reduceMotion ? 1 : Self.opacity(at: context.date))
+        }
+        .accessibilityLabel("Loading")
+    }
+
+    private var row: some View {
         VStack(spacing: 0) {
             HStack(spacing: Spacing.md) {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -22,20 +30,20 @@ struct SkeletonRow: View {
                 ListDivider()
             }
         }
-        .opacity(isDimmed ? 0.45 : 1)
-        // Scoped to the opacity: a `withAnimation` here would leak the repeating animation into the surrounding layout.
-        .animation(.easeInOut(duration: Motion.pulse).repeatForever(autoreverses: true), value: isDimmed)
-        .onAppear {
-            guard !reduceMotion else { return }
-            isDimmed = true
-        }
-        .accessibilityLabel("Loading")
     }
 
     private func bar(width: CGFloat, height: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: Spacing.xs, style: .continuous)
             .fill(Color.ms.canvasSunken)
             .frame(width: width, height: height)
+    }
+
+    /// 1 at the start of each breath, 0.45 halfway through, back to 1 after two `Motion.pulse` halves.
+    nonisolated static func opacity(at date: Date) -> Double {
+        let breath = Motion.pulse * 2
+        let phase = date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: breath) / breath
+        let wave = (1 + cos(phase * 2 * .pi)) / 2
+        return 0.45 + 0.55 * wave
     }
 }
 

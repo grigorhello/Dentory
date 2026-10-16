@@ -46,7 +46,8 @@ struct MSTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let label {
-                Text(label).textStyle(.bodyStrong14).foregroundStyle(Color.ms.ink)
+                // VoiceOver gets the label from the field itself.
+                Text(label).textStyle(.bodyStrong14).foregroundStyle(Color.ms.ink).accessibilityHidden(true)
             }
             field
             if let error {

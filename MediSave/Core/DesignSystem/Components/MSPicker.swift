@@ -32,7 +32,8 @@ struct MSPicker<Value: Hashable & Sendable>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let label {
-                Text(label).textStyle(.bodyStrong14).foregroundStyle(Color.ms.ink)
+                // VoiceOver gets the label from the menu itself.
+                Text(label).textStyle(.bodyStrong14).foregroundStyle(Color.ms.ink).accessibilityHidden(true)
             }
             Menu {
                 ForEach(options, id: \.self) { option in

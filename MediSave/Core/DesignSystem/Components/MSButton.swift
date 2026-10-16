@@ -42,7 +42,7 @@ struct MSButton: View {
             }
         }
         .buttonStyle(.ms(variant, size: size, fullWidth: isFullWidth, loading: isLoading))
-        .disabled(isDisabled)
+        .disabled(isDisabled || isLoading)
     }
 }
 

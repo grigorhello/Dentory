@@ -16,6 +16,7 @@ nonisolated enum MSButtonSize: CaseIterable, Sendable {
 }
 
 /// The MediSave button look for any `Button`: `Button("Adjust") { }.buttonStyle(.ms(.tertiary))`.
+/// A loading button keeps its colors but must also be `.disabled(true)` so nothing can activate it; `MSButton` does that.
 struct MSButtonStyle: ButtonStyle {
     var variant: MSButtonVariant = .primary
     var size: MSButtonSize = .medium
@@ -77,8 +78,6 @@ struct MSButtonSurface<Label: View>: View {
         .contentShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         .frame(minHeight: ControlHeight.hitTarget)
         .animation(Motion.fastAnimation, value: isPressed)
-        .allowsHitTesting(!isLoading)
-        .accessibilityValue(isLoading ? "Loading" : "")
     }
 
     private var isFilled: Bool {
@@ -88,13 +87,16 @@ struct MSButtonSurface<Label: View>: View {
         }
     }
 
+    /// Disabled while loading, but drawn in its own colors: the spinner says why it does not respond.
+    private var looksEnabled: Bool { isEnabled || isLoading }
+
     private var foreground: Color {
-        if !isEnabled { return isFilled ? .ms.onPrimary : .ms.textDisabled }
+        if !looksEnabled { return isFilled ? .ms.onPrimary : .ms.textDisabled }
         return isFilled ? .ms.onPrimary : .ms.ink
     }
 
     private var background: Color {
-        if !isEnabled { return isFilled ? .ms.mute : .clear }
+        if !looksEnabled { return isFilled ? .ms.mute : .clear }
         switch (variant, isPressed) {
         case (.primary, false): return .ms.primary
         case (.primary, true): return .ms.primaryActive
@@ -111,6 +113,6 @@ struct MSButtonSurface<Label: View>: View {
 
     private var border: Color {
         guard variant == .tertiary else { return .clear }
-        return isEnabled ? .ms.ink : .ms.mute
+        return looksEnabled ? .ms.ink : .ms.mute
     }
 }
