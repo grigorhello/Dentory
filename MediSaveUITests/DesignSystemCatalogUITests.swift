@@ -8,6 +8,7 @@ final class DesignSystemCatalogUITests: XCTestCase {
     @MainActor
     func testLongPressOnHomeOpensTheCatalog() {
         let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
         app.launch()
 
         let home = app.staticTexts["tab.home.placeholder"]
