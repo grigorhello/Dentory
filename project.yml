@@ -22,6 +22,8 @@ settings:
     TARGETED_DEVICE_FAMILY: "1,2"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     DEAD_CODE_STRIPPING: YES
+    # Keep Xcode from generating `Color.primary`-style accessors for asset colors, which would clash with SwiftUI's own.
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
     # `make ... WARNINGS_AS_ERRORS=YES` (CI) turns warnings into errors for our targets only;
     # setting SWIFT_TREAT_WARNINGS_AS_ERRORS globally would also hit SPM packages.
     WARNINGS_AS_ERRORS: NO
