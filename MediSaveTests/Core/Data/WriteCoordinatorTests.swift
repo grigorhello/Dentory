@@ -97,7 +97,39 @@ struct WriteCoordinatorTests {
         await coordinator.replay()
         #expect(coordinator.queue.isEmpty)
         #expect(coordinator.lastReplayError == .validation(field: nil, message: "a note is required"))
-        #expect(toasts.current?.title == "Couldn't save. Try again.")
+        #expect(toasts.current?.title == WriteCoordinator.saveFailedMessage)
+    }
+
+    @Test func aRefusedReplayDropsThatWriteAndCarriesOn() async throws {
+        let rpc = FakeRPCClient(results: [
+            .failure(PostgrestError(code: "22023", message: "a note is required")), .success(Self.actionJSON)
+        ])
+        let network = FixedNetworkMonitor(isConnected: false)
+        let toasts = ToastCenter(duration: 60)
+        let coordinator = makeCoordinator(rpc: rpc, network: network, toasts: toasts)
+        _ = try await coordinator.write("stock_procedure_cancel", params: ["n": "1"])
+        _ = try await coordinator.write("bottle_open", params: ["n": "2"])
+        network.isConnected = true
+        await coordinator.replay()
+        #expect(rpc.calls.map(\.function) == ["stock_procedure_cancel", "bottle_open"])
+        #expect(coordinator.queue.isEmpty)
+        #expect(coordinator.lastReplayError == .validation(field: nil, message: "a note is required"))
+        #expect(toasts.current?.title == WriteCoordinator.saveFailedMessage)
+    }
+
+    @Test func aWriteMadeWhileOlderOnesWaitJoinsTheQueueInOrder() async throws {
+        let rpc = FakeRPCClient(results: [.success(Self.actionJSON), .success(Self.actionJSON)])
+        let network = FixedNetworkMonitor(isConnected: false)
+        let coordinator = makeCoordinator(rpc: rpc, network: network)
+        _ = try await coordinator.write("stock_adjust", params: ["p_actual_qty": "28"])
+        network.isConnected = true
+        let outcome = try await coordinator.write("stock_adjust", params: ["p_actual_qty": "30"])
+        #expect(outcome == .queued, "The newer write waits behind the queued one")
+        for _ in 0..<50 where !coordinator.queue.isEmpty {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(rpc.calls.map { $0.params["p_actual_qty"] ?? "" } == ["28", "30"])
+        #expect(coordinator.queue.isEmpty)
     }
 
     @Test func aReplayThatLosesTheNetworkKeepsTheRestInOrder() async throws {

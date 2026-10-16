@@ -4,17 +4,20 @@ import SwiftUI
 /// refresh on return to foreground). Every list screen applies it with its view model's `load()`.
 struct ReloadOnReturnModifier: ViewModifier {
     @Environment(\.scenePhase) private var scenePhase
+    @State private var foregroundReload: Task<Void, Never>?
     let reload: () async -> Void
 
     func body(content: Content) -> some View {
         content
             .task { await reload() }
             .refreshable { await reload() }
-            .onChange(of: scenePhase) { _, phase in
-                if phase == .active {
-                    Task { await reload() }
-                }
+            .onChange(of: scenePhase) { previous, phase in
+                // Only a return from the background; the launch transition is covered by `.task`.
+                guard previous == .background, phase == .active else { return }
+                foregroundReload?.cancel()
+                foregroundReload = Task { await reload() }
             }
+            .onDisappear { foregroundReload?.cancel() }
     }
 }
 

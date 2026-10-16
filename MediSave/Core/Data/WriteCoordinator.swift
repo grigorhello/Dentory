@@ -45,15 +45,20 @@ final class WriteCoordinator {
 
     var isOnline: Bool { networkMonitor.isConnected }
 
-    /// Sends a stock RPC, or queues it while offline. Errors other than the network are thrown as `AppError`.
+    /// The toast when the server refuses a queued write (PRD §7 errors).
+    static let saveFailedMessage = "Couldn't save. Try again."
+
+    /// Sends a stock RPC, or queues it while offline or while older writes are still waiting, so writes
+    /// reach the server in the order they were made. Errors other than the network are thrown as `AppError`.
     func write<Params: Encodable & Sendable>(
         _ function: String,
         params: Params,
         idempotencyKey: UUID = UUID()
     ) async throws -> WriteOutcome {
         let object = try Self.jsonObject(from: params)
-        guard isOnline else {
+        guard isOnline, queue.isEmpty, !isReplaying else {
             _ = queue.enqueue(function: function, params: object, key: idempotencyKey, at: clock.now)
+            if isOnline { Task { await replay() } }
             return .queued
         }
         do {
@@ -70,26 +75,25 @@ final class WriteCoordinator {
         }
     }
 
-    /// Replays the queue oldest first with the keys it was given. Stops at the first failure: a network
-    /// error keeps the write for the next attempt; any other refusal drops it and shows the save toast.
+    /// Replays the queue oldest first with the keys it was given. A network error stops the replay and
+    /// keeps the write for the next attempt; any other refusal drops that write, shows the save toast and
+    /// carries on with the next one.
     func replay() async {
         guard !isReplaying, !queue.isEmpty, isOnline else { return }
         isReplaying = true
         defer { isReplaying = false }
         lastReplayError = nil
-        for write in queue.writes {
+        while let write = queue.writes.first, isOnline {
             do {
                 let _: AnyJSON = try await rpc.call(write.function, params: write.params, idempotencyKey: write.id)
                 queue.remove(write.id)
             } catch {
                 let appError = AppError(error)
                 reporter.record(appError, function: write.function)
-                if appError != .network {
-                    queue.remove(write.id)
-                    lastReplayError = appError
-                    toasts?.show(AppError.unknown("").userMessage)
-                }
-                return
+                guard appError != .network else { return }
+                queue.remove(write.id)
+                lastReplayError = appError
+                toasts?.show(Self.saveFailedMessage)
             }
         }
     }
