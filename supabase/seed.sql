@@ -1,1 +1,1 @@
--- Runs after the migrations on every `make db-reset`. MS-109 fills it with the demo clinic.
+-- Runs after the migrations on every `make db-reset`. The demo clinic is in seed-demo.sql (`make seed-demo`, MS-109).

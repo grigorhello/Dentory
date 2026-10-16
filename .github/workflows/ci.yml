@@ -58,5 +58,9 @@ jobs:
           supabase db start
           make db-reset db-test
 
+      # The demo seed checks its own numbers against the frames and fails when they drift.
+      - name: Load the demo clinic
+        run: make seed-demo
+
       - name: Type-check the Edge Functions
         run: make functions-check

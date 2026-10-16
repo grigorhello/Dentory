@@ -64,7 +64,7 @@ select is(value_at_risk_90, 0.00::numeric, 'attention: nothing at risk yet') fro
 update public.batches set expiry_month = date_trunc('month', current_date + interval '1 month')::date where id = '00000000-0000-4000-8000-0000000000e1';
 select is(status, 'expiring', 'the view sees the batch inside the window at once') from public.product_status where product_id = '00000000-0000-4000-8000-0000000000d1';
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null), 0::bigint, 'but no alert exists until the refresh runs');
-select is(public.refresh_all_products(), 3, 'the daily refresh visits every active product');
+select is(public.refresh_all_products(), (select count(*)::int from public.products where archived_at is null), 'the daily refresh visits every active product');
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null), 1::bigint, 'and opens one expiring alert (the clinic has the 90-day threshold only)');
 select is(expiring_batch_count, 1, 'attention: one expiring batch') from public.clinic_attention where clinic_id = '00000000-0000-4000-8000-0000000000c1';
 select is(value_at_risk_90, 100.00::numeric, 'attention: its value is at risk') from public.clinic_attention where clinic_id = '00000000-0000-4000-8000-0000000000c1';
