@@ -54,7 +54,8 @@ select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 10::numeric, 'a n
 select is((select last_unit_cost from public.products where id = '00000000-0000-4000-8000-0000000000d1'), 0.99::numeric, 'last unit cost is updated');
 select is((select count(*) from public.transactions where type = 'receiving' and ref_label = 'Invoice INV-10092'), 2::bigint, 'one receiving row per line');
 select is((select qty_before || '→' || qty_after from public.transactions where product_id = '00000000-0000-4000-8000-0000000000d1' and type = 'receiving'), '57.00→107.00', 'totals are recorded around the row');
-select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null), 1::bigint, 'the December batch (76 days to month end) opens an expiring alert for the 90 day threshold');
+select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null),
+  (select count(*) from unnest(array[30, 60, 90]) t where public.days_to_expiry('2026-12-01', 'UTC') <= t), 'the December batch opens one expiring alert per threshold it has crossed');
 
 -- Idempotency ----------------------------------------------------------------------------------------
 select is(

@@ -7,7 +7,7 @@
 create function public.days_to_expiry(p_expiry_month date, p_time_zone text)
 returns integer
 language sql
-immutable
+stable
 set search_path = ''
 as $$
   select case
@@ -179,6 +179,7 @@ begin
 end;
 $$;
 revoke execute on function public.refresh_all_products() from public, anon, authenticated;
+grant execute on function public.refresh_all_products() to service_role;
 
 create extension if not exists pg_cron with schema pg_catalog;
 select cron.schedule('refresh-product-status', '0 7 * * *', $$select public.refresh_all_products()$$);
