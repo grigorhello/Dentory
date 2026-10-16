@@ -1,1 +1,1 @@
-Formatters, Clock, NetworkMonitor, Logger.
+Formatters, Clock, NetworkMonitor, SubmitGuard and error reporting (Sentry).

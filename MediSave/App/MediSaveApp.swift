@@ -7,11 +7,15 @@ struct MediSaveApp: App {
 
     init() {
         // `-uiTesting` runs the app on the preview doubles: no network, a signed-in demo admin.
-        let dependencies = ProcessInfo.processInfo.arguments.contains("-uiTesting")
-            ? AppDependencies.preview()
+        // `-offline` with it makes the network monitor report no connection.
+        let arguments = ProcessInfo.processInfo.arguments
+        let dependencies = arguments.contains("-uiTesting")
+            ? AppDependencies.preview(isConnected: !arguments.contains("-offline"))
             : AppDependencies.live()
         self.dependencies = dependencies
         _sessionStore = State(initialValue: SessionStore(auth: dependencies.auth))
+        dependencies.reporter.start()
+        dependencies.writes.startWatchingNetwork()
     }
 
     var body: some Scene {

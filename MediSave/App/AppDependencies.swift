@@ -9,8 +9,13 @@ struct AppDependencies: Sendable {
     let auth: AuthServicing
     let clock: Clock
     let networkMonitor: NetworkMonitoring
-    /// One toast at a time, shown by every screen container (MS-103).
+    /// One toast at a time, shown once at the app level (MS-103).
     let toasts: ToastCenter
+    /// Last answers of repository reads, shown while offline (MS-108).
+    let cache: ResponseCaching
+    /// The door for stock writes: online now, or queued and replayed (MS-108).
+    let writes: WriteCoordinator
+    let reporter: ErrorReporting
 
     /// Formatters for the signed-in clinic.
     func formatters(for session: Session) -> ClinicFormatters {
@@ -24,24 +29,54 @@ struct AppDependencies: Sendable {
     @MainActor
     static func live() -> AppDependencies {
         let client = SupabaseClientProvider.makeClient()
+        let rpc = SupabaseRPCClient(transport: SupabaseRPCTransport(client: client))
+        let clock = SystemClock()
+        let networkMonitor = NetworkMonitor()
+        let toasts = ToastCenter()
+        let reporter = SentryErrorReporter()
         return AppDependencies(
-            rpc: SupabaseRPCClient(transport: SupabaseRPCTransport(client: client)),
+            rpc: rpc,
             auth: SupabaseAuthService(client: client),
-            clock: SystemClock(),
-            networkMonitor: NetworkMonitor(),
-            toasts: ToastCenter()
+            clock: clock,
+            networkMonitor: networkMonitor,
+            toasts: toasts,
+            cache: FileResponseCache(),
+            writes: WriteCoordinator(
+                rpc: rpc,
+                queue: PendingWriteQueue(store: FilePendingWriteStore()),
+                networkMonitor: networkMonitor,
+                clock: clock,
+                reporter: reporter,
+                toasts: toasts
+            ),
+            reporter: reporter
         )
     }
 
     /// No network: a demo clinic, a signed-in admin and a fixed moment, for previews and UI tests.
     @MainActor
-    static func preview(signedIn: Bool = true) -> AppDependencies {
-        AppDependencies(
-            rpc: PreviewRPCClient(),
+    static func preview(signedIn: Bool = true, isConnected: Bool = true) -> AppDependencies {
+        let rpc = PreviewRPCClient()
+        let clock = FixedClock(Session.demoNow)
+        let networkMonitor = FixedNetworkMonitor(isConnected: isConnected)
+        let toasts = ToastCenter()
+        let reporter = NoopErrorReporter()
+        return AppDependencies(
+            rpc: rpc,
             auth: PreviewAuthService(session: signedIn ? .demo : nil),
-            clock: FixedClock(Session.demoNow),
-            networkMonitor: FixedNetworkMonitor(),
-            toasts: ToastCenter()
+            clock: clock,
+            networkMonitor: networkMonitor,
+            toasts: toasts,
+            cache: InMemoryResponseCache(),
+            writes: WriteCoordinator(
+                rpc: rpc,
+                queue: PendingWriteQueue(store: InMemoryPendingWriteStore()),
+                networkMonitor: networkMonitor,
+                clock: clock,
+                reporter: reporter,
+                toasts: toasts
+            ),
+            reporter: reporter
         )
     }
 }
