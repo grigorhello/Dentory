@@ -23,6 +23,8 @@ struct FormattersTests {
     @Test func datesInTheClinicTimeZone() {
         let december1 = Date(timeIntervalSince1970: 1_796_101_200) // 2026-12-01 05:00 UTC, midnight in New York
         #expect(formatters.date(december1) == "Dec 1, 2026")
+        // The frames say Thursday; October 2, 2026 is a Friday.
+        #expect(formatters.weekday(Session.demoNow) == "Friday, October 2")
         #expect(formatters.date(CalendarDay(year: 2026, month: 12, day: 1)) == "Dec 1, 2026")
         #expect(formatters.month(CalendarDay(year: 2026, month: 12, day: 1)) == "December 2026")
     }

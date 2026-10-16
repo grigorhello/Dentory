@@ -18,12 +18,13 @@ enum AppTab: String, CaseIterable, Identifiable {
         }
     }
 
-    var systemImage: String {
+    /// Lucide icon of the tab (f25).
+    var icon: Icon {
         switch self {
-        case .home: "square.grid.2x2"
-        case .inventory: "shippingbox"
-        case .procedures: "list.clipboard"
-        case .toBuy: "list.bullet.clipboard"
+        case .home: .layoutGrid
+        case .inventory: .package
+        case .procedures: .clipboardCheck
+        case .toBuy: .clipboardList
         }
     }
 
