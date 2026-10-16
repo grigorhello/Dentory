@@ -27,6 +27,17 @@ struct SessionStoreTests {
         #expect(store.lastError == .network)
     }
 
+    @Test func aRevokedMembershipSignsOutAndRemembersWhy() async {
+        let auth = FakeAuthService(storedSession: .demo)
+        auth.restoreError = AppError.forbidden
+        let store = SessionStore(auth: auth)
+        await store.restore()
+        #expect(store.state == .signedOut)
+        #expect(store.accessWasRevoked)
+        store.acknowledgeRevokedAccess()
+        #expect(!store.accessWasRevoked)
+    }
+
     @Test func signInAndOut() async {
         let auth = FakeAuthService()
         let store = SessionStore(auth: auth, state: .signedOut)

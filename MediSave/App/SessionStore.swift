@@ -13,6 +13,8 @@ final class SessionStore {
 
     private(set) var state: State = .restoring
     private(set) var lastError: AppError?
+    /// Set when a stored session turned out to have no membership; Sign in shows the toast once.
+    private(set) var accessWasRevoked = false
 
     private let auth: AuthServicing
 
@@ -31,8 +33,14 @@ final class SessionStore {
             state = try await auth.restore().map(State.signedIn) ?? .signedOut
         } catch {
             lastError = AppError(error)
+            accessWasRevoked = lastError == .forbidden
             state = .signedOut
         }
+    }
+
+    /// The Sign in screen calls this after showing the revoked toast.
+    func acknowledgeRevokedAccess() {
+        accessWasRevoked = false
     }
 
     func signIn(email: String, password: String) async -> Bool {

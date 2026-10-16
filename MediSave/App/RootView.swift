@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Signed out shows a placeholder until MS-110 brings Sign in; signed in shows the four tabs, each
-/// with its own `NavigationStack` and path from `AppRouter`.
+/// Signed out shows Sign in (MS-110); signed in shows the four tabs, each with its own
+/// `NavigationStack` and path from `AppRouter`.
 struct RootView: View {
     let sessionStore: SessionStore
     @State private var router = AppRouter()
@@ -13,7 +13,7 @@ struct RootView: View {
                 .tint(Color.ms.primary)
                 .accessibilityIdentifier("root.restoring")
         case .signedOut:
-            SignedOutPlaceholderView()
+            SignInView(sessionStore: sessionStore)
         case .signedIn(let session):
             AppTabsView(router: router)
                 .environment(router)
@@ -47,19 +47,6 @@ struct AppTabsView: View {
             }
         }
         .background(Color.ms.canvas)
-    }
-}
-
-/// Stands in for the Sign in screen (f1) until MS-110.
-struct SignedOutPlaceholderView: View {
-    var body: some View {
-        VStack(spacing: Spacing.md) {
-            Text("Sign in").textStyle(.display32).foregroundStyle(Color.ms.ink)
-            Text("The sign-in screen arrives with MS-110.").textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.ms.canvas)
-        .accessibilityIdentifier("signin.placeholder")
     }
 }
 

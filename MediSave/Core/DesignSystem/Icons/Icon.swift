@@ -13,6 +13,8 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case clipboardList = "clipboard-list"
     case creditCard = "credit-card"
     case download
+    case eye
+    case eyeOff = "eye-off"
     case fileUp = "file-up"
     case info
     case layoutGrid = "layout-grid"

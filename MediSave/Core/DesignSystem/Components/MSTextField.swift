@@ -1,17 +1,21 @@
 import SwiftUI
 
 /// Text input: 44 pt, 6 pt radius, ink hairline; blue when focused, danger with an inline error under it.
-/// Set the Appendix B id with `.accessibilityIdentifier` on the component.
+/// Pass the Appendix B id as `identifier`: it goes on the input itself, so UI tests can tap and type into it.
 struct MSTextField: View {
     @Environment(\.isEnabled) private var isEnabled
     @FocusState private var isFocused: Bool
     let label: String?
     @Binding var text: String
+    /// The Appendix B id of the input (`signin.email`); the toggle gets `<id>.toggle`.
+    var identifier: String?
     var placeholder = ""
     var hint: String?
     var error: String?
     var icon: Icon?
     var trailingIcon: Icon?
+    /// Makes the trailing icon a button with this label (the password show/hide toggle).
+    var trailingAction: TrailingAction?
     var suffix: String?
     var isSecure = false
     var keyboard: UIKeyboardType = .default
@@ -20,11 +24,13 @@ struct MSTextField: View {
     init(
         _ label: String?,
         text: Binding<String>,
+        identifier: String? = nil,
         placeholder: String = "",
         hint: String? = nil,
         error: String? = nil,
         icon: Icon? = nil,
         trailingIcon: Icon? = nil,
+        trailingAction: TrailingAction? = nil,
         suffix: String? = nil,
         isSecure: Bool = false,
         keyboard: UIKeyboardType = .default,
@@ -32,11 +38,13 @@ struct MSTextField: View {
     ) {
         self.label = label
         _text = text
+        self.identifier = identifier
         self.placeholder = placeholder
         self.hint = hint
         self.error = error
         self.icon = icon
         self.trailingIcon = trailingIcon
+        self.trailingAction = trailingAction
         self.suffix = suffix
         self.isSecure = isSecure
         self.keyboard = keyboard
@@ -68,6 +76,7 @@ struct MSTextField: View {
                 .textStyle(.body16)
                 .foregroundStyle(Color.ms.ink)
                 .accessibilityLabel(label ?? placeholder)
+                .accessibilityIdentifier(identifier ?? "")
                 .focused($isFocused)
                 .keyboardType(keyboard)
                 .textContentType(contentType)
@@ -75,7 +84,17 @@ struct MSTextField: View {
             if let suffix {
                 Text(suffix).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
             }
-            if let trailingIcon {
+            if let trailingIcon, let trailingAction {
+                Button(action: trailingAction.perform) {
+                    IconView(trailingIcon, size: 20)
+                        .foregroundStyle(Color.ms.ink)
+                        .frame(width: ControlHeight.md, height: ControlHeight.md)
+                        .contentShape(Rectangle())
+                }
+                .padding(.trailing, -Spacing.md)
+                .accessibilityLabel(trailingAction.label)
+                .accessibilityIdentifier(identifier.map { "\($0).toggle" } ?? trailingAction.identifier)
+            } else if let trailingIcon {
                 IconView(trailingIcon, size: 20).foregroundStyle(Color.ms.ink)
             }
         }
@@ -100,6 +119,13 @@ struct MSTextField: View {
         }
     }
 
+    /// A tappable trailing icon: its VoiceOver label, Appendix B id and action.
+    struct TrailingAction {
+        let label: String
+        let identifier: String
+        let perform: () -> Void
+    }
+
     private var prompt: Text {
         Text(placeholder).foregroundStyle(Color.ms.textSecondary)
     }
@@ -118,6 +144,11 @@ struct MSTextField: View {
         MSTextField("Email", text: .constant(""), placeholder: "you@clinic.com", error: "No account with this email.")
         MSTextField("Search", text: .constant(""), placeholder: "Search products", icon: .search)
         MSTextField("Expiry", text: .constant(""), placeholder: "- - - - - -", trailingIcon: .calendar)
+        MSTextField(
+            "Password", text: .constant("smiledental"),
+            trailingIcon: .eye, trailingAction: .init(label: "Show password", identifier: "preview.show") {},
+            isSecure: true
+        )
         MSTextField("Minimum", text: .constant("20"), suffix: "cartridges", keyboard: .numberPad)
         MSTextField("Disabled", text: .constant("Read only")).disabled(true)
     }
