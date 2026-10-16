@@ -48,6 +48,11 @@ jobs:
         with:
           deno-version: v2.x
 
+      # Linux hands out ephemeral ports from 32768 up, so an outgoing connection can grab 54322
+      # before Postgres binds it ("address already in use"). Reserving the Supabase ports stops that.
+      - name: Keep the Supabase ports out of the ephemeral range
+        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=54320-54329
+
       - name: Start Postgres, apply migrations and seed, run the pgTAP tests
         run: |
           supabase db start
