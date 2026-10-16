@@ -2,7 +2,7 @@
 -- expiry goes first and shortfalls land on the undated batch, retries change nothing, cancelling gives
 -- back to the original batches, Undo has its window and owner, and permissions hold.
 begin;
-select plan(78);
+select plan(95);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin1@medisave.test'),
@@ -135,6 +135,7 @@ select pg_temp.act_as('00000000-0000-4000-8000-0000000000b1');
 select lives_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(10)), pg_temp.k(11)) $$, 'the same user undoes within 10 seconds');
 select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 30::numeric, 'the adjustment is reversed');
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3'), 5::numeric, 'the two units come back as undated stock (MS-100 D9)');
+select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e2'), 25::numeric, 'the dated batch keeps what the adjustment took');
 select is((select count(*) from public.transactions where ref_type = 'undo' and reverses_id is not null), 1::bigint, 'as a reversal row');
 select throws_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(10)), pg_temp.k(12)) $$,
   '22023', null, 'it cannot be undone twice');
@@ -146,23 +147,42 @@ select pg_temp.act_as('00000000-0000-4000-8000-0000000000a1');
 select throws_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(2)), pg_temp.k(14)) $$,
   '22023', null, 'the window closes after 10 seconds');
 
+-- Undo of an upward adjustment, a receiving and a disposal --------------------------------------------
+select lives_ok($$ select public.stock_adjust('00000000-0000-4000-8000-0000000000d1', 33, 'Returned', null, pg_temp.k(40)) $$, 'adjust upwards');
+select lives_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(40)), pg_temp.k(41)) $$, 'and undo it');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 30::numeric, 'the upward adjustment is reversed');
+select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3'), 5::numeric, 'through the undated batch it was added to');
+select is((select count(*) from public.transactions where reverses_id = (select id from public.transactions where action_id = (select id from public.stock_actions where idempotency_key = pg_temp.k(40)))), 1::bigint, 'with a reversal row pointing at it');
+select lives_ok($$ select public.stock_receive('00000000-0000-4000-8000-0000000000c1', '[{"product_id":"00000000-0000-4000-8000-0000000000d3","qty":4}]', pg_temp.k(42)) $$, 'receive gloves while their To buy line was never ordered');
+select is((select status from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' order by created_at limit 1), 'received', 'the To buy line is received');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 2::numeric, 'the shortfall is covered');
+select lives_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(42)), pg_temp.k(43)) $$, 'a receiving can be undone');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), -2::numeric, 'and the stock goes back');
+select lives_ok($$ select public.stock_procedure_edit((select id from public.stock_actions where idempotency_key = pg_temp.k(3)), '[{"product_id":"00000000-0000-4000-8000-0000000000d1","qty":69},{"product_id":"00000000-0000-4000-8000-0000000000d3","qty":12}]', array[]::uuid[], pg_temp.k(44)) $$, 'a procedure can be edited a second time');
+select lives_ok($$ select public.stock_procedure_edit((select id from public.stock_actions where idempotency_key = pg_temp.k(3)), '[{"product_id":"00000000-0000-4000-8000-0000000000d1","qty":70},{"product_id":"00000000-0000-4000-8000-0000000000d3","qty":12}]', array[]::uuid[], pg_temp.k(47)) $$, 'and a third time in the same transaction');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 30::numeric, 'two opposite edits leave the total as it was');
+
 -- Dispose (admin only) ---------------------------------------------------------------------------------
 select throws_ok($$ select public.stock_dispose('00000000-0000-4000-8000-0000000000e2', 99, pg_temp.k(15)) $$,
   '22023', null, 'cannot dispose more than the batch holds');
+create temp table snap as select pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e2') as e2, pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3') as e3, pg_temp.qty('00000000-0000-4000-8000-0000000000d1') as d1;
 select lives_ok($$ select public.stock_dispose('00000000-0000-4000-8000-0000000000e2', 7, pg_temp.k(15)) $$, 'admin disposes 7');
-select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e2'), 18::numeric, 'from that batch');
+select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e2'), (select e2 - 7 from snap), 'from that batch');
 select is((select reason from public.transactions where type = 'disposal'), 'Expired', 'with the reason Expired');
+select lives_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(15)), pg_temp.k(45)) $$, 'a disposal can be undone');
+select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e2'), (select e2 from snap), 'and the batch is whole again');
+select lives_ok($$ select public.stock_dispose('00000000-0000-4000-8000-0000000000e2', 7, pg_temp.k(46)) $$, 'then disposed again for the rest of the test');
 reset role;
 select pg_temp.act_as('00000000-0000-4000-8000-0000000000b1');
 select throws_ok($$ select public.stock_dispose('00000000-0000-4000-8000-0000000000e2', 1, pg_temp.k(16)) $$, '42501', null, 'staff cannot dispose');
 
 -- Add expiry and edit batch ------------------------------------------------------------------------------
 select lives_ok($$ select public.batch_upsert('00000000-0000-4000-8000-0000000000d1', null, '2027-06-01', 2, 'C7', pg_temp.k(17)) $$, 'add expiry to undated stock');
-select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3'), 3::numeric, 'moves it out of the undated batch');
-select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 23::numeric, 'with no net change');
-select lives_ok($$ select public.batch_upsert('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000e2', '2027-03-01', 25, 'B441', pg_temp.k(18)) $$, 'edit a batch quantity');
+select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3'), (select e3 - 2 from snap), 'moves it out of the undated batch');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), (select d1 - 7 from snap), 'with no net change');
+select lives_ok($$ select public.batch_upsert('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000e2', '2027-03-01', (select e2 - 2 from snap), 'B441', pg_temp.k(18)) $$, 'edit a batch quantity');
 select is((select reason from public.transactions where ref_label = 'Edit batch'), 'Data correction', 'an edited quantity is a data correction');
-select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 30::numeric, 'the total follows');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), (select d1 - 2 from snap), 'the total follows');
 
 -- Bottles -------------------------------------------------------------------------------------------------
 select lives_ok($$ select public.bottle_open('00000000-0000-4000-8000-0000000000d2', pg_temp.k(19)) $$, 'open a bottle');

@@ -182,7 +182,8 @@ $$;
 create function engine.deduct(
   p_clinic_id uuid, p_product_id uuid, p_qty numeric, p_type public.transaction_type,
   p_ref_type public.transaction_ref_type, p_ref_id uuid, p_ref_label text, p_reason text, p_note text,
-  p_action_id uuid, p_open_item_id uuid default null, p_row_per_batch boolean default true
+  p_action_id uuid, p_open_item_id uuid default null, p_row_per_batch boolean default true,
+  p_reverses_id uuid default null
 )
 returns void
 language plpgsql
@@ -220,7 +221,7 @@ begin
   end if;
   if not p_row_per_batch then
     perform engine.ledger(p_clinic_id, p_product_id, null, null, p_type, -p_qty,
-      p_ref_type, p_ref_id, p_ref_label, p_reason, p_note, p_action_id);
+      p_ref_type, p_ref_id, p_ref_label, p_reason, p_note, p_action_id, p_reverses_id);
   end if;
 end;
 $$;
@@ -448,7 +449,9 @@ begin
     end if;
     perform engine.ledger(p_clinic_id, v_product.id, v_batch, null, 'receiving', v_line.qty,
       p_ref_type, p_ref_id, p_ref_label, null, null, v_action.o_action_id);
+    -- A line still "to buy" counts as ordered now: the delivery is the proof.
     update public.to_buy_items set status = 'received', received_at = now(),
+      ordered_at = coalesce(ordered_at, now()), ordered_by = coalesce(ordered_by, auth.uid()),
       invoice_id = case when p_ref_type = 'invoice' then p_ref_id else invoice_id end
     where product_id = v_product.id and status in ('to_buy', 'ordered');
     perform public.refresh_product(v_product.id);
@@ -546,10 +549,11 @@ begin
   v_label := 'Edited usage · ' || v_event.name;
 
   -- Countables: new quantity per product; a product left out of the list goes to 0.
-  create temp table edit_items on commit drop as
-    select (l->>'product_id')::uuid as product_id, (l->>'qty')::numeric as qty
-    from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) l;
   for v_item in
+    with edit_items as (
+      select (l->>'product_id')::uuid as product_id, (l->>'qty')::numeric as qty
+      from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) l
+    )
     select coalesce(e.product_id, i.product_id) as product_id, coalesce(e.qty, 0) as qty
     from edit_items e
     full join (select product_id from public.procedure_event_items where event_id = p_event_id) i on i.product_id = e.product_id
@@ -840,6 +844,7 @@ end;
 $$;
 
 -- Reverses an adjustment, a receiving or a disposal: same user, within 10 seconds (MS-100 D10).
+-- Undoing "Add to buy" is a plain delete of the To buy row in the app (MS-128); it never touches stock.
 create function public.undo_action(p_action_id uuid, p_idempotency_key uuid)
 returns uuid
 language plpgsql
@@ -868,11 +873,8 @@ begin
       update public.batches set qty = qty - v_row.delta where id = v_row.batch_id;
       perform engine.ledger(v_original.clinic_id, v_row.product_id, v_row.batch_id, null, v_row.type, -v_row.delta,
         'undo', p_action_id, v_label, v_row.reason, null, v_action.o_action_id, v_row.id);
-    elsif v_row.delta > 0 then
-      -- The original added to the undated batch; take it back the FEFO way (MS-100 D9).
-      perform engine.deduct(v_original.clinic_id, v_row.product_id, v_row.delta, v_row.type, 'undo', p_action_id, v_label, v_row.reason, null, v_action.o_action_id, null, false);
-      update public.transactions set reverses_id = v_row.id where action_id = v_action.o_action_id and product_id = v_row.product_id and reverses_id is null;
     else
+      -- A count or adjustment row carries no batch; its reversal goes through the undated batch (MS-100 D9).
       update public.batches set qty = qty - v_row.delta where id = engine.undated_batch(v_original.clinic_id, v_row.product_id);
       perform engine.ledger(v_original.clinic_id, v_row.product_id, null, null, v_row.type, -v_row.delta,
         'undo', p_action_id, v_label, v_row.reason, null, v_action.o_action_id, v_row.id);
