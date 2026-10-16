@@ -6,7 +6,8 @@
 -- Stock moves only through the MS-106 RPC functions, called as the person the story says did it, so batches,
 -- open items, the ledger, alerts and the To buy list are exactly what the engine writes. Dates are relative
 -- to today in the clinic's time zone (the frames' "Thursday, October 2" is today, "Oct 1" is yesterday), so the
--- Home tiles keep matching f6 whatever day the seed runs: 3 To buy, 2 Expiring soon, 1 Missing expiry.
+-- Home tiles match f6 on the day the seed runs: 3 To buy, 2 Expiring soon, 1 Missing expiry. Nothing moves the
+-- dates afterwards, so the expiry figures drift as days pass: reseed before a demo or a screenshot session.
 -- After each step the rows it wrote are moved back to the time the story gives it (see pg_temp.backdate); that
 -- touches timestamps only, never a quantity, and the ledger's append-only trigger is switched back on at the end.
 --
@@ -17,9 +18,11 @@
 --   (f27 lists "1 bottle · lot BA7"), and the open bottle carries no batch.
 -- - Septocaine lot A112 expires after the 90-day window; with both lots inside it f6 would read 3 Expiring soon.
 --   Lot B441 is inside it (f27), so Septocaine's badge is Expiring, not the Healthy f16 draws.
--- - Root canal sealer, Temporary cement and Gauze are Low, so the engine puts them on To buy; they are marked
---   Ordered with the others on "Oct 1", so the To buy tab reads 3 as in f25 (Ordered reads 5 instead of 3).
+-- - Root canal sealer and Temporary cement are Low (0 unopened, as f16 draws), so the engine puts them on To buy;
+--   they are marked Ordered with the others on "Oct 1", so the To buy tab reads 3 as in f25 (Ordered reads 5, not 3).
 -- - To buy quantities are in counted units (PRD §4: target − current), so Needle 27g short is 60, not "2".
+-- - Composite A2's open syringe is the one the Filling took new (events e3, Sarah, 2 days ago); P lists Dr. Kim,
+--   7 days ago. The prototype contradicts itself there, and the procedure history is what the frames show.
 --
 -- Sign in with sarah@smiledental.ca (Admin) or michael@smiledental.ca (Staff), password "smiledental".
 
@@ -48,9 +51,9 @@ $$;
 
 -- Today in the clinic's time zone.
 create function pg_temp.today() returns date language sql stable as $$ select (now() at time zone 'America/Toronto')::date $$;
--- A moment N days ago at a clinic wall-clock time.
+-- A moment N days ago at a clinic wall-clock time, never later than now (a run at 7 AM keeps "today 8:55 AM" in the past).
 create function pg_temp.ago(p_days int, p_time time) returns timestamptz language sql stable as $$
-  select ((pg_temp.today() - p_days) + p_time) at time zone 'America/Toronto'
+  select least(now(), ((pg_temp.today() - p_days) + p_time) at time zone 'America/Toronto')
 $$;
 -- The expiry month that holds the day N days from today: its month end is N to N + 30 days away.
 create function pg_temp.expiry_in(p_days int) returns date language sql stable as $$
@@ -210,7 +213,7 @@ from (values
   (16, 2, 7.00, null, 500), (17, 1, 64.00, 'RS4', 560), (18, 6, 21.00, 'PV1', 710), (19, 1, 26.00, null, 500),
   (20, 2, 19.00, 'HG3', 740), (21, 42, 0.14, null, 900), (22, 6, 5.50, null, 800), (23, 31, 0.45, null, 900),
   (24, 181, 0.06, null, 900), (25, 36, 0.80, null, 900), (26, 82, 0.07, null, 900), (27, 3, 18.00, null, 700),
-  (28, 3, 3.20, null, 900), (29, 4, 42.00, null, 600)
+  (28, 8, 3.20, null, 900), (29, 4, 42.00, null, 600)
 ) l (n, qty, unit_cost, lot, expiry_days);
 select pg_temp.backdate(pg_temp.ago(75, '09:00'));
 
@@ -274,12 +277,14 @@ select pg_temp.procedure(pg_temp.sarah(), 3, array[3], 2, '14:05');  -- Filling,
 select pg_temp.procedure(pg_temp.michael(), 2, '{}', 1, '11:20');    -- Cleaning
 select pg_temp.procedure(pg_temp.sarah(), 1, '{}', 1, '15:14');      -- Root canal: Rubber dam runs out
 
--- Yesterday ("Oct 1") Sarah adds Needle 27g short and Prophy angle by hand and orders everything except the
--- three lines f25 shows under To buy.
-insert into public.to_buy_items (clinic_id, product_id, qty, source, added_by)
-select pg_temp.clinic(), p.id, greatest(p.target - s.quantity, 1), 'manual', pg_temp.sarah()
+-- Yesterday ("Oct 1") Sarah adds the prototype's ordered items by hand (Needle 27g short and Prophy angle at the
+-- suggested quantity, 5 Gauze as in orders) and orders everything except the three lines f25 shows under To buy.
+insert into public.to_buy_items (clinic_id, product_id, qty, qty_edited, source, added_by)
+select pg_temp.clinic(), p.id,
+  case when p.id = pg_temp.pid(28) then 5 else greatest(p.target - s.quantity, 1) end,
+  p.id = pg_temp.pid(28), 'manual', pg_temp.sarah()
 from public.products p join public.product_stock s on s.product_id = p.id
-where p.id in (pg_temp.pid(21), pg_temp.pid(23));
+where p.id in (pg_temp.pid(21), pg_temp.pid(23), pg_temp.pid(28));
 select pg_temp.backdate(pg_temp.ago(1, '16:35'));
 update public.to_buy_items set status = 'ordered', ordered_at = now(), ordered_by = pg_temp.sarah()
 where clinic_id = pg_temp.clinic() and status = 'to_buy'
@@ -301,13 +306,13 @@ values
 insert into public.alerts (clinic_id, kind, invoice_id, opened_at, created_at)
 values (pg_temp.clinic(), 'invoice_ready', 'd0000000-0000-4000-8000-000000000401', pg_temp.ago(0, '08:56'), pg_temp.ago(0, '08:56'));
 
--- An expiring alert opens on the day its batch crosses the threshold (the daily refresh at 7 AM), not on the
+-- An expiring alert opens on the day its batch crosses the threshold (the daily refresh, 07:00 UTC), not on the
 -- day the batch was received.
 update public.alerts a
 set opened_at = x.crossed, created_at = x.crossed
 from (
   select a2.id, least(now(), ((((b.expiry_month + interval '1 month' - interval '1 day')::date - a2.threshold_days)
-    + time '07:00') at time zone 'America/Toronto')) as crossed
+    + time '07:00') at time zone 'UTC')) as crossed
   from public.alerts a2 join public.batches b on b.id = a2.batch_id
   where a2.clinic_id = pg_temp.clinic() and a2.kind = 'expiring'
 ) x
@@ -339,7 +344,7 @@ begin
     (10, 4, 1, 'healthy'), (11, 3, 1, 'healthy'), (12, 2, 1, 'healthy'), (13, 2, 1, 'healthy'), (14, 3, 1, 'healthy'),
     (15, 2, 1, 'healthy'), (16, 2, 1, 'healthy'), (17, 1, 1, 'low'), (18, 6, 1, 'healthy'), (19, 1, 1, 'low'),
     (20, 2, 0, 'healthy'), (21, 40, 0, 'healthy'), (22, 5, 0, 'healthy'), (23, 30, 0, 'healthy'), (24, 180, 0, 'healthy'),
-    (25, 35, 0, 'healthy'), (26, 80, 0, 'healthy'), (27, 3, 0, 'healthy'), (28, 3, 0, 'low'), (29, 4, 0, 'healthy')
+    (25, 35, 0, 'healthy'), (26, 80, 0, 'healthy'), (27, 3, 0, 'healthy'), (28, 8, 0, 'healthy'), (29, 4, 0, 'healthy')
   ) e (n, quantity, open_count, status)
   join public.product_status ps on ps.product_id = pg_temp.pid(e.n)
   join public.products p on p.id = ps.product_id
@@ -354,7 +359,7 @@ begin
   where t.clinic_id = pg_temp.clinic()
     and (t.product_id, t.status::text, t.qty) not in (
       (pg_temp.pid(2), 'to_buy', 4), (pg_temp.pid(3), 'to_buy', 4), (pg_temp.pid(7), 'to_buy', 36),
-      (pg_temp.pid(17), 'ordered', 1), (pg_temp.pid(19), 'ordered', 1), (pg_temp.pid(28), 'ordered', 7),
+      (pg_temp.pid(17), 'ordered', 1), (pg_temp.pid(19), 'ordered', 1), (pg_temp.pid(28), 'ordered', 5),
       (pg_temp.pid(21), 'ordered', 60), (pg_temp.pid(23), 'ordered', 70), (pg_temp.pid(10), 'received', 2));
   if v_wrong is not null or (select count(*) from public.to_buy_items where clinic_id = pg_temp.clinic()) <> 9 then
     raise exception 'To buy differs from f25: %', coalesce(v_wrong, 'wrong number of lines');
@@ -371,6 +376,19 @@ begin
   end if;
   if exists (select 1 from public.transactions where clinic_id = pg_temp.clinic() and at >= now()) then
     raise exception 'A ledger row was not moved back to its time in the story';
+  end if;
+  -- Nothing the story wrote is dated after the moment the seed ran.
+  if exists (select 1 from public.stock_actions where clinic_id = pg_temp.clinic() and created_at > now())
+    or exists (select 1 from public.open_items where clinic_id = pg_temp.clinic() and opened_at > now())
+    or exists (select 1 from public.procedure_events where clinic_id = pg_temp.clinic() and started_at > now())
+    or exists (select 1 from public.to_buy_items where clinic_id = pg_temp.clinic()
+      and greatest(created_at, ordered_at, received_at) > now())
+    or exists (select 1 from public.alerts where clinic_id = pg_temp.clinic() and greatest(opened_at, resolved_at) > now())
+    or exists (select 1 from public.invoices where clinic_id = pg_temp.clinic() and created_at > now())
+    or exists (select 1 from public.invoice_lines where clinic_id = pg_temp.clinic() and created_at > now())
+    or exists (select 1 from public.memberships where clinic_id = pg_temp.clinic() and invited_at > now())
+  then
+    raise exception 'A row is dated in the future';
   end if;
 end;
 $$;

@@ -30,7 +30,7 @@ Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one
 | `make db-stop` | Stop it |
 | `make db-reset` | Drop the local database, apply `supabase/migrations` in order, then `supabase/seed.sql` |
 | `make db-test` | Run the pgTAP tests in `supabase/tests` |
-| `make seed-demo` | Load the demo clinic Smile Dental after a reset (`make db-reset seed-demo`). Sign in as sarah@smiledental.ca (Admin) or michael@smiledental.ca (Staff), password `smiledental`. |
+| `make seed-demo` | Load the demo clinic Smile Dental after a reset (`make db-reset seed-demo`). Sign in as sarah@smiledental.ca (Admin) or michael@smiledental.ca (Staff), password `smiledental`. Dates are relative to the day it runs, so reseed before a demo. |
 | `make functions-serve` | Serve the Edge Functions locally (`/functions/v1/<name>`) |
 | `make functions-check` | Type-check the Edge Functions (`brew install deno`) |
 

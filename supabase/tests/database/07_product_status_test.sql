@@ -38,6 +38,9 @@ insert into public.products (id, clinic_id, name, unit, tracking, minimum, targe
   ('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000c1', 'Septocaine 4% 1:100,000', 'cartridges', 'countable', 20, 60, 2.00),
   ('00000000-0000-4000-8000-0000000000d2', '00000000-0000-4000-8000-0000000000c1', 'Bonding agent', 'bottles', 'multi_use', 1, 3, 30.00),
   ('00000000-0000-4000-8000-0000000000d3', '00000000-0000-4000-8000-0000000000c1', 'Nitrile gloves M', 'boxes', 'countable', 3, 10, 8.00);
+-- Archived: the daily refresh and the attention tiles leave it out.
+insert into public.products (id, clinic_id, name, unit, tracking, minimum, target, archived_at) values
+  ('00000000-0000-4000-8000-0000000000d4', '00000000-0000-4000-8000-0000000000c1', 'Old gauze', 'packs', 'countable', 5, 10, now());
 -- Septocaine: 50 dated five months out, 4 undated. Bonding: 2 unopened dated far out, 1 open. Gloves: nothing.
 insert into public.batches (id, clinic_id, product_id, expiry_month, lot, qty) values
   ('00000000-0000-4000-8000-0000000000e1', '00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d1', date_trunc('month', current_date + interval '5 months')::date, 'A112', 50),
@@ -64,7 +67,7 @@ select is(value_at_risk_90, 0.00::numeric, 'attention: nothing at risk yet') fro
 update public.batches set expiry_month = date_trunc('month', current_date + interval '1 month')::date where id = '00000000-0000-4000-8000-0000000000e1';
 select is(status, 'expiring', 'the view sees the batch inside the window at once') from public.product_status where product_id = '00000000-0000-4000-8000-0000000000d1';
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null), 0::bigint, 'but no alert exists until the refresh runs');
-select is(public.refresh_all_products(), (select count(*)::int from public.products where archived_at is null), 'the daily refresh visits every active product');
+select is(public.refresh_all_products(), (select count(*)::int from public.products where archived_at is null), 'the daily refresh visits every active product and skips the archived one');
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null), 1::bigint, 'and opens one expiring alert (the clinic has the 90-day threshold only)');
 select is(expiring_batch_count, 1, 'attention: one expiring batch') from public.clinic_attention where clinic_id = '00000000-0000-4000-8000-0000000000c1';
 select is(value_at_risk_90, 100.00::numeric, 'attention: its value is at risk') from public.clinic_attention where clinic_id = '00000000-0000-4000-8000-0000000000c1';

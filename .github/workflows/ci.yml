@@ -58,9 +58,10 @@ jobs:
           supabase db start
           make db-reset db-test
 
-      # The demo seed checks its own numbers against the frames and fails when they drift.
-      - name: Load the demo clinic
-        run: make seed-demo
+      # The demo seed checks its own numbers against the frames and fails when they drift. The tests then run
+      # again on the seeded database, the state developers test against locally.
+      - name: Load the demo clinic and rerun the pgTAP tests on it
+        run: make seed-demo db-test
 
       - name: Type-check the Edge Functions
         run: make functions-check
