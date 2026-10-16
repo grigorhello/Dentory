@@ -110,6 +110,11 @@ create trigger memberships_keep_an_admin
 
 grant usage on schema public to anon, authenticated, service_role;
 
+-- Start from nothing for the API roles, whatever the image's default ACL granted, now and for tables
+-- later migrations create; every right below is then the whole list.
+revoke all on all tables in schema public from public, anon, authenticated;
+alter default privileges for role postgres in schema public revoke all on tables from public, anon, authenticated;
+
 grant select, insert, update, delete on all tables in schema public to service_role;
 revoke update, delete, truncate on public.transactions from service_role;
 revoke delete, truncate on public.products from service_role;
