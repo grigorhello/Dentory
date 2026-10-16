@@ -40,9 +40,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A fixed version downloads the release directly; "latest" asks the GitHub API first and fails when the
+      # runner's API rate limit is used up. Raise it on purpose, with the local CLI.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.121.0
 
       - uses: denoland/setup-deno@v2
         with:
