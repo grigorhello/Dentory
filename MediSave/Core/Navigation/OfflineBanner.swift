@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// One line under the header while the device has no connection (PRD §7 errors). Reading works;
-/// MS-108 queues writes.
+/// One line under the header while the device has no connection (PRD §7 errors). Reading works from
+/// the cache; `WriteCoordinator` queues writes and replays them when the connection returns.
 struct OfflineBanner: View {
     var body: some View {
-        Text("No connection. Changes are saved when you're back online.")
+        Text("You're offline. Changes will sync.")
             .textStyle(.caption12)
             .foregroundStyle(Color.ms.warning)
             .frame(maxWidth: .infinity, alignment: .leading)

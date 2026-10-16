@@ -2,5 +2,6 @@
 // (git-ignored): copy Secrets.example.xcconfig to Secrets.xcconfig and fill it in.
 SUPABASE_URL =
 SUPABASE_ANON_KEY =
+SENTRY_DSN =
 
 #include? "Secrets.xcconfig"
