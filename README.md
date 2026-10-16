@@ -33,7 +33,7 @@ Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one
 | `make functions-serve` | Serve the Edge Functions locally (`/functions/v1/<name>`) |
 | `make functions-check` | Type-check the Edge Functions (`brew install deno`) |
 
-Adding a change: `supabase migration new <name>` creates the file under `supabase/migrations`; write the SQL, add a pgTAP test next to the others, then `make db-reset db-test`. CI (`database` job, Ubuntu) runs `supabase db start`, `make db-reset db-test` and `make functions-check` on every pull request and fails when a test fails.
+Adding a change: `supabase migration new <name>` creates the file under `supabase/migrations`; write the SQL, add a pgTAP test next to the others, then `make db-reset db-test`. `supabase gen types --lang=swift --local` prints Swift types for the current schema (MS-154 wires them into the app). CI (`database` job, Ubuntu) runs `supabase db start`, `make db-reset db-test` and `make functions-check` on every pull request and fails when a test fails.
 
 **Hosted projects.** Two Supabase projects belong to Grigor's account: staging (the pilot clinic) and, before TestFlight, prod. To work with one from your Mac:
 1. `supabase login` once; it opens the browser and stores your token in the keychain.
