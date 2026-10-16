@@ -11,6 +11,9 @@ struct TabPlaceholderView: View {
     @State private var isCatalogPresented = false
     /// `-catalogSection buttons` as a launch argument opens the catalog at that section, for screenshots.
     private let launchSection = UserDefaults.standard.string(forKey: "catalogSection")
+    /// `-shellDemo sheet|list|toast` opens the shell demo and that overlay, for screenshots.
+    private let launchDemo = UserDefaults.standard.string(forKey: "shellDemo")
+    @Environment(AppRouter.self) private var router
     #endif
 
     var body: some View {
@@ -19,6 +22,9 @@ struct TabPlaceholderView: View {
             #if DEBUG
             .onAppear {
                 if tab == .home, launchSection != nil { isCatalogPresented = true }
+                if tab == .home, launchDemo != nil, router.path(for: .home).isEmpty {
+                    router.push(ShellDemoRoute.pushed)
+                }
             }
             .sheet(isPresented: $isCatalogPresented) {
                 NavigationStack {
@@ -42,17 +48,19 @@ struct TabPlaceholderView: View {
             }
             #endif
         #if DEBUG
-        ListCard {
-            NavigationLink(value: ShellDemoRoute.pushed) {
-                ListRow(
-                    "Shell demo",
-                    caption: "A pushed screen with a pinned bar, a sheet and a toast",
-                    navigates: true,
-                    showsDivider: false
-                )
+        if tab == .home {
+            ListCard {
+                NavigationLink(value: ShellDemoRoute.pushed) {
+                    ListRow(
+                        "Shell demo",
+                        caption: "A pushed screen with a pinned bar, a sheet and a toast",
+                        navigates: true,
+                        showsDivider: false
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("shell.demo.push")
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("shell.demo.push")
         }
         #endif
     }

@@ -13,6 +13,8 @@ struct ShellDemoPushedView: View {
     @State private var sheet: DemoSheet?
     @State private var searchText = ""
     @State private var quantity = "52"
+    /// `-shellDemo sheet|list|toast` as a launch argument opens that overlay on appear, for screenshots.
+    private let launchDemo = UserDefaults.standard.string(forKey: "shellDemo")
 
     private enum DemoSheet: String, Identifiable {
         case adjust, pick
@@ -47,12 +49,8 @@ struct ShellDemoPushedView: View {
                     .accessibilityIdentifier("shell.demo.sheetList")
             }
             ListRow("Show a toast", caption: "3.2 s, with Undo") {
-                MSButton("Toast", variant: .tertiary, size: .small) {
-                    dependencies.toasts.show("Adjustment saved", detail: "Septocaine 4% · 54 → 52") {
-                        dependencies.toasts.show("Adjustment undone")
-                    }
-                }
-                .accessibilityIdentifier("shell.demo.toast")
+                MSButton("Toast", variant: .tertiary, size: .small, action: showToast)
+                    .accessibilityIdentifier("shell.demo.toast")
             }
             ListRow("Admin only row", caption: "Hidden for Staff", showsDivider: false)
                 .adminOnly()
@@ -70,6 +68,14 @@ struct ShellDemoPushedView: View {
                 dependencies.toasts.show("Invoice received", detail: "4 products updated")
             }
             .accessibilityIdentifier("shell.demo.primary")
+        }
+        .onAppear {
+            switch launchDemo {
+            case "sheet": sheet = .adjust
+            case "list": sheet = .pick
+            case "toast": showToast()
+            default: break
+            }
         }
         .msSheet(item: $sheet) { which in
             switch which {
@@ -102,6 +108,12 @@ struct ShellDemoPushedView: View {
                         .accessibilityIdentifier("pickProduct.new")
                 }
             }
+        }
+    }
+
+    private func showToast() {
+        dependencies.toasts.show("Adjustment saved", detail: "Septocaine 4% · 54 → 52") {
+            dependencies.toasts.show("Adjustment undone")
         }
     }
 

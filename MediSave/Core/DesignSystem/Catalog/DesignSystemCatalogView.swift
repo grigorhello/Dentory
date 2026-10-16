@@ -31,6 +31,7 @@ struct DesignSystemCatalogView: View {
             }
         }
         .background(Color.ms.canvas)
+        .toastHost()
         .navigationTitle("Design system")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

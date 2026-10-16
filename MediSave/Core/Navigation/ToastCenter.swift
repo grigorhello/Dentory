@@ -29,6 +29,8 @@ final class ToastCenter {
     static let defaultDuration: TimeInterval = 3.2
 
     private(set) var current: Toast?
+    /// Height of the pinned primary bar on screen, so the toast floats above it (0 when there is none).
+    var bottomInset: CGFloat = 0
     private let duration: TimeInterval
     private var dismissal: Task<Void, Never>?
 

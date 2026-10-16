@@ -31,8 +31,8 @@ struct ToastView: View {
     }
 }
 
-/// Places the current toast at the bottom of a screen, inside its safe area, so it floats above the
-/// tab bar or the pinned bar. Every screen container applies it.
+/// Places the current toast at the bottom of the app, above the tab bar (a safe-area inset) and the
+/// pinned bar (reported through `ToastCenter.bottomInset`). `AppTabsView` applies it once.
 struct ToastHostModifier: ViewModifier {
     @Environment(\.appDependencies) private var dependencies
 
@@ -42,7 +42,7 @@ struct ToastHostModifier: ViewModifier {
             if let toast = toasts.current {
                 ToastView(toast: toast) { toasts.undo() }
                     .padding(.horizontal, Spacing.page)
-                    .padding(.bottom, Spacing.md)
+                    .padding(.bottom, toasts.bottomInset + Spacing.md)
                     .frame(maxWidth: PageLayout.contentMaxWidth)
                     .transition(.opacity)
                     .id(toast.id)

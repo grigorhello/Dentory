@@ -22,37 +22,31 @@ struct RootView: View {
     }
 }
 
-/// The tab bar (f25): Lucide icons, active tab in primary blue, red count badge on To buy.
+/// The four tabs, each a `NavigationStack` kept alive so scroll positions survive switching, under the
+/// drawn `AppTabBar`. The bar disappears while a tab shows a pushed screen (PRD §3).
 struct AppTabsView: View {
     @Bindable var router: AppRouter
 
     var body: some View {
-        TabView(selection: selection) {
+        ZStack {
             ForEach(AppTab.allCases) { tab in
+                let isSelected = tab == router.selectedTab
                 NavigationStack(path: router.pathBinding(for: tab)) {
                     TabPlaceholderView(tab: tab)
                 }
-                .tabItem {
-                    Label {
-                        Text(tab.title)
-                    } icon: {
-                        tab.icon.image
-                    }
-                }
-                .tag(tab)
-                .badge(tab == .toBuy ? router.toBuyCount : 0)
-                .accessibilityIdentifier(tab.accessibilityIdentifier)
+                .opacity(isSelected ? 1 : 0)
+                .allowsHitTesting(isSelected)
+                .accessibilityHidden(!isSelected)
+                .zIndex(isSelected ? 1 : 0)
             }
         }
-        .tint(Color.ms.primary)
-    }
-
-    /// Reselecting the current tab pops it to its root, as iOS does.
-    private var selection: Binding<AppTab> {
-        Binding(
-            get: { router.selectedTab },
-            set: { router.select($0) }
-        )
+        .toastHost()
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if router.path(for: router.selectedTab).isEmpty {
+                AppTabBar(selected: router.selectedTab, toBuyCount: router.toBuyCount) { router.select($0) }
+            }
+        }
+        .background(Color.ms.canvas)
     }
 }
 

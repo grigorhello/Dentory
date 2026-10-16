@@ -3,10 +3,25 @@ import SwiftUI
 /// The bottom bar of a pushed screen: hairline top, optional caption, one full-width 48 pt primary
 /// (PRD §7). Safe-area aware; content scrolls under nothing.
 struct PinnedPrimaryBar<Button: View>: View {
+    @Environment(\.appDependencies) private var dependencies
     var caption: String?
+    /// Whether the bar tells `ToastCenter` its height so toasts float above it; off in the catalog specimen.
+    var reportsHeight = true
     @ViewBuilder let button: () -> Button
 
     var body: some View {
+        bar
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.size.height
+            } action: { height in
+                if reportsHeight { dependencies.toasts.bottomInset = height }
+            }
+            .onDisappear {
+                if reportsHeight { dependencies.toasts.bottomInset = 0 }
+            }
+    }
+
+    private var bar: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.ms.line).frame(height: 1)
             VStack(spacing: Spacing.sm) {

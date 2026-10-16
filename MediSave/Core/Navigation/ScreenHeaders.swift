@@ -92,7 +92,7 @@ struct PushedHeader: View {
     }
 }
 
-/// A root screen: cream page, custom header, offline banner, 720 pt column, toast host. The system
+/// A root screen: cream page, custom header, offline banner, 720 pt column. The system
 /// navigation bar is hidden; the header is drawn (PRD §7).
 struct RootScreenModifier<Trailing: View>: ViewModifier {
     var eyebrow: String?
@@ -116,11 +116,11 @@ struct RootScreenModifier<Trailing: View>: ViewModifier {
         .background(Color.ms.canvas)
         .toolbar(.hidden, for: .navigationBar)
         .navigationTitle(title)
-        .toastHost()
     }
 }
 
-/// A pushed screen: back chevron header, no tab bar, cream page, 720 pt column, toast host.
+/// A pushed screen: back chevron header, cream page, 720 pt column. The tab bar hides
+/// because the tab's path is no longer empty (`AppTabsView`).
 struct PushedScreenModifier: ViewModifier {
     let title: String
     var subtitle: String?
@@ -142,10 +142,8 @@ struct PushedScreenModifier: ViewModifier {
         .scrollDismissesKeyboard(.interactively)
         .background(Color.ms.canvas)
         .toolbar(.hidden, for: .navigationBar)
-        .toolbar(.hidden, for: .tabBar)
         .navigationBarBackButtonHidden()
         .navigationTitle(title)
-        .toastHost()
     }
 }
 

@@ -32,7 +32,7 @@ struct CatalogShellSection: View {
             }
             CatalogCaption("Sheet: handle, 20 pt radius, fitted height, swipe or tap outside to close.")
             CatalogCaption("Toast: 3.2 s, Undo.")
-            PinnedPrimaryBar(caption: "Resolve every line to continue.") {
+            PinnedPrimaryBar(caption: "Resolve every line to continue.", reportsHeight: false) {
                 MSButton("Confirm & receive", isFullWidth: true, isDisabled: true) {}
             }
             OfflineBanner()
