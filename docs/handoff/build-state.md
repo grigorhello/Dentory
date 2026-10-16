@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-16 15:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-16 19:10 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -14,32 +14,33 @@ As of 2026-10-16 15:30 UTC. Before acting on this file, confirm the live state: 
 | 5 | MS-104 · Database schema (#75) | [#130](https://github.com/grigorhello/MediSave/pull/130) | 2026-10-16 03:39 | 13 enums, 21 tables, append-only ledger, archive-only products, clinic-locked references, `product_stock` view. |
 | 6 | MS-105 · Clinic isolation and permissions (#76) | [#131](https://github.com/grigorhello/MediSave/pull/131) | 2026-10-16 13:41 | RLS on every table, Staff refused on admin-only actions, a clinic always keeps an active Admin, read-only after an ended trial, Admins cannot touch subscription columns. |
 | 7 | MS-106 · Stock transaction engine (#77) | [#132](https://github.com/grigorhello/MediSave/pull/132) | 2026-10-16 15:22 | Eleven RPC functions as the only way stock moves, soonest-expiring batch first, negatives on the undated batch, alerts and To buy refresh, undo within 10 seconds, idempotency keys; 290 SQL assertions in total. |
+| 8 | MS-107 · Product status, attention counts and values (#78) | [#134](https://github.com/grigorhello/MediSave/pull/134) | 2026-10-16 16:36 | `days_to_expiry`, `evaluate_product_status`, the `product_status` and `clinic_attention` views (Home tiles, inventory value, value at risk), nightly `refresh_all_products` via pg_cron; 324 SQL assertions in total. |
+| 9 | MS-154 · App core: dependencies, data layer and session (#125) | [#135](https://github.com/grigorhello/MediSave/pull/135) | 2026-10-16 18:06 | `AppDependencies` (live and preview), `RPCCalling` with idempotency keys and `AppError` mapping, Supabase auth service and `SessionStore`, `Clock`, `NetworkMonitoring`, `ClinicFormatters`, `CalendarDay` for Postgres dates; `-uiTesting` launch argument runs the app on fakes. |
+| 12 | MS-109 · Demo clinic seed (#80) | [#136](https://github.com/grigorhello/MediSave/pull/136) | 2026-10-16 19:00 | `supabase/seed-demo.sql` and `make seed-demo`: Smile Dental with the prototype's products, templates, procedures, To buy list and invoice, written through the engine RPCs. Sign in as sarah@smiledental.ca (Admin) or michael@smiledental.ca (Staff), password `smiledental`. Built out of order by a second session. |
+| 10 | MS-103 · App shell (#74) | [#138](https://github.com/grigorhello/MediSave/pull/138) | 2026-10-16 19:07 | `AppRouter`, drawn `AppTabBar` (same bottom tabs on iPad), root and pushed screen containers, `PinnedPrimaryBar`, `MSSheet`/`SheetList`, `ToastCenter`, `OfflineBanner`, `ContentColumn`, `.adminOnly()`; Debug shell demo from Home and a Shell section in the catalog. |
 
-Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`.
+Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`.
 
 ## In progress
 
-- **MS-107 · Compute product status, attention counts and values (#78)**, build step 8, started 2026-10-16 15:23 UTC in the build thread on Grigor's Mac. No PR yet at 15:30 UTC. If a PR for it exists when you read this, continue from the review loop; if it is merged, go to the next step.
+- **MS-108 · Errors, offline writes and double taps (#79)**, build step 11, started 2026-10-16 19:10 UTC in the build thread on Grigor's Mac. No PR yet at that time. If a PR for it exists when you read this, continue from the review loop; if it is merged, go to the next step.
 
 ## Next, in build order
 
 | Step | Ticket | Blocked by |
 |---|---|---|
-| 9 | MS-154 · App core: dependencies, data layer and session (#125) | MS-101, MS-153 (both merged) |
-| 10 | MS-103 · App shell: tabs, pushed screens, sheets and toasts (#74) | MS-102, MS-154 |
-| 11 | MS-108 · Errors, offline writes and double taps (#79) | MS-106, MS-154, MS-103 |
-| 12 | MS-109 · Seed a demo clinic that matches the design (#80) | MS-106 |
-| 13 | MS-110 · Sign in (#81), first M1 ticket | MS-105, MS-103 |
+| 13 | MS-110 · Sign in (#81), first M1 ticket | MS-105, MS-103 (both merged) |
+| 14 | MS-111 · Sign up and clinic setup (#82) | see the issue |
 
 Then M1 continues MS-111, MS-112, MS-114, MS-115, MS-116, MS-117, MS-118, MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 29 (MS-126); M3 from step 40 (MS-137); M4 from step 51 (MS-151) to step 55 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105 and MS-106 are in Feature QA for Grigor to try. MS-107 is in In progress. MS-100 is Done. Everything else is To do.
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109 and MS-103 are in Feature QA for Grigor to try. MS-108 is in In progress. MS-100 is Done. Everything else is To do.
 
 ## Open items for Grigor
 
-1. **Hosted database.** None of the three migrations is on the hosted staging project yet. Say "push now" in the build thread; it opens a terminal tab for `supabase db push`, where he types the database password. The thread proposed batching the push and he has not answered yet.
+1. **Hosted database.** None of the four migrations is on the hosted staging project yet. Say "push now" in the build thread; it opens a terminal tab for `supabase db push`, where he types the database password. The thread proposed batching the push and he has not answered yet.
 2. **Bundle id and team.** The app uses the placeholder bundle id `com.medisave.app` and no Apple Developer team; both are needed before a device build or TestFlight (MS-152).
 3. **Default branch.** Rename `claude/project-thread-ocu7tf` to `main` in GitHub settings (asked 2026-10-15 03:15 UTC). After the rename, update the base branch in local checkouts and in `docs/handoff`.
 4. **Production domain** for invitation and password links (MS-100 D12). Until then the Supabase project URL is used for testing.
@@ -47,7 +48,8 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105 and MS-106 are in Feature QA fo
 
 ## Known issues
 
-- On iPad with iOS 18 the placeholder tabs sit at the top of the screen; MS-103 replaces the placeholder tab bar.
+- The demo clinic's inventory value is about $1,616 where frame f6 shows $12,420: the prototype has no unit costs and the seed uses realistic ones, pinned so f27 reads $82 + $104. Reaching the frame's figure with the frame's quantities would need implausible prices; Grigor decides whether the number matters for demos.
+- Sheets use the system scrim, not the PRD's `rgba(32,21,21,.4)`; SwiftUI does not expose the sheet scrim colour.
 - The reviewer agent needs `gh` to act as `grigorhello` on the Mac; it stops and reports if another account is active.
 - The Remote Control session draws on Grigor's own usage limit and may pause with "I've hit my usage limit"; "try again" in the thread resumes it after the reset.
 
