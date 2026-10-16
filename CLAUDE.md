@@ -1,6 +1,6 @@
 # MediSave
 
-Dental inventory app for small clinics: iPhone and iPad, two roles (Admin, Staff). V1.1 is specified in `design/PRD-v1.1.md` and drawn in `design/frames/`.
+Dental inventory app for small clinics: iPhone and iPad, two roles (Admin, Staff). V1.1 is specified in `design/PRD-v1.1.md` and drawn in `design/frames/`. The process, the current build state and the product knowledge for non-engineering work are in `docs/handoff/` (start with its README).
 
 ## Working on a ticket
 - Follow the `medisave-ios` skill (`.claude/skills/medisave-ios/SKILL.md`) for every ticket: MVVM, feature folders, SOLID, tests, PR checklist. Use `swiftui-pro` to review SwiftUI code and `swift-concurrency` for concurrency errors.
