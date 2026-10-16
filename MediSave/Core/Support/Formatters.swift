@@ -41,9 +41,14 @@ nonisolated struct ClinicFormatters: Sendable {
         return "\(day) · \(time)"
     }
 
-    /// "December 2026" for an expiry month.
-    func month(_ date: Date) -> String {
-        date.formatted(style.month(.wide).year())
+    /// "Dec 1, 2026" for a Postgres `date`.
+    func date(_ day: CalendarDay) -> String {
+        date(day.start(in: timeZone))
+    }
+
+    /// "December 2026" for an expiry month (a Postgres `date` on the first of the month).
+    func month(_ expiryMonth: CalendarDay) -> String {
+        expiryMonth.start(in: timeZone).formatted(style.month(.wide).year())
     }
 
     /// An empty date style in the clinic's locale and time zone; callers add the fields.
@@ -61,15 +66,13 @@ nonisolated struct ClinicFormatters: Sendable {
         }
     }
 
-    /// Whole days from today (clinic time zone) to the last day of the expiry month, like the database.
-    func daysToExpiry(month expiryMonth: Date) -> Int {
+    /// Whole days from today (clinic time zone) to the last day of the expiry month, like the
+    /// database's `days_to_expiry`.
+    func daysToExpiry(month expiryMonth: CalendarDay) -> Int {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         let today = calendar.startOfDay(for: clock.now)
-        let firstOfMonth = calendar.startOfDay(for: expiryMonth)
-        guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: firstOfMonth),
-              let lastDay = calendar.date(byAdding: .day, value: -1, to: nextMonth)
-        else { return 0 }
+        let lastDay = expiryMonth.lastDayOfMonth.start(in: timeZone)
         return calendar.dateComponents([.day], from: today, to: lastDay).day ?? 0
     }
 }

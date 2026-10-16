@@ -111,6 +111,7 @@ extension JSONEncoder {
 }
 
 extension JSONDecoder {
+    /// snake_case keys and ISO 8601 instants. Postgres `date` columns decode as `CalendarDay`, not `Date`.
     nonisolated static let supabase: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -121,9 +122,6 @@ extension JSONDecoder {
             }
             if let date = ISO8601DateFormatter.plain.date(from: value) {
                 return date
-            }
-            if let day = DateFormatter.isoDay.date(from: value) {
-                return day
             }
             throw DecodingError.dataCorrupted(
                 .init(codingPath: decoder.codingPath, debugDescription: "Unreadable date \(value)")
@@ -140,16 +138,4 @@ private extension ISO8601DateFormatter {
         return formatter
     }()
     nonisolated(unsafe) static let plain = ISO8601DateFormatter()
-}
-
-private extension DateFormatter {
-    /// Postgres `date` columns arrive as "2026-12-01".
-    nonisolated static let isoDay: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .iso8601)
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(identifier: "UTC")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
 }

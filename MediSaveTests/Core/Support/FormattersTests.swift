@@ -23,7 +23,8 @@ struct FormattersTests {
     @Test func datesInTheClinicTimeZone() {
         let december1 = Date(timeIntervalSince1970: 1_796_101_200) // 2026-12-01 05:00 UTC, midnight in New York
         #expect(formatters.date(december1) == "Dec 1, 2026")
-        #expect(formatters.month(december1) == "December 2026")
+        #expect(formatters.date(CalendarDay(year: 2026, month: 12, day: 1)) == "Dec 1, 2026")
+        #expect(formatters.month(CalendarDay(year: 2026, month: 12, day: 1)) == "December 2026")
     }
 
     @Test func daysLeftCopy() {
@@ -35,7 +36,18 @@ struct FormattersTests {
 
     @Test func daysToExpiryCountsToTheLastDayOfTheMonth() {
         // demoNow is Thursday, October 2, 2026 in New York; December 2026 ends on the 31st: 90 days.
-        let december = Date(timeIntervalSince1970: 1_796_101_200)
-        #expect(formatters.daysToExpiry(month: december) == 90)
+        #expect(formatters.daysToExpiry(month: CalendarDay(year: 2026, month: 12, day: 1)) == 90)
+        #expect(formatters.daysToExpiry(month: CalendarDay(year: 2026, month: 10, day: 1)) == 29)
+        #expect(formatters.daysToExpiry(month: CalendarDay(year: 2026, month: 9, day: 1)) == -2)
+    }
+
+    @Test func aDecodedDateColumnIsADayNotAnInstant() throws {
+        struct Row: Decodable { let expiryMonth: CalendarDay }
+        let row = try JSONDecoder.supabase.decode(Row.self, from: Data(#"{"expiry_month":"2026-12-01"}"#.utf8))
+        #expect(formatters.daysToExpiry(month: row.expiryMonth) == 90)
+        #expect(formatters.month(row.expiryMonth) == "December 2026")
+        #expect(formatters.date(row.expiryMonth) == "Dec 1, 2026")
+        let encoded = try JSONEncoder.supabase.encode(row.expiryMonth)
+        #expect(String(bytes: encoded, encoding: .utf8) == "\"2026-12-01\"")
     }
 }
