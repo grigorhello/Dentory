@@ -8,6 +8,7 @@ final class TabNavigationUITests: XCTestCase {
     @MainActor
     func testTappingEachTabShowsItsScreen() {
         let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
         app.launch()
 
         for title in ["Home", "Inventory", "Procedures", "To buy"] {
