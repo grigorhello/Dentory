@@ -19,7 +19,7 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
-.PHONY: project build test uitest lint db-start db-stop db-reset db-test functions-serve functions-check
+.PHONY: project build test uitest lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check
 
 project:
 	xcodegen generate
@@ -52,6 +52,12 @@ db-reset:
 # Runs the pgTAP tests in supabase/tests against the local database.
 db-test:
 	supabase test db
+
+# Loads the demo clinic from the design (MS-109) into the local database; run it right after db-reset.
+# psql runs inside the database container, so no local Postgres client is needed.
+DB_CONTAINER ?= supabase_db_MediSave
+seed-demo:
+	docker exec -i $(DB_CONTAINER) psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -o /dev/null < supabase/seed-demo.sql
 
 functions-serve:
 	supabase functions serve

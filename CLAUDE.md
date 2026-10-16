@@ -30,5 +30,6 @@ Native iOS: Swift 6, SwiftUI, Observation, iOS 17+, iPhone and iPad, project gen
 - Supabase keys: copy `Config/Secrets.example.xcconfig` to `Config/Secrets.xcconfig` (git-ignored).
 - `make db-start`: local Supabase stack in Docker (Studio at http://127.0.0.1:54323); `make db-stop` stops it. Debug builds talk to it by default.
 - `make db-reset`: drop the local database, apply `supabase/migrations` in order, then `supabase/seed.sql`. `make db-test`: pgTAP tests in `supabase/tests/database`.
+- `make seed-demo`: load the demo clinic Smile Dental from the frames into the local database, right after `make db-reset` (MS-109). Logins are in the root README.
 - New migration: `supabase migration new <name>`; give it a pgTAP test. CI runs `db-reset db-test` and `make functions-check` (Deno) on every PR.
 - Hosted projects: `supabase link --project-ref <ref>` once, then `supabase db push` to staging after a merge. Pushing to prod is done by hand, never from CI. Keys live in `Config/Secrets*.xcconfig` (git-ignored), never in the repo.
