@@ -33,3 +33,25 @@ jobs:
 
       - name: Generate, lint, build and test
         run: make project lint build test WARNINGS_AS_ERRORS=YES SPM_FLAGS=-onlyUsePackageVersionsFromResolvedFile
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Start Postgres, apply migrations and seed, run the pgTAP tests
+        run: |
+          supabase db start
+          make db-reset db-test
+
+      - name: Type-check the Edge Functions
+        run: make functions-check

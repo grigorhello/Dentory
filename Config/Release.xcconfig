@@ -1,5 +1,5 @@
-// Supabase settings, read into Info.plist. Real values live in Secrets.xcconfig (git-ignored):
-// copy Secrets.example.xcconfig to Secrets.xcconfig and fill it in.
+// Release builds talk to the hosted Supabase project. Its URL and anon key live in Secrets.xcconfig
+// (git-ignored): copy Secrets.example.xcconfig to Secrets.xcconfig and fill it in.
 SUPABASE_URL =
 SUPABASE_ANON_KEY =
 

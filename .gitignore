@@ -19,6 +19,7 @@ DerivedData/
 
 # Secrets
 Config/Secrets.xcconfig
+Config/Secrets.debug.xcconfig
 .env
 
 # macOS

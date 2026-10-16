@@ -1,0 +1,1 @@
+-- Runs after the migrations on every `make db-reset`. MS-109 fills it with the demo clinic.

@@ -19,7 +19,7 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
-.PHONY: project build test uitest lint
+.PHONY: project build test uitest lint db-start db-stop db-reset db-test functions-serve functions-check
 
 project:
 	xcodegen generate
@@ -37,3 +37,25 @@ uitest:
 
 lint:
 	swiftlint lint --strict
+
+# Local Supabase stack (Docker). Studio: http://127.0.0.1:54323, API: http://127.0.0.1:54321.
+db-start:
+	supabase start
+
+db-stop:
+	supabase stop
+
+# Drops the local database, applies supabase/migrations in order, then supabase/seed.sql.
+db-reset:
+	supabase db reset
+
+# Runs the pgTAP tests in supabase/tests against the local database.
+db-test:
+	supabase test db
+
+functions-serve:
+	supabase functions serve
+
+# Type-checks every Edge Function (needs Deno: brew install deno).
+functions-check:
+	deno check supabase/functions/*/index.ts
