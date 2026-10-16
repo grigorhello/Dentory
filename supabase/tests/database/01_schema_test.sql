@@ -1,7 +1,7 @@
 -- Every table, type, index and trigger of MS-104 exists, every business table carries clinic_id,
 -- and row level security is on everywhere.
 begin;
-select plan(78);
+select plan(81);
 
 select has_table('public', t, 'table ' || t || ' exists')
 from unnest(array[
@@ -37,6 +37,9 @@ from unnest(array[
 
 select has_view('public', 'product_stock', 'product_stock view exists');
 select has_trigger('public', 'transactions', 'transactions_append_only', 'the ledger has its append-only trigger');
+select has_trigger('public', 'transactions', 'transactions_append_only_truncate', 'the ledger cannot be truncated');
+select has_trigger('public', 'products', 'products_archive_only', 'products cannot be deleted');
+select has_trigger('public', 'products', 'products_archive_only_truncate', 'products cannot be truncated');
 select has_index('public', 'batches', 'batches_product_expiry_idx', 'batches are indexed by product and expiry');
 select has_index('public', 'memberships', 'memberships_clinic_email_key', 'one membership per email per clinic');
 select has_index('public', 'alerts', 'alerts_open_key', 'one open alert per subject');

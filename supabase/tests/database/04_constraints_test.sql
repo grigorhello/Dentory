@@ -1,7 +1,7 @@
 -- The rules the schema enforces on its own: clinic isolation of references, the batch and expiry
 -- rules of MS-100 D8 and D9, and the uniqueness of emails, names, open To buy lines and open alerts.
 begin;
-select plan(17);
+select plan(21);
 
 insert into auth.users (id, instance_id, aud, role, email)
 values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@medisave.test');
@@ -23,6 +23,26 @@ select throws_ok($$
   insert into public.batches (clinic_id, product_id, qty)
   values ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000a1', 1)
 $$, '23503', null, 'a batch cannot sit in another clinic than its product');
+insert into public.invoices (id, clinic_id, source, created_by)
+values ('00000000-0000-4000-8000-0000000000d2', '00000000-0000-4000-8000-0000000000c2', 'manual', '00000000-0000-4000-8000-000000000001');
+select throws_ok($$
+  insert into public.invoice_lines (clinic_id, invoice_id, n, raw, suggested_product_id)
+  values ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000d2', 1, 'SEPTO 4%', '00000000-0000-4000-8000-0000000000a1')
+$$, '23503', null, 'an invoice line cannot suggest another clinic''s product');
+insert into public.procedure_templates (id, clinic_id, name)
+values ('00000000-0000-4000-8000-0000000000b1', '00000000-0000-4000-8000-0000000000c1', 'Root canal');
+select throws_ok($$
+  insert into public.procedure_events (clinic_id, template_id, name, started_by)
+  values ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000b1', 'Root canal', '00000000-0000-4000-8000-000000000001')
+$$, '23503', null, 'a procedure cannot start from another clinic''s template');
+
+-- Products are archived, never deleted; an account with an active membership stays
+select throws_ok($$ delete from public.products where id = '00000000-0000-4000-8000-0000000000a1' $$,
+  '23001', null, 'deleting a product raises');
+insert into public.memberships (clinic_id, user_id, email, role, status)
+values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-000000000001', 'tap@medisave.test', 'admin', 'active');
+select throws_ok($$ delete from auth.users where id = '00000000-0000-4000-8000-000000000001' $$,
+  '23503', null, 'a user with an active membership cannot be removed');
 
 -- Packs: both or neither, and a pack holds more than one unit
 select throws_ok($$

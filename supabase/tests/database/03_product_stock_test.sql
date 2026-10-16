@@ -1,7 +1,7 @@
 -- product_stock: unopened is the sum of the batches, multi-use products add their open items,
 -- undated quantity is reported as missing expiry, and empty batches do not set the soonest expiry.
 begin;
-select plan(14);
+select plan(17);
 
 insert into auth.users (id, instance_id, aud, role, email)
 values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@medisave.test');
@@ -31,6 +31,13 @@ insert into public.open_items (clinic_id, product_id, opened_by, finished_at, fi
 insert into public.products (id, clinic_id, name, unit)
 values ('00000000-0000-4000-8000-0000000000a3', '00000000-0000-4000-8000-0000000000c1', 'Suction tips', 'bags');
 
+-- A product in shortfall (MS-100 D9): 4 dated, the undated batch at -3.
+insert into public.products (id, clinic_id, name, unit)
+values ('00000000-0000-4000-8000-0000000000a4', '00000000-0000-4000-8000-0000000000c1', 'Gutta percha F2', 'packs');
+insert into public.batches (clinic_id, product_id, expiry_month, qty) values
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a4', '2027-06-01', 4),
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a4', null, -3);
+
 select is(unopened, 57::numeric, 'countable: unopened sums every batch') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a1';
 select is(open_count, 0, 'countable: no open items') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a1';
 select is(quantity, 57::numeric, 'countable: quantity is the batch sum') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a1';
@@ -47,6 +54,10 @@ select is(unopened, 0::numeric, 'empty product: unopened is 0') from public.prod
 select is(open_count, 0, 'empty product: open count is 0') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a3';
 select is(quantity, 0::numeric, 'empty product: quantity is 0') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a3';
 select is(missing_expiry_qty, 0::numeric, 'empty product: nothing is missing expiry') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a3';
+
+select is(unopened, 1::numeric, 'shortfall: the negative undated batch counts against the total') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a4';
+select is(quantity, 1::numeric, 'shortfall: quantity follows the total') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a4';
+select is(missing_expiry_qty, 0::numeric, 'shortfall: a negative undated batch is not missing-expiry stock') from public.product_stock where product_id = '00000000-0000-4000-8000-0000000000a4';
 
 select * from finish();
 rollback;

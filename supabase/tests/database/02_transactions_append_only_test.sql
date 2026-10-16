@@ -1,7 +1,7 @@
 -- The transactions ledger only grows: no role may update, delete or truncate it, the trigger stops
 -- the owner too, and every row's totals add up.
 begin;
-select plan(13);
+select plan(14);
 
 insert into auth.users (id, instance_id, aud, role, email)
 values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@medisave.test');
@@ -18,6 +18,7 @@ $$, 'a transaction can be written');
 
 select throws_ok($$ update public.transactions set note = 'edited' $$, '23001', null, 'updating the ledger raises');
 select throws_ok($$ delete from public.transactions $$, '23001', null, 'deleting from the ledger raises');
+select throws_ok($$ truncate public.transactions $$, '23001', null, 'truncating the ledger raises');
 
 select throws_ok($$
   insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, ref_type, action_id)

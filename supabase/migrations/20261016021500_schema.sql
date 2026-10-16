@@ -53,8 +53,9 @@ create table public.memberships (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   clinic_id uuid not null references public.clinics (id) on delete cascade,
-  -- Null until the invitation is accepted.
-  user_id uuid references auth.users (id) on delete set null,
+  -- Null until the invitation is accepted. An account with an active membership cannot be removed;
+  -- revoke the membership first (an active row must keep its user).
+  user_id uuid references auth.users (id) on delete restrict,
   email text not null check (position('@' in email) > 1),
   full_name text not null default '',
   role public.membership_role not null default 'staff',
@@ -109,6 +110,27 @@ create table public.products (
 create index products_clinic_active_idx on public.products (clinic_id) where archived_at is null;
 create index products_category_idx on public.products (category_id);
 
+-- Products are archived, never deleted (PRD §4, §9): no role may delete, and the trigger stops the owner too.
+revoke delete, truncate on public.products from public, anon, authenticated, service_role;
+
+create function public.products_archive_only()
+returns trigger
+language plpgsql
+as $$
+begin
+  raise exception 'products are archived, never deleted: set archived_at instead'
+    using errcode = 'restrict_violation';
+end;
+$$;
+
+create trigger products_archive_only
+  before delete on public.products
+  for each row execute function public.products_archive_only();
+
+create trigger products_archive_only_truncate
+  before truncate on public.products
+  for each statement execute function public.products_archive_only();
+
 -- Stock --------------------------------------------------------------------------------------------
 
 create table public.batches (
@@ -120,6 +142,7 @@ create table public.batches (
   expiry_month date check (expiry_month = date_trunc('month', expiry_month)::date),
   lot text,
   qty numeric(12, 2) not null default 0,
+  unique (id, clinic_id),
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete cascade,
   -- MS-100 D9: stock may go negative, and the negative sits on the undated batch only.
   constraint batches_negative_only_undated check (qty >= 0 or expiry_month is null)
@@ -155,7 +178,7 @@ create table public.procedure_events (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   clinic_id uuid not null references public.clinics (id) on delete cascade,
-  template_id uuid references public.procedure_templates (id) on delete set null,
+  template_id uuid,
   -- Snapshot of the template name at the time.
   name text not null,
   started_by uuid not null references auth.users (id),
@@ -163,6 +186,8 @@ create table public.procedure_events (
   cancelled_at timestamptz,
   cancelled_by uuid references auth.users (id),
   cancel_note text,
+  unique (id, clinic_id),
+  foreign key (template_id, clinic_id) references public.procedure_templates (id, clinic_id) on delete set null (template_id),
   -- Cancelling requires a note (PRD §4).
   constraint procedure_events_cancellation check (
     (cancelled_at is null and cancelled_by is null and cancel_note is null)
@@ -178,10 +203,12 @@ create table public.open_items (
   product_id uuid not null,
   opened_by uuid not null references auth.users (id),
   opened_at timestamptz not null default now(),
-  opened_in_event_id uuid references public.procedure_events (id) on delete set null,
+  opened_in_event_id uuid,
   finished_at timestamptz,
   finished_by uuid references auth.users (id),
+  unique (id, clinic_id),
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete cascade,
+  foreign key (opened_in_event_id, clinic_id) references public.procedure_events (id, clinic_id) on delete set null (opened_in_event_id),
   constraint open_items_finished check ((finished_at is null) = (finished_by is null))
 );
 create index open_items_product_open_idx on public.open_items (product_id) where finished_at is null;
@@ -190,9 +217,10 @@ create table public.procedure_event_items (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   clinic_id uuid not null references public.clinics (id) on delete cascade,
-  event_id uuid not null references public.procedure_events (id) on delete cascade,
+  event_id uuid not null,
   product_id uuid not null,
   qty numeric(12, 2) not null check (qty >= 0),
+  foreign key (event_id, clinic_id) references public.procedure_events (id, clinic_id) on delete cascade,
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete cascade,
   unique (event_id, product_id)
 );
@@ -201,10 +229,12 @@ create table public.procedure_event_openings (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   clinic_id uuid not null references public.clinics (id) on delete cascade,
-  event_id uuid not null references public.procedure_events (id) on delete cascade,
+  event_id uuid not null,
   product_id uuid not null,
-  open_item_id uuid not null references public.open_items (id) on delete cascade,
+  open_item_id uuid not null,
+  foreign key (event_id, clinic_id) references public.procedure_events (id, clinic_id) on delete cascade,
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete cascade,
+  foreign key (open_item_id, clinic_id) references public.open_items (id, clinic_id) on delete cascade,
   unique (event_id, open_item_id)
 );
 
@@ -226,6 +256,7 @@ create table public.invoices (
   created_by uuid not null references auth.users (id),
   confirmed_at timestamptz,
   confirmed_by uuid references auth.users (id),
+  unique (id, clinic_id),
   constraint invoices_confirmation check ((confirmed_at is null) = (confirmed_by is null)),
   constraint invoices_file check (source = 'manual' or storage_path is not null)
 );
@@ -235,7 +266,7 @@ create table public.invoice_lines (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   clinic_id uuid not null references public.clinics (id) on delete cascade,
-  invoice_id uuid not null references public.invoices (id) on delete cascade,
+  invoice_id uuid not null,
   n integer not null check (n >= 1),
   raw text not null,
   qty numeric(12, 2),
@@ -243,10 +274,12 @@ create table public.invoice_lines (
   unit_price numeric(12, 4),
   line_total numeric(12, 2),
   state public.invoice_line_state not null default 'needs_review',
-  suggested_product_id uuid references public.products (id) on delete set null,
+  suggested_product_id uuid,
   product_id uuid,
   lot text,
   expiry_month date check (expiry_month = date_trunc('month', expiry_month)::date),
+  foreign key (invoice_id, clinic_id) references public.invoices (id, clinic_id) on delete cascade,
+  foreign key (suggested_product_id, clinic_id) references public.products (id, clinic_id) on delete set null (suggested_product_id),
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete set null (product_id),
   unique (invoice_id, n)
 );
@@ -275,8 +308,9 @@ create table public.to_buy_items (
   ordered_at timestamptz,
   ordered_by uuid references auth.users (id),
   received_at timestamptz,
-  invoice_id uuid references public.invoices (id) on delete set null,
+  invoice_id uuid,
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete cascade,
+  foreign key (invoice_id, clinic_id) references public.invoices (id, clinic_id) on delete set null (invoice_id),
   constraint to_buy_items_ordered check (status = 'to_buy' or ordered_at is not null),
   constraint to_buy_items_received check (status <> 'received' or received_at is not null)
 );
@@ -291,8 +325,8 @@ create table public.transactions (
   created_at timestamptz not null default now(),
   clinic_id uuid not null references public.clinics (id) on delete restrict,
   product_id uuid not null,
-  batch_id uuid references public.batches (id) on delete restrict,
-  open_item_id uuid references public.open_items (id) on delete restrict,
+  batch_id uuid,
+  open_item_id uuid,
   type public.transaction_type not null,
   delta numeric(12, 2) not null,
   -- Product totals around this row.
@@ -309,13 +343,15 @@ create table public.transactions (
   -- Groups the rows one user action wrote; Undo reverses a whole action (MS-100 D10).
   action_id uuid not null,
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete restrict,
+  foreign key (batch_id, clinic_id) references public.batches (id, clinic_id) on delete restrict,
+  foreign key (open_item_id, clinic_id) references public.open_items (id, clinic_id) on delete restrict,
   constraint transactions_totals check (qty_after = qty_before + delta)
 );
 create index transactions_product_at_idx on public.transactions (product_id, at desc);
 create index transactions_clinic_at_idx on public.transactions (clinic_id, at desc);
 create index transactions_action_idx on public.transactions (action_id);
 
--- Append-only: no role may change or remove a row, and the trigger catches the owner too.
+-- Append-only: no role may change or remove a row, and the triggers catch the owner too.
 revoke update, delete, truncate on public.transactions from public, anon, authenticated, service_role;
 
 create function public.transactions_append_only()
@@ -332,6 +368,11 @@ create trigger transactions_append_only
   before update or delete on public.transactions
   for each row execute function public.transactions_append_only();
 
+-- TRUNCATE fires no row triggers, so it gets its own statement trigger.
+create trigger transactions_append_only_truncate
+  before truncate on public.transactions
+  for each statement execute function public.transactions_append_only();
+
 -- Alerts and devices -------------------------------------------------------------------------------
 
 create table public.alerts (
@@ -340,15 +381,18 @@ create table public.alerts (
   clinic_id uuid not null references public.clinics (id) on delete cascade,
   kind public.alert_kind not null,
   product_id uuid,
-  batch_id uuid references public.batches (id) on delete cascade,
-  invoice_id uuid references public.invoices (id) on delete cascade,
+  batch_id uuid,
+  invoice_id uuid,
   threshold_days integer check (threshold_days in (30, 60, 90)),
   opened_at timestamptz not null default now(),
   resolved_at timestamptz,
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete cascade,
+  foreign key (batch_id, clinic_id) references public.batches (id, clinic_id) on delete cascade,
+  foreign key (invoice_id, clinic_id) references public.invoices (id, clinic_id) on delete cascade,
+  -- Each kind names exactly its subject and nothing else.
   constraint alerts_subject check (
     case kind
-      when 'invoice_ready' then invoice_id is not null and product_id is null
+      when 'invoice_ready' then invoice_id is not null and product_id is null and batch_id is null and threshold_days is null
       when 'expiring' then product_id is not null and batch_id is not null and threshold_days is not null and invoice_id is null
       else product_id is not null and batch_id is null and threshold_days is null and invoice_id is null
     end
@@ -392,7 +436,8 @@ create table public.export_jobs (
 -- Quantity helpers ---------------------------------------------------------------------------------
 
 -- Stock per product (PRD §4): unopened is the sum of its batches; multi-use products add their open
--- items; missing_expiry_qty is the undated quantity; soonest_expiry ignores empty batches.
+-- items; missing_expiry_qty is the undated quantity (never below 0, since a negative undated batch is
+-- a shortfall, not undated stock); soonest_expiry ignores empty batches.
 create view public.product_stock
 with (security_invoker = true)
 as
@@ -403,7 +448,7 @@ select
   coalesce(b.unopened, 0)::numeric(12, 2) as unopened,
   coalesce(o.open_count, 0)::integer as open_count,
   (coalesce(b.unopened, 0) + case when p.tracking = 'multi_use' then coalesce(o.open_count, 0) else 0 end)::numeric(12, 2) as quantity,
-  coalesce(b.missing_expiry_qty, 0)::numeric(12, 2) as missing_expiry_qty,
+  greatest(coalesce(b.missing_expiry_qty, 0), 0)::numeric(12, 2) as missing_expiry_qty,
   b.soonest_expiry
 from public.products p
 left join (
