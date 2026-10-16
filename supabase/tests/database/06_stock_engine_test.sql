@@ -54,7 +54,8 @@ select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 10::numeric, 'a n
 select is((select last_unit_cost from public.products where id = '00000000-0000-4000-8000-0000000000d1'), 0.99::numeric, 'last unit cost is updated');
 select is((select count(*) from public.transactions where type = 'receiving' and ref_label = 'Invoice INV-10092'), 2::bigint, 'one receiving row per line');
 select is((select qty_before || '→' || qty_after from public.transactions where product_id = '00000000-0000-4000-8000-0000000000d1' and type = 'receiving'), '57.00→107.00', 'totals are recorded around the row');
-select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null), 2::bigint, 'the December batch opens an expiring alert for the 60 and 90 day thresholds');
+select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null),
+  (select count(*) from unnest(array[30, 60, 90]) t where public.days_to_expiry('2026-12-01', 'UTC') <= t), 'the December batch opens one expiring alert per threshold it has crossed');
 
 -- Idempotency ----------------------------------------------------------------------------------------
 select is(
@@ -81,7 +82,7 @@ select is((select count(*) from public.transactions where ref_type = 'procedure_
 select is((select status from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' and status = 'to_buy'), 'to_buy', 'an out-of-stock product is added to To buy');
 select is((select qty from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' and status = 'to_buy'), 12::numeric, 'with target minus current');
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d3' and kind = 'out_of_stock' and resolved_at is null), 1::bigint, 'and an out-of-stock alert');
-select is(public.product_status('00000000-0000-4000-8000-0000000000d1'), 'missing_expiry', 'Septocaine still has undated stock');
+select is(public.product_status_of('00000000-0000-4000-8000-0000000000d1'), 'missing_expiry', 'Septocaine still has undated stock');
 
 -- Procedure edit: only the differences ---------------------------------------------------------------
 select lives_ok($$ select public.stock_procedure_edit((select id from public.stock_actions where idempotency_key = pg_temp.k(3)),
@@ -114,7 +115,7 @@ select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 30::numeric, 'the
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e2'), 27::numeric, 'a decrease takes from the soonest batch');
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e4'), 3::numeric, 'an increase goes to the undated batch');
 select is((select count(*) from public.transactions where type = 'count' and reason = 'Physical count'), 2::bigint, 'one count row per changed product');
-select is(public.product_status('00000000-0000-4000-8000-0000000000d1'), 'missing_expiry', 'with the December batch empty, Septocaine is only missing expiry');
+select is(public.product_status_of('00000000-0000-4000-8000-0000000000d1'), 'missing_expiry', 'with the December batch empty, Septocaine is only missing expiry');
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'expiring' and resolved_at is null), 0::bigint, 'its expiring alerts closed when the batch emptied');
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d1' and kind = 'missing_expiry' and resolved_at is null), 1::bigint, 'and a missing-expiry alert is open');
 
