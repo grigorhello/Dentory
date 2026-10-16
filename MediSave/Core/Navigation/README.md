@@ -1,1 +1,1 @@
-Router, sheet and toast presenters (MS-103).
+The app shell (MS-103): `AppRouter` (selected tab and one typed path per tab), `ToastCenter` and its overlay, `MSSheet` and `SheetList`, `PinnedPrimaryBar`, the root and pushed screen headers, `ContentColumn`, `OfflineBanner` and the `.adminOnly()` modifier. Features use these; they never draw their own chrome.

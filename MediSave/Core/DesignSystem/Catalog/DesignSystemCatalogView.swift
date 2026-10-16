@@ -5,7 +5,7 @@ import SwiftUI
 /// Debug builds only; opened with a long press on the Home title.
 struct DesignSystemCatalogView: View {
     @Environment(\.dismiss) private var dismiss
-    /// Section to scroll to on appear: colors, type, shape, icons, buttons, forms, selection, steppers, display, list or notices.
+    /// Section to scroll to on appear: colors, type, shape, icons, buttons, forms, selection, steppers, display, list, notices or shell.
     var initialSection: String?
 
     var body: some View {
@@ -20,6 +20,7 @@ struct DesignSystemCatalogView: View {
                     CatalogFormsSection().id("forms")
                     CatalogSelectionSection().id("selection")
                     CatalogDisplaySection().id("display")
+                    CatalogShellSection().id("shell")
                 }
                 .padding(Spacing.page)
                 .frame(maxWidth: PageLayout.contentMaxWidth)
@@ -30,6 +31,7 @@ struct DesignSystemCatalogView: View {
             }
         }
         .background(Color.ms.canvas)
+        .toastHost()
         .navigationTitle("Design system")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

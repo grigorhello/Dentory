@@ -9,6 +9,8 @@ struct AppDependencies: Sendable {
     let auth: AuthServicing
     let clock: Clock
     let networkMonitor: NetworkMonitoring
+    /// One toast at a time, shown by every screen container (MS-103).
+    let toasts: ToastCenter
 
     /// Formatters for the signed-in clinic.
     func formatters(for session: Session) -> ClinicFormatters {
@@ -26,7 +28,8 @@ struct AppDependencies: Sendable {
             rpc: SupabaseRPCClient(transport: SupabaseRPCTransport(client: client)),
             auth: SupabaseAuthService(client: client),
             clock: SystemClock(),
-            networkMonitor: NetworkMonitor()
+            networkMonitor: NetworkMonitor(),
+            toasts: ToastCenter()
         )
     }
 
@@ -37,7 +40,8 @@ struct AppDependencies: Sendable {
             rpc: PreviewRPCClient(),
             auth: PreviewAuthService(session: signedIn ? .demo : nil),
             clock: FixedClock(Session.demoNow),
-            networkMonitor: FixedNetworkMonitor()
+            networkMonitor: FixedNetworkMonitor(),
+            toasts: ToastCenter()
         )
     }
 }
@@ -56,7 +60,7 @@ extension EnvironmentValues {
 // MARK: - Preview doubles
 
 extension Session {
-    /// Thursday, October 2, 9:41, the moment every frame shows.
+    /// October 2, 2026, 9:41 in New York, the moment every frame shows (the frames label it a Thursday; it is a Friday).
     nonisolated static let demoNow = Date(timeIntervalSince1970: 1_790_933_260)
 
     nonisolated static let demo = Session(

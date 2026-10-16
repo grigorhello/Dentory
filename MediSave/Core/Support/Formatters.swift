@@ -46,6 +46,11 @@ nonisolated struct ClinicFormatters: Sendable {
         date(day.start(in: timeZone))
     }
 
+    /// "Thursday, October 2" for the Home eyebrow (f6).
+    func weekday(_ date: Date) -> String {
+        date.formatted(style.weekday(.wide).month(.wide).day())
+    }
+
     /// "December 2026" for an expiry month (a Postgres `date` on the first of the month).
     func month(_ expiryMonth: CalendarDay) -> String {
         expiryMonth.start(in: timeZone).formatted(style.month(.wide).year())
