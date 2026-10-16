@@ -86,6 +86,8 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- Serialise admin changes per clinic, so two admins stepping down at once cannot both pass the check.
+  perform pg_advisory_xact_lock(hashtext('memberships_keep_an_admin'), hashtext(old.clinic_id::text));
   if old.role = 'admin' and old.status = 'active'
      and (tg_op = 'DELETE' or new.role <> 'admin' or new.status <> 'active')
      and not exists (
@@ -130,7 +132,10 @@ grant select on public.clinics, public.profiles, public.memberships, public.cate
 
 -- Direct writes, each narrowed by role in its policy. No INSERT, UPDATE or DELETE on batches,
 -- open_items, transactions or the procedure event tables: those go through the MS-106 RPCs.
-grant update on public.clinics to authenticated;
+-- Clinic settings only: the billing columns (subscription_status, trial_ends_at, promo_lifetime_50,
+-- stripe_*) are written by the billing functions as service_role, never by an app user.
+grant update (name, logo_path, city, country, currency, time_zone, expiry_thresholds, email_digest, billing_emails)
+  on public.clinics to authenticated;
 grant insert, update on public.profiles to authenticated;
 grant insert, update, delete on public.memberships to authenticated;
 grant insert, update, delete on public.categories to authenticated;

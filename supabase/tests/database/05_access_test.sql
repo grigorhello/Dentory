@@ -2,7 +2,7 @@
 -- PRD §2 role table fails for Staff, stock tables take no direct writes, the last admin stays, and a
 -- clinic whose trial ended takes no writes.
 begin;
-select plan(48);
+select plan(59);
 
 -- Fixtures (as the owner) --------------------------------------------------------------------------
 insert into auth.users (id, instance_id, aud, role, email) values
@@ -23,6 +23,7 @@ insert into public.memberships (clinic_id, user_id, email, role, status) values
   ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000b2', 'staff2@medisave.test', 'staff', 'active');
 insert into public.products (id, clinic_id, name, unit) values
   ('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000c1', 'Septocaine 4% 1:100,000', 'cartridges'),
+  ('00000000-0000-4000-8000-0000000000d3', '00000000-0000-4000-8000-0000000000c1', 'Nitrile gloves M', 'boxes'),
   ('00000000-0000-4000-8000-0000000000d2', '00000000-0000-4000-8000-0000000000c2', 'Composite A2', 'syringes');
 insert into public.batches (clinic_id, product_id, qty) values
   ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d1', 54),
@@ -56,9 +57,9 @@ reset role;
 -- No cross-clinic reads ----------------------------------------------------------------------------
 select pg_temp.act_as('00000000-0000-4000-8000-0000000000b1');
 select results_eq($$ select id from public.clinics order by id $$, $$ values ('00000000-0000-4000-8000-0000000000c1'::uuid) $$, 'staff1 sees only clinic 1');
-select results_eq($$ select id from public.products $$, $$ values ('00000000-0000-4000-8000-0000000000d1'::uuid) $$, 'staff1 sees only clinic 1 products');
+select results_eq($$ select id from public.products order by id $$, $$ values ('00000000-0000-4000-8000-0000000000d1'::uuid), ('00000000-0000-4000-8000-0000000000d3'::uuid) $$, 'staff1 sees only clinic 1 products');
 select is((select count(*) from public.batches), 1::bigint, 'staff1 sees only clinic 1 batches');
-select is((select count(*) from public.product_stock), 1::bigint, 'the stock view follows the same rule');
+select is((select count(*) from public.product_stock), 2::bigint, 'the stock view follows the same rule');
 select is((select count(*) from public.memberships), 2::bigint, 'staff1 sees the team of clinic 1 only');
 select is((select count(*) from public.profiles), 2::bigint, 'staff1 sees the profiles of clinic 1 only');
 select is((select count(*) from public.invoices), 0::bigint, 'staff sees no invoices');
@@ -95,8 +96,12 @@ select throws_ok($$ insert into storage.objects (bucket_id, name) values ('invoi
 -- and the "yes" cells work
 select lives_ok($$ update public.to_buy_items set qty = 8, qty_edited = true where id = '00000000-0000-4000-8000-000000000011' $$,
   'staff can change a To buy quantity');
-select lives_ok($$ insert into public.to_buy_items (clinic_id, product_id, qty, source, added_by) select '00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d2', 1, 'manual', '00000000-0000-4000-8000-0000000000b1' where false $$,
-  'staff may add to To buy (statement form)');
+select lives_ok($$ insert into public.to_buy_items (clinic_id, product_id, qty, source, added_by) values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d3', 1, 'manual', '00000000-0000-4000-8000-0000000000b1') $$,
+  'staff adds to To buy');
+select throws_ok($$ insert into public.to_buy_items (clinic_id, product_id, qty, status, ordered_at, ordered_by) values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d1', 1, 'ordered', now(), '00000000-0000-4000-8000-0000000000b1') $$,
+  '42501', null, 'staff cannot add an item as already ordered');
+select throws_ok($$ insert into storage.objects (bucket_id, name) values ('logos', '00000000-0000-4000-8000-0000000000c1/logo.png') $$,
+  '42501', null, 'staff cannot upload a logo');
 select lives_ok($$ insert into public.alert_reads (clinic_id, user_id) values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000b1') $$,
   'staff keeps their own bell marker');
 reset role;
@@ -121,10 +126,27 @@ select lives_ok($$ update public.to_buy_items set status = 'ordered', ordered_at
   'admin marks as ordered');
 select lives_ok($$ update public.clinics set name = 'Smile Dental Group' where id = '00000000-0000-4000-8000-0000000000c1' $$,
   'admin changes clinic settings');
+select throws_ok($$ update public.clinics set subscription_status = 'active' where id = '00000000-0000-4000-8000-0000000000c1' $$,
+  '42501', null, 'admin cannot change the subscription');
+select throws_ok($$ update public.clinics set trial_ends_at = '2099-01-01' where id = '00000000-0000-4000-8000-0000000000c1' $$,
+  '42501', null, 'admin cannot extend the trial');
+select throws_ok($$ update public.clinics set promo_lifetime_50 = true where id = '00000000-0000-4000-8000-0000000000c1' $$,
+  '42501', null, 'admin cannot grant the promo');
+select lives_ok($$ insert into storage.objects (bucket_id, name) values ('logos', '00000000-0000-4000-8000-0000000000c1/logo.png') $$,
+  'admin uploads the logo');
+select throws_ok($$ insert into storage.objects (bucket_id, name) values ('logos', '00000000-0000-4000-8000-0000000000c2/logo.png') $$,
+  '42501', null, 'but not another clinic''s logo');
 select lives_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c1/inv.jpg') $$,
   'admin uploads invoices');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c2/inv.jpg') $$,
   '42501', null, 'but not into another clinic''s folder');
+reset role;
+
+select pg_temp.act_as('00000000-0000-4000-8000-0000000000b1');
+select is((select count(*) from storage.objects where bucket_id = 'logos'), 1::bigint, 'staff sees the clinic logo');
+reset role;
+select pg_temp.act_as('00000000-0000-4000-8000-0000000000b2');
+select is((select count(*) from storage.objects where bucket_id = 'logos'), 0::bigint, 'another clinic does not see it');
 reset role;
 
 -- The last admin stays -----------------------------------------------------------------------------
@@ -142,6 +164,12 @@ select lives_ok($$ update public.memberships set role = 'staff' where user_id = 
 reset role;
 
 -- A clinic past its trial is read-only (MS-100 G5) -------------------------------------------------
+update public.clinics set trial_ends_at = now() - interval '1 day' where id = '00000000-0000-4000-8000-0000000000c2';
+select pg_temp.act_as('00000000-0000-4000-8000-0000000000a2');
+select ok(not public.clinic_can_write('00000000-0000-4000-8000-0000000000c2'), 'a trial that ended without payment cannot be written');
+select throws_ok($$ insert into public.products (clinic_id, name, unit) values ('00000000-0000-4000-8000-0000000000c2', 'Gloves', 'boxes') $$,
+  '42501', null, 'writes are refused once the trial ended');
+reset role;
 update public.clinics set subscription_status = 'read_only' where id = '00000000-0000-4000-8000-0000000000c2';
 select pg_temp.act_as('00000000-0000-4000-8000-0000000000a2');
 select ok(not public.clinic_can_write('00000000-0000-4000-8000-0000000000c2'), 'clinic_can_write is false after the trial');
