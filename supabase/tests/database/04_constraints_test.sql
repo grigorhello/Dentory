@@ -1,7 +1,7 @@
 -- The rules the schema enforces on its own: clinic isolation of references, the batch and expiry
 -- rules of MS-100 D8 and D9, and the uniqueness of emails, names, open To buy lines and open alerts.
 begin;
-select plan(21);
+select plan(22);
 
 insert into auth.users (id, instance_id, aud, role, email)
 values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@medisave.test');
@@ -35,6 +35,17 @@ select throws_ok($$
   insert into public.procedure_events (clinic_id, template_id, name, started_by)
   values ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000b1', 'Root canal', '00000000-0000-4000-8000-000000000001')
 $$, '23503', null, 'a procedure cannot start from another clinic''s template');
+
+insert into public.products (id, clinic_id, name, unit) values
+  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-0000000000c2', 'Septocaine 4% 1:100,000', 'cartridges');
+insert into public.transactions (id, clinic_id, product_id, type, delta, qty_before, qty_after, by_user, ref_type, action_id)
+values ('00000000-0000-4000-8000-0000000000f0', '00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1',
+        'count', 2, 0, 2, '00000000-0000-4000-8000-000000000001', 'count_session', gen_random_uuid());
+select throws_ok($$
+  insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, ref_type, reverses_id, action_id)
+  values ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000a2', 'cancellation', -2, 2, 0,
+          '00000000-0000-4000-8000-000000000001', 'undo', '00000000-0000-4000-8000-0000000000f0', gen_random_uuid())
+$$, '23503', null, 'a reversal cannot point at another clinic''s transaction');
 
 -- Products are archived, never deleted; an account with an active membership stays
 select throws_ok($$ delete from public.products where id = '00000000-0000-4000-8000-0000000000a1' $$,

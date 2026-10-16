@@ -53,8 +53,8 @@ create table public.memberships (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   clinic_id uuid not null references public.clinics (id) on delete cascade,
-  -- Null until the invitation is accepted. An account with an active membership cannot be removed;
-  -- revoke the membership first (an active row must keep its user).
+  -- Null until the invitation is accepted. An account cannot be removed while a membership row
+  -- still holds its user_id: clear user_id or delete the membership first.
   user_id uuid references auth.users (id) on delete restrict,
   email text not null check (position('@' in email) > 1),
   full_name text not null default '',
@@ -339,9 +339,11 @@ create table public.transactions (
   ref_label text,
   reason text,
   note text,
-  reverses_id uuid references public.transactions (id),
+  reverses_id uuid,
   -- Groups the rows one user action wrote; Undo reverses a whole action (MS-100 D10).
   action_id uuid not null,
+  unique (id, clinic_id),
+  foreign key (reverses_id, clinic_id) references public.transactions (id, clinic_id),
   foreign key (product_id, clinic_id) references public.products (id, clinic_id) on delete restrict,
   foreign key (batch_id, clinic_id) references public.batches (id, clinic_id) on delete restrict,
   foreign key (open_item_id, clinic_id) references public.open_items (id, clinic_id) on delete restrict,
