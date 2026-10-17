@@ -8,13 +8,15 @@ struct DentoryApp: App {
     init() {
         // `-uiTesting` runs the app on the preview doubles: no network, a signed-in demo admin.
         // `-offline` with it makes the network monitor report no connection; `-signedOut` starts on Sign in;
-        // `-staff` signs in as the Staff member.
+        // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there.
         let arguments = ProcessInfo.processInfo.arguments
+        let onboarding = UserDefaults.standard.string(forKey: "onboarding")
         let dependencies = arguments.contains("-uiTesting")
             ? AppDependencies.preview(
-                signedIn: !arguments.contains("-signedOut"),
+                signedIn: !arguments.contains("-signedOut") && onboarding != "account",
                 isConnected: !arguments.contains("-offline"),
-                role: arguments.contains("-staff") ? .staff : .admin
+                role: arguments.contains("-staff") ? .staff : .admin,
+                onboarding: onboarding
             )
             : AppDependencies.live()
         self.dependencies = dependencies

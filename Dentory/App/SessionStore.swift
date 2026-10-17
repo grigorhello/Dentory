@@ -9,6 +9,8 @@ final class SessionStore {
         case restoring
         case signedOut
         case signedIn(Session)
+        /// Signed up without a clinic yet: admin sign-up resumes at the clinic step (MS-111).
+        case needsClinic(Account)
     }
 
     private(set) var state: State = .restoring
@@ -30,12 +32,26 @@ final class SessionStore {
 
     func restore() async {
         do {
-            state = try await auth.restore().map(State.signedIn) ?? .signedOut
+            switch try await auth.restore() {
+            case .none: state = .signedOut
+            case .signedIn(let session): state = .signedIn(session)
+            case .needsClinic(let account): state = .needsClinic(account)
+            }
         } catch {
             lastError = AppError(error)
             accessWasRevoked = lastError == .forbidden
             state = .signedOut
         }
+    }
+
+    /// After admin sign-up step 1: the user exists, the clinic does not yet.
+    func didSignUp(_ account: Account) {
+        state = .needsClinic(account)
+    }
+
+    /// After the clinic exists: reload the session from the server.
+    func refresh() async {
+        await restore()
     }
 
     /// The Sign in screen calls this after showing the revoked toast.

@@ -121,11 +121,9 @@ struct SignInView: View {
         VStack(spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
                 Text("Setting up a new clinic?").textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
-                Button("Sign up as admin") {
-                    dependencies.toasts.show("Sign up arrives with a later update.")
+                NavigationLink(value: OnboardingViewModel.Step.account) {
+                    Text("Sign up as admin").textStyle(.bodyStrong14).foregroundStyle(Color.ms.primary)
                 }
-                .textStyle(.bodyStrong14)
-                .foregroundStyle(Color.ms.primary)
                 .accessibilityIdentifier("signin.signUpAdmin")
             }
             Text("Staff join through the invitation email.")
