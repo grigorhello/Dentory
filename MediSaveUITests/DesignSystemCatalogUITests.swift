@@ -6,14 +6,14 @@ final class DesignSystemCatalogUITests: XCTestCase {
     }
 
     @MainActor
-    func testLongPressOnHomeOpensTheCatalog() {
+    func testLongPressOnTheShellDemoRowOpensTheCatalog() {
         let app = XCUIApplication()
         app.launchArguments = ["-uiTesting"]
         app.launch()
 
-        let home = app.staticTexts["tab.home.placeholder"]
-        XCTAssertTrue(home.waitForExistence(timeout: 5))
-        home.press(forDuration: 1)
+        let demo = app.descendants(matching: .any)["shell.demo.push"]
+        XCTAssertTrue(demo.waitForExistence(timeout: 5))
+        demo.press(forDuration: 1)
 
         let catalog = app.descendants(matching: .any)["catalog.root"]
         XCTAssertTrue(catalog.waitForExistence(timeout: 5), "Catalog did not open")
