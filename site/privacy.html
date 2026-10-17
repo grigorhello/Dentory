@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dentory · Privacy</title>
+<style>body{font-family:Inter,system-ui,sans-serif;color:#1c1b1a;background:#fffefb;margin:0;padding:24px;max-width:720px;margin:0 auto;line-height:1.5}h1,h2{font-family:Outfit,Inter,sans-serif}a{color:#2457f5}</style></head>
+<body>
+<p><a href="index.html">Dentory</a></p>
+<h1>Privacy</h1>
+<p>Last updated: DATE. Dentory is made by Dentory, Oakville, Ontario, Canada. Contact: EMAIL.</p>
+<h2>What the app stores</h2>
+<p>Clinic data only: the clinic's name and settings, its products, batches, lots and expiry dates, procedure templates, stock events (who did what, when and why), supplier invoice images uploaded by the clinic, and the team's names, email addresses and roles. Dentory has no field for patient or appointment information and stores none.</p>
+<h2>How it is kept</h2>
+<p>Each clinic's data is isolated per clinic in the database (row-level security on every table). Staff permissions are enforced by the database, not only by the app. Every stock change is a server-side transaction in an append-only ledger. Invoice images belong to the clinic; an Admin can delete them at any time.</p>
+<h2>Who processes it</h2>
+<p>Supabase (database, authentication, storage and functions, US east region), Stripe (payments, on Stripe-hosted pages; Dentory never sees card numbers), Resend (email), Apple (push notifications and the App Store). The invoice reading model runs server side; the clinic's invoice never leaves the server path.</p>
+<h2>Your choices</h2>
+<p>Push notifications are opt-in on the device. The weekly email digest is a clinic setting. An Admin can export the clinic's products, batches and transactions as CSV by email, and can ask for the clinic's data to be deleted by writing to EMAIL.</p>
+<h2>Sign-up form on this site</h2>
+<p>The form asks for the clinic name, your name, email and phone. We use them to call you about your free trial and onboarding, and for nothing else.</p>
+</body></html>
