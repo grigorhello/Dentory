@@ -1,4 +1,4 @@
-// Renders every frame of design/project/MediSave Board.dc.html to design/frames/fNN.png.
+// Renders every frame of design/project/Dentory Board.dc.html to design/frames/fNN.png.
 // Usage: serve design/project on http://localhost:8765, then
 //   NODE_PATH=$(npm root -g) node design/render-frames.js design/frames <vendor-dir>
 // <vendor-dir> holds npm-packed react@18.3.1, react-dom@18.3.1, lucide@0.460.0, @babel/standalone@7.29.0 (extracted as <name>-<version>/package).
@@ -24,7 +24,7 @@ const map = {
     if (/fonts\.(googleapis|gstatic)\.com/.test(u)) { const body=require('child_process').execFileSync('curl',['-sSL','-A','Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36',u]); return r.fulfill({body, contentType: u.includes('css2')?'text/css':'font/woff2'}); }
     return r.abort();
   });
-  await p.goto('http://localhost:8765/' + encodeURI(process.argv[4] || 'MediSave Board.dc.html'), { waitUntil: 'load' });
+  await p.goto('http://localhost:8765/' + encodeURI(process.argv[4] || 'Dentory Board.dc.html'), { waitUntil: 'load' });
   await p.waitForTimeout(8000);
   for (let i = 1; i <= 38; i++) {
     const el = await p.$('#f' + i);

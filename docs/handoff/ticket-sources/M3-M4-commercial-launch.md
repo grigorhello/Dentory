@@ -45,7 +45,7 @@ meta: milestone=M3; priority=P1; type=feature; area=settings; size=2; frames=f33
 meta: milestone=M3; priority=P0; type=feature; area=billing; size=5; frames=f34; screens=billing; prd=§6.9 Billing, §9 Billing, §1 Billing; depends=MS-137,MS-104
 
 ### Commercial rules
-3-month free trial from clinic creation, then $99 per clinic per month (USD price list; show the clinic currency only when a matching Stripe price exists, otherwise USD), unlimited users. Some clinics get a 50% lifetime promotion ($49.50): a flag set by MediSave (`promo_lifetime_50`, via SQL or Stripe coupon), never editable in the app.
+3-month free trial from clinic creation, then $99 per clinic per month (USD price list; show the clinic currency only when a matching Stripe price exists, otherwise USD), unlimited users. Some clinics get a 50% lifetime promotion ($49.50): a flag set by Dentory (`promo_lifetime_50`, via SQL or Stripe coupon), never editable in the app.
 
 ### Screen (f34), Admin only
 - `billing.trial` dark ink card: eyebrow "FREE TRIAL", "3 months free" (or "{N} days left" in the last 30 days), "Ends {date}". Divider, "After trial" and `billing.price` "$99 / month" or "~~$99~~ $49.50 / month" with success pill "50% off for life". After the trial with an active subscription: eyebrow "PLAN", "$99 / month", "Next payment {date}".
@@ -110,7 +110,7 @@ meta: milestone=M3; priority=P1; type=feature; area=alerts; size=3; frames=; scr
 ## MS-145 · Weekly email digest
 meta: milestone=M3; priority=P2; type=feature; area=alerts; size=2; frames=f33; screens=; prd=§8 Email digest; depends=MS-139
 
-- When `email_digest` is on, every Monday 07:00 clinic time send to every Admin: To buy count, items expiring within the window (top 5 with days), missing expiry count, procedures last week (count). Subject "This week at {Clinic}: {N} to buy, {M} expiring". Plain, on-brand HTML (cream background, ink text, one blue button "Open MediSave").
+- When `email_digest` is on, every Monday 07:00 clinic time send to every Admin: To buy count, items expiring within the window (top 5 with days), missing expiry count, procedures last week (count). Subject "This week at {Clinic}: {N} to buy, {M} expiring". Plain, on-brand HTML (cream background, ink text, one blue button "Open Dentory").
 - pg_cron hourly job selects clinics whose local time is Monday 07:00.
 
 ### Acceptance criteria
@@ -177,7 +177,7 @@ meta: milestone=M4; priority=P0; type=chore; area=platform; size=2; frames=; scr
 ## MS-152 · Ship to TestFlight and the App Store
 meta: milestone=M4; priority=P0; type=chore; area=platform; size=3; frames=; screens=; prd=§9 Platforms; depends=MS-148,MS-149,MS-150,MS-151
 
-- Xcode Cloud workflows (pull request: build + test; `main`: archive and upload to TestFlight; tag `v*`: App Store build), or the same with `xcodebuild archive` + `xcrun altool` in GitHub Actions if Xcode Cloud is unavailable; App Store Connect app record; bundle id, app icon (plain "MediSave" wordmark per the design system, no logo exists yet), launch screen in cream.
+- Xcode Cloud workflows (pull request: build + test; `main`: archive and upload to TestFlight; tag `v*`: App Store build), or the same with `xcodebuild archive` + `xcrun altool` in GitHub Actions if Xcode Cloud is unavailable; App Store Connect app record; bundle id, app icon (plain "Dentory" wordmark per the design system, no logo exists yet), launch screen in cream.
 - Privacy nutrition labels (email, name, usage data; no health data; no tracking), privacy policy and terms URLs, support URL.
 - Review notes: demo account (Smile Dental admin) for App Review.
 - Billing review risk (D11): confirm before submission that linking to Stripe-hosted billing for a B2B per-clinic subscription is accepted; if not, hide the payment method row on iOS and bill by email invoice for pilot clinics.

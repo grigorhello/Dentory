@@ -1,6 +1,6 @@
 # Engineering process
 
-How MediSave tickets go from "To do" to "Feature QA". This is the process the previous Claude project ran from 2026-10-15 to 2026-10-16 for MS-101 to MS-106; it is written for a thread that picks up the next ticket.
+How Dentory tickets go from "To do" to "Feature QA". This is the process the previous Claude project ran from 2026-10-15 to 2026-10-16 for MS-101 to MS-106; it is written for a thread that picks up the next ticket.
 
 ## 1. Roles
 
@@ -13,11 +13,11 @@ How MediSave tickets go from "To do" to "Feature QA". This is the process the pr
 
 | What | Where | Notes |
 |---|---|---|
-| Code | https://github.com/grigorhello/MediSave | Default branch `claude/project-thread-ocu7tf` until Grigor renames it to `main`. |
+| Code | https://github.com/grigorhello/Dentory | Default branch `claude/project-thread-ocu7tf` until Grigor renames it to `main`. |
 | Tickets | GitHub issues #71 to #125, titled `MS-1NN · …` | Each issue is self-contained: build step, blockers, frames, PRD section, element ids, acceptance criteria, out of scope. |
 | Order | `docs/BUILD-ORDER.md` | Topological order with ties broken by milestone then priority. 55 steps. |
-| Board | Notion "MediSave · Product board" | One card per issue. Status moves with the ticket. |
-| Rules | `CLAUDE.md`, `.claude/skills/medisave-ios/SKILL.md` | Read both at the start of every ticket. |
+| Board | Notion "Dentory · Product board" | One card per issue. Status moves with the ticket. |
+| Rules | `CLAUDE.md`, `.claude/skills/dentory-ios/SKILL.md` | Read both at the start of every ticket. |
 | Decisions | Issue MS-100 (#71) | Overrides the PRD. When frame and PRD disagree and MS-100 is silent: layout and copy follow the frame, business rules follow the PRD. |
 | Spec | `design/PRD-v1.1.md`, `design/frames/fNN.png` | Appendix B element ids are used verbatim as accessibility identifiers and analytics names. |
 | Machine | Grigor's Mac, folder `/Users/grigorgrigoryan/Documents/Personal/MediSave` | Xcode 26, simulators iPhone 16 and iPad Pro 11-inch (M4), Docker Desktop, Supabase CLI, `gh` as `grigorhello`. |
@@ -38,7 +38,7 @@ How MediSave tickets go from "To do" to "Feature QA". This is the process the pr
 11. **After the merge**: the issue closes through `Closes #N`; move the Notion card to Feature QA (Grigor moves it to Done after his QA, section 5); post one reply in the thread (what the PR delivers, what the reviewer caught, anything Grigor must do). Then take the next ticket at once (rule of 2026-10-16). Update `docs/handoff/build-state.md` with the merged ticket, either in the next PR or in a small docs PR.
 12. **Database tickets only**: after the merge, push the migrations to the hosted staging project (`supabase db push` in a terminal tab; Grigor types the database password). So far this is batched: the thread asks Grigor to say "push now" and he decides when.
 
-## 4. Board flow (Notion "MediSave · Product board")
+## 4. Board flow (Notion "Dentory · Product board")
 
 One card per ticket, linked to its GitHub issue. The Status column is the only field that moves; Order stays the build step.
 
@@ -75,7 +75,7 @@ Rounds so far were lost on: simulator names in test commands, unlocked package v
 
 - Local stack: `make db-start` (Studio at http://127.0.0.1:54323), `make db-reset` applies `supabase/migrations` then `supabase/seed.sql`, `make db-test` runs pgTAP. Debug builds talk to it with fixed local keys in `Config/Debug.xcconfig`; nothing secret.
 - Every migration has a pgTAP test; 290 assertions existed after MS-106. The ledger (`transactions`) is append-only with triggers against update, delete and truncate. Products are archived. Every foreign reference is locked to the clinic. RLS is on every table; Staff is refused on admin-only actions with a clear error; the stock changes only through the eleven engine RPCs (receive, procedure start/edit/cancel, count, adjust, dispose, batch add/edit, bottle open/finish, undo within 10 seconds, all idempotent with a key).
-- Hosted: staging project "MediSave" (us-east-2, Postgres 17), linked from the Mac on 2026-10-16. Push after database merges with `supabase db push`. Prod is created before TestFlight (MS-152) and pushed by hand, never from CI. Release builds read the hosted URL and anon key from the git-ignored `Config/Secrets.xcconfig`.
+- Hosted: staging project "Dentory" (us-east-2, Postgres 17), linked from the Mac on 2026-10-16. Push after database merges with `supabase db push`. Prod is created before TestFlight (MS-152) and pushed by hand, never from CI. Release builds read the hosted URL and anon key from the git-ignored `Config/Secrets.xcconfig`.
 
 ## 8. Communication rules the previous threads learned
 
@@ -91,4 +91,4 @@ Sources are in `docs/handoff/ticket-sources/` (one Markdown file per milestone g
 
 ## 10. Onboarding a new build thread
 
-Brief: "Build the next MediSave ticket in build order on Grigor's Mac. Read docs/handoff/build-state.md and docs/handoff/engineering-process.md first, then CLAUDE.md and the skill. Check GitHub for the real current state. Do not stop after a merge." Start a Remote Control session on the approved folder; it starts with no prompt when the folder is already approved for the project.
+Brief: "Build the next Dentory ticket in build order on Grigor's Mac. Read docs/handoff/build-state.md and docs/handoff/engineering-process.md first, then CLAUDE.md and the skill. Check GitHub for the real current state. Do not stop after a merge." Start a Remote Control session on the approved folder; it starts with no prompt when the folder is already approved for the project.

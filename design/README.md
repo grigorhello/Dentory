@@ -1,14 +1,14 @@
-# MediSave design (V1.1)
+# Dentory design (V1.1)
 
-Everything a developer needs to build the V1.1 iPhone and iPad app. Exported from the Claude Design project "Mobile app design for MediSave" on October 15, 2026. Treat this folder as read-only input.
+Everything a developer needs to build the V1.1 iPhone and iPad app. Exported from the Claude Design project "Mobile app design for Dentory" on October 15, 2026. Treat this folder as read-only input.
 
 | What | Where |
 |---|---|
 | Product requirements, readable | `PRD-v1.1.md` (sections 1–10, screen index, Appendix B element ids, Appendix C sheets) |
 | Every screen as an image | `frames/fNN.png` (f01–f38, numbers match the PRD). `fNN-2.png`, `-3.png`… are the same screen scrolled further down. |
-| Clickable prototype source | `project/MediSave Mobile.dc.html` (one file, all screens and sheets; seed data in the `constructor` of the script at the bottom) |
-| Design board source | `project/MediSave Board.dc.html` |
-| PRD source | `project/MediSave PRD v1.1.dc.html` |
+| Clickable prototype source | `project/Dentory Mobile.dc.html` (one file, all screens and sheets; seed data in the `constructor` of the script at the bottom) |
+| Design board source | `project/Dentory Board.dc.html` |
+| PRD source | `project/Dentory PRD v1.1.dc.html` |
 | Design system | `project/_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/` (`readme.md`, `tokens/*.css`, `_ds_bundle.js` React components) |
 | Designer notes | `project/DESIGN-NOTES.md` |
 
@@ -45,5 +45,7 @@ Everything a developer needs to build the V1.1 iPhone and iPad app. Exported fro
 Sheets (bottom sheets) are not drawn as frames; they are specified in `PRD-v1.1.md` Appendix C and implemented in the prototype under `<!-- SHEETS -->`.
 
 ## Re-rendering the frames
+
+The product is Dentory since 2026-10-17 (MS-100 D15); f01 (Sign in) was re-rendered with the new name on that day and the other frames never showed it.
 
 `render-frames.js` renders the board with Playwright and saves one PNG per frame. It needs the four CDN scripts the prototype loads (react, react-dom, lucide, @babel/standalone) available locally; see the script header.
