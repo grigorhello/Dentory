@@ -98,13 +98,13 @@ struct SupabaseAuthService: AuthServicing {
 }
 
 /// The membership row with its clinic, as the select above shapes it.
-private nonisolated struct MembershipRow: Decodable {
+nonisolated struct MembershipRow: Decodable {
     let role: MembershipRole
     let fullName: String
     let clinic: MembershipClinicRow
 }
 
-private nonisolated struct MembershipClinicRow: Decodable {
+nonisolated struct MembershipClinicRow: Decodable {
     let id: UUID
     let name: String
     let currency: String

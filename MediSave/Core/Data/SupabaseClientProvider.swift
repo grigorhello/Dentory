@@ -13,6 +13,12 @@ nonisolated enum SupabaseClientProvider {
         else {
             preconditionFailure("SUPABASE_URL and SUPABASE_ANON_KEY must be set in Config/*.xcconfig")
         }
-        return SupabaseClient(supabaseURL: url, supabaseKey: key)
+        return SupabaseClient(supabaseURL: url, supabaseKey: key, options: options)
+    }
+
+    /// PostgREST rows are snake_case and carry ISO 8601 instants and `date` columns; the app's own
+    /// encoder and decoder handle both, the package's defaults do not convert the keys.
+    static var options: SupabaseClientOptions {
+        SupabaseClientOptions(db: .init(encoder: JSONEncoder.supabase, decoder: JSONDecoder.supabase))
     }
 }

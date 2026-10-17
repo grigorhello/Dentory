@@ -114,7 +114,7 @@ extension Session {
         Session(
             userID: UUID(uuidString: "00000000-0000-4000-8000-0000000000a1") ?? UUID(),
             email: role == .admin ? "sarah@smiledental.ca" : "michael@smiledental.ca",
-            fullName: role == .admin ? "Sarah Chen" : "Michael Torres",
+            fullName: role == .admin ? "Sarah Mitchell" : "Michael Reyes",
             clinicID: UUID(uuidString: "00000000-0000-4000-8000-000000000001") ?? UUID(),
             clinicName: "Smile Dental",
             role: role,

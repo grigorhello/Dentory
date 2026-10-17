@@ -1,6 +1,9 @@
 import Foundation
 import Supabase
 
+/// Rows decode with the client's decoder, which `SupabaseClientProvider` sets to `JSONDecoder.supabase`
+/// (snake_case keys); `SupabaseRowDecodingTests` decodes sample PostgREST payloads with it.
+///
 /// One row of `clinic_attention`, the latest `procedure_events` row with its item count and starter,
 /// and the newest open alert against the user's `alert_reads` mark.
 struct SupabaseHomeRepository: HomeRepository {
@@ -26,7 +29,7 @@ struct SupabaseHomeRepository: HomeRepository {
         }
     }
 
-    private func attentionRow(clinicID: UUID) async throws -> AttentionRow {
+    private func attentionRow(clinicID: UUID) async throws -> HomeAttentionRow {
         try await client.from("clinic_attention")
             .select()
             .eq("clinic_id", value: clinicID.uuidString)
@@ -36,7 +39,7 @@ struct SupabaseHomeRepository: HomeRepository {
     }
 
     private func latestProcedure(clinicID: UUID) async throws -> LatestProcedure? {
-        let events: [EventRow] = try await client.from("procedure_events")
+        let events: [HomeEventRow] = try await client.from("procedure_events")
             .select("id, name, started_at, started_by, procedure_event_items(count)")
             .eq("clinic_id", value: clinicID.uuidString)
             .is("cancelled_at", value: nil)
@@ -45,7 +48,7 @@ struct SupabaseHomeRepository: HomeRepository {
             .execute()
             .value
         guard let event = events.first else { return nil }
-        let members: [MemberRow] = try await client.from("memberships")
+        let members: [HomeMemberRow] = try await client.from("memberships")
             .select("full_name")
             .eq("clinic_id", value: clinicID.uuidString)
             .eq("user_id", value: event.startedBy.uuidString)
@@ -63,7 +66,7 @@ struct SupabaseHomeRepository: HomeRepository {
 
     /// An alert opened after the user's last visit to Alerts (or ever, when they never visited).
     private func hasUnseenAlerts(clinicID: UUID, userID: UUID) async throws -> Bool {
-        let alerts: [AlertRow] = try await client.from("alerts")
+        let alerts: [HomeAlertRow] = try await client.from("alerts")
             .select("opened_at")
             .eq("clinic_id", value: clinicID.uuidString)
             .is("resolved_at", value: nil)
@@ -72,7 +75,7 @@ struct SupabaseHomeRepository: HomeRepository {
             .execute()
             .value
         guard let newest = alerts.first else { return false }
-        let reads: [ReadRow] = try await client.from("alert_reads")
+        let reads: [HomeReadRow] = try await client.from("alert_reads")
             .select("last_seen_at")
             .eq("clinic_id", value: clinicID.uuidString)
             .eq("user_id", value: userID.uuidString)
@@ -88,7 +91,7 @@ struct SupabaseHomeRepository: HomeRepository {
     }
 }
 
-private nonisolated struct AttentionRow: Decodable {
+nonisolated struct HomeAttentionRow: Decodable {
     let toBuyCount: Int
     let expiringBatchCount: Int
     let missingExpiryProductCount: Int
@@ -96,26 +99,26 @@ private nonisolated struct AttentionRow: Decodable {
     let valueAtRisk90: Decimal
 }
 
-private nonisolated struct EventRow: Decodable {
+nonisolated struct HomeEventRow: Decodable {
     let id: UUID
     let name: String
     let startedAt: Date
     let startedBy: UUID
-    let procedureEventItems: [CountRow]
+    let procedureEventItems: [HomeCountRow]
 }
 
-private nonisolated struct CountRow: Decodable {
+nonisolated struct HomeCountRow: Decodable {
     let count: Int
 }
 
-private nonisolated struct MemberRow: Decodable {
+nonisolated struct HomeMemberRow: Decodable {
     let fullName: String
 }
 
-private nonisolated struct AlertRow: Decodable {
+nonisolated struct HomeAlertRow: Decodable {
     let openedAt: Date
 }
 
-private nonisolated struct ReadRow: Decodable {
+nonisolated struct HomeReadRow: Decodable {
     let lastSeenAt: Date
 }
