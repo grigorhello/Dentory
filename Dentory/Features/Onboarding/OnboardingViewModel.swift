@@ -198,7 +198,6 @@ final class OnboardingViewModel {
         case .validation(let field, let message) where field == "email": emailError = message
         case .validation(let field, let message) where field == "password": passwordError = message
         case .validation(let field, let message) where field == "name": nameError = message
-        case .validation(nil, let message) where step == .clinic: clinicNameError = message
         default: generalError = error
         }
     }

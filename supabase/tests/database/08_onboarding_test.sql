@@ -1,10 +1,11 @@
 -- MS-111 · clinic_create and invite_members.
 begin;
-select plan(26);
+select plan(32);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000a11', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'owner@dentory.test'),
-  ('00000000-0000-4000-8000-000000000a12', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'second@dentory.test');
+  ('00000000-0000-4000-8000-000000000a12', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'second@dentory.test'),
+  ('00000000-0000-4000-8000-000000000a13', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'revoked@dentory.test');
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -26,6 +27,7 @@ reset role;
 
 -- The owner creates the clinic.
 select pg_temp.act_as('00000000-0000-4000-8000-000000000a11');
+select is(public.membership_state(), 'none', 'a new user has no membership');
 select throws_ok($$ select public.clinic_create('  ', 'Toronto', 'CA', 'America/Toronto', 'Sarah') $$, '22023', 'Enter the clinic name',
   'a blank name is refused');
 select throws_ok($$ select public.clinic_create('Smile Dental', 'Toronto', 'C1', 'America/Toronto', 'Sarah') $$, '22023', 'Choose a country',
@@ -72,6 +74,22 @@ select ok((select bool_and(invite_expires_at between now() + interval '6 days' a
   'invitations expire in 7 days');
 select is(public.invite_members(pg_temp.clinic(), '[{"email":"priya@dentory.test","role":"admin"}]'), 1, 'inviting again refreshes the row');
 select is((select role::text from public.memberships where clinic_id = pg_temp.clinic() and email = 'priya@dentory.test'), 'admin', 'the refreshed invitation carries the new role');
+reset role;
+
+-- The owner is active; a revoked member is neither active nor new.
+select pg_temp.act_as('00000000-0000-4000-8000-000000000a11');
+select is(public.membership_state(), 'active', 'the owner is active');
+reset role;
+insert into public.memberships (clinic_id, user_id, email, role, status)
+values (pg_temp.clinic(), '00000000-0000-4000-8000-000000000a13', 'revoked@dentory.test', 'staff', 'revoked');
+select pg_temp.act_as('00000000-0000-4000-8000-000000000a13');
+select is(public.membership_state(), 'revoked', 'a revoked member reads as revoked, not as new');
+select throws_ok($$ select public.clinic_create('Rogue Dental', 'Ottawa', 'CA', 'America/Toronto', 'Rogue') $$, '42501',
+  'This account belongs to another clinic', 'a revoked member cannot found a new clinic');
+reset role;
+select is((select count(*)::integer from public.clinics), 1, 'still one clinic');
+select pg_temp.act_as('00000000-0000-4000-8000-000000000a12');
+select is(public.membership_state(), 'none', 'a stranger with no rows is new');
 reset role;
 
 -- Someone who is not an admin of the clinic cannot invite.

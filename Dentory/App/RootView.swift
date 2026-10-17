@@ -10,8 +10,12 @@ struct RootView: View {
     @State private var pendingInviteClinicID: UUID?
     @State private var didReadProgress = false
     /// `-onboarding account` (screenshots) starts Sign in with step 1 already pushed.
-    @State private var signInPath: [OnboardingViewModel.Step] =
-        UserDefaults.standard.string(forKey: "onboarding") == "account" ? [.account] : []
+    @State private var signInPath: [OnboardingViewModel.Step]
+
+    init(sessionStore: SessionStore, startsOnSignUp: Bool = false) {
+        self.sessionStore = sessionStore
+        _signInPath = State(initialValue: startsOnSignUp ? [.account] : [])
+    }
 
     var body: some View {
         Group {

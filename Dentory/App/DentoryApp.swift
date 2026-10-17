@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct DentoryApp: App {
     private let dependencies: AppDependencies
+    private let startsOnSignUp: Bool
     @State private var sessionStore: SessionStore
 
     init() {
@@ -11,6 +12,7 @@ struct DentoryApp: App {
         // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there.
         let arguments = ProcessInfo.processInfo.arguments
         let onboarding = UserDefaults.standard.string(forKey: "onboarding")
+        startsOnSignUp = onboarding == "account"
         let dependencies = arguments.contains("-uiTesting")
             ? AppDependencies.preview(
                 signedIn: !arguments.contains("-signedOut") && onboarding != "account",
@@ -27,7 +29,7 @@ struct DentoryApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(sessionStore: sessionStore)
+            RootView(sessionStore: sessionStore, startsOnSignUp: startsOnSignUp)
                 .environment(\.appDependencies, dependencies)
                 .task { await sessionStore.restore() }
         }

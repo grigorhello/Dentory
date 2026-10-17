@@ -30,12 +30,12 @@ struct SupabaseAuthService: AuthServicing {
         do {
             return .signedIn(try await session(for: stored.user))
         } catch AppError.notFound {
-            if try await hasAnyMembership(user: stored.user) {
-                // The membership was revoked (or never accepted): drop the device session.
+            // The server says whether this user never had a clinic (`none`) or lost one (`revoked`,
+            // `invited`); the memberships table itself hides rows of clinics one no longer belongs to.
+            guard try await membershipState() == "none" else {
                 try? await client.auth.signOut()
                 throw AppError.forbidden
             }
-            // Signed up, no clinic yet: admin sign-up resumes at step 2.
             return .needsClinic(Account(
                 userID: stored.user.id,
                 email: stored.user.email ?? "",
@@ -57,19 +57,13 @@ struct SupabaseAuthService: AuthServicing {
         }
     }
 
-    private func hasAnyMembership(user: User) async throws -> Bool {
-        let rows: [MembershipStatusRow]
+    /// `membership_state()`: "active", "none", or the latest non-active status.
+    private func membershipState() async throws -> String {
         do {
-            rows = try await client.from("memberships")
-                .select("status")
-                .eq("user_id", value: user.id.uuidString)
-                .limit(1)
-                .execute()
-                .value
+            return try await client.rpc("membership_state").execute().value
         } catch {
             throw AppError(error)
         }
-        return !rows.isEmpty
     }
 
     func signIn(email: String, password: String) async throws -> Session {
@@ -152,8 +146,4 @@ nonisolated struct MembershipClinicRow: Decodable {
     let name: String
     let currency: String
     let timeZone: String
-}
-
-nonisolated struct MembershipStatusRow: Decodable {
-    let status: String
 }

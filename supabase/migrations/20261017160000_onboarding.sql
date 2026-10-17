@@ -25,6 +25,24 @@ as $$
 $$;
 grant execute on function public.currency_for_country(char(2)) to authenticated, service_role;
 
+-- Where the caller stands: 'active' (a member of a clinic), 'none' (never belonged to one: admin sign-up
+-- continues at the clinic step), or the status of their latest non-active row ('revoked', 'invited'), which
+-- signs them out. Security definer, because the memberships policy only shows rows of clinics one belongs to.
+create function public.membership_state()
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(
+    (select 'active' from public.memberships where user_id = auth.uid() and status = 'active' limit 1),
+    (select status::text from public.memberships where user_id = auth.uid() order by created_at desc limit 1),
+    'none'
+  );
+$$;
+grant execute on function public.membership_state() to authenticated, service_role;
+
 -- Creates the signed-in user's clinic: the clinic row, the admin membership, the user's profile and the
 -- ten default categories (D13), in one transaction. Idempotent: a user who already belongs to a clinic
 -- gets that clinic back, so a relaunch after step 2 never creates a second one. Clinics have no insert
@@ -55,6 +73,10 @@ begin
   where user_id = v_user and status = 'active' order by created_at limit 1;
   if v_clinic is not null then
     return v_clinic;
+  end if;
+  if exists (select 1 from public.memberships where user_id = v_user) then
+    -- Revoked or invited elsewhere: not a new clinic owner.
+    raise exception 'This account belongs to another clinic' using errcode = '42501';
   end if;
   if length(v_name) < 1 or length(v_name) > 120 then
     raise exception 'Enter the clinic name' using errcode = '22023';
