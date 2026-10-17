@@ -29,11 +29,11 @@ select is(public.days_to_expiry(null, 'UTC'), null, 'no expiry, no days');
 
 -- Views and the daily refresh ----------------------------------------------------------------------
 insert into auth.users (id, instance_id, aud, role, email) values
-  ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin1@medisave.test');
+  ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin1@dentory.test');
 insert into public.clinics (id, name, country, currency, time_zone, expiry_thresholds) values
   ('00000000-0000-4000-8000-0000000000c1', 'Smile Dental', 'US', 'USD', 'America/New_York', '{90}');
 insert into public.memberships (clinic_id, user_id, email, role, status) values
-  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', 'admin1@medisave.test', 'admin', 'active');
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', 'admin1@dentory.test', 'admin', 'active');
 insert into public.products (id, clinic_id, name, unit, tracking, minimum, target, last_unit_cost) values
   ('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000c1', 'Septocaine 4% 1:100,000', 'cartridges', 'countable', 20, 60, 2.00),
   ('00000000-0000-4000-8000-0000000000d2', '00000000-0000-4000-8000-0000000000c1', 'Bonding agent', 'bottles', 'multi_use', 1, 3, 30.00),

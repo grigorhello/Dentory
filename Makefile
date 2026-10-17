@@ -1,5 +1,5 @@
-SCHEME := MediSave
-PROJECT := MediSave.xcodeproj
+SCHEME := Dentory
+PROJECT := Dentory.xcodeproj
 LPAREN := (
 SIM_NAME ?= iPhone 16
 # Newest installed runtime that has $(SIM_NAME), matched as plain text so names like "iPad Pro 11-inch (M4)" work.
@@ -29,11 +29,11 @@ build:
 
 test:
 	$(CHECK_SIM)
-	$(XCODEBUILD) -destination '$(SIM_DESTINATION)' -only-testing:MediSaveTests test
+	$(XCODEBUILD) -destination '$(SIM_DESTINATION)' -only-testing:DentoryTests test
 
 uitest:
 	$(CHECK_SIM)
-	$(XCODEBUILD) -destination '$(SIM_DESTINATION)' -only-testing:MediSaveUITests test
+	$(XCODEBUILD) -destination '$(SIM_DESTINATION)' -only-testing:DentoryUITests test
 
 lint:
 	swiftlint lint --strict
@@ -55,7 +55,7 @@ db-test:
 
 # Loads the demo clinic from the design (MS-109) into the local database; run it right after db-reset.
 # psql runs inside the database container, so no local Postgres client is needed.
-DB_CONTAINER ?= supabase_db_MediSave
+DB_CONTAINER ?= supabase_db_Dentory
 seed-demo:
 	docker exec -i $(DB_CONTAINER) psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -o /dev/null < supabase/seed-demo.sql
 

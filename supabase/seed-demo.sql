@@ -1,5 +1,5 @@
 -- MS-109 · The demo clinic "Smile Dental" from the design (frames f6, f11, f16, f25, f27, f31; prototype
--- design/project/MediSave Mobile.dc.html: P, T, events, lines, orders, expiring).
+-- design/project/Dentory Mobile.dc.html: P, T, events, lines, orders, expiring).
 --
 -- Run after a reset: `make db-reset seed-demo`. Local stack only; never run it against a hosted project.
 --

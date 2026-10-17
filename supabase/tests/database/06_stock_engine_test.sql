@@ -5,16 +5,16 @@ begin;
 select plan(95);
 
 insert into auth.users (id, instance_id, aud, role, email) values
-  ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin1@medisave.test'),
-  ('00000000-0000-4000-8000-0000000000b1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff1@medisave.test'),
-  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin2@medisave.test');
+  ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin1@dentory.test'),
+  ('00000000-0000-4000-8000-0000000000b1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff1@dentory.test'),
+  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin2@dentory.test');
 insert into public.clinics (id, name, country, currency) values
   ('00000000-0000-4000-8000-0000000000c1', 'Smile Dental', 'US', 'USD'),
   ('00000000-0000-4000-8000-0000000000c2', 'Other Dental', 'CA', 'CAD');
 insert into public.memberships (clinic_id, user_id, email, role, status) values
-  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', 'admin1@medisave.test', 'admin', 'active'),
-  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000b1', 'staff1@medisave.test', 'staff', 'active'),
-  ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000a2', 'admin2@medisave.test', 'admin', 'active');
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', 'admin1@dentory.test', 'admin', 'active'),
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000b1', 'staff1@dentory.test', 'staff', 'active'),
+  ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000a2', 'admin2@dentory.test', 'admin', 'active');
 -- Clinic 1: Septocaine (countable, 20 expiring Dec 2026 + 34 Mar 2027 + 3 undated), Bonding agent
 -- (multi-use, 2 unopened), Gloves (countable, empty, minimum 3, target 10).
 insert into public.products (id, clinic_id, name, unit, tracking, minimum, target) values

@@ -4,7 +4,7 @@ begin;
 select plan(17);
 
 insert into auth.users (id, instance_id, aud, role, email)
-values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@medisave.test');
+values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@dentory.test');
 insert into public.clinics (id, name, country, currency)
 values ('00000000-0000-4000-8000-0000000000c1', 'Smile Dental', 'US', 'USD');
 
