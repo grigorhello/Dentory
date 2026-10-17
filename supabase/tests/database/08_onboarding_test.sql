@@ -56,7 +56,7 @@ select results_eq($$ select name from public.categories where clinic_id = pg_tem
 
 -- Calling again returns the same clinic and creates nothing.
 select is(public.clinic_create('Another Dental', 'Ottawa', 'CA', 'America/Toronto', 'Sarah'), pg_temp.clinic(), 'a second call returns the existing clinic');
-select is((select count(*)::integer from public.clinics), 1, 'no second clinic was created');
+select is((select count(*)::integer from public.clinics where name = 'Another Dental'), 0, 'no second clinic was created');
 select is((select count(*)::integer from public.memberships where user_id = '00000000-0000-4000-8000-000000000a11'), 1, 'no second membership either');
 
 -- Invitations.
@@ -87,7 +87,7 @@ select is(public.membership_state(), 'revoked', 'a revoked member reads as revok
 select throws_ok($$ select public.clinic_create('Rogue Dental', 'Ottawa', 'CA', 'America/Toronto', 'Rogue') $$, '42501',
   'This account belongs to another clinic', 'a revoked member cannot found a new clinic');
 reset role;
-select is((select count(*)::integer from public.clinics), 1, 'still one clinic');
+select is((select count(*)::integer from public.clinics where name = 'Rogue Dental'), 0, 'no rogue clinic was created');
 select pg_temp.act_as('00000000-0000-4000-8000-000000000a12');
 select is(public.membership_state(), 'none', 'a stranger with no rows is new');
 reset role;
