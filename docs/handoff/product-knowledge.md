@@ -108,7 +108,7 @@ Cream page (#fffefb) with cream-soft cards (#f8f4f0), ink text, one blue primary
 
 ## 13. Numbers and names to use consistently
 
-- Product name: Dentory (called MediSave until 2026-10-17). Domain `dentory.ca`. Bundle id `ca.dentory.app` (confirmed 2026-10-17). Production domain for email links not chosen yet.
+- Product name: Dentory (called MediSave until 2026-10-17). Domain `dentory.ca`. Bundle id `ca.dentory.app` (confirmed 2026-10-17). Email links on `app.dentory.ca`, sending from `@dentory.ca` (D12); DNS and universal links land with MS-112 and MS-157.
 - Platforms: iPhone and iPad, iOS 17 or later. Portrait on iPhone, both orientations on iPad.
 - Roles: Admin, Staff (two words, capitalised).
 - Trial: 3 months. Price: $99 per clinic per month. Promotion: 50% lifetime.

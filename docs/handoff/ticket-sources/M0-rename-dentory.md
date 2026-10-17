@@ -35,7 +35,7 @@ Grigor bought `dentory.ca` on 2026-10-17 and renamed the product from MediSave t
 meta: milestone=M0; priority=P0; type=chore; area=product; size=2; frames=; screens=; prd=§1; depends=MS-155
 
 ### Why
-After MS-155 the code says Dentory while the handoff pack, the build order, the PRD text export, the Claude Design export, the 55 ticket sources and the open issues still say MediSave. One pull request finishes the repository, then the issues and the board are regenerated from the sources so every ticket a session reads carries the new name, the new repository links and the new step count (58 tickets).
+After MS-155 the code says Dentory while the handoff pack, the build order, the PRD text export, the Claude Design export, the 58 ticket sources and the open issues still say MediSave. One pull request finishes the repository, then the issues and the board are regenerated from the sources so every ticket a session reads carries the new name, the new repository links and the new step count (58 tickets).
 
 ### Scope
 1. **Ticket sources and generator** (`docs/handoff/ticket-sources/`). The rename thread already applied these edits to the plan copy under `/mnt/project-files/medisave-plan-v2` on 2026-10-17 and left a copy of the five edited files on the Mac in `.build/rename-tickets/` (git-ignored); copy them over if present, otherwise make the same edits by hand:
