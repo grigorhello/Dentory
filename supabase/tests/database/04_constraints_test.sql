@@ -4,7 +4,7 @@ begin;
 select plan(22);
 
 insert into auth.users (id, instance_id, aud, role, email)
-values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@medisave.test');
+values ('00000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tap@dentory.test');
 insert into public.clinics (id, name, country, currency) values
   ('00000000-0000-4000-8000-0000000000c1', 'Smile Dental', 'US', 'USD'),
   ('00000000-0000-4000-8000-0000000000c2', 'Other Dental', 'CA', 'CAD');
@@ -51,7 +51,7 @@ $$, '23503', null, 'a reversal cannot point at another clinic''s transaction');
 select throws_ok($$ delete from public.products where id = '00000000-0000-4000-8000-0000000000a1' $$,
   '23001', null, 'deleting a product raises');
 insert into public.memberships (clinic_id, user_id, email, role, status)
-values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-000000000001', 'tap@medisave.test', 'admin', 'active');
+values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-000000000001', 'tap@dentory.test', 'admin', 'active');
 select throws_ok($$ delete from auth.users where id = '00000000-0000-4000-8000-000000000001' $$,
   '23503', null, 'a user with an active membership cannot be removed');
 

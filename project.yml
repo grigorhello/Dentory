@@ -1,6 +1,6 @@
-name: MediSave
+name: Dentory
 options:
-  bundleIdPrefix: com.medisave
+  bundleIdPrefix: ca.dentory
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
@@ -39,11 +39,11 @@ packages:
     from: 8.0.0
 
 targets:
-  MediSave:
+  Dentory:
     type: application
     platform: iOS
     sources:
-      - path: MediSave
+      - path: Dentory
         excludes:
           - "**/README.md"
     dependencies:
@@ -51,14 +51,14 @@ targets:
       - package: Sentry
     settings:
       base:
-        PRODUCT_NAME: MediSave
-        PRODUCT_BUNDLE_IDENTIFIER: com.medisave.app
+        PRODUCT_NAME: Dentory
+        PRODUCT_BUNDLE_IDENTIFIER: ca.dentory.app
         MARKETING_VERSION: "1.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
-        INFOPLIST_FILE: MediSave/Resources/Info.plist
+        INFOPLIST_FILE: Dentory/Resources/Info.plist
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: MediSave
+        INFOPLIST_KEY_CFBundleDisplayName: Dentory
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
@@ -68,42 +68,42 @@ targets:
         LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         SWIFT_EMIT_LOC_STRINGS: YES
 
-  MediSaveTests:
+  DentoryTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - MediSaveTests
+      - DentoryTests
     dependencies:
-      - target: MediSave
+      - target: Dentory
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.medisave.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: ca.dentory.app.tests
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         BUNDLE_LOADER: $(TEST_HOST)
-        TEST_HOST: $(BUILT_PRODUCTS_DIR)/MediSave.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MediSave
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Dentory.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dentory
 
-  MediSaveUITests:
+  DentoryUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
-      - MediSaveUITests
+      - DentoryUITests
     dependencies:
-      - target: MediSave
+      - target: Dentory
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.medisave.app.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: ca.dentory.app.uitests
         GENERATE_INFOPLIST_FILE: YES
-        TEST_TARGET_NAME: MediSave
+        TEST_TARGET_NAME: Dentory
 
 schemes:
-  MediSave:
+  Dentory:
     build:
       targets:
-        MediSave: all
+        Dentory: all
     test:
       config: Debug
       gatherCoverageData: true
       targets:
-        - MediSaveTests
-        - MediSaveUITests
+        - DentoryTests
+        - DentoryUITests

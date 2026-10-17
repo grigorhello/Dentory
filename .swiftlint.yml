@@ -1,7 +1,7 @@
 included:
-  - MediSave
-  - MediSaveTests
-  - MediSaveUITests
+  - Dentory
+  - DentoryTests
+  - DentoryUITests
 
 opt_in_rules:
   - force_unwrapping
@@ -30,6 +30,6 @@ custom_rules:
     message: "Use Core/DesignSystem tokens instead of raw colors or fonts."
     regex: '(Color\(red:|Color\(hex:|UIColor\(|Font\.custom\()'
     excluded:
-      - 'MediSave/Core/DesignSystem/'
-      - 'MediSaveTests/Core/DesignSystem/'
+      - 'Dentory/Core/DesignSystem/'
+      - 'DentoryTests/Core/DesignSystem/'
     severity: error

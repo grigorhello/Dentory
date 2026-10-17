@@ -1,17 +1,17 @@
-# MediSave
+# Dentory
 
 Dental inventory app for small clinics, native SwiftUI for iPhone and iPad (iOS 17+, Swift 6) on Supabase. Product spec: `design/PRD-v1.1.md`. Build rules: `CLAUDE.md`. Tickets and their order: `docs/BUILD-ORDER.md`.
 
 ## Setup
 1. Install Xcode 26 or later, then `brew install xcodegen swiftlint`.
 2. Install Docker Desktop and the Supabase CLI (`brew install supabase/tap/supabase`), then `make db-start`. Debug builds talk to this local stack; nothing else is needed to run the app.
-3. `make project` and open `MediSave.xcodeproj`. The project file is generated from `project.yml` and not committed, except `Package.resolved`, which pins the Swift package versions (commit it when they change). Rerun `make project` after pulling or adding files.
+3. `make project` and open `Dentory.xcodeproj`. The project file is generated from `project.yml` and not committed, except `Package.resolved`, which pins the Swift package versions (commit it when they change). Rerun `make project` after pulling or adding files.
 4. Only for Release builds and TestFlight: `cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig` and fill in the hosted project's URL and anon key (see Database below).
 
 ## Commands
 | Command | What it does |
 |---|---|
-| `make project` | Generate `MediSave.xcodeproj` from `project.yml` (XcodeGen) |
+| `make project` | Generate `Dentory.xcodeproj` from `project.yml` (XcodeGen) |
 | `make build` | Build the app for the iOS Simulator |
 | `make test` | Run the unit tests (Swift Testing) on the iPhone 16 simulator |
 | `make uitest` | Run the UI tests (XCUITest) on the iPhone 16 simulator |

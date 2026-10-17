@@ -6,10 +6,10 @@ select plan(59);
 
 -- Fixtures (as the owner) --------------------------------------------------------------------------
 insert into auth.users (id, instance_id, aud, role, email) values
-  ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin1@medisave.test'),
-  ('00000000-0000-4000-8000-0000000000b1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff1@medisave.test'),
-  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin2@medisave.test'),
-  ('00000000-0000-4000-8000-0000000000b2', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff2@medisave.test');
+  ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin1@dentory.test'),
+  ('00000000-0000-4000-8000-0000000000b1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff1@dentory.test'),
+  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin2@dentory.test'),
+  ('00000000-0000-4000-8000-0000000000b2', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff2@dentory.test');
 insert into public.profiles (user_id, full_name) values
   ('00000000-0000-4000-8000-0000000000a1', 'Michael'), ('00000000-0000-4000-8000-0000000000b1', 'Sarah'),
   ('00000000-0000-4000-8000-0000000000a2', 'Dana'), ('00000000-0000-4000-8000-0000000000b2', 'Lee');
@@ -17,10 +17,10 @@ insert into public.clinics (id, name, country, currency) values
   ('00000000-0000-4000-8000-0000000000c1', 'Smile Dental', 'US', 'USD'),
   ('00000000-0000-4000-8000-0000000000c2', 'Other Dental', 'CA', 'CAD');
 insert into public.memberships (clinic_id, user_id, email, role, status) values
-  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', 'admin1@medisave.test', 'admin', 'active'),
-  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000b1', 'staff1@medisave.test', 'staff', 'active'),
-  ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000a2', 'admin2@medisave.test', 'admin', 'active'),
-  ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000b2', 'staff2@medisave.test', 'staff', 'active');
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', 'admin1@dentory.test', 'admin', 'active'),
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000b1', 'staff1@dentory.test', 'staff', 'active'),
+  ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000a2', 'admin2@dentory.test', 'admin', 'active'),
+  ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000b2', 'staff2@dentory.test', 'staff', 'active');
 insert into public.products (id, clinic_id, name, unit) values
   ('00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000c1', 'Septocaine 4% 1:100,000', 'cartridges'),
   ('00000000-0000-4000-8000-0000000000d3', '00000000-0000-4000-8000-0000000000c1', 'Nitrile gloves M', 'boxes'),
