@@ -98,7 +98,7 @@ Cream page (#fffefb) with cream-soft cards (#f8f4f0), ink text, one blue primary
 | M3 Commercial Beta | Account, team management, Stripe billing, read-only mode after trial, clinic settings, push notifications, billing invoices and emails, CSV export, weekly digest, invoice file deletion, product analytics | not started |
 | M4 V1 Launch | Security review, iPad pass, accessibility and Dynamic Type pass, performance and backups, TestFlight and App Store | not started |
 
-55 tickets, 179 points in total. The pilot is one clinic on the hosted staging project; production is set up before TestFlight.
+58 tickets, 185 points in total. The pilot is one clinic on the hosted staging project; production is set up before TestFlight.
 
 ## 12. Pilot plan and metrics (from PRD v1.0, still the intent)
 

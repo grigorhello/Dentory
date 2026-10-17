@@ -14,7 +14,7 @@ How Dentory tickets go from "To do" to "Feature QA". This is the process the pre
 | What | Where | Notes |
 |---|---|---|
 | Code | https://github.com/grigorhello/Dentory | Default branch `claude/project-thread-ocu7tf` until Grigor renames it to `main`. |
-| Tickets | GitHub issues #71 to #125, titled `MS-1NN · …` | Each issue is self-contained: build step, blockers, frames, PRD section, element ids, acceptance criteria, out of scope. |
+| Tickets | GitHub issues #71 to #125 and #143 to #145, titled `MS-1NN · …` | Each issue is self-contained: build step, blockers, frames, PRD section, element ids, acceptance criteria, out of scope. |
 | Order | `docs/BUILD-ORDER.md` | Topological order with ties broken by milestone then priority. 55 steps. |
 | Board | Notion "Dentory · Product board" | One card per issue. Status moves with the ticket. |
 | Rules | `CLAUDE.md`, `.claude/skills/dentory-ios/SKILL.md` | Read both at the start of every ticket. |

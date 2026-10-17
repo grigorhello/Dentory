@@ -18,17 +18,17 @@ Nothing in this pack is secret. Supabase keys, database passwords, Stripe or Res
 | [build-state.md](build-state.md) | Continuing the build: what is merged, what is in progress, what comes next, what Grigor still owes. |
 | [product-knowledge.md](product-knowledge.md) | Marketing, sales, pitch, landing page, support or pricing chats. What Dentory is and is not, in plain words. |
 | [decisions-log.md](decisions-log.md) | Checking why something is the way it is. Dated decisions from the first day to now. |
-| [ticket-sources/](ticket-sources/) | Changing a ticket: the Markdown sources of the 55 tickets and the script that regenerates the issues, the ticket list and the build order. |
+| [ticket-sources/](ticket-sources/) | Changing a ticket: the Markdown sources of the 58 tickets and the script that regenerates the issues, the ticket list and the build order. |
 
 Sources of truth that the pack points at, in the order a new thread should read them:
 
 1. `CLAUDE.md` in the repo root: the build rules every ticket follows.
 2. `.claude/skills/dentory-ios/SKILL.md`: architecture and coding standard, test and PR checklist.
 3. `.claude/agents/pr-reviewer.md`: the reviewer that merges pull requests.
-4. `docs/BUILD-ORDER.md`: the 55 tickets in dependency order.
+4. `docs/BUILD-ORDER.md`: the 58 tickets in dependency order.
 5. `design/PRD-v1.1.md` and `design/frames/`: the product specification and every screen.
 6. GitHub issue MS-100 (#71): decisions that override or fill gaps in the PRD.
-7. The GitHub issues #71 to #125 (one per ticket) and the Notion board "Dentory · Product board".
+7. The GitHub issues #71 to #125 and #143 to #145 (one per ticket) and the Notion board "Dentory · Product board".
 
 ## Setting up the new project, step by step
 

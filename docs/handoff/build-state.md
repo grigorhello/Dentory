@@ -37,7 +37,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 | 18 | MS-111 · Admin sign-up: account, clinic and team invites (#82) | MS-104, MS-110, MS-155 (all merged) |
 | 19 | MS-112 · Invite teammates and accept an invitation (#83) | MS-111 |
 
-Then M1 continues MS-115, MS-116, MS-117, MS-118, MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 29 (MS-126); M3 from step 40 (MS-137); M4 from step 51 (MS-151) to step 55 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
+Then M1 continues MS-115, MS-116, MS-117, MS-118, MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
