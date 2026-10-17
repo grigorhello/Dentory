@@ -3,10 +3,18 @@ import Supabase
 
 /// Sign in, sign out and session restore. Returns the app's `Session`, never Supabase types.
 protocol AuthServicing: Sendable {
-    /// The session stored on the device, or nil when signed out.
+    /// The session stored on the device, or nil when signed out. Throws `AppError.forbidden` when the
+    /// stored user has no active membership any more (revoked); the device session is dropped.
     func restore() async throws -> Session?
+    /// Throws `AppError.validation(field: "email" | "password", …)` with the PRD copy for a refused
+    /// sign-in, `AppError.forbidden` when the account has no active membership.
     func signIn(email: String, password: String) async throws -> Session
     func signOut() async throws
+}
+
+extension AppError {
+    static let unknownEmail = AppError.validation(field: "email", message: "No account with this email.")
+    static let wrongPassword = AppError.validation(field: "password", message: "Wrong password.")
 }
 
 struct SupabaseAuthService: AuthServicing {
@@ -17,17 +25,38 @@ struct SupabaseAuthService: AuthServicing {
         do {
             return try await session(for: stored.user)
         } catch AppError.notFound {
-            // A user without an active membership has nothing to see; MS-112 handles invitations.
-            return nil
+            // The membership was revoked (or never accepted): drop the device session.
+            try? await client.auth.signOut()
+            throw AppError.forbidden
         }
     }
 
     func signIn(email: String, password: String) async throws -> Session {
+        let user: User
         do {
-            let auth = try await client.auth.signIn(email: email, password: password)
-            return try await session(for: auth.user)
+            user = try await client.auth.signIn(email: email, password: password).user
+        } catch let error as AuthError {
+            throw Self.appError(for: error)
         } catch {
             throw AppError(error)
+        }
+        do {
+            return try await session(for: user)
+        } catch AppError.notFound {
+            try? await client.auth.signOut()
+            throw AppError.forbidden
+        }
+    }
+
+    /// Supabase answers a wrong password and an unknown email alike (`invalid_credentials`), so both
+    /// show under the password field; `user_not_found` is the one case it names the email.
+    static func appError(for error: AuthError) -> AppError {
+        guard case .api(_, let code, _, _) = error else { return AppError(error) }
+        switch code {
+        case .userNotFound: return .unknownEmail
+        case .invalidCredentials: return .wrongPassword
+        case .emailNotConfirmed: return .validation(field: "email", message: "Confirm your email first.")
+        default: return .unknown(error.localizedDescription)
         }
     }
 

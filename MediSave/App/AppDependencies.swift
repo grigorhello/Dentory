@@ -124,10 +124,21 @@ struct PreviewRPCClient: RPCCalling {
     }
 }
 
+/// Signs in the demo clinic's people with the seed password (MS-109); anything else is refused the
+/// way Supabase would.
 struct PreviewAuthService: AuthServicing {
     var session: Session?
+    static let demoPassword = "smiledental"
+    static let demoEmails = ["sarah@smiledental.ca", "michael@smiledental.ca"]
 
     func restore() async throws -> Session? { session }
-    func signIn(email: String, password: String) async throws -> Session { session ?? .demo }
+
+    func signIn(email: String, password: String) async throws -> Session {
+        try await Task.sleep(for: .milliseconds(400))
+        guard Self.demoEmails.contains(email.lowercased()) else { throw AppError.unknownEmail }
+        guard password == Self.demoPassword else { throw AppError.wrongPassword }
+        return .demo
+    }
+
     func signOut() async throws {}
 }

@@ -5,6 +5,7 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
     var storedSession: Session?
     var signInResult: Result<Session, Error>
     var restoreError: Error?
+    var signInDelay: Duration = .zero
     private(set) var signOutCount = 0
     private(set) var signIns: [(email: String, password: String)] = []
 
@@ -20,6 +21,7 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
 
     func signIn(email: String, password: String) async throws -> Session {
         signIns.append((email, password))
+        if signInDelay > .zero { try await Task.sleep(for: signInDelay) }
         return try signInResult.get()
     }
 
