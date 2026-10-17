@@ -17,6 +17,8 @@ struct AppDependencies: Sendable {
     let writes: WriteCoordinator
     let reporter: ErrorReporting
     let homeRepository: HomeRepository
+    let onboardingRepository: OnboardingRepository
+    let onboardingProgress: OnboardingProgressStoring
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
     var locale: Locale = .current
 
@@ -54,23 +56,34 @@ struct AppDependencies: Sendable {
                 toasts: toasts
             ),
             reporter: reporter,
-            homeRepository: SupabaseHomeRepository(client: client)
+            homeRepository: SupabaseHomeRepository(client: client),
+            onboardingRepository: SupabaseOnboardingRepository(client: client),
+            onboardingProgress: UserDefaultsOnboardingProgress()
         )
     }
 
     /// No network: a demo clinic, a signed-in admin and a fixed moment, for previews and UI tests.
     @MainActor
     static func preview(
-        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin
+        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin, onboarding: String? = nil
     ) -> AppDependencies {
         let rpc = PreviewRPCClient()
         let clock = FixedClock(Session.demoNow)
         let networkMonitor = FixedNetworkMonitor(isConnected: isConnected)
         let toasts = ToastCenter()
         let reporter = NoopErrorReporter()
+        let auth = PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil)
+        // `-onboarding clinic` resumes admin sign-up at step 2, `-onboarding invite` at step 3 (screenshots).
+        if onboarding == "clinic" {
+            auth.session = nil
+            auth.account = Account(
+                userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell"
+            )
+        }
+        let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         return AppDependencies(
             rpc: rpc,
-            auth: PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil),
+            auth: auth,
             clock: clock,
             networkMonitor: networkMonitor,
             toasts: toasts,
@@ -85,7 +98,23 @@ struct AppDependencies: Sendable {
             ),
             reporter: reporter,
             homeRepository: DemoHomeRepository(),
+            onboardingRepository: DemoOnboardingRepository(auth: auth),
+            onboardingProgress: progress,
             locale: Locale(identifier: "en_US")
+        )
+    }
+
+    /// The admin sign-up view model at the step the app state asks for.
+    @MainActor
+    func makeOnboardingViewModel(
+        sessionStore: SessionStore,
+        startingAt step: OnboardingViewModel.Step = .account,
+        account: Account? = nil,
+        clinicID: UUID? = nil
+    ) -> OnboardingViewModel {
+        OnboardingViewModel(
+            auth: auth, repository: onboardingRepository, sessionStore: sessionStore, progress: onboardingProgress,
+            locale: locale, startingAt: step, account: account, clinicID: clinicID
         )
     }
 }
@@ -139,13 +168,22 @@ struct PreviewRPCClient: RPCCalling {
 }
 
 /// Signs in the demo clinic's people with the seed password (MS-109); anything else is refused the
-/// way Supabase would.
-struct PreviewAuthService: AuthServicing {
+/// way Supabase would. Sign-up creates an account in memory; `DemoOnboardingRepository` then sets the session.
+final class PreviewAuthService: AuthServicing, @unchecked Sendable {
     var session: Session?
+    var account: Account?
     static let demoPassword = "smiledental"
     static let demoEmails = ["sarah@smiledental.ca", "michael@smiledental.ca"]
 
-    func restore() async throws -> Session? { session }
+    init(session: Session?) {
+        self.session = session
+    }
+
+    func restore() async throws -> RestoredSession {
+        if let session { return .signedIn(session) }
+        if let account { return .needsClinic(account) }
+        return .none
+    }
 
     func signIn(email: String, password: String) async throws -> Session {
         try await Task.sleep(for: .milliseconds(400))
@@ -154,5 +192,16 @@ struct PreviewAuthService: AuthServicing {
         return .demo
     }
 
-    func signOut() async throws {}
+    func signUp(fullName: String, email: String, password: String) async throws -> Account {
+        try await Task.sleep(for: .milliseconds(300))
+        guard !Self.demoEmails.contains(email.lowercased()) else { throw AppError.emailTaken }
+        let account = Account(userID: UUID(), email: email, fullName: fullName)
+        self.account = account
+        return account
+    }
+
+    func signOut() async throws {
+        session = nil
+        account = nil
+    }
 }

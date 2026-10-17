@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Dentory
 
@@ -35,6 +36,16 @@ struct SessionStoreTests {
         #expect(store.state == .signedOut)
         #expect(store.accessWasRevoked)
         store.acknowledgeRevokedAccess()
+        #expect(!store.accessWasRevoked)
+    }
+
+    @Test func aUserWithoutAClinicResumesSignUp() async {
+        let account = Account(userID: UUID(), email: "owner@newclinic.ca", fullName: "Sarah")
+        let auth = FakeAuthService()
+        auth.storedAccount = account
+        let store = SessionStore(auth: auth)
+        await store.restore()
+        #expect(store.state == .needsClinic(account))
         #expect(!store.accessWasRevoked)
     }
 

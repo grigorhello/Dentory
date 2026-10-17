@@ -3,21 +3,64 @@ import SwiftUI
 /// Signed out shows Sign in (MS-110); signed in shows the four tabs, each with its own
 /// `NavigationStack` and path from `AppRouter`.
 struct RootView: View {
+    @Environment(\.appDependencies) private var dependencies
     let sessionStore: SessionStore
     @State private var router = AppRouter()
+    /// Set while step 3 of admin sign-up is still due for the signed-in clinic.
+    @State private var pendingInviteClinicID: UUID?
+    @State private var didReadProgress = false
+    /// `-onboarding account` (screenshots) starts Sign in with step 1 already pushed.
+    @State private var signInPath: [OnboardingViewModel.Step]
+
+    init(sessionStore: SessionStore, startsOnSignUp: Bool = false) {
+        self.sessionStore = sessionStore
+        _signInPath = State(initialValue: startsOnSignUp ? [.account] : [])
+    }
 
     var body: some View {
-        switch sessionStore.state {
-        case .restoring:
-            ProgressView()
-                .tint(Color.ms.primary)
-                .accessibilityIdentifier("root.restoring")
-        case .signedOut:
-            SignInView(sessionStore: sessionStore)
-        case .signedIn(let session):
-            AppTabsView(router: router)
-                .environment(router)
-                .environment(\.session, session)
+        Group {
+            switch sessionStore.state {
+            case .restoring:
+                ProgressView()
+                    .tint(Color.ms.primary)
+                    .accessibilityIdentifier("root.restoring")
+            case .signedOut:
+                NavigationStack(path: $signInPath) {
+                    SignInView(sessionStore: sessionStore)
+                        .navigationDestination(for: OnboardingViewModel.Step.self) { _ in
+                            OnboardingView(
+                                viewModel: dependencies.makeOnboardingViewModel(sessionStore: sessionStore)
+                            ) { pendingInviteClinicID = nil }
+                        }
+                }
+            case .needsClinic(let account):
+                NavigationStack {
+                    OnboardingView(viewModel: dependencies.makeOnboardingViewModel(
+                        sessionStore: sessionStore, startingAt: .clinic, account: account
+                    )) { pendingInviteClinicID = nil }
+                }
+            case .signedIn(let session) where pendingInviteClinicID == session.clinicID:
+                NavigationStack {
+                    OnboardingView(viewModel: dependencies.makeOnboardingViewModel(
+                        sessionStore: sessionStore, startingAt: .invite, clinicID: session.clinicID
+                    )) { pendingInviteClinicID = nil }
+                }
+            case .signedIn(let session):
+                AppTabsView(router: router)
+                    .environment(router)
+                    .environment(\.session, session)
+            }
+        }
+        .onAppear {
+            guard !didReadProgress else { return }
+            didReadProgress = true
+            pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
+        }
+        .onChange(of: sessionStore.state) { _, state in
+            // Step 2 just finished in this launch: step 3 shows before the tabs.
+            if case .signedIn = state {
+                pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
+            }
         }
     }
 }

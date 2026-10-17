@@ -14,9 +14,30 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
         self.signInResult = signInResult
     }
 
-    func restore() async throws -> Session? {
+    var storedAccount: Account?
+    var signUpResult: Result<Account, Error> = .success(
+        Account(userID: UUID(), email: "new@clinic.com", fullName: "New Admin")
+    )
+    struct SignUp: Equatable {
+        let fullName: String
+        let email: String
+        let password: String
+    }
+
+    private(set) var signUps: [SignUp] = []
+
+    func restore() async throws -> RestoredSession {
         if let restoreError { throw restoreError }
-        return storedSession
+        if let storedSession { return .signedIn(storedSession) }
+        if let storedAccount { return .needsClinic(storedAccount) }
+        return .none
+    }
+
+    func signUp(fullName: String, email: String, password: String) async throws -> Account {
+        signUps.append(SignUp(fullName: fullName, email: email, password: password))
+        let account = try signUpResult.get()
+        storedAccount = account
+        return account
     }
 
     func signIn(email: String, password: String) async throws -> Session {
