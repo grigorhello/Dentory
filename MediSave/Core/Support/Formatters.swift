@@ -19,6 +19,11 @@ nonisolated struct ClinicFormatters: Sendable {
         amount.formatted(.currency(code: currency).locale(locale))
     }
 
+    /// "$12,420": the value tiles show no cents (f6).
+    func wholeMoney(_ amount: Decimal) -> String {
+        amount.formatted(.currency(code: currency).precision(.fractionLength(0)).locale(locale))
+    }
+
     /// "54 cartridges", "1 box", "2.5 bags"
     func quantity(_ amount: Decimal, unit: String) -> String {
         "\(number(amount)) \(unit)"

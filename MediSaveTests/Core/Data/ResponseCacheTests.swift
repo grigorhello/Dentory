@@ -28,7 +28,8 @@ struct ResponseCacheTests {
 
     @Test func keysMakeSafeFileNames() {
         let key = CacheKey(method: "Inventory/products?filter=low", clinicID: Session.demo.clinicID)
-        #expect(key.fileName == "00000000-0000-4000-8000-0000000000c1-Inventory-products-filter-low.json")
+        let clinic = Session.demo.clinicID.uuidString.lowercased()
+        #expect(key.fileName == "\(clinic)-Inventory-products-filter-low.json")
     }
 
     @Test func theInMemoryCacheBehavesTheSame() {

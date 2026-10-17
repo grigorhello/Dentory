@@ -16,12 +16,16 @@ struct AppDependencies: Sendable {
     /// The door for stock writes: online now, or queued and replayed (MS-108).
     let writes: WriteCoordinator
     let reporter: ErrorReporting
+    let homeRepository: HomeRepository
+    /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
+    var locale: Locale = .current
 
     /// Formatters for the signed-in clinic.
     func formatters(for session: Session) -> ClinicFormatters {
         ClinicFormatters(
             currency: session.currency,
             timeZone: TimeZone(identifier: session.timeZone) ?? .current,
+            locale: locale,
             clock: clock
         )
     }
@@ -49,13 +53,16 @@ struct AppDependencies: Sendable {
                 reporter: reporter,
                 toasts: toasts
             ),
-            reporter: reporter
+            reporter: reporter,
+            homeRepository: SupabaseHomeRepository(client: client)
         )
     }
 
     /// No network: a demo clinic, a signed-in admin and a fixed moment, for previews and UI tests.
     @MainActor
-    static func preview(signedIn: Bool = true, isConnected: Bool = true) -> AppDependencies {
+    static func preview(
+        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin
+    ) -> AppDependencies {
         let rpc = PreviewRPCClient()
         let clock = FixedClock(Session.demoNow)
         let networkMonitor = FixedNetworkMonitor(isConnected: isConnected)
@@ -63,7 +70,7 @@ struct AppDependencies: Sendable {
         let reporter = NoopErrorReporter()
         return AppDependencies(
             rpc: rpc,
-            auth: PreviewAuthService(session: signedIn ? .demo : nil),
+            auth: PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil),
             clock: clock,
             networkMonitor: networkMonitor,
             toasts: toasts,
@@ -76,7 +83,9 @@ struct AppDependencies: Sendable {
                 reporter: reporter,
                 toasts: toasts
             ),
-            reporter: reporter
+            reporter: reporter,
+            homeRepository: DemoHomeRepository(),
+            locale: Locale(identifier: "en_US")
         )
     }
 }
@@ -98,16 +107,21 @@ extension Session {
     /// October 2, 2026, 9:41 in New York, the moment every frame shows (the frames label it a Thursday; it is a Friday).
     nonisolated static let demoNow = Date(timeIntervalSince1970: 1_790_933_260)
 
-    nonisolated static let demo = Session(
-        userID: UUID(uuidString: "00000000-0000-4000-8000-0000000000a1") ?? UUID(),
-        email: "michael@smiledental.test",
-        fullName: "Michael",
-        clinicID: UUID(uuidString: "00000000-0000-4000-8000-0000000000c1") ?? UUID(),
-        clinicName: "Smile Dental",
-        role: .admin,
-        currency: "USD",
-        timeZone: "America/New_York"
-    )
+    nonisolated static let demo = demo(role: .admin)
+
+    /// Sarah (Admin) or Michael (Staff) of the demo clinic (MS-109).
+    nonisolated static func demo(role: MembershipRole) -> Session {
+        Session(
+            userID: UUID(uuidString: "00000000-0000-4000-8000-0000000000a1") ?? UUID(),
+            email: role == .admin ? "sarah@smiledental.ca" : "michael@smiledental.ca",
+            fullName: role == .admin ? "Sarah Mitchell" : "Michael Reyes",
+            clinicID: UUID(uuidString: "00000000-0000-4000-8000-000000000001") ?? UUID(),
+            clinicName: "Smile Dental",
+            role: role,
+            currency: "USD",
+            timeZone: "America/New_York"
+        )
+    }
 }
 
 /// Answers every function with an empty object; feature previews swap in their own fakes.

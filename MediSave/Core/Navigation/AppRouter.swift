@@ -9,6 +9,8 @@ final class AppRouter {
     var selectedTab: AppTab
     /// Items on the To buy list, shown as the tab's badge; MS-128 keeps it current. Hidden at 0.
     var toBuyCount = 0
+    /// Set by Home before selecting the Inventory tab; the list applies it once and clears it (MS-115).
+    var inventoryFilter: InventoryFilter?
     private var paths: [AppTab: NavigationPath] = [:]
 
     init(selectedTab: AppTab = .home) {

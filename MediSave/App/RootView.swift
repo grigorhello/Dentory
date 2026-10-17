@@ -25,6 +25,8 @@ struct RootView: View {
 /// The four tabs, each a `NavigationStack` kept alive so scroll positions survive switching, under the
 /// drawn `AppTabBar`. The bar disappears while a tab shows a pushed screen (PRD §3).
 struct AppTabsView: View {
+    @Environment(\.appDependencies) private var dependencies
+    @Environment(\.session) private var session
     @Bindable var router: AppRouter
 
     var body: some View {
@@ -32,7 +34,11 @@ struct AppTabsView: View {
             ForEach(AppTab.allCases) { tab in
                 let isSelected = tab == router.selectedTab
                 NavigationStack(path: router.pathBinding(for: tab)) {
-                    TabPlaceholderView(tab: tab)
+                    if tab == .home, let session {
+                        HomeView(session: session, dependencies: dependencies)
+                    } else {
+                        TabPlaceholderView(tab: tab)
+                    }
                 }
                 .opacity(isSelected ? 1 : 0)
                 .allowsHitTesting(isSelected)

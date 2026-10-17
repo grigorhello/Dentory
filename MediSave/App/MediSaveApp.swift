@@ -7,11 +7,14 @@ struct MediSaveApp: App {
 
     init() {
         // `-uiTesting` runs the app on the preview doubles: no network, a signed-in demo admin.
-        // `-offline` with it makes the network monitor report no connection; `-signedOut` starts on Sign in.
+        // `-offline` with it makes the network monitor report no connection; `-signedOut` starts on Sign in;
+        // `-staff` signs in as the Staff member.
         let arguments = ProcessInfo.processInfo.arguments
         let dependencies = arguments.contains("-uiTesting")
             ? AppDependencies.preview(
-                signedIn: !arguments.contains("-signedOut"), isConnected: !arguments.contains("-offline")
+                signedIn: !arguments.contains("-signedOut"),
+                isConnected: !arguments.contains("-offline"),
+                role: arguments.contains("-staff") ? .staff : .admin
             )
             : AppDependencies.live()
         self.dependencies = dependencies

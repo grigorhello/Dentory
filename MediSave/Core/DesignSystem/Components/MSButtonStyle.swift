@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Button variants (PRD §7). One blue primary per screen; danger only inside confirmation sheets.
+/// Button variants (PRD §7). One blue primary per screen; danger only inside confirmation sheets;
+/// `outlineOnDark` is the hairline button on the dark procedure card (f6 Edit usage).
 nonisolated enum MSButtonVariant: CaseIterable, Sendable {
-    case primary, secondary, tertiary, text, danger
+    case primary, secondary, tertiary, text, danger, outlineOnDark
 }
 
 /// `medium` is the 48 pt primary action; `small` is the 36 pt in-card button (its hit target is still 44).
@@ -83,7 +84,7 @@ struct MSButtonSurface<Label: View>: View {
     private var isFilled: Bool {
         switch variant {
         case .primary, .secondary, .danger: true
-        case .tertiary, .text: false
+        case .tertiary, .text, .outlineOnDark: false
         }
     }
 
@@ -91,6 +92,7 @@ struct MSButtonSurface<Label: View>: View {
     private var looksEnabled: Bool { isEnabled || isLoading }
 
     private var foreground: Color {
+        if variant == .outlineOnDark { return looksEnabled ? .ms.textOnDark : .ms.mute }
         if !looksEnabled { return isFilled ? .ms.onPrimary : .ms.textDisabled }
         return isFilled ? .ms.onPrimary : .ms.ink
     }
@@ -108,11 +110,16 @@ struct MSButtonSurface<Label: View>: View {
         case (.text, true): return .ms.canvasSunken
         case (.danger, false): return .ms.danger
         case (.danger, true): return .ms.dangerActive
+        case (.outlineOnDark, false): return .clear
+        case (.outlineOnDark, true): return .ms.inkMid
         }
     }
 
     private var border: Color {
-        guard variant == .tertiary else { return .clear }
-        return looksEnabled ? .ms.ink : .ms.mute
+        switch variant {
+        case .tertiary: looksEnabled ? .ms.ink : .ms.mute
+        case .outlineOnDark: .ms.mute
+        default: .clear
+        }
     }
 }
