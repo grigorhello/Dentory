@@ -1,8 +1,13 @@
 import re, json, os, glob, sys
-SRC='/mnt/project-files/medisave-plan-v2/src'; OUT='/mnt/project-files/medisave-plan-v2'
-SHA=sys.argv[1]; FR='/home/claude/MediSave/design/frames'
-RAW=f'https://raw.githubusercontent.com/grigorhello/MediSave/{SHA}/design/frames/'
-BLOB='https://github.com/grigorhello/MediSave/blob/'+SHA+'/'
+# Usage: [SRC=… OUT=… FR=…] python3 build.py <sha> [owner/repo] [brand]
+# Defaults are the plan folder of the Claude project; on the Mac use SRC=docs/handoff/ticket-sources FR=design/frames.
+SRC=os.environ.get('SRC','/mnt/project-files/medisave-plan-v2/src'); OUT=os.environ.get('OUT','/mnt/project-files/medisave-plan-v2')
+SHA=sys.argv[1]; FR=os.environ.get('FR','/home/claude/MediSave/design/frames')
+REPO=sys.argv[2] if len(sys.argv)>2 else 'grigorhello/MediSave'   # grigorhello/Dentory after MS-155
+BRAND=sys.argv[3] if len(sys.argv)>3 else 'MediSave'              # Dentory after MS-156 (design file names, skill name)
+SKILL=BRAND.lower()+'-ios'
+RAW=f'https://raw.githubusercontent.com/{REPO}/{SHA}/design/frames/'
+BLOB=f'https://github.com/{REPO}/blob/'+SHA+'/'
 MS={'M0':1,'M1':2,'M2':3,'M3':4,'M4':5}
 MSN={'M0':'M0 · Foundations','M1':'M1 · Internal Alpha','M2':'M2 · Clinic Pilot','M3':'M3 · Commercial Beta','M4':'M4 · V1 Launch'}
 tickets=[]
@@ -15,7 +20,7 @@ for f in sorted(glob.glob(SRC+'/*.md')):
         body=re.split(r'^# M\d', body, flags=re.M)[0].strip()
         tid,title=head.split(' · ',1)
         tickets.append(dict(id=tid,title=title.strip(),body=body,**{k:v.strip() for k,v in meta.items()}))
-EXTRA={'MS-153':124,'MS-154':125}
+EXTRA={'MS-153':124,'MS-154':125,'MS-155':143,'MS-156':144,'MS-157':145}
 num={t['id']:(int(t['id'][3:])-29 if int(t['id'][3:])<=152 else EXTRA[t['id']]) for t in tickets}
 # build order: Kahn's algorithm, ties broken by milestone, priority, then ticket number
 byid={t['id']:t for t in tickets}
@@ -39,13 +44,13 @@ for t in tickets:
     unb=', '.join(ref(d) for d in sorted(unblocks[t['id']],key=lambda d:step[d])) or 'nothing'
     lines=[f"> **Build step {step[t['id']]} of {N}** · **Blocked by** {blk} · **Unblocks** {unb}",
            ">",
-           f"> **For Claude Code:** read [`CLAUDE.md`]({BLOB}CLAUDE.md) and follow the [`medisave-ios` skill]({BLOB}.claude/skills/medisave-ios/SKILL.md) (MVVM, feature folders, SOLID, tests). Then read this ticket, its frames and the PRD section before writing code. Do not start while a blocker is open; the full sequence is in [`docs/BUILD-ORDER.md`]({BLOB}docs/BUILD-ORDER.md). Product decisions that apply everywhere are in {ref('MS-100')}.",
+           f"> **For Claude Code:** read [`CLAUDE.md`]({BLOB}CLAUDE.md) and follow the [`{SKILL}` skill]({BLOB}.claude/skills/{SKILL}/SKILL.md) (MVVM, feature folders, SOLID, tests). Then read this ticket, its frames and the PRD section before writing code. Do not start while a blocker is open; the full sequence is in [`docs/BUILD-ORDER.md`]({BLOB}docs/BUILD-ORDER.md). Product decisions that apply everywhere are in {ref('MS-100')}.",
            "",
            f"**Ticket** {t['id']} · **Milestone** {MSN[t['milestone']]} · **Priority** {t['priority']} · **Size** {t['size']} pts · **Depends on** {', '.join(ref(d) for d in deps) or 'nothing'}",""]
     if frames or t['screens'] or t['prd']:
         lines.append('## Design')
         if t['prd']: lines.append(f"- **PRD:** {t['prd']} in [`design/PRD-v1.1.md`]({BLOB}design/PRD-v1.1.md)")
-        if t['screens']: lines.append(f"- **Prototype:** [`design/project/MediSave Mobile.dc.html`]({BLOB}design/project/MediSave%20Mobile.dc.html), screen key(s) `{t['screens'].replace(',', '`, `')}`; element ids in PRD Appendix B")
+        if t['screens']: lines.append(f"- **Prototype:** [`design/project/{BRAND} Mobile.dc.html`]({BLOB}design/project/{BRAND}%20Mobile.dc.html), screen key(s) `{t['screens'].replace(',', '`, `')}`; element ids in PRD Appendix B")
         lines.append(f"- **Design system:** [`design/project/_ds/…/`]({BLOB}design/project/_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326) (tokens, components, rules)")
         if frames:
             imgs=[]
@@ -62,7 +67,7 @@ for t in tickets:
     lines.append(b)
     if t['type'] in ('feature','tech'):
         lines+=['','## Definition of done',
-          '- [ ] Follows the `medisave-ios` skill: code in its feature folder, view without business logic, `@Observable` view model with injected protocols, repository returning domain types; nothing from its "do not" list.',
+          '- [ ] Follows the `'+SKILL+'` skill: code in its feature folder, view without business logic, `@Observable` view model with injected protocols, repository returning domain types; nothing from its "do not" list.',
           '- [ ] Built only with `Core/DesignSystem` tokens and components; screens match the frames above on iPhone and stay within the 720 pt column on iPad.',
           '- [ ] PRD Appendix B element ids set as `.accessibilityIdentifier` on every interactive element.',
           '- [ ] Swift Testing unit tests for view models and rules, pgTAP tests for any migration or RPC, XCUITest flow added or updated when a user flow changes.',
@@ -80,13 +85,13 @@ print(len(tickets), sum(int(t['size']) for t in tickets))
 from collections import Counter; print(Counter(t['milestone'] for t in tickets)); print(max(len(t['full']) for t in tickets))
 
 # docs/BUILD-ORDER.md for the repo
-REPO='https://github.com/grigorhello/MediSave/issues/'
+REPO_ISSUES=f'https://github.com/{REPO}/issues/'
 out=['# Build order','',f'Build the {N} tickets in this order. A ticket can start when every ticket in its "Blocked by" column is merged. Tickets next to each other with no link between them can run in parallel.','',
      'Generated from the ticket dependencies (ties broken by milestone, then priority). Each GitHub issue repeats its step at the top.','']
 cur=None
 for t in tickets:
     if t['milestone']!=cur:
         cur=t['milestone']; out+=['',f'## {MSN[cur]}','','| Step | Ticket | Issue | Pri | Pts | Blocked by |','|---|---|---|---|---|---|']
-    b=', '.join(f"[{d}]({REPO}{num[d]})" for d in sorted(DEPS[t['id']],key=lambda d:step[d])) or '—'
-    out.append(f"| {t['step']} | {t['id']} · {t['title']} | [#{t['number']}]({REPO}{t['number']}) | {t['priority']} | {t['size']} | {b} |")
+    b=', '.join(f"[{d}]({REPO_ISSUES}{num[d]})" for d in sorted(DEPS[t['id']],key=lambda d:step[d])) or '—'
+    out.append(f"| {t['step']} | {t['id']} · {t['title']} | [#{t['number']}]({REPO_ISSUES}{t['number']}) | {t['priority']} | {t['size']} | {b} |")
 open(OUT+'/BUILD-ORDER.md','w').write('\n'.join(out)+'\n')

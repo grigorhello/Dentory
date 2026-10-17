@@ -4,10 +4,10 @@
 meta: milestone=M1; priority=P0; type=feature; area=auth; size=2; frames=f1; screens=signin; prd=§6.1; depends=MS-103,MS-105
 
 ### User story
-As anyone with a MediSave account, I sign in with email and password and land on Home of my clinic.
+As anyone with a Dentory account, I sign in with email and password and land on Home of my clinic.
 
 ### Screen (f1)
-- Title "MediSave" (display 32), caption "Sign in to your clinic."
+- Title "Dentory" (display 32; the frame still shows the old name, D15), caption "Sign in to your clinic."
 - `signin.email` Email field. Inline error under the field on unknown email: "No account with this email."
 - `signin.password` Password field with show/hide toggle. Wrong password error: "Wrong password."
 - `signin.submit` primary "Sign in", disabled until both fields have text → Home.
@@ -26,13 +26,13 @@ As anyone with a MediSave account, I sign in with email and password and land on
 - [ ] XCUITest flow: sign in as the demo admin → Home.
 
 ## MS-111 · Admin sign-up: account, clinic and team invites
-meta: milestone=M1; priority=P0; type=feature; area=onboarding; size=5; frames=f2,f3,f4; screens=onboard.account,onboard.clinic,onboard.invite; prd=§6.1; depends=MS-110,MS-104
+meta: milestone=M1; priority=P0; type=feature; area=onboarding; size=5; frames=f2,f3,f4; screens=onboard.account,onboard.clinic,onboard.invite; prd=§6.1; depends=MS-110,MS-104,MS-155
 
 ### User story
 As a practice owner, I create my admin account and my clinic in three short steps, invite my team, and land on Home.
 
 ### Step 1 · Account (f2) eyebrow "ADMIN SIGN-UP · STEP 1 OF 3", title "Create your admin account", caption "You will own the clinic workspace and invite the team."
-- `onboard.name` Full name, `onboard.email` Work email (unique across MediSave; error "An account with this email already exists. Sign in instead."), `onboard.password` (min 8 characters; hint "At least 8 characters").
+- `onboard.name` Full name, `onboard.email` Work email (unique across Dentory; error "An account with this email already exists. Sign in instead."), `onboard.password` (min 8 characters; hint "At least 8 characters").
 - `onboard.continue` primary "Continue →", disabled until valid → step 2. Back chevron returns to Sign in. No Google button (D4).
 - Creates the Supabase Auth user and profile. Email confirmation: not required to continue in V1.1 (send a welcome email only).
 
@@ -55,7 +55,7 @@ As a practice owner, I create my admin account and my clinic in three short step
 meta: milestone=M1; priority=P0; type=feature; area=team; size=3; frames=f5,f4,f31; screens=invite.accept; prd=§6.1, G4; depends=MS-111
 
 ### Invite (server)
-Edge Function `invite_member(clinic_id, email, role, full_name?)`, admin only: creates or refreshes a `memberships` row with status invited, a random token (store only its hash), `invite_expires_at = now() + 7 days`, and sends the email via Resend: subject "{Admin name} invited you to {Clinic} on MediSave", body with one button "Join {Clinic}" linking to `https://{domain}/invite?token=…` (universal link, D12). Resend = same function with a new token (old one stops working).
+Edge Function `invite_member(clinic_id, email, role, full_name?)`, admin only: creates or refreshes a `memberships` row with status invited, a random token (store only its hash), `invite_expires_at = now() + 7 days`, and sends the email via Resend: subject "{Admin name} invited you to {Clinic} on Dentory", body with one button "Join {Clinic}" linking to `https://{domain}/invite?token=…` (universal link, D12). Resend = same function with a new token (old one stops working).
 
 ### Accept invitation screen (f5), Staff
 - Eyebrow "INVITATION", title "Join {Clinic}", caption "{Admin} invited you as {Role}. Set a password to finish." (`invite.clinic`).

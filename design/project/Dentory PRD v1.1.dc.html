@@ -17,19 +17,19 @@
 <doc-page margin="0.75in">
 <div style="font:14px/1.6 Inter,system-ui,sans-serif;color:var(--text-body)">
 
-<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)">MediSave · Product requirements</div>
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary)">Dentory · Product requirements</div>
 <h1 style="font:500 36px/1.1 Outfit,sans-serif;color:var(--color-ink);margin:10px 0 8px;letter-spacing:.5px">Dental inventory app, V1.1 (iPhone and iPad)</h1>
 <p style="margin:0 0 6px">Version 1.1 · October 14, 2026 · Status: ready for development. Supersedes PRD v1.0 (October 1, 2026) wherever the two differ. Written from the approved design; every rule below is visible in a screen.</p>
 <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:4px 16px;padding:14px 16px;border-radius:12px;background:var(--surface-card);margin:16px 0 8px;font-size:13px">
-<span style="color:var(--text-secondary)">Design board</span><span><a href="MediSave%20Board.dc.html">MediSave Board</a> · every screen, Admin and Staff versions, grouped by flow</span>
-<span style="color:var(--text-secondary)">Clickable demo</span><span><a href="MediSave%20Mobile.dc.html">MediSave Mobile</a> · tap through all flows; Tweaks switch role, device and start screen</span>
-<span style="color:var(--text-secondary)">Design system</span><span>MediSave Design System (tokens, Button, Badge, Input, Select, Switch, Card, Icon, Dialog, Toast)</span>
+<span style="color:var(--text-secondary)">Design board</span><span><a href="Dentory%20Board.dc.html">Dentory Board</a> · every screen, Admin and Staff versions, grouped by flow</span>
+<span style="color:var(--text-secondary)">Clickable demo</span><span><a href="Dentory%20Mobile.dc.html">Dentory Mobile</a> · tap through all flows; Tweaks switch role, device and start screen</span>
+<span style="color:var(--text-secondary)">Design system</span><span>Dentory Design System (tokens, Button, Badge, Input, Select, Switch, Card, Icon, Dialog, Toast)</span>
 <span style="color:var(--text-secondary)">Source PRD</span><span>uploads/dental_inventory_saas_sellable_mvp_prd.pdf</span>
 </div>
 <p style="margin:8px 0 0;font-size:13px;color:var(--text-secondary)">The screens embedded in this document are live previews of the demo. Frame numbers (f1…f38) match the board.</p>
 
 <h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">1. Summary</h2>
-<p style="margin:0 0 10px">MediSave tells a small dental clinic what it has, what is running low and what is expiring, without constant counting or scanning. Stock moves through five events only: a procedure takes supplies out, a delivery brings them in, a count or an adjustment corrects, a disposal removes, a cancelled procedure returns. Every event is recorded with who and when.</p>
+<p style="margin:0 0 10px">Dentory tells a small dental clinic what it has, what is running low and what is expiring, without constant counting or scanning. Stock moves through five events only: a procedure takes supplies out, a delivery brings them in, a count or an adjustment corrects, a disposal removes, a cancelled procedure returns. Every event is recorded with who and when.</p>
 <p style="margin:0 0 10px">V1.1 is a native-feeling mobile app for iPhone and iPad with two roles. The daily user is the dental assistant: pick a procedure, start it, done. The admin receives deliveries, maintains products and templates, and buys.</p>
 <h3 style="font:600 15px/1.4 Inter,sans-serif;color:var(--color-ink);margin:22px 0 6px">What changed since v1.0</h3>
 <ul style="margin:0 0 10px;padding-left:18px">
@@ -114,7 +114,7 @@
 <p style="margin:0 0 10px">The admin creates the account and the clinic; staff only ever accept an invitation.</p>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f1 }}" as="s" hint-placeholder-count="3">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <ul style="margin:0 0 10px;padding-left:18px">
 <li><b style="color:var(--color-ink)">Sign in</b>: email, password, Forgot password. Footer: "Setting up a new clinic? Sign up as admin" starts admin sign-up; "Staff join through the invitation email." No public self-service for staff.</li>
@@ -127,7 +127,7 @@
 <p style="margin:0 0 10px">Home answers "what needs me today" and makes starting a procedure one tap.</p>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f2 }}" as="s" hint-placeholder-count="3">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <ul style="margin:0 0 10px;padding-left:18px">
 <li><b style="color:var(--color-ink)">Attention tiles</b> (three, equal width): To buy, Expiring soon, Missing expiry. Big number in the status color (ink when 0), short label. Tap opens the matching list.</li>
@@ -141,7 +141,7 @@
 <p style="margin:0 0 10px">The core daily flow. The assistant picks a procedure, corrects the list, starts. Stock changes immediately; mistakes are fixed from history, never blocked up front.</p>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f3 }}" as="s" hint-placeholder-count="3">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <p style="margin:0 0 6px"><b style="color:var(--color-ink)">Procedures list</b></p>
 <ul style="margin:0 0 10px;padding-left:18px">
@@ -170,7 +170,7 @@
 <p style="margin:0 0 10px">One list serves browsing and counting. Expiry is the headline of every product page; lot is free text the clinic owns.</p>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f4 }}" as="s" hint-placeholder-count="3">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <p style="margin:0 0 6px"><b style="color:var(--color-ink)">Inventory list</b></p>
 <ul style="margin:0 0 10px;padding-left:18px">
@@ -206,7 +206,7 @@
 <p style="margin:0 0 10px">The invoice is the input; the admin confirms every line. Nothing touches inventory before Confirm.</p>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f5 }}" as="s" hint-placeholder-count="3">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <ul style="margin:0 0 10px;padding-left:18px">
 <li><b style="color:var(--color-ink)">Receive delivery</b>: three options as cards: Take a photo (dark), Upload PDF or image, Receive manually. Micro: "Nothing affects inventory until you confirm." Below, <i>Waiting for delivery</i> lists items marked Ordered with supplier and date, for reference only.</li>
@@ -227,7 +227,7 @@
 <p style="margin:0 0 10px">A shopping list the clinic takes to its supplier. The app never places orders; the wording avoids implying it does.</p>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f6 }}" as="s" hint-placeholder-count="2">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <ul style="margin:0 0 10px;padding-left:18px">
 <li>Segments with counts: <i>To buy · N</i>, <i>Ordered · N</i>, <i>Received · N</i>.</li>
@@ -241,7 +241,7 @@
 <h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.7 Expiring soon <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f27–f28</span></h3>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f7 }}" as="s" hint-placeholder-count="2">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <ul style="margin:0 0 10px;padding-left:18px">
 <li>Segments 30 / 60 / 90 days. Summary: "N products · $X at risk within 90 days."</li>
@@ -260,13 +260,13 @@
 <h3 style="font:600 18px/1.3 Outfit,sans-serif;color:var(--color-ink);margin:24px 0 6px">6.9 Account, team, settings and billing <span style="font:400 12px Inter,sans-serif;color:var(--text-secondary)">f29–f35</span></h3>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f9 }}" as="s" hint-placeholder-count="3">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:193px;height:420px;overflow:hidden;border-radius:21px"><div style="width:402px;height:874px;transform:scale(.48);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" embedded="{{ t }}" hint-size="402px,874px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:193px">{{ s.label }}</div></div>
 </sc-for></div>
 <ul style="margin:0 0 10px;padding-left:18px">
 <li><b style="color:var(--color-ink)">Account</b>: user card (generic profile icon, name, "Role · Clinic"). Admin groups: Team, Clinic settings, Billing, Export CSV; Help; Sign out (red). Staff: Team, Help, Sign out.</li>
 <li><b style="color:var(--color-ink)">Team</b>: rows with initials, name, email, role; pending rows read "Invited · date". Admin: <i>Invite</i> opens a sheet (Name, Email, Role Staff/Admin, <i>Send invitation</i>; toast "Invitation sent · They get a link by email."). Admin can resend or revoke an invitation and change a role from the row.</li>
 <li><b style="color:var(--color-ink)">Clinic settings</b> (Admin): logo (tap to replace), clinic name, city, country. Alerts: Expiry warning (30, 60 and 90 days · 60 and 90 · 90 only), Email digest switch (weekly, Monday 7 am). <i>Save</i> in the header; toast "Settings saved".</li>
-<li><b style="color:var(--color-ink)">Billing</b> (Admin): dark card "Free trial · N days left · Ends {date}". Price line "$99 per clinic / month after the trial", or "$49.50 · 50% lifetime promotion" when granted (flag set by MediSave, not editable in the app). Rows: Payment method (opens the secure card form), Invoices (→ Invoices screen; empty state "No invoices yet"), Billing emails (count; sheet to add or remove addresses; the admin's is first and not removable). Billing is per clinic, unlimited users.</li>
+<li><b style="color:var(--color-ink)">Billing</b> (Admin): dark card "Free trial · N days left · Ends {date}". Price line "$99 per clinic / month after the trial", or "$49.50 · 50% lifetime promotion" when granted (flag set by Dentory, not editable in the app). Rows: Payment method (opens the secure card form), Invoices (→ Invoices screen; empty state "No invoices yet"), Billing emails (count; sheet to add or remove addresses; the admin's is first and not removable). Billing is per clinic, unlimited users.</li>
 <li><b style="color:var(--color-ink)">Export CSV</b>: products, batches and transactions, sent to the admin's email. Toast "Export started".</li>
 </ul>
 
@@ -274,11 +274,11 @@
 <p style="margin:0 0 10px">Same screens and the same bottom tabs. Content is capped at 720px and centred; sheets are centred at the same width. Both orientations are supported; nothing becomes a sidebar or a two-pane layout in V1.1.</p>
 <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 10px;break-inside:avoid">
 <sc-for list="{{ f10 }}" as="s" hint-placeholder-count="2">
-<div style="display:flex;flex-direction:column;gap:6px"><div style="width:317px;height:454px;overflow:hidden;border-radius:17px"><div style="width:834px;height:1194px;transform:scale(.38);transform-origin:0 0"><dc-import name="MediSave Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" device="ipad" embedded="{{ t }}" hint-size="834px,1194px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:317px">{{ s.label }}</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="width:317px;height:454px;overflow:hidden;border-radius:17px"><div style="width:834px;height:1194px;transform:scale(.38);transform-origin:0 0"><dc-import name="Dentory Mobile" screen="{{ s.screen }}" proc-state="{{ s.procState }}" inv-mode="{{ s.mode }}" inv-filter="{{ s.filter }}" onboard-step="{{ s.step }}" role="{{ s.role }}" role-tag="{{ s.roleTag }}" show-role="{{ t }}" act-seg="{{ s.actSeg }}" device="ipad" embedded="{{ t }}" hint-size="834px,1194px"></dc-import></div></div><div style="font:11px/1.3 Inter,sans-serif;color:var(--text-secondary);max-width:317px">{{ s.label }}</div></div>
 </sc-for></div>
 
 <h2 style="font:500 24px/1.15 Outfit,sans-serif;color:var(--color-ink);margin:40px 0 8px">7. UX and UI standards</h2>
-<p style="margin:0 0 10px">These rules keep every screen consistent and are the acceptance criteria for new screens. Tokens and components come from the MediSave Design System; do not introduce new colors, radii or type sizes.</p>
+<p style="margin:0 0 10px">These rules keep every screen consistent and are the acceptance criteria for new screens. Tokens and components come from the Dentory Design System; do not introduce new colors, radii or type sizes.</p>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px">
 <thead><tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink);width:150px">Area</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--color-ink);color:var(--color-ink)">Rule</th></tr></thead>
 <tbody>
@@ -394,7 +394,7 @@ class Component extends DCLogic {
       SC("signin", "Sign in", "f1", "Admin / Staff", null, "App launch when signed out; Account › Sign out", null, [
         E("signin.email", "Email field. Inline error on unknown email."), E("signin.password", "Password field, show/hide toggle."), E("signin.submit", "Primary. Disabled until both fields filled. → home"), E("signin.forgot", "Text button → password reset email (G4)."), E("signin.signUpAdmin", "Footer 'Setting up a new clinic? Sign up as admin' → onboard.account"), E("signin.staffNote", "Static: 'Staff join through the invitation email.'")]),
       SC("onboard.account", "Create account · step 1 of 3", "f2", "Admin", null, "signin.createClinic", null, [
-        E("onboard.name", "Full name."), E("onboard.email", "Email, unique across MediSave."), E("onboard.password", "Password, min 8 characters."), E("onboard.continue", "Primary → onboard.clinic")]),
+        E("onboard.name", "Full name."), E("onboard.email", "Email, unique across Dentory."), E("onboard.password", "Password, min 8 characters."), E("onboard.continue", "Primary → onboard.clinic")]),
       SC("onboard.clinic", "Create clinic · step 2 of 3", "f3", "Admin", null, "onboard.account", null, [
         E("onboard.logo", "72px tap-to-upload placeholder; optional; square crop."), E("onboard.clinicName", "Required."), E("onboard.city", "Required."), E("onboard.country", "Select; drives currency and date format."), E("onboard.continue", "Primary → onboard.invite. Creates the clinic and starts the trial.")]),
       SC("onboard.invite", "Invite team · step 3 of 3", "f4", "Admin", null, "onboard.clinic", null, [

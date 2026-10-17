@@ -1,18 +1,18 @@
-# MediSave PRD v1.1 (text export)
+# Dentory PRD v1.1 (text export)
 
-Exported from the Claude Design project file `project/MediSave PRD v1.1.dc.html` so it can be read without a browser. Frame images are in `frames/`. Where the PRD said "live preview", see the matching frame image.
+Exported from the Claude Design project file `project/Dentory PRD v1.1.dc.html` so it can be read without a browser. Frame images are in `frames/`. Where the PRD said "live preview", see the matching frame image.
 
-MediSave · Product requirements
+Dentory · Product requirements
 
 Dental inventory app, V1.1 (iPhone and iPad)
 
 Version 1.1 · October 14, 2026 · Status: ready for development. Supersedes PRD v1.0 (October 1, 2026) wherever the two differ. Written from the approved design; every rule below is visible in a screen.
 
-Design boardMediSave Board · every screen, Admin and Staff versions, grouped by flow
+Design boardDentory Board · every screen, Admin and Staff versions, grouped by flow
 
-Clickable demoMediSave Mobile · tap through all flows; Tweaks switch role, device and start screen
+Clickable demoDentory Mobile · tap through all flows; Tweaks switch role, device and start screen
 
-Design systemMediSave Design System (tokens, Button, Badge, Input, Select, Switch, Card, Icon, Dialog, Toast)
+Design systemDentory Design System (tokens, Button, Badge, Input, Select, Switch, Card, Icon, Dialog, Toast)
 
 Source PRDuploads/dental_inventory_saas_sellable_mvp_prd.pdf
 
@@ -21,7 +21,7 @@ The screens embedded in this document are live previews of the demo. Frame numbe
 
 ## 1. Summary
 
-MediSave tells a small dental clinic what it has, what is running low and what is expiring, without constant counting or scanning. Stock moves through five events only: a procedure takes supplies out, a delivery brings them in, a count or an adjustment corrects, a disposal removes, a cancelled procedure returns. Every event is recorded with who and when.
+Dentory tells a small dental clinic what it has, what is running low and what is expiring, without constant counting or scanning. Stock moves through five events only: a procedure takes supplies out, a delivery brings them in, a count or an adjustment corrects, a disposal removes, a cancelled procedure returns. Every event is recorded with who and when.
 
 V1.1 is a native-feeling mobile app for iPhone and iPad with two roles. The daily user is the dental assistant: pick a procedure, start it, done. The admin receives deliveries, maintains products and templates, and buys.
 
@@ -300,7 +300,7 @@ Team: rows with initials, name, email, role; pending rows read "Invited · date"
 
 Clinic settings (Admin): logo (tap to replace), clinic name, city, country. Alerts: Expiry warning (30, 60 and 90 days · 60 and 90 · 90 only), Email digest switch (weekly, Monday 7 am). Save in the header; toast "Settings saved".
 
-Billing (Admin): dark card "Free trial · N days left · Ends {date}". Price line "$99 per clinic / month after the trial", or "$49.50 · 50% lifetime promotion" when granted (flag set by MediSave, not editable in the app). Rows: Payment method (opens the secure card form), Invoices (→ Invoices screen; empty state "No invoices yet"), Billing emails (count; sheet to add or remove addresses; the admin's is first and not removable). Billing is per clinic, unlimited users.
+Billing (Admin): dark card "Free trial · N days left · Ends {date}". Price line "$99 per clinic / month after the trial", or "$49.50 · 50% lifetime promotion" when granted (flag set by Dentory, not editable in the app). Rows: Payment method (opens the secure card form), Invoices (→ Invoices screen; empty state "No invoices yet"), Billing emails (count; sheet to add or remove addresses; the admin's is first and not removable). Billing is per clinic, unlimited users.
 
 Export CSV: products, batches and transactions, sent to the admin's email. Toast "Export started".
 
@@ -312,7 +312,7 @@ Same screens and the same bottom tabs. Content is capped at 720px and centred; s
 
 ## 7. UX and UI standards
 
-These rules keep every screen consistent and are the acceptance criteria for new screens. Tokens and components come from the MediSave Design System; do not introduce new colors, radii or type sizes.
+These rules keep every screen consistent and are the acceptance criteria for new screens. Tokens and components come from the Dentory Design System; do not introduce new colors, radii or type sizes.
 
 | Area | Rule |
 |---|---|
@@ -450,7 +450,7 @@ Sheets: —
 | Element id | Behaviour |
 |---|---|
 | `onboard.name` | Full name. |
-| `onboard.email` | Email, unique across MediSave. |
+| `onboard.email` | Email, unique across Dentory. |
 | `onboard.password` | Password, min 8 characters. |
 | `onboard.continue` | Primary → onboard.clinic |
 

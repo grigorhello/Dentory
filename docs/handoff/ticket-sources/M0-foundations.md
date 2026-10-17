@@ -9,7 +9,7 @@ PRD v1.1 is "ready for development", but it leaves six gaps (G1–G6), and the d
 ### Decisions (defaults, Claude as product owner)
 | ID | Topic | Decision |
 |---|---|---|
-| D1 | Stack | Native iOS app: Swift 6, SwiftUI, Observation, iOS 17+, one target for iPhone and iPad, MVVM in feature folders per the `medisave-ios` skill (changed from Expo by Grigor, 2026-10-15). Supabase for Postgres, Auth, Storage, Edge Functions and cron (`supabase-swift` client). Claude API for invoice reading (server side). Stripe for billing (hosted pages). Resend for email. APNs for push. Android is out of scope for V1.1. |
+| D1 | Stack | Native iOS app: Swift 6, SwiftUI, Observation, iOS 17+, one target for iPhone and iPad, MVVM in feature folders per the `dentory-ios` skill (`medisave-ios` until MS-155) (changed from Expo by Grigor, 2026-10-15). Supabase for Postgres, Auth, Storage, Edge Functions and cron (`supabase-swift` client). Claude API for invoice reading (server side). Stripe for billing (hosted pages). Resend for email. APNs for push. Android is out of scope for V1.1. |
 | D2 | Source of truth | Layout and copy: the drawn frame wins. Business rules: PRD v1.1 wins. Where they conflict and this table is silent, follow the frame and note it in the PR. |
 | D3 | Element ids | The ids in PRD Appendix B (e.g. `procDetail.start`) are used verbatim as SwiftUI `.accessibilityIdentifier` values (so XCUITest finds them) and as analytics event names. |
 | D4 | Google sign-in | Frames f1 and f2 show "Continue with Google"; the PRD does not. Not in V1.1. Remove the button. |
@@ -26,13 +26,15 @@ PRD v1.1 is "ready for development", but it leaves six gaps (G1–G6), and the d
 | D9 | Which batch a change hits | Deductions (procedure, count down, adjust down, open a bottle) take from the soonest-expiring batch first, undated quantity last. Increases from count or adjust go to the undated batch (so they show as Missing expiry until dated). Stock may go negative; negatives sit on the undated batch. |
 | D10 | Undo | Undo is a server call that writes reversal transactions for one action. Available for 10 seconds after the action, only to the same user (the toast shows it for 3.2 s). |
 | D11 | Billing on iOS | Payment happens on a Stripe-hosted web page opened from the app (Stripe Checkout, then Customer Portal). No in-app purchase. Before App Store submission confirm this is accepted for a B2B clinic subscription (see MS-152). |
-| D12 | Links in emails | Invitation and password links are https links on a MediSave domain that open the app (universal links) and fall back to a simple web page. Grigor to pick the domain; until then use the Supabase project URL for testing. |
+| D12 | Links in emails | Invitation and password links are https links on `app.dentory.ca` that open the app (universal links) and fall back to a simple web page; transactional email is sent from `@dentory.ca` (domain bought by Grigor on 2026-10-17). Until MS-112 wires the domain, use the Supabase project URL for testing. |
 | D14 | Clinic settings fields (f33) | The frame shows Currency and Time zone; the PRD lists logo, name, city, country. Build both: logo, name, city, country, plus Currency and Time zone prefilled from the country and device, editable. |
 | D13 | Categories | Per clinic, seeded with: Anesthetic, Restorative, Endodontics, Impression, Preventive, Surgical, PPE, Sterilization, Disposable, Other. Admin picks from the list or types a new one in New product. |
+| D15 | Product name | **Dentory**, domain `dentory.ca` (Grigor, 2026-10-17; replaces MediSave, which was taken). Everything user-facing, the repository, the bundle id, the docs and the boards use it: MS-155, MS-156 and MS-157. Where a frame still shows the old wordmark, the name wins over the frame. Wordmark and visual identity stay as they are until a design exists. |
+| D16 | Identifiers after the rename | Bundle id `ca.dentory.app` (reverse of the domain; Claude's default until Grigor confirms it with his Apple Developer team), repository `grigorhello/Dentory`, Xcode project, scheme, targets and folders `Dentory`, `DentoryTests`, `DentoryUITests`, local Supabase project id `Dentory`, skill `dentory-ios`. Kept on purpose: the `MS-` ticket ids, the `MS` prefix on design-system types (now the design-system prefix, not an abbreviation), the hosted Supabase project ref, the Claude Design export's machine ids, and the Mac checkout path. |
 
 ### Action items
 - [ ] Grigor reads this table and comments on any row he wants changed.
-- [ ] Pick the production domain for D12.
+- [x] Pick the production domain for D12: `dentory.ca` (2026-10-17).
 - [ ] When a decision changes, edit this ticket and every ticket it names.
 
 ### Acceptance criteria
@@ -45,17 +47,17 @@ meta: milestone=M0; priority=P0; type=tech; area=platform; size=3; frames=f6,f36
 A native SwiftUI app that builds and runs on iPhone and iPad simulators, with the folder structure, build settings, lint and test targets every later ticket assumes, and CI that builds and tests every pull request. No features yet.
 
 ### Read first
-`.claude/skills/medisave-ios/SKILL.md` (architecture standard). This ticket creates exactly the layout in its section 2 and the build settings in its section 6.
+`.claude/skills/dentory-ios/SKILL.md` (architecture standard). This ticket creates exactly the layout in its section 2 and the build settings in its section 6.
 
 ### Scope
-- **Project generation:** XcodeGen `project.yml` at the repo root; `MediSave.xcodeproj` is generated and git-ignored (avoids project-file merge conflicts across 50+ PRs). `make project` runs `xcodegen generate`.
-- **Targets:** `MediSave` (app), `MediSaveTests` (Swift Testing), `MediSaveUITests` (XCUITest).
-- **Settings:** app name MediSave, bundle id `com.medisave.app` (placeholder until Grigor confirms), iOS 17.0 deployment target, `TARGETED_DEVICE_FAMILY = 1,2` (iPhone and iPad), iPhone portrait only, iPad all orientations, Swift 6 language mode, `SWIFT_STRICT_CONCURRENCY = complete`, `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`, warnings as errors in CI.
+- **Project generation:** XcodeGen `project.yml` at the repo root; `Dentory.xcodeproj` is generated and git-ignored (avoids project-file merge conflicts across 50+ PRs). `make project` runs `xcodegen generate`.
+- **Targets:** `Dentory` (app), `DentoryTests` (Swift Testing), `DentoryUITests` (XCUITest).
+- **Settings:** app name Dentory, bundle id `ca.dentory.app` (`com.medisave.app` until MS-155; placeholder until Grigor confirms), iOS 17.0 deployment target, `TARGETED_DEVICE_FAMILY = 1,2` (iPhone and iPad), iPhone portrait only, iPad all orientations, Swift 6 language mode, `SWIFT_STRICT_CONCURRENCY = complete`, `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`, warnings as errors in CI.
 - **Configurations:** Debug and Release with `Config/Debug.xcconfig` / `Release.xcconfig` holding `SUPABASE_URL` and `SUPABASE_ANON_KEY` (read into `Info.plist`); `Config/Secrets.example.xcconfig` committed, real values git-ignored.
 - **Folders:** create the skeleton from the skill (`App/`, `Core/DesignSystem`, `Core/Domain`, `Core/Data`, `Core/Navigation`, `Core/Support`, `Features/`, `Resources/`), each with a short `README.md` line saying what belongs there. No placeholder protocols or base classes.
-- **App entry:** `MediSaveApp` showing a temporary `RootView` with four tabs (Home, Inventory, Procedures, To buy) whose screens say only the tab name. MS-103 replaces it with the real shell.
+- **App entry:** `DentoryApp` showing a temporary `RootView` with four tabs (Home, Inventory, Procedures, To buy) whose screens say only the tab name. MS-103 replaces it with the real shell.
 - **Packages (SPM, via `project.yml`):** `supabase-swift` only. Nothing else in this ticket.
-- **Lint and format:** SwiftLint with a short `.swiftlint.yml` (default rules plus `force_unwrapping`, `implicitly_unwrapped_optional`, file length 400, type body length 300) and a custom rule that rejects `Color(red:`, `Color(hex:`, `UIColor(` and `Font.custom(` outside `MediSave/Core/DesignSystem/`.
+- **Lint and format:** SwiftLint with a short `.swiftlint.yml` (default rules plus `force_unwrapping`, `implicitly_unwrapped_optional`, file length 400, type body length 300) and a custom rule that rejects `Color(red:`, `Color(hex:`, `UIColor(` and `Font.custom(` outside `Dentory/Core/DesignSystem/`.
 - **Makefile:** `make project`, `make build`, `make test` (unit tests, iPhone 16 simulator), `make uitest`, `make lint`. Add the commands to the "Commands" section of `CLAUDE.md` and to `README.md`.
 - **CI (GitHub Actions, `macos-15` runner, latest stable Xcode):** on every pull request: install XcodeGen and SwiftLint, `make project lint build test`. Cache SPM.
 - **Repo hygiene:** `.gitignore` for Xcode, SPM and secrets; `.github/pull_request_template.md` with `Closes #`, screenshots, and the PR checklist from the skill.
@@ -84,7 +86,7 @@ A local Supabase stack any ticket can migrate, seed and test against, and a CI j
 - `make db-start` (`supabase start`), `make db-reset` (`supabase db reset`, applies migrations and seed), `make db-test` (`supabase test db`), `make functions-serve`.
 - One placeholder pgTAP test so the pipeline is real.
 - CI job (Ubuntu runner, parallel to the iOS job from MS-101): Supabase CLI, `supabase db start`, `supabase db reset`, `supabase test db`, `deno check` on functions.
-- Hosted projects: `medisave-staging` and `medisave-prod` in Supabase (Grigor's account). Document in `README.md` how to link and push migrations (`supabase link`, `supabase db push`); pushing to prod is manual, never from CI.
+- Hosted projects: `dentory-staging` and `dentory-prod` in Supabase (Grigor's account). Document in `README.md` how to link and push migrations (`supabase link`, `supabase db push`); pushing to prod is manual, never from CI.
 - Local app config: `Config/Debug.xcconfig` points at the local stack (`http://127.0.0.1:54321` + local anon key) by default.
 
 ### Out of scope
@@ -101,7 +103,7 @@ Tables and policies (MS-104, MS-105).
 meta: milestone=M0; priority=P0; type=tech; area=platform; size=3; frames=; screens=; prd=§9; depends=MS-101,MS-153
 
 ### Goal
-The small set of shared building blocks every feature uses, exactly as the `medisave-ios` skill describes (section 3), so feature tickets only add a view, a view model and a repository.
+The small set of shared building blocks every feature uses, exactly as the `dentory-ios` skill describes (section 3), so feature tickets only add a view, a view model and a repository.
 
 ### Scope
 - `App/AppDependencies.swift`: `struct AppDependencies` holding the shared services below, with `static func live()` and `static func preview()` (fakes with demo data). Injected through a custom `EnvironmentKey`. Feature repositories are added to it by their own tickets.
@@ -110,7 +112,7 @@ The small set of shared building blocks every feature uses, exactly as the `medi
 - `Core/Data/AppError.swift`: the enum from the skill, with `userMessage` copy from PRD §7 ("Couldn't save. Try again.").
 - `Core/Domain/Session.swift` + `Core/Data/AuthService.swift` (`protocol AuthServicing`): signed-in user, current clinic id, role (`admin | staff`), sign in, sign out, session restore on launch. `@Observable final class SessionStore` holds it for the UI.
 - `Core/Support/Clock.swift` (`protocol Clock` with `now`; live and fixed), `Core/Support/NetworkMonitor.swift` (`protocol NetworkMonitoring`, live with `NWPathMonitor`), `Core/Support/Formatters.swift` (money in clinic currency, quantity + unit, dates and "in N days" in the clinic time zone).
-- `MediSaveTests/Support/`: fakes for each protocol (`FakeRPCClient` records calls and returns canned results, `FakeAuthService`, `FixedClock`, `FakeNetworkMonitor`).
+- `DentoryTests/Support/`: fakes for each protocol (`FakeRPCClient` records calls and returns canned results, `FakeAuthService`, `FixedClock`, `FakeNetworkMonitor`).
 - `RootView` switches between a signed-out placeholder and the tabs based on `SessionStore` (MS-110 builds the real Sign in).
 
 ### Out of scope
@@ -119,16 +121,16 @@ Design system (MS-102), navigation shell and overlays (MS-103), offline queue an
 ### Acceptance criteria
 - [ ] Unit tests: `RPCClient` attaches an idempotency key and maps `read_only`, permission and network errors; formatters render "$1,234.50", "54 cartridges", "in 12 days" for a fixed clock and time zone; `SessionStore` restores a stored session.
 - [ ] `#Preview` blocks can build any later screen with `AppDependencies.preview()` and no network.
-- [ ] No singletons or globals besides `MediSaveApp` building `AppDependencies.live()`.
+- [ ] No singletons or globals besides `DentoryApp` building `AppDependencies.live()`.
 
-## MS-102 · Port the MediSave design system to SwiftUI
+## MS-102 · Port the Dentory design system to SwiftUI
 meta: milestone=M0; priority=P0; type=tech; area=platform; size=5; frames=f13,f20,f23,f25; screens=; prd=§7 UX and UI standards; depends=MS-101
 
 ### Goal
-Every screen is built only from tokens and components in `MediSave/Core/DesignSystem/`. No raw colors, font names or magic numbers in feature code.
+Every screen is built only from tokens and components in `Dentory/Core/DesignSystem/`. No raw colors, font names or magic numbers in feature code.
 
 ### Source
-`design/project/_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/`: `tokens/*.css` (colors, typography, spacing, radius, elevation), `_ds_bundle.js` (the web components: Button, IconButton, Badge, Card, Icon, Tabs, Tag, Dialog, Toast, Tooltip, Checkbox, Input, Radio, Select, Switch), `readme.md` (rules). The prototype `design/project/MediSave Mobile.dc.html` shows how each component is used on mobile.
+`design/project/_ds/medisave-design-system-1666cb0d-4269-4a87-8f99-be4e150e5326/`: `tokens/*.css` (colors, typography, spacing, radius, elevation), `_ds_bundle.js` (the web components: Button, IconButton, Badge, Card, Icon, Tabs, Tag, Dialog, Toast, Tooltip, Checkbox, Input, Radio, Select, Switch), `readme.md` (rules). The prototype `design/project/Dentory Mobile.dc.html` shows how each component is used on mobile.
 
 ### Scope
 1. **Tokens** (`DesignSystem/Tokens/`): every CSS variable from `tokens/colors.css`, `spacing.css`, `radius.css`, `elevation.css`, `typography.css` as Swift constants with the same names in lowerCamelCase: `Color.ms.primary`, `Spacing.lg`, `Radius.md`, `Shadow.card`. Colors live in the asset catalog (`Colors/` folder, one color set per token) so they can gain a dark variant later; V1.1 is light only. Motion: `Motion.fast` 0.12 s, `Motion.base` 0.18 s, easing `cubic-bezier(.2,0,0,1)` as a custom `Animation.timingCurve`.
@@ -306,7 +308,7 @@ meta: milestone=M0; priority=P1; type=tech; area=platform; size=3; frames=; scre
 - Writes: every stock RPC goes through `RPCClient` with an idempotency key (MS-154). Primary buttons show `isLoading` and ignore taps until the call returns (view model flag, not a debounce timer).
 - Offline: `PendingWriteQueue` (`@Observable`, persisted as JSON in Application Support) stores writes made while `NetworkMonitoring` reports offline, shows the banner "You're offline. Changes will sync." and replays them in order with the same idempotency key when back online. If a replay fails, toast "Couldn't save. Try again." and keep the user's input where the screen still exists.
 - Field errors inline under the field in danger text. Save failures: toast "Couldn't save. Try again." keeping input.
-- Crash and error reporting: Sentry Cocoa SDK via SPM (`sentry-cocoa`), started in `MediSaveApp`, with breadcrumbs for failed RPCs. Never attach user-entered text, names, emails or invoice contents.
+- Crash and error reporting: Sentry Cocoa SDK via SPM (`sentry-cocoa`), started in `DentoryApp`, with breadcrumbs for failed RPCs. Never attach user-entered text, names, emails or invoice contents.
 
 ### Acceptance criteria
 - [ ] Double-tapping Start procedure creates one event (unit test with a delayed `FakeRPCClient`).
@@ -320,7 +322,7 @@ meta: milestone=M0; priority=P1; type=chore; area=platform; size=2; frames=f6,f1
 Local dev, previews and pilot demos open on the same data the frames show, so screens can be compared with `design/frames/*.png` line by line.
 
 ### Scope
-`supabase/seed-demo.sql` (calling the RPCs so the ledger is consistent) creating clinic "Smile Dental" (Toronto, Canada, CAD), admins Sarah Mitchell (sarah@smiledental.ca) and Dr. Daniel Kim (daniel@smiledental.ca), staff Michael Reyes (michael@smiledental.ca), and Priya invited as Staff (priya@smiledental.ca, invited Oct 1) as in `design/frames/f31.png`, and the 20 products, 5 templates (Root canal, Cleaning, Filling, Crown, Extraction), 3 past procedures, To buy items, invoice lines and activity rows exactly as defined in the prototype constructor: `design/project/MediSave Mobile.dc.html`, the `const P = [...]`, `this.T = [...]`, `events`, `lines`, `orders`, `expiring` blocks. Products referenced by templates but missing from P (Needle 27g short, Paper points, Prophy angle, Patient bib, Matrix band, Microbrushes, Retraction cord, Gauze, Suture) are created as countable with sensible stock.
+`supabase/seed-demo.sql` (calling the RPCs so the ledger is consistent) creating clinic "Smile Dental" (Toronto, Canada, CAD), admins Sarah Mitchell (sarah@smiledental.ca) and Dr. Daniel Kim (daniel@smiledental.ca), staff Michael Reyes (michael@smiledental.ca), and Priya invited as Staff (priya@smiledental.ca, invited Oct 1) as in `design/frames/f31.png`, and the 20 products, 5 templates (Root canal, Cleaning, Filling, Crown, Extraction), 3 past procedures, To buy items, invoice lines and activity rows exactly as defined in the prototype constructor: `design/project/Dentory Mobile.dc.html`, the `const P = [...]`, `this.T = [...]`, `events`, `lines`, `orders`, `expiring` blocks. Products referenced by templates but missing from P (Needle 27g short, Paper points, Prophy angle, Patient bib, Matrix band, Microbrushes, Retraction cord, Gauze, Suture) are created as countable with sensible stock.
 Prototype `mode` maps: Unit → countable, Package → countable with pack_unit/pack_size, Container → multi_use.
 
 ### Acceptance criteria

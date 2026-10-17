@@ -1,10 +1,10 @@
-# MediSave product knowledge
+# Dentory product knowledge
 
 Written for marketing, sales, support, pricing and pitch work. Every statement comes from PRD v1.1 (`design/PRD-v1.1.md`, dated 2026-10-14) or from the decisions in GitHub issue MS-100 (#71). When the product changes, this file changes with it. Status on 2026-10-16: the database and the stock engine are built; the app screens are being built; no clinic uses it yet.
 
 ## 1. One paragraph
 
-MediSave is an iPhone and iPad app that tells a small dental clinic what it has, what is running low and what is expiring, without constant counting or scanning. Stock moves through five events only: a procedure takes supplies out, a delivery brings them in, a count or an adjustment corrects, a disposal removes, a cancelled procedure returns. Every event is recorded with who and when. The daily user is the dental assistant: pick a procedure, start it, done. The admin receives deliveries, maintains products and templates, and buys. Billing is per clinic, unlimited users: a 3-month free trial, then $99 per month.
+Dentory is an iPhone and iPad app that tells a small dental clinic what it has, what is running low and what is expiring, without constant counting or scanning. Stock moves through five events only: a procedure takes supplies out, a delivery brings them in, a count or an adjustment corrects, a disposal removes, a cancelled procedure returns. Every event is recorded with who and when. The daily user is the dental assistant: pick a procedure, start it, done. The admin receives deliveries, maintains products and templates, and buys. Billing is per clinic, unlimited users: a 3-month free trial, then $99 per month.
 
 ## 2. The problem it solves
 
@@ -12,7 +12,7 @@ MediSave is an iPhone and iPad app that tells a small dental clinic what it has,
 - Existing inventory tools are built for warehouses or large groups: barcodes, purchase orders, integrations, training. A two-chair practice does not have an inventory manager.
 - The person who uses supplies (the assistant) is not the person who buys them (the owner or office manager). Nothing connects the two.
 
-MediSave connects them with the least possible manual work: the procedure is the unit of consumption, the invoice is the unit of receiving, and counting is a correction, not a routine.
+Dentory connects them with the least possible manual work: the procedure is the unit of consumption, the invoice is the unit of receiving, and counting is a correction, not a routine.
 
 ## 3. Who it is for
 
@@ -63,7 +63,7 @@ Ordering through the app or supplier integrations, barcode scanning, patient or 
 ## 7. Pricing and billing
 
 - 3-month free trial from clinic creation; no card needed to start.
-- $99 per clinic per month after the trial, unlimited users. Some clinics get a 50% lifetime promotion ($49.50), a flag set by MediSave, not in the app.
+- $99 per clinic per month after the trial, unlimited users. Some clinics get a 50% lifetime promotion ($49.50), a flag set by Dentory, not in the app.
 - Payment on a Stripe-hosted page opened from the app (Stripe Checkout, then the Customer Portal); invoices and billing emails in the app.
 - When the trial ends without a payment method the app keeps reading access and blocks writes until one is added; the admin sees it on Home and Billing.
 
@@ -86,7 +86,7 @@ Copy style everywhere, including marketing that quotes the product: sentence cas
 
 ## 10. Look and feel
 
-Cream page (#fffefb) with cream-soft cards (#f8f4f0), ink text, one blue primary action per screen, status as text plus a soft tint (never a large colour fill), Outfit for display titles, Lucide icons, bottom sheets for short forms, dark ink card for the one featured block per screen. The design system (tokens and components) is in the repo under `design/project/_ds/`; the 38 screens are in `design/frames/` and make good marketing material once the app matches them. The clickable prototype is `design/project/MediSave Mobile.dc.html`.
+Cream page (#fffefb) with cream-soft cards (#f8f4f0), ink text, one blue primary action per screen, status as text plus a soft tint (never a large colour fill), Outfit for display titles, Lucide icons, bottom sheets for short forms, dark ink card for the one featured block per screen. The design system (tokens and components) is in the repo under `design/project/_ds/`; the 38 screens are in `design/frames/` and make good marketing material once the app matches them. The clickable prototype is `design/project/Dentory Mobile.dc.html`.
 
 ## 11. Roadmap and status
 
@@ -98,7 +98,7 @@ Cream page (#fffefb) with cream-soft cards (#f8f4f0), ink text, one blue primary
 | M3 Commercial Beta | Account, team management, Stripe billing, read-only mode after trial, clinic settings, push notifications, billing invoices and emails, CSV export, weekly digest, invoice file deletion, product analytics | not started |
 | M4 V1 Launch | Security review, iPad pass, accessibility and Dynamic Type pass, performance and backups, TestFlight and App Store | not started |
 
-55 tickets, 179 points in total. The pilot is one clinic on the hosted staging project; production is set up before TestFlight.
+58 tickets, 185 points in total. The pilot is one clinic on the hosted staging project; production is set up before TestFlight.
 
 ## 12. Pilot plan and metrics (from PRD v1.0, still the intent)
 
@@ -108,7 +108,7 @@ Cream page (#fffefb) with cream-soft cards (#f8f4f0), ink text, one blue primary
 
 ## 13. Numbers and names to use consistently
 
-- Product name: MediSave. Bundle id placeholder `com.medisave.app` (to be confirmed). Production domain for email links not chosen yet.
+- Product name: Dentory (called MediSave until 2026-10-17). Domain `dentory.ca`. Bundle id `ca.dentory.app` (confirmed 2026-10-17). Email links on `app.dentory.ca`, sending from `@dentory.ca` (D12); DNS and universal links land with MS-112 and MS-157.
 - Platforms: iPhone and iPad, iOS 17 or later. Portrait on iPhone, both orientations on iPad.
 - Roles: Admin, Staff (two words, capitalised).
 - Trial: 3 months. Price: $99 per clinic per month. Promotion: 50% lifetime.

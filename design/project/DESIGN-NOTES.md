@@ -1,4 +1,4 @@
-# MediSave project notes
+# Dentory project notes
 - Roles: Admin and Staff only (Inventory Manager merged into Admin). Deviations from PRD v1.0 to carry into the next PRD:
   - Staff CAN adjust quantities (Adjust on product detail and Count stock), not only perform counts.
   - Staff CAN add expiry and edit batches (date, lot, qty).

@@ -1,6 +1,6 @@
-# MediSave Design System
+# Dentory Design System
 
-Design system for **MediSave**, a dental inventory SaaS for independent dental clinics (1–10 dentists/hygienists, single location). Primary users are dental assistants, inventory coordinators and office managers; the buyer is the practice owner.
+Design system for **Dentory**, a dental inventory SaaS for independent dental clinics (1–10 dentists/hygienists, single location). Primary users are dental assistants, inventory coordinators and office managers; the buyer is the practice owner.
 
 Product promise: *Know what your clinic has, what is running low, and what is expiring without continuously counting or scanning supplies.*
 
@@ -63,6 +63,6 @@ One product: a responsive web app (laptop, iPad, phone). Core screens from the P
 - `components/forms/` — Input, Select, Checkbox, Radio, Switch
 - `components/display/` — Card, Badge, Tag, Tabs, Icon
 - `components/feedback/` — Dialog, Toast, Tooltip
-- `ui_kits/app/` — MediSave web app: Dashboard, Inventory, Product detail, Procedure, Invoice review (`index.html` is click-through).
+- `ui_kits/app/` — Dentory web app: Dashboard, Inventory, Product detail, Procedure, Invoice review (`index.html` is click-through).
 - `thumbnail.html` — project tile.
 - `SKILL.md` — agent skill entry point.
