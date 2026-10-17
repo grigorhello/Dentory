@@ -142,7 +142,8 @@ private struct OnboardingAccountStep: View {
         )
         MSTextField(
             "Work email", text: $viewModel.email, identifier: "onboard.email",
-            placeholder: "name@clinic.com", error: viewModel.emailError, keyboard: .emailAddress, contentType: .emailAddress
+            placeholder: "name@clinic.com", error: viewModel.emailError, keyboard: .emailAddress,
+            contentType: .emailAddress
         )
         MSTextField(
             "Password", text: $viewModel.password, identifier: "onboard.password",
@@ -229,7 +230,8 @@ private struct OnboardingInviteStep: View {
             HStack(alignment: .top, spacing: Spacing.md) {
                 MSTextField(
                     "Email", text: $row.email, identifier: "onboard.inviteRow[\(index)].email",
-                    placeholder: "name@clinic.com", error: row.error, keyboard: .emailAddress, contentType: .emailAddress
+                    placeholder: "name@clinic.com", error: row.error, keyboard: .emailAddress,
+                    contentType: .emailAddress
                 )
                 MSPicker("Role", selection: roleBinding($row.role), options: [MembershipRole.staff, .admin]) {
                     $0 == .admin ? "Admin" : "Staff"

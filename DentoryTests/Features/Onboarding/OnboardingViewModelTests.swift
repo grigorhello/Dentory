@@ -107,7 +107,8 @@ struct OnboardingViewModelTests {
         viewModel.invites[2].role = .admin
         await viewModel.sendInvites()
         #expect(repository.invites.first?.invites == [
-            TeamInvite(email: "priya@smiledental.ca", role: .staff), TeamInvite(email: "kim@smiledental.ca", role: .admin)
+            TeamInvite(email: "priya@smiledental.ca", role: .staff),
+            TeamInvite(email: "kim@smiledental.ca", role: .admin)
         ])
         #expect(viewModel.isFinished)
         #expect(viewModel.completionMessage == "Invitations sent · They get a link by email.")

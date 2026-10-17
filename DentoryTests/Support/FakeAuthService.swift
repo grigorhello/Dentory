@@ -15,7 +15,9 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
     }
 
     var storedAccount: Account?
-    var signUpResult: Result<Account, Error> = .success(Account(userID: UUID(), email: "new@clinic.com", fullName: "New Admin"))
+    var signUpResult: Result<Account, Error> = .success(
+        Account(userID: UUID(), email: "new@clinic.com", fullName: "New Admin")
+    )
     struct SignUp: Equatable {
         let fullName: String
         let email: String

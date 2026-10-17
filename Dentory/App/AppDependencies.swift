@@ -76,7 +76,9 @@ struct AppDependencies: Sendable {
         // `-onboarding clinic` resumes admin sign-up at step 2, `-onboarding invite` at step 3 (screenshots).
         if onboarding == "clinic" {
             auth.session = nil
-            auth.account = Account(userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell")
+            auth.account = Account(
+                userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell"
+            )
         }
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         return AppDependencies(
