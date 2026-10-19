@@ -14,8 +14,8 @@ How Dentory tickets go from "To do" to "Feature QA". This is the process the pre
 | What | Where | Notes |
 |---|---|---|
 | Code | https://github.com/grigorhello/Dentory | Default branch `claude/project-thread-ocu7tf` until Grigor renames it to `main`. |
-| Tickets | GitHub issues #71 to #125 and #143 to #145, titled `MS-1NN · …` | Each issue is self-contained: build step, blockers, frames, PRD section, element ids, acceptance criteria, out of scope. |
-| Order | `docs/BUILD-ORDER.md` | Topological order with ties broken by milestone then priority. 55 steps. |
+| Tickets | GitHub issues #71 to #125 and #143 to #145, titled `MS-1NN · …`; #152 to #156 are the brand tickets, outside the build order | Each issue is self-contained: build step, blockers, frames, PRD section, element ids, acceptance criteria, out of scope. |
+| Order | `docs/BUILD-ORDER.md` | Topological order with ties broken by milestone then priority. 58 steps. |
 | Board | Notion "Dentory · Product board" | One card per issue. Status moves with the ticket. |
 | Rules | `CLAUDE.md`, `.claude/skills/dentory-ios/SKILL.md` | Read both at the start of every ticket. |
 | Decisions | Issue MS-100 (#71) | Overrides the PRD. When frame and PRD disagree and MS-100 is silent: layout and copy follow the frame, business rules follow the PRD. |
@@ -87,7 +87,7 @@ Rounds so far were lost on: simulator names in test commands, unlocked package v
 
 ## 9. Changing a ticket
 
-Sources are in `docs/handoff/ticket-sources/` (one Markdown file per milestone group; each ticket is a `## MS-1NN · title` section with a `meta:` line for milestone, priority, points, frames and dependencies). `build.py <commit-sha>` rebuilds the per-ticket files, `tickets.json`, `all-tickets.md` and `BUILD-ORDER.md` with frame links pinned to that commit; its paths at the top point at the previous project's shared folder and must be edited to the new location before running. After a rebuild, update the GitHub issue body and the Notion card (page ids in `notion_ids.txt`). A decision change goes into MS-100 and into every ticket it names.
+Sources are in `docs/handoff/ticket-sources/` (one Markdown file per milestone group; each ticket is a `## MS-1NN · title` section with a `meta:` line for milestone, priority, points, frames and dependencies). `build.py <commit-sha>` rebuilds the per-ticket files, `tickets.json`, `all-tickets.md` and `BUILD-ORDER.md` with frame links pinned to that commit; its paths at the top point at the previous project's shared folder and must be edited to the new location before running. After a rebuild, update the GitHub issue body and the Notion card (page ids in `notion_ids.txt`). A decision change goes into MS-100 and into every ticket it names. The brand tickets (MS-158 to MS-162) have their own source, `ticket-sources/brand/brand-assets.md`, and generator, `build_brand.py <commit-sha>`, which pins the links to the brand files; they stay out of `build.py` and of the build order on purpose.
 
 ## 10. Onboarding a new build thread
 

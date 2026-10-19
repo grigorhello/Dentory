@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 03:00 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 06:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -24,13 +24,13 @@ As of 2026-10-19 03:00 UTC. Before acting on this file, confirm the live state: 
 | 15 | MS-155 · Rename to Dentory, code and repository (#143) | [#146](https://github.com/grigorhello/Dentory/pull/146) | 2026-10-17 15:49 | Repository `grigorhello/Dentory`; project, targets, folders `Dentory*`; bundle id `ca.dentory.app`; Makefile, lint, local Supabase (`supabase_db_Dentory`), pgTAP fixtures, skill `dentory-ios` (MS stays the design-system prefix), reviewer agent. |
 | 16 | MS-156 · Rename in the docs, the design files, the ticket sources and the issues (#144) | [#147](https://github.com/grigorhello/Dentory/pull/147) | 2026-10-17 17:19 | Docs, design files, ticket sources, issues and this handoff pack say Dentory; the re-rendered f01 frame merged as [#148](https://github.com/grigorhello/Dentory/pull/148). |
 | 18 | MS-111 · Admin sign-up: account, clinic and team invites (#82) | [#149](https://github.com/grigorhello/Dentory/pull/149) | 2026-10-17 17:57 | The three sign-up steps of f2, f3, f4: Supabase sign-up, `clinic_create` (clinic, admin membership, profile, ten categories, currency from the country), invited rows at step 3, resume at the pending step after a relaunch; `membership_state()`; 32 pgTAP assertions. |
-| 19 | MS-112 · Invite teammates and accept an invitation (#83) | [#150](https://github.com/grigorhello/Dentory/pull/150) | 2026-10-19 02:47 | `invitation_create` (token, SHA-256 stored, 7-day window, resend replaces), `invitation_lookup` (open to the signed-out app), `invitation_check` and `invitation_accept` (service_role only); Edge Functions `invite_member` (Resend, or the log without `RESEND_API_KEY`) and `accept_invitation`; the Join screen (f5), the `dentory://` scheme, the `applinks:app.dentory.ca` entitlement and the `applinks/` files; 66 pgTAP assertions. |
+| 19 | MS-112 · Invite teammates and accept an invitation (#83) | [#150](https://github.com/grigorhello/Dentory/pull/150) | 2026-10-19 02:47 | Migration `20261019020000_invitations.sql` (`invitation_create`, `invitation_lookup`, `auth_user_id_for_email`, `invitation_accept`; `invite_members` dropped), Edge Functions `invite_member` (Resend) and `accept_invitation`, the Join screen (f5), the `dentory://` scheme and the `applinks:app.dentory.ca` entitlement, the `applinks/` static files for the domain. |
 
-Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`. Edge Functions: `health`, `invite_member`, `accept_invitation`.
+Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`.
 
 ## In progress
 
-- **MS-115 · Inventory list: browse, search and filter (#86)**, build step 20, started 2026-10-19 02:10 UTC in the build thread on Grigor's Mac (the checkout now lives in `/Users/grigorgrigoryan/Documents/Personal/Dentory`): migration `20261019040000_inventory_list.sql` (`inventory_list`), `Features/Inventory`, `ProductSummary`, the `-tab` and `-inventoryFilter` launch hooks, the `tabBarInset` environment value. This file is part of its PR. If the MS-115 PR is merged when you read this, go to the next step.
+- **MS-115 · Inventory list: browse, search and filter (#86)**, build step 20, in the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`): PR [#151](https://github.com/grigorhello/Dentory/pull/151) open since 2026-10-19 02:27 UTC on branch `ms-115-inventory-list`, in the review loop. If it is merged when you read this, go to the next step.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
@@ -45,7 +45,7 @@ Then M1 continues MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111 and MS-112 are in Feature QA for Grigor to try. MS-115 is in PR review. MS-100 is Done. Everything else is To do. The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111 and MS-112 are in Feature QA for Grigor to try. MS-115 is in PR review. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in PR review and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
@@ -54,6 +54,19 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109
 3. **Default branch.** Rename `claude/project-thread-ocu7tf` to `main` in GitHub settings (asked 2026-10-15 03:15 UTC). After the rename, update the base branch in local checkouts and in `docs/handoff`.
 4. **Production domain** is `dentory.ca` (links on `app.dentory.ca`, email from `@dentory.ca`, MS-100 D12). MS-112 built the app side; what Grigor adds, in this order: a Resend account with `dentory.ca` as a verified sending domain (Resend gives the SPF and DKIM records to add at the registrar) and its API key set with `supabase secrets set RESEND_API_KEY=…` on the hosted project; a static host for the `applinks/` folder at `https://app.dentory.ca` (its `apple-app-site-association` needs the Apple team id, so universal links only work once the Apple Developer team exists); until then the emails carry `https://app.dentory.ca/invite?token=…` links that the fallback page turns into `dentory://` links, and the simulator opens `dentory://invite?token=…` directly.
 5. **Try the merged tickets** in Feature QA and move the cards to Done.
+6. **Brand tickets.** MS-159 to MS-162 (#153 to #156) wait for his word on which to build and when; the landing page (MS-161) also needs the DNS records for GitHub Pages at the registrar, listed in the issue.
+
+## Brand assets (outside the build order)
+
+Grigor delivered the visual identity on 2026-10-19 (MS-100 D17): `design/brand/` holds the molar mark, the lockups and wordmark, the iOS icon set, the web favicons and the Android icons, with a README of rules and an inventory. The brand tickets are GitHub issues #152 to #156; their source is `docs/handoff/ticket-sources/brand/brand-assets.md` and their generator `build_brand.py` (see `engineering-process.md` section 9). They are not in `docs/BUILD-ORDER.md` and, apart from the icon, wait for Grigor's word.
+
+| Ticket | State | What it delivers |
+|---|---|---|
+| MS-158 · App icon from the brand package (#152) | PR [#157](https://github.com/grigorhello/Dentory/pull/157) open; this file is part of it | The single-size 1024 px icon with dark and tinted appearances in `Assets.xcassets/AppIcon.appiconset`, copied from `design/brand/ios/`. |
+| MS-159 · Brand mark and wordmark in the app (#153) | Backlog | Vector image sets and an `MSLogo` design-system component; the lockup replaces the "Dentory" text on the sign-in screen. |
+| MS-160 · Launch screen with the mark on cream (#154) | Backlog | A `UILaunchScreen` with the mark on cream instead of the generated blank screen. |
+| MS-161 · Landing page dentory.ca with the brand (#155) | Backlog; Grigor said he will ask for it | Restyle of `site/` (PR #137) with the lockup, favicons, manifest and brand colours; `CNAME` and the GitHub Pages custom domain; the DNS records are his. |
+| MS-162 · Brand in emails and link pages (#156) | Backlog | Shared email header and footer for the Edge Functions, Supabase Auth templates, the invite link page. |
 
 ## Known issues
 
