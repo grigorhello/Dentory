@@ -18,7 +18,7 @@ Dentory is a dental inventory app for small clinics: native iPhone and iPad app 
 - Model for implementation work: claude-fable-5-1.
 
 ## Engineering process (short form; the long form is docs/handoff/engineering-process.md)
-- Tickets are GitHub issues `MS-1NN · …` (#71 to #125 and #143 to #145), built in the order of `docs/BUILD-ORDER.md`. Never start a ticket while a blocker is open.
+- Tickets are GitHub issues `MS-1NN · …` (#71 to #125 and #143 to #145), built in the order of `docs/BUILD-ORDER.md`. Never start a ticket while a blocker is open. The brand tickets (#152 to #156, `design/brand/`) sit outside that order and wait for Grigor's word.
 - Implementation runs on Grigor's Mac through Remote Control in `/Users/grigorgrigoryan/Documents/Personal/MediSave` (Xcode, simulators, Docker, Supabase CLI are there). One branch `ms-1NN-short-name` and one PR per ticket; PR title `MS-1NN · …`, body `Closes #N`, assigned to Grigor.
 - Once CI is green, run the `pr-reviewer` agent on the PR. It squash-merges by itself when nothing blocks; on changes requested, fix every finding on the same branch, push, wait for CI, run it again, at most 3 rounds, then ask Grigor. Full auto-merge is Grigor's choice.
 - Database changes: a timestamped migration under `supabase/migrations` with a pgTAP test, `make db-reset db-test` locally, CI runs the same. After a database ticket merges, push to the hosted staging project with `supabase db push` in a terminal tab where Grigor types the database password.

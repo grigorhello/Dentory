@@ -177,7 +177,7 @@ meta: milestone=M4; priority=P0; type=chore; area=platform; size=2; frames=; scr
 ## MS-152 · Ship to TestFlight and the App Store
 meta: milestone=M4; priority=P0; type=chore; area=platform; size=3; frames=; screens=; prd=§9 Platforms; depends=MS-148,MS-149,MS-150,MS-151
 
-- Xcode Cloud workflows (pull request: build + test; `main`: archive and upload to TestFlight; tag `v*`: App Store build), or the same with `xcodebuild archive` + `xcrun altool` in GitHub Actions if Xcode Cloud is unavailable; App Store Connect app record; bundle id, app icon (plain "Dentory" wordmark per the design system, no logo exists yet), launch screen in cream.
+- Xcode Cloud workflows (pull request: build + test; `main`: archive and upload to TestFlight; tag `v*`: App Store build), or the same with `xcodebuild archive` + `xcrun altool` in GitHub Actions if Xcode Cloud is unavailable; App Store Connect app record; bundle id, the App Store icon `design/brand/ios/dentory-app-store-1024.png` (the app icon itself ships with MS-158), the launch screen from MS-160.
 - Privacy nutrition labels (email, name, usage data; no health data; no tracking), privacy policy and terms URLs, support URL.
 - Review notes: demo account (Smile Dental admin) for App Review.
 - Billing review risk (D11): confirm before submission that linking to Stripe-hosted billing for a B2B per-clinic subscription is accepted; if not, hide the payment method row on iOS and bill by email invoice for pilot clinics.

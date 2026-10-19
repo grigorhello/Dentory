@@ -28,7 +28,7 @@ Sources of truth that the pack points at, in the order a new thread should read 
 4. `docs/BUILD-ORDER.md`: the 58 tickets in dependency order.
 5. `design/PRD-v1.1.md` and `design/frames/`: the product specification and every screen.
 6. GitHub issue MS-100 (#71): decisions that override or fill gaps in the PRD.
-7. The GitHub issues #71 to #125 and #143 to #145 (one per ticket) and the Notion board "Dentory · Product board".
+7. The GitHub issues #71 to #125 and #143 to #145 (one per ticket), #152 to #156 (the brand tickets, outside the build order) and the Notion board "Dentory · Product board".
 
 ## Setting up the new project, step by step
 
