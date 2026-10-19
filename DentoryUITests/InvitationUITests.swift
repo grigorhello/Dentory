@@ -18,8 +18,13 @@ final class InvitationUITests: XCTestCase {
         XCTAssertFalse(join.isEnabled, "Join is enabled before the fields are filled")
 
         app.textFields["invite.name"].firstMatch.tap()
-        // Return moves to the password, as on Sign in.
+        // Return moves to the password, as on Sign in; wait for the focus before typing into it.
         app.typeText("Priya Patel\n")
+        let password = app.secureTextFields["invite.password"].firstMatch
+        let focused = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "hasKeyboardFocus == true"), object: password
+        )
+        XCTAssertEqual(XCTWaiter().wait(for: [focused], timeout: 3), .completed, "The password field has no focus")
         app.typeText("smiledental")
         XCTAssertTrue(join.isEnabled, "Join stays disabled: name and password were not both filled")
         join.tap()
