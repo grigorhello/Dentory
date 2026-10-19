@@ -8,6 +8,19 @@
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SENTRY_DSN</key>
 	<string>$(SENTRY_DSN)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>ca.dentory.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>dentory</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Outfit-Regular.ttf</string>

@@ -32,4 +32,5 @@ Native iOS: Swift 6, SwiftUI, Observation, iOS 17+, iPhone and iPad, project gen
 - `make db-reset`: drop the local database, apply `supabase/migrations` in order, then `supabase/seed.sql`. `make db-test`: pgTAP tests in `supabase/tests/database`.
 - `make seed-demo`: load the demo clinic Smile Dental from the frames into the local database, right after `make db-reset` (MS-109). Logins are in the root README.
 - New migration: `supabase migration new <name>`; give it a pgTAP test. CI runs `db-reset db-test` and `make functions-check` (Deno) on every PR.
+- Edge Functions live in `supabase/functions/<name>/index.ts` with shared code in `_shared/`; they answer refusals as `{ "error": { "code", "message", "field" } }` and the app maps them with `AppError(functionError:)`. Secrets (`RESEND_API_KEY`) go on the hosted project with `supabase secrets set`; the local stack has none and logs the emails (`make invite-links`).
 - Hosted projects: `supabase link --project-ref <ref>` once, then `supabase db push` to staging after a merge. Pushing to prod is done by hand, never from CI. Keys live in `Config/Secrets*.xcconfig` (git-ignored), never in the repo.

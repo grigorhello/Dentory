@@ -49,6 +49,13 @@ targets:
     dependencies:
       - package: Supabase
       - package: Sentry
+    # Universal links `https://app.dentory.ca/invite?token=…` (MS-100 D12, MS-112). The domain serves
+    # applinks/.well-known/apple-app-site-association with the Apple team id once the team exists.
+    entitlements:
+      path: Dentory/Resources/Dentory.entitlements
+      properties:
+        com.apple.developer.associated-domains:
+          - applinks:app.dentory.ca
     settings:
       base:
         PRODUCT_NAME: Dentory

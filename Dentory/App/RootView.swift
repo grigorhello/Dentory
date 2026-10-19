@@ -16,44 +16,36 @@ struct RootView: View {
     @State private var didReadProgress = false
     /// `-onboarding account` (screenshots) starts Sign in with step 1 already pushed.
     @State private var signInPath: [OnboardingViewModel.Step]
+    /// The token of the invitation link that opened the app: the Join screen (f5) shows whatever the
+    /// session is, and the new session replaces the old one when the invitee joins (MS-112).
+    @State private var invitationToken: String?
 
-    init(sessionStore: SessionStore, startsOnSignUp: Bool = false) {
+    init(sessionStore: SessionStore, startsOnSignUp: Bool = false, invitationToken: String? = nil) {
         self.sessionStore = sessionStore
         _signInPath = State(initialValue: startsOnSignUp ? [.account] : [])
+        _invitationToken = State(initialValue: invitationToken)
     }
 
     var body: some View {
         Group {
-            switch sessionStore.state {
-            case .restoring:
-                ProgressView()
-                    .tint(Color.ms.primary)
-                    .accessibilityIdentifier("root.restoring")
-            case .signedOut:
-                NavigationStack(path: $signInPath) {
-                    SignInView(sessionStore: sessionStore)
-                        .navigationDestination(for: OnboardingViewModel.Step.self) { _ in
-                            OnboardingView(
-                                viewModel: dependencies.makeOnboardingViewModel(sessionStore: sessionStore)
-                            ) { pendingInviteClinicID = nil }
-                        }
-                }
-            case .needsClinic(let account):
+            if let invitationToken {
                 NavigationStack {
-                    OnboardingView(viewModel: dependencies.makeOnboardingViewModel(
-                        sessionStore: sessionStore, startingAt: .clinic, account: account
-                    )) { pendingInviteClinicID = nil }
+                    AcceptInvitationView(
+                        viewModel: dependencies.makeAcceptInvitationViewModel(
+                            token: invitationToken, sessionStore: sessionStore
+                        ),
+                        onFinished: { self.invitationToken = nil },
+                        onSignIn: { self.invitationToken = nil }
+                    )
+                    .id(invitationToken)
                 }
-            case .signedIn(let session) where pendingInviteClinicID == session.clinicID:
-                NavigationStack {
-                    OnboardingView(viewModel: dependencies.makeOnboardingViewModel(
-                        sessionStore: sessionStore, startingAt: .invite, clinicID: session.clinicID
-                    )) { pendingInviteClinicID = nil }
-                }
-            case .signedIn(let session):
-                AppTabsView(router: router)
-                    .environment(router)
-                    .environment(\.session, session)
+            } else {
+                sessionContent
+            }
+        }
+        .onOpenURL { url in
+            if let token = InvitationLink.token(from: url) {
+                invitationToken = token
             }
         }
         .onAppear {
@@ -66,6 +58,41 @@ struct RootView: View {
             if case .signedIn = state {
                 pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
             }
+        }
+    }
+
+    /// Signed out, admin sign-up in progress, or the tabs.
+    @ViewBuilder private var sessionContent: some View {
+        switch sessionStore.state {
+        case .restoring:
+            ProgressView()
+                .tint(Color.ms.primary)
+                .accessibilityIdentifier("root.restoring")
+        case .signedOut:
+            NavigationStack(path: $signInPath) {
+                SignInView(sessionStore: sessionStore)
+                    .navigationDestination(for: OnboardingViewModel.Step.self) { _ in
+                        OnboardingView(
+                            viewModel: dependencies.makeOnboardingViewModel(sessionStore: sessionStore)
+                        ) { pendingInviteClinicID = nil }
+                    }
+            }
+        case .needsClinic(let account):
+            NavigationStack {
+                OnboardingView(viewModel: dependencies.makeOnboardingViewModel(
+                    sessionStore: sessionStore, startingAt: .clinic, account: account
+                )) { pendingInviteClinicID = nil }
+            }
+        case .signedIn(let session) where pendingInviteClinicID == session.clinicID:
+            NavigationStack {
+                OnboardingView(viewModel: dependencies.makeOnboardingViewModel(
+                    sessionStore: sessionStore, startingAt: .invite, clinicID: session.clinicID
+                )) { pendingInviteClinicID = nil }
+            }
+        case .signedIn(let session):
+            AppTabsView(router: router)
+                .environment(router)
+                .environment(\.session, session)
         }
     }
 }
