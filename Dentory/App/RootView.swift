@@ -5,7 +5,12 @@ import SwiftUI
 struct RootView: View {
     @Environment(\.appDependencies) private var dependencies
     let sessionStore: SessionStore
-    @State private var router = AppRouter()
+    /// `-tab inventory` and `-inventoryFilter Low` open the app there (screenshots, UI tests).
+    @State private var router = AppRouter(
+        selectedTab: AppTab(rawValue: UserDefaults.standard.string(forKey: "tab") ?? "") ?? .home,
+        inventoryFilter: UserDefaults.standard.string(forKey: "inventoryFilter")
+            .flatMap(InventoryFilter.init(rawValue:))
+    )
     /// Set while step 3 of admin sign-up is still due for the signed-in clinic.
     @State private var pendingInviteClinicID: UUID?
     @State private var didReadProgress = false
@@ -98,6 +103,8 @@ struct AppTabsView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.session) private var session
     @Bindable var router: AppRouter
+    /// Measured from the bar; root screens read it as `tabBarInset` to float controls above the bar.
+    @State private var tabBarHeight: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -106,10 +113,13 @@ struct AppTabsView: View {
                 NavigationStack(path: router.pathBinding(for: tab)) {
                     if tab == .home, let session {
                         HomeView(session: session, dependencies: dependencies)
+                    } else if tab == .inventory, let session {
+                        InventoryListView(session: session, dependencies: dependencies)
                     } else {
                         TabPlaceholderView(tab: tab)
                     }
                 }
+                .environment(\.tabBarInset, router.path(for: tab).isEmpty ? tabBarHeight : 0)
                 .opacity(isSelected ? 1 : 0)
                 .allowsHitTesting(isSelected)
                 .accessibilityHidden(!isSelected)
@@ -120,6 +130,11 @@ struct AppTabsView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if router.path(for: router.selectedTab).isEmpty {
                 AppTabBar(selected: router.selectedTab, toBuyCount: router.toBuyCount) { router.select($0) }
+                    .onGeometryChange(for: CGFloat.self) { proxy in
+                        proxy.size.height
+                    } action: { height in
+                        tabBarHeight = height
+                    }
             }
         }
         .background(Color.ms.canvas)
