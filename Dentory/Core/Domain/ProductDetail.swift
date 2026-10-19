@@ -32,6 +32,19 @@ nonisolated struct ProductDetail: Codable, Equatable, Sendable {
     let openBottles: [OpenBottle]
     /// Newest first, at most 20.
     let history: [StockTransaction]
+
+    /// The same product with `delta` added to its quantity and unopened count (an increase lands on the
+    /// undated quantity, MS-100 D9) and the given history. Status is left to the server's next answer.
+    func adjusted(by delta: Decimal, history: [StockTransaction]) -> ProductDetail {
+        ProductDetail(
+            id: id, name: name, categoryName: categoryName, unit: unit, packUnit: packUnit, packSize: packSize,
+            minimum: minimum, target: target, tracking: tracking, location: location, status: status,
+            quantity: quantity + delta, unopened: unopened + delta, openCount: openCount,
+            missingExpiryQuantity: missingExpiryQuantity, usedInLast30Days: usedInLast30Days,
+            lastCountedAt: lastCountedAt, toBuyItemID: toBuyItemID, batches: batches, openBottles: openBottles,
+            history: history
+        )
+    }
 }
 
 /// A batch of the product: a quantity with an expiry month and a lot, or undated.

@@ -128,7 +128,9 @@ extension ProductDetailViewModel {
     }
 
     /// The reason ("Damaged", "Physical count"), else the reference (the procedure, the invoice), else the kind.
+    /// A reversal keeps its reason but reads "Undo · Damaged", as the engine labels it (MS-100 D10).
     nonisolated static func label(for row: StockTransaction) -> String {
+        if let reference = row.referenceLabel, reference.hasPrefix(undoPrefix) { return reference }
         if let reason = row.reason, !reason.isEmpty { return reason }
         if let reference = row.referenceLabel, !reference.isEmpty { return reference }
         switch row.type {
@@ -140,6 +142,11 @@ extension ProductDetailViewModel {
         case .cancellation: return "Cancelled"
         }
     }
+}
+
+extension ProductDetailViewModel {
+    /// What `undo_action` puts in front of the reversed row's label.
+    nonisolated static let undoPrefix = "Undo · "
 }
 
 private extension CalendarDay {

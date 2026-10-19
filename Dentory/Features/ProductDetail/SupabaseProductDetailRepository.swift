@@ -2,8 +2,10 @@ import Foundation
 import Supabase
 
 /// `product_detail` answers one JSON object; its rows decode with the client's decoder (snake_case keys).
+/// Stock writes go through `WriteCoordinator`: online now with an idempotency key, queued offline (MS-108).
 struct SupabaseProductDetailRepository: ProductDetailRepository {
     let client: SupabaseClient
+    let writes: WriteCoordinator
 
     func detail(productID: UUID) async throws -> ProductDetail {
         let payload: ProductDetailPayload
@@ -81,6 +83,47 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
             throw AppError(error)
         }
     }
+
+    func adjust(
+        productID: UUID, actualQuantity: Decimal, reason: AdjustmentReason, note: String?
+    ) async throws -> WriteOutcome {
+        try await writes.write(
+            "stock_adjust",
+            params: StockAdjustParams(
+                pProductId: productID, pActualQty: actualQuantity, pReason: reason.rawValue, pNote: note
+            )
+        )
+    }
+
+    func undoAdjustment(actionID: UUID) async throws {
+        _ = try await writes.write("undo_action", params: UndoActionParams(pActionId: actionID))
+    }
+}
+
+/// The parameters of `stock_adjust`; the coordinator adds `p_idempotency_key`. A missing note is sent as
+/// null, not left out: PostgREST matches the function by its full parameter list.
+nonisolated struct StockAdjustParams: Encodable, Sendable {
+    let pProductId: UUID
+    let pActualQty: Decimal
+    let pReason: String
+    let pNote: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case pProductId, pActualQty, pReason, pNote
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(pProductId, forKey: .pProductId)
+        try container.encode(pActualQty, forKey: .pActualQty)
+        try container.encode(pReason, forKey: .pReason)
+        try container.encode(pNote, forKey: .pNote)
+    }
+}
+
+/// The parameters of `undo_action`.
+nonisolated struct UndoActionParams: Encodable, Sendable {
+    let pActionId: UUID
 }
 
 /// The object `product_detail` returns. Its keys avoid a digit-led component: the snake_case decoder

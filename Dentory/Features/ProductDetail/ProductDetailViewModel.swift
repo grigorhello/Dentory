@@ -2,13 +2,19 @@ import Foundation
 import Observation
 
 /// Product detail (f20 Admin, f21 Staff): the figures, the expiry and bottle cards and the history of one
-/// product, with Add to buy and its Undo. The last answer is served from the cache while a fresh one loads
-/// or the network is gone (MS-108). Adjust, Edit, batches, bottles and Delete arrive with their own tickets.
-/// The card rows are built in `ProductDetailViewModel+Rows.swift`.
+/// product, with Add to buy and its Undo (MS-116) and the Adjust sheet with its Undo (MS-118). The last
+/// answer is served from the cache while a fresh one loads or the network is gone (MS-108). Edit, batches,
+/// bottles and Delete arrive with their own tickets. The card rows are built in `ProductDetailViewModel+Rows.swift`.
 @MainActor
 @Observable
 final class ProductDetailViewModel {
     enum LoadState: Equatable { case loading, loaded, failed(AppError) }
+
+    /// The sheets this screen presents (PRD Appendix B `product`).
+    enum Sheet: Identifiable {
+        case adjust
+        var id: Self { self }
+    }
 
     /// What the toast says after Add to buy; the view offers Undo on it.
     struct AddedToBuy: Equatable {
@@ -17,9 +23,20 @@ final class ProductDetailViewModel {
         let detail: String
     }
 
+    /// What the toast says after an adjustment; Undo is offered while `actionID` is known (MS-100 D10).
+    struct Adjusted: Equatable {
+        let actionID: UUID?
+        let title: String
+        let detail: String
+    }
+
     private(set) var state: LoadState = .loading
     private(set) var detail: ProductDetail?
     private(set) var addedToBuy: AddedToBuy?
+    private(set) var adjusted: Adjusted?
+    /// The last applied adjustment, undoable until Undo runs or the next adjustment replaces it.
+    private(set) var undoableAdjustmentID: UUID?
+    var sheet: Sheet?
     /// A refusal that belongs to no field; the view shows it as a toast.
     private(set) var generalError: AppError?
 
@@ -155,6 +172,49 @@ final class ProductDetailViewModel {
 
     func clearAddedToBuy() {
         addedToBuy = nil
+    }
+
+    // MARK: - Adjust
+
+    /// The sheet's view model for the loaded product; nil while nothing is loaded.
+    func makeAdjustInventoryViewModel() -> AdjustInventoryViewModel? {
+        detail.map { AdjustInventoryViewModel(detail: $0, repository: repository, formatters: formatters) }
+    }
+
+    func openAdjust() {
+        guard detail != nil else { return }
+        sheet = .adjust
+    }
+
+    /// Closes the sheet, moves the figures by the difference at once, queues the toast and loads the fresh
+    /// detail (the server's status, batches and history).
+    func adjustmentSaved(_ saved: AdjustInventoryViewModel.Saved) async {
+        sheet = nil
+        guard let detail else { return }
+        self.detail = detail.adjusted(by: saved.after - saved.before, history: detail.history)
+        undoableAdjustmentID = saved.actionID
+        adjusted = Adjusted(
+            actionID: saved.actionID,
+            title: "Inventory adjusted",
+            detail: "\(detail.name) · \(formatters.number(saved.before)) → \(formatters.number(saved.after))"
+        )
+        await load()
+    }
+
+    func undoAdjustment() async {
+        guard let actionID = undoableAdjustmentID else { return }
+        undoableAdjustmentID = nil
+        adjusted = nil
+        do {
+            try await repository.undoAdjustment(actionID: actionID)
+        } catch {
+            generalError = AppError(error)
+        }
+        await load()
+    }
+
+    func clearAdjusted() {
+        adjusted = nil
     }
 
     func clearGeneralError() {
