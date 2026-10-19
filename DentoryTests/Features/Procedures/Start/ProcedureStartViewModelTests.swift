@@ -73,17 +73,17 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.startTitle == "Start procedure · 9 items")
     }
 
-    @Test func takeNewCountsOneItemAndSaysWhatIsLeft() async {
+    @Test func takeNewCountsOneItemAndSaysWhatIsLeft() async throws {
         let viewModel = await make()
         let disinfectant = id(of: "Surface disinfectant")
         viewModel.toggleTakeNew(disinfectant)
         #expect(viewModel.takenNew.map(\.item.name) == ["Surface disinfectant"])
         #expect(viewModel.startTitle == "Start procedure · 11 items")
-        let bottle = try? #require(viewModel.bottles.first { $0.id == disinfectant })
-        #expect(bottle.map(viewModel.line(for:)) == "Will take 1 from stock · 0 unopened left")
+        let bottle = try #require(viewModel.bottles.first { $0.id == disinfectant })
+        #expect(viewModel.line(for: bottle) == "Will take 1 from stock · 0 unopened left")
         viewModel.toggleTakeNew(disinfectant)
         #expect(viewModel.takenNew.isEmpty, "Tapping again removes it")
-        #expect(bottle.map { viewModel.line(for: .init(item: $0.item)) } == "2 open · 1 in stock")
+        #expect(viewModel.line(for: .init(item: bottle.item)) == "2 open · 1 in stock")
     }
 
     @Test func nothingUnopenedMeansOutOfStock() async {
@@ -96,7 +96,7 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.message?.title == "Opened a new one?")
     }
 
-    @Test func addItemOffersTheOtherCountableProductsAndAppendsOne() async {
+    @Test func addItemOffersTheOtherCountableProductsAndAppendsOne() async throws {
         let repository = FakeProcedureStartRepository()
         let viewModel = await make(repository)
         viewModel.openAddItem()
@@ -107,31 +107,31 @@ struct ProcedureStartViewModelTests {
         #expect(!offered.contains("Composite A2"), "Multi-use products come from the template")
         #expect(offered.contains("Gauze"))
         viewModel.searchText = "gau"
-        let gauze = try? #require(viewModel.addableProducts.first)
-        #expect(gauze?.name == "Gauze")
-        #expect(gauze.map(viewModel.addCaption(for:)) == "8 packs in stock")
-        if let gauze { viewModel.add(gauze) }
+        let gauze = try #require(viewModel.addableProducts.first)
+        #expect(gauze.name == "Gauze")
+        #expect(viewModel.addCaption(for: gauze) == "8 packs in stock")
+        viewModel.add(gauze)
         #expect(viewModel.sheet == nil)
         #expect(viewModel.supplies.last?.item.name == "Gauze")
         #expect(viewModel.supplies.last?.quantity == 1)
         #expect(viewModel.startTitle == "Start procedure · 11 items")
     }
 
-    @Test func startSendsEverySupplyAndTheBottlesTakenNew() async {
+    @Test func startSendsEverySupplyAndTheBottlesTakenNew() async throws {
         let repository = FakeProcedureStartRepository()
         let viewModel = await make(repository)
         let septocaine = id(of: "Septocaine 4% 1:100,000")
         viewModel[quantityOf: septocaine] = 3
         viewModel.toggleTakeNew(id(of: "Surface disinfectant"))
         await viewModel.start()
-        let request = try? #require(repository.starts.first)
-        #expect(request?.clinicID == Session.demo.clinicID)
-        #expect(request?.templateID == rootCanal.id)
-        #expect(request?.name == "Root canal")
-        #expect(request?.lines.count == 12, "Eight supplies and the four multi-use products")
-        #expect(request?.lines.first == ProcedureStartLine(productID: septocaine, quantity: 3))
-        #expect(request?.lines.suffix(4).allSatisfy { $0.quantity == 0 } == true, "An open bottle changes nothing")
-        #expect(request?.takeNew == [id(of: "Surface disinfectant")])
+        let request = try #require(repository.starts.first)
+        #expect(request.clinicID == Session.demo.clinicID)
+        #expect(request.templateID == rootCanal.id)
+        #expect(request.name == "Root canal")
+        #expect(request.lines.count == 12, "Eight supplies and the four multi-use products")
+        #expect(request.lines.first == ProcedureStartLine(productID: septocaine, quantity: 3))
+        #expect(request.lines.suffix(4).allSatisfy { $0.quantity == 0 }, "An open bottle changes nothing")
+        #expect(request.takeNew == [id(of: "Surface disinfectant")])
         #expect(viewModel.started == .init(title: "Root canal started", detail: "12 items deducted"))
     }
 
