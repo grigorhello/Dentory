@@ -3,7 +3,8 @@ import Foundation
 /// Product detail without a server: Septocaine as f20 draws it, and a plain detail for the other demo
 /// products, with whatever the Edit sheet saved applied on top. Add to buy and its Undo, adjustments
 /// and their Undo are remembered in memory, so the figures and the history move the way the server's
-/// would; Delete product takes the product out of the shared store.
+/// would; a count applied on Inventory (MS-121) shows as "Counted" and a Physical count row; Delete product
+/// takes the product out of the shared store.
 final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sendable {
     /// What an adjustment did, so Undo can reverse it.
     private struct Adjustment {
@@ -51,7 +52,20 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
         let edited = store.draft(for: productID).map {
             base.applying($0, categoryName: store.categoryName(for: $0.categoryID), status: summary.status)
         } ?? base
-        return edited.adjusted(by: delta, history: history + edited.history)
+        let counts = store.countRecords(for: productID)
+        // The other products are built from the store's row, which a count already moved; Septocaine's
+        // drawn figures are not.
+        let countDelta = summary.id == ProductSummary.demo[0].id ? counts.reduce(Decimal(0)) { $0 + $1.delta } : 0
+        let countRows = counts.map { record in
+            StockTransaction(
+                id: UUID(), type: .count, delta: record.delta, quantityBefore: record.quantityBefore,
+                quantityAfter: record.quantityAfter, reason: "Physical count", referenceLabel: "Physical count",
+                at: record.at, byName: record.byName
+            )
+        }
+        return edited
+            .counted(at: counts.first?.at)
+            .adjusted(by: delta + countDelta, history: history + countRows + edited.history)
     }
 
     func addToBuy(clinicID: UUID, productID: UUID, quantity: Decimal, userID: UUID) async throws -> UUID {
@@ -114,6 +128,18 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
 }
 
 private extension ProductDetail {
+    /// The detail with the last count's date, when a count moved it.
+    func counted(at date: Date?) -> ProductDetail {
+        guard let date else { return self }
+        return ProductDetail(
+            id: id, name: name, categoryName: categoryName, unit: unit, packUnit: packUnit, packSize: packSize,
+            minimum: minimum, target: target, tracking: tracking, location: location, status: status,
+            quantity: quantity, unopened: unopened, openCount: openCount, missingExpiryQuantity: missingExpiryQuantity,
+            usedInLast30Days: usedInLast30Days, lastCountedAt: date, toBuyItemID: toBuyItemID, batches: batches,
+            openBottles: openBottles, history: history, categoryID: categoryID, supplier: supplier
+        )
+    }
+
     /// The detail with the sheet's fields on top; the stock figures and the ledger stay.
     func applying(_ draft: ProductDraft, categoryName: String?, status: ProductStatus) -> ProductDetail {
         ProductDetail(

@@ -35,6 +35,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 ## In progress
 
 - **MS-117 · Create, edit and delete products (#88)**, build step 22, in PR review: [#161](https://github.com/grigorhello/Dentory/pull/161), opened 2026-10-19 13:43 UTC from the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`), branch `ms-117-product-sheets`. Three review rounds ran; every finding is fixed and pushed, and the branch carries the default branch with MS-118 merged in (conflicts in `Features/ProductDetail` resolved: Edit, Delete and Adjust sheets side by side). Under CLAUDE.md's three-round rule it waits for Grigor's word in the build thread before it is merged. This file is part of its PR. If #161 is merged when you read this, go to the next step.
+- **MS-121 · Count stock with review before applying (#92)**, build step 26, in PR review: PR_MS121, branch `ms-121-count-stock`, stacked on #161 (MS-117) like MS-119's #164, so its diff shows MS-117 until #161 is merged; then it is rebased onto the default branch and reviewed. Count mode on the Inventory list (f18) with the Review corrections and Discard this count? sheets, the counts kept in `count-draft.json` until applied or discarded, `stock_count_apply` through `WriteCoordinator`; no migration.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order

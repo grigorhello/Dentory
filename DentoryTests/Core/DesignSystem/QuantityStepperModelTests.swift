@@ -39,4 +39,15 @@ struct QuantityStepperModelTests {
         model.increment()
         #expect(model.differsFromReference == false)
     }
+
+    @Test func theCallersHighlightWinsOverTheReference() {
+        // A count of 0 against a negative estimate: the value differs from the reference, yet nothing was counted.
+        let untouched = QuantityStepperModel(value: 0, reference: -2, highlight: false)
+        #expect(untouched.differsFromReference)
+        #expect(untouched.isHighlighted == false)
+        // 12 counted against an estimate of 12.5 shown as 12: a correction the reference cannot see.
+        let counted = QuantityStepperModel(value: 12, reference: 12, highlight: true)
+        #expect(counted.isHighlighted)
+        #expect(QuantityStepperModel(value: 3, reference: 2).isHighlighted, "Without a highlight the reference decides")
+    }
 }

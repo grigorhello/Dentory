@@ -2,7 +2,7 @@ import Foundation
 
 /// One row of the Inventory list (PRD §6.4): the product, its stock figures and its status, as
 /// `inventory_list` reports them. Count mode (MS-121) and the procedure item picker (MS-123) read the same rows.
-nonisolated struct ProductSummary: Codable, Equatable, Identifiable, Sendable {
+nonisolated struct ProductSummary: Codable, Hashable, Identifiable, Sendable {
     let id: UUID
     let name: String
     let categoryName: String?

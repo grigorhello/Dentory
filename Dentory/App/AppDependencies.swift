@@ -18,6 +18,8 @@ struct AppDependencies: Sendable {
     let reporter: ErrorReporting
     let homeRepository: HomeRepository
     let inventoryRepository: InventoryRepository
+    /// The count in progress, kept until applied or discarded (MS-121).
+    let countDraftStore: CountDraftStoring
     let productDetailRepository: ProductDetailRepository
     let productFormRepository: ProductFormRepository
     let onboardingRepository: OnboardingRepository
@@ -62,7 +64,8 @@ struct AppDependencies: Sendable {
             writes: writes,
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
-            inventoryRepository: SupabaseInventoryRepository(client: client),
+            inventoryRepository: SupabaseInventoryRepository(client: client, writes: writes),
+            countDraftStore: FileCountDraftStore(),
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             productFormRepository: SupabaseProductFormRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
@@ -108,7 +111,8 @@ struct AppDependencies: Sendable {
             ),
             reporter: reporter,
             homeRepository: DemoHomeRepository(),
-            inventoryRepository: DemoInventoryRepository(store: products),
+            inventoryRepository: DemoInventoryRepository(store: products, byName: Session.demo(role: role).fullName),
+            countDraftStore: InMemoryCountDraftStore(),
             productDetailRepository: DemoProductDetailRepository(
                 store: products, byName: Session.demo(role: role).fullName
             ),
@@ -126,8 +130,10 @@ struct AppDependencies: Sendable {
         InventoryListViewModel(
             repository: inventoryRepository,
             cache: cache,
+            draftStore: countDraftStore,
             formatters: formatters(for: session),
-            clinicID: session.clinicID
+            clinicID: session.clinicID,
+            userID: session.userID
         )
     }
 

@@ -30,4 +30,6 @@ nonisolated enum ControlHeight {
 nonisolated enum PageLayout {
     /// iPad content is capped at this width and centred (PRD §7).
     static let contentMaxWidth: CGFloat = 720
+    /// The list inside a sheet scrolls past this height (Appendix C pickers, Review corrections).
+    static let sheetListHeight: CGFloat = 360
 }

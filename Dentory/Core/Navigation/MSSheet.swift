@@ -62,7 +62,7 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
     @ViewBuilder let row: (Item) -> Row
     @ViewBuilder let action: () -> Action
 
-    static var listHeight: CGFloat { 360 }
+    static var listHeight: CGFloat { PageLayout.sheetListHeight }
 
     init(
         _ title: String,
