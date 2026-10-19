@@ -98,6 +98,24 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
     func undoAdjustment(actionID: UUID) async throws {
         _ = try await writes.write("undo_action", params: UndoActionParams(pActionId: actionID))
     }
+
+    func openBottle(productID: UUID) async throws -> WriteOutcome {
+        try await writes.write("bottle_open", params: BottleOpenParams(pProductId: productID))
+    }
+
+    func finishBottle(openItemID: UUID) async throws -> WriteOutcome {
+        try await writes.write("bottle_finish", params: BottleFinishParams(pOpenItemId: openItemID))
+    }
+}
+
+/// The parameters of `bottle_open`.
+nonisolated struct BottleOpenParams: Encodable, Sendable {
+    let pProductId: UUID
+}
+
+/// The parameters of `bottle_finish`.
+nonisolated struct BottleFinishParams: Encodable, Sendable {
+    let pOpenItemId: UUID
 }
 
 /// The parameters of `stock_adjust`; the coordinator adds `p_idempotency_key`. A missing note is sent as
