@@ -38,7 +38,9 @@ create trigger products_validate
 
 -- Changing the minimum, the target or the tracking re-runs refresh_product (the Low and Out of stock
 -- alerts and the auto To buy line follow the levels); archiving resolves every open alert of the product.
--- A new product waits for its first delivery (MS-100 G6): the engine refreshes it then.
+-- A value must change: the Edit sheet sends every column, and a new name is not a new level. A new
+-- product is not refreshed on insert: the engine refreshes it at its first stock change (MS-100 G6), or
+-- refresh_all_products does at 07:00 (pg_cron, MS-107).
 create function public.products_refresh_alerts()
 returns trigger
 language plpgsql
@@ -57,7 +59,12 @@ $$;
 
 create trigger products_refresh_alerts
   after update of minimum, target, tracking, archived_at on public.products
-  for each row execute function public.products_refresh_alerts();
+  for each row
+  when (
+    old.minimum is distinct from new.minimum or old.target is distinct from new.target
+    or old.tracking is distinct from new.tracking or old.archived_at is distinct from new.archived_at
+  )
+  execute function public.products_refresh_alerts();
 
 -- Categories ----------------------------------------------------------------------------------------
 

@@ -48,11 +48,6 @@ struct InventoryListView: View {
                 viewModel.apply(category: category)
                 router.inventoryCategory = nil
             }
-            .onChange(of: router.inventoryNeedsReload) { _, needsReload in
-                guard needsReload else { return }
-                router.inventoryNeedsReload = false
-                Task { await viewModel.load() }
-            }
             .msSheet(isPresented: $isNewProductPresented) {
                 ProductFormSheet(mode: .create, session: session, dependencies: dependencies) { _ in
                     isNewProductPresented = false

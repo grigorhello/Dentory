@@ -1,7 +1,7 @@
 -- MS-117 · Create, edit and delete products: categories found or created, levels and tracking rules, alerts
 -- following the levels, and Delete product archiving with the templates and open To buy lines cleared.
 begin;
-select plan(36);
+select plan(37);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000e31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -73,8 +73,9 @@ select throws_ok(
   '42501', null, 'staff cannot create a category');
 reset role;
 
--- Levels: a new product without stock is Out of stock and waits for its first delivery (no alert yet);
--- target under minimum is refused; raising the minimum above the stock opens Low, lowering it resolves Low
+-- Levels: a new product without stock is Out of stock and gets its alert and auto To buy line at its first
+-- stock or level change (or from refresh_all_products at 07:00), not on insert or on an edit that keeps the
+-- levels; target under minimum is refused; raising the minimum above the stock opens Low, lowering it resolves Low
 select pg_temp.act_as('00000000-0000-4000-8000-000000000e31');
 select lives_ok(
   $$ insert into public.products (id, clinic_id, name, unit, minimum, target)
@@ -90,8 +91,17 @@ select lives_ok(
 reset role;
 select ok(not exists (
   select 1 from public.alerts where product_id = '00000000-0000-4000-8000-000000000e63' and resolved_at is null),
-  'creating a product opens no alert and no To buy line until its first delivery');
+  'creating a product opens no alert and no To buy line until its first stock or level change');
 select is((select count(*) from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000e63'), 0::bigint, 'no auto To buy line either');
+select pg_temp.act_as('00000000-0000-4000-8000-000000000e31');
+-- The Edit sheet sends every column: a new name with the same levels is not a level change.
+update public.products set name = 'Articaine 4% 1:100,000', minimum = minimum, target = target, tracking = tracking
+  where id = '00000000-0000-4000-8000-000000000e63';
+reset role;
+select ok(
+  not exists (select 1 from public.alerts where product_id = '00000000-0000-4000-8000-000000000e63' and resolved_at is null)
+  and not exists (select 1 from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000e63'),
+  'an edit that keeps the levels opens nothing either');
 select ok(exists (
   select 1 from public.alerts where product_id = '00000000-0000-4000-8000-000000000e61' and kind = 'low' and resolved_at is null),
   'raising the minimum above the stock opened the Low alert');

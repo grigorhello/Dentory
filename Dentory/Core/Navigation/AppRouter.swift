@@ -13,8 +13,6 @@ final class AppRouter {
     var inventoryFilter: InventoryFilter?
     /// A category name set by Inventory value (MS-135) before selecting the Inventory tab; applied once, like the filter.
     var inventoryCategory: String?
-    /// Set by Product detail after "Delete product": the Inventory list reloads when it shows again (MS-117).
-    var inventoryNeedsReload = false
     private var paths: [AppTab: NavigationPath] = [:]
 
     init(selectedTab: AppTab = .home, inventoryFilter: InventoryFilter? = nil) {

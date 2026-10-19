@@ -75,8 +75,8 @@ final class ProductFormViewModel {
             packUnit = product.packUnit ?? ""
             packSizeText = product.packSize.map(String.init) ?? ""
             isMultiUse = product.tracking == .multiUse
-            minimumText = formatters.number(product.minimum)
-            targetText = formatters.number(product.target)
+            minimumText = Self.plainText(product.minimum, locale: formatters.locale)
+            targetText = Self.plainText(product.target, locale: formatters.locale)
             supplier = product.supplier ?? ""
             location = product.location ?? ""
         }
@@ -188,8 +188,8 @@ final class ProductFormViewModel {
             packSizeError = "Enter how many \(countedUnitWord) make 1 \(pack), 2 or more"
             valid = false
         }
-        let minimum = Self.quantity(from: minimumText) ?? 0
-        let target = Self.quantity(from: targetText) ?? 0
+        let minimum = Self.quantity(from: minimumText, locale: formatters.locale) ?? 0
+        let target = Self.quantity(from: targetText, locale: formatters.locale) ?? 0
         if minimum < 0 || target < 0 { targetError = "Levels cannot be negative"; valid = false }
         if target < minimum { targetError = "Target must be at least the minimum"; valid = false }
         guard valid else { return nil }
@@ -225,10 +225,27 @@ final class ProductFormViewModel {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// "20", "20.5" or "20,5" as typed on the number pad.
-    nonisolated static func quantity(from text: String) -> Decimal? {
-        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: ".")
+    /// "1000" or "20,5" in the clinic's locale, without digit grouping, so the field reads back what the
+    /// person would type and `quantity(from:locale:)` returns the same number.
+    nonisolated static func plainText(_ value: Decimal, locale: Locale) -> String {
+        value.formatted(Decimal.FormatStyle(locale: locale).grouping(.never))
+    }
+
+    /// "20", "20.5", "1,000.5" in en_US or "1 000,5" in fr_CA, as typed on the number pad: the locale's
+    /// grouping separators are dropped and its decimal separator read; anything else is not a quantity.
+    nonisolated static func quantity(from text: String, locale: Locale) -> Decimal? {
+        var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { return nil }
+        let decimalSeparator = locale.decimalSeparator ?? "."
+        let groupingSeparators = Set([locale.groupingSeparator ?? ",", " ", "\u{00A0}", "\u{202F}"])
+        for separator in groupingSeparators where separator != decimalSeparator {
+            cleaned = cleaned.replacingOccurrences(of: separator, with: "")
+        }
+        cleaned = cleaned.replacingOccurrences(of: decimalSeparator, with: ".")
+        let digitsAndPoint = cleaned.allSatisfy { $0.isASCII && ($0.isNumber || $0 == ".") }
+        guard digitsAndPoint, cleaned.filter({ $0 == "." }).count <= 1, cleaned.first != ".", cleaned.last != "." else {
+            return nil
+        }
         return Decimal(string: cleaned, locale: Locale(identifier: "en_US_POSIX"))
     }
 

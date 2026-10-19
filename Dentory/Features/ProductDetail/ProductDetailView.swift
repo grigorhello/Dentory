@@ -42,7 +42,6 @@ struct ProductDetailView: View {
             .onChange(of: viewModel.isDeleted) { _, isDeleted in
                 guard isDeleted else { return }
                 dependencies.toasts.show("Product deleted")
-                router.inventoryNeedsReload = true
                 dismiss()
             }
             .msSheet(item: $viewModel.sheet) { sheet in

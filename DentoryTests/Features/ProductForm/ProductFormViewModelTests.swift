@@ -11,9 +11,14 @@ struct ProductFormViewModelTests {
 
     private func make(
         mode: ProductFormViewModel.Mode = .create,
-        repository: FakeProductFormRepository = FakeProductFormRepository()
+        repository: FakeProductFormRepository = FakeProductFormRepository(),
+        locale: Locale = Locale(identifier: "en_US")
     ) -> ProductFormViewModel {
-        ProductFormViewModel(
+        let formatters = ClinicFormatters(
+            currency: "USD", timeZone: TimeZone(identifier: "America/New_York") ?? .current,
+            locale: locale, clock: FixedClock(Session.demoNow)
+        )
+        return ProductFormViewModel(
             repository: repository, formatters: formatters, clinicID: Session.demo.clinicID, mode: mode
         )
     }
@@ -163,10 +168,30 @@ struct ProductFormViewModelTests {
         #expect(viewModel.generalError == nil)
     }
 
-    @Test func quantitiesParseAsTyped() {
-        #expect(ProductFormViewModel.quantity(from: " 20 ") == 20)
-        #expect(ProductFormViewModel.quantity(from: "2,5") == Decimal(string: "2.5"))
-        #expect(ProductFormViewModel.quantity(from: "") == nil)
-        #expect(ProductFormViewModel.quantity(from: "ten") == nil)
+    @Test func quantitiesParseAsTypedInTheClinicsLocale() {
+        let english = Locale(identifier: "en_US")
+        let french = Locale(identifier: "fr_CA")
+        #expect(ProductFormViewModel.quantity(from: " 20 ", locale: english) == 20)
+        #expect(ProductFormViewModel.quantity(from: "1,000.5", locale: english) == Decimal(string: "1000.5"))
+        #expect(ProductFormViewModel.quantity(from: "1 000,5", locale: french) == Decimal(string: "1000.5"))
+        #expect(ProductFormViewModel.quantity(from: "2,5", locale: french) == Decimal(string: "2.5"))
+        #expect(ProductFormViewModel.quantity(from: "20.5", locale: french) == Decimal(string: "20.5"))
+        #expect(ProductFormViewModel.quantity(from: "", locale: english) == nil)
+        #expect(ProductFormViewModel.quantity(from: "ten", locale: english) == nil)
+        #expect(ProductFormViewModel.quantity(from: "12abc", locale: english) == nil)
+        #expect(ProductFormViewModel.plainText(1000, locale: english) == "1000")
+        #expect(ProductFormViewModel.plainText(Decimal(string: "20.5") ?? 0, locale: french) == "20,5")
+    }
+
+    @Test(arguments: ["en_US", "fr_CA"])
+    func editKeepsLevelsOfAThousandOrMore(localeID: String) async {
+        let repository = FakeProductFormRepository()
+        let product = ProductDetail.fixture(quantity: 0, unopened: 0, minimum: 1000, target: 2500)
+        let viewModel = make(mode: .edit(product), repository: repository, locale: Locale(identifier: localeID))
+        #expect(viewModel.minimumText == "1000" && viewModel.targetText == "2500", "No digit grouping in the fields")
+        viewModel.name = "Patient bib"
+        await viewModel.save()
+        #expect(repository.updates.first?.draft.minimum == 1000)
+        #expect(repository.updates.first?.draft.target == 2500)
     }
 }

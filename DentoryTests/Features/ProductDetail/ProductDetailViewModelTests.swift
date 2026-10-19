@@ -278,6 +278,8 @@ extension ProductDetail {
         quantity: Decimal = 54,
         unopened: Decimal = 54,
         openCount: Int = 0,
+        minimum: Decimal? = nil,
+        target: Decimal? = nil,
         lastCountedAt: Date? = Date(timeIntervalSince1970: 1_790_882_040),
         batches: [ProductBatch]? = nil,
         openBottles: [OpenBottle] = [],
@@ -286,7 +288,7 @@ extension ProductDetail {
         let base = ProductDetail.demoSeptocaine()
         return ProductDetail(
             id: base.id, name: base.name, categoryName: categoryName, unit: base.unit, packUnit: packUnit,
-            packSize: packSize, minimum: base.minimum, target: base.target, tracking: tracking,
+            packSize: packSize, minimum: minimum ?? base.minimum, target: target ?? base.target, tracking: tracking,
             location: base.location, status: status, quantity: quantity, unopened: unopened, openCount: openCount,
             missingExpiryQuantity: 0, usedInLast30Days: base.usedInLast30Days, lastCountedAt: lastCountedAt,
             toBuyItemID: nil, batches: batches ?? base.batches, openBottles: openBottles,
