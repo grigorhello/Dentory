@@ -65,6 +65,27 @@ final class InventoryUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Missing expiry"].isSelected, "The Missing expiry chip is not selected")
     }
 
+    /// The title row stays pinned while the list scrolls under it (f16-2), so Count stock is always in reach.
+    @MainActor
+    func testTheTitleRowStaysPinnedWhileTheListScrolls() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-tab", "inventory"]
+        app.launch()
+
+        let title = app.staticTexts["inv.header.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "Inventory did not open")
+        let search = app.textFields["inv.search"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5), "No search field")
+        let top = title.frame.minY
+        for _ in 0..<4 {
+            app.swipeUp()
+        }
+        XCTAssertFalse(search.isHittable, "The list did not scroll")
+        XCTAssertTrue(title.isHittable, "The title scrolled away")
+        XCTAssertEqual(title.frame.minY, top, accuracy: 1, "The title moved")
+        XCTAssertTrue(app.descendants(matching: .any)["inv.countStock"].isHittable, "Count stock scrolled away")
+    }
+
     @MainActor
     func testStaffHasNoNewProductButton() {
         let app = XCUIApplication()
