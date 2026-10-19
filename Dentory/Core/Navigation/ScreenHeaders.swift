@@ -39,6 +39,13 @@ extension RootHeader where Trailing == EmptyView {
     }
 }
 
+/// How a pushed screen's header row reads its text: the 24 pt title (f13), or a 14 pt secondary context line
+/// such as "Anesthetic · 1 box = 50 cartridges" when the screen's own title sits in the content (f20).
+nonisolated enum PushedHeaderStyle: Sendable {
+    case title
+    case context
+}
+
 /// Pushed screen header (f13): 44 pt back chevron, 24 pt title, optional subtitle and right text action.
 struct PushedHeader: View {
     @Environment(\.dismiss) private var dismiss
@@ -46,6 +53,7 @@ struct PushedHeader: View {
     var subtitle: String?
     var identifier: String
     var action: HeaderAction?
+    var style: PushedHeaderStyle = .title
 
     struct HeaderAction {
         let title: String
@@ -66,12 +74,20 @@ struct PushedHeader: View {
                 }
                 .accessibilityLabel("Back")
                 .accessibilityIdentifier("\(identifier).back")
-                Text(title)
-                    .textStyle(.title24)
-                    .foregroundStyle(Color.ms.ink)
-                    .lineLimit(1)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("\(identifier).title")
+                if style == .context {
+                    Text(title)
+                        .textStyle(.body14)
+                        .foregroundStyle(Color.ms.textSecondary)
+                        .lineLimit(1)
+                        .accessibilityIdentifier("\(identifier).context")
+                } else {
+                    Text(title)
+                        .textStyle(.title24)
+                        .foregroundStyle(Color.ms.ink)
+                        .lineLimit(1)
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("\(identifier).title")
+                }
                 Spacer(minLength: Spacing.sm)
                 if let action {
                     Button(action.title, action: action.perform)
@@ -126,11 +142,12 @@ struct PushedScreenModifier: ViewModifier {
     var subtitle: String?
     let identifier: String
     var action: PushedHeader.HeaderAction?
+    var style: PushedHeaderStyle = .title
 
     func body(content: Content) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                PushedHeader(title: title, subtitle: subtitle, identifier: identifier, action: action)
+                PushedHeader(title: title, subtitle: subtitle, identifier: identifier, action: action, style: style)
                 OfflineBannerHost()
                 content
             }
@@ -163,13 +180,17 @@ extension View {
     }
 
     /// Lays the view out as a pushed screen. Add `.pinnedPrimaryBar` for its primary action.
+    /// `style: .context` reads the title as a secondary line when the content carries the real title (f20).
     func pushedScreen(
         title: String,
         subtitle: String? = nil,
         identifier: String,
-        action: PushedHeader.HeaderAction? = nil
+        action: PushedHeader.HeaderAction? = nil,
+        style: PushedHeaderStyle = .title
     ) -> some View {
-        modifier(PushedScreenModifier(title: title, subtitle: subtitle, identifier: identifier, action: action))
+        modifier(PushedScreenModifier(
+            title: title, subtitle: subtitle, identifier: identifier, action: action, style: style
+        ))
     }
 }
 

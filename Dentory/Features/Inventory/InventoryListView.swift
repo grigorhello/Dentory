@@ -30,7 +30,12 @@ struct InventoryListView: View {
             }
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: InventoryRoute.self) { route in
-                InventoryRoutePlaceholderView(route: route)
+                switch route {
+                case .product(let id):
+                    ProductDetailView(productID: id, session: session, dependencies: dependencies)
+                case .receive:
+                    InventoryRoutePlaceholderView(route: route)
+                }
             }
             .onChange(of: router.inventoryFilter, initial: true) { _, filter in
                 guard let filter else { return }

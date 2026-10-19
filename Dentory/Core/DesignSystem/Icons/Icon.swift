@@ -28,6 +28,7 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case settings
     case shoppingCart = "shopping-cart"
     case slidersHorizontal = "sliders-horizontal"
+    case trash = "trash-2"
     case truck
     case userPlus = "user-plus"
     case user

@@ -60,7 +60,7 @@ struct SupabaseHomeRepository: HomeRepository {
             name: event.name,
             startedAt: event.startedAt,
             supplyCount: event.procedureEventItems.first?.count ?? 0,
-            startedByFirstName: Self.firstName(of: members.first?.fullName ?? "")
+            startedByFirstName: PersonName.first(of: members.first?.fullName ?? "")
         )
     }
 
@@ -86,9 +86,6 @@ struct SupabaseHomeRepository: HomeRepository {
         return newest.openedAt > lastSeen
     }
 
-    static func firstName(of fullName: String) -> String {
-        String(fullName.split(separator: " ").first ?? "")
-    }
 }
 
 nonisolated struct HomeAttentionRow: Decodable {

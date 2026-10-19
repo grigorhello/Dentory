@@ -51,6 +51,21 @@ nonisolated struct ClinicFormatters: Sendable {
         date(day.start(in: timeZone))
     }
 
+    /// "Oct 1": a recent day without its year, as lists show it (f20).
+    func monthDay(_ date: Date) -> String {
+        date.formatted(style.month(.abbreviated).day())
+    }
+
+    /// Whole days from the start of `date`'s day to today in the clinic's time zone (3 for a bottle
+    /// opened three days ago).
+    func daysSince(_ date: Date) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let from = calendar.startOfDay(for: date)
+        let today = calendar.startOfDay(for: clock.now)
+        return calendar.dateComponents([.day], from: from, to: today).day ?? 0
+    }
+
     /// "Thursday, October 2" for the Home eyebrow (f6).
     func weekday(_ date: Date) -> String {
         date.formatted(style.weekday(.wide).month(.wide).day())
@@ -59,6 +74,11 @@ nonisolated struct ClinicFormatters: Sendable {
     /// "December 2026" for an expiry month (a Postgres `date` on the first of the month).
     func month(_ expiryMonth: CalendarDay) -> String {
         expiryMonth.start(in: timeZone).formatted(style.month(.wide).year())
+    }
+
+    /// "Dec 2026": the expiry month on a card row (f20), where a day would claim a precision batches lack.
+    func shortMonth(_ expiryMonth: CalendarDay) -> String {
+        expiryMonth.start(in: timeZone).formatted(style.month(.abbreviated).year())
     }
 
     /// An empty date style in the clinic's locale and time zone; callers add the fields.

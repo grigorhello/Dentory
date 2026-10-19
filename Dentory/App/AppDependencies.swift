@@ -18,6 +18,7 @@ struct AppDependencies: Sendable {
     let reporter: ErrorReporting
     let homeRepository: HomeRepository
     let inventoryRepository: InventoryRepository
+    let productDetailRepository: ProductDetailRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -60,6 +61,7 @@ struct AppDependencies: Sendable {
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
             inventoryRepository: SupabaseInventoryRepository(client: client),
+            productDetailRepository: SupabaseProductDetailRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -103,6 +105,7 @@ struct AppDependencies: Sendable {
             reporter: reporter,
             homeRepository: DemoHomeRepository(),
             inventoryRepository: DemoInventoryRepository(),
+            productDetailRepository: DemoProductDetailRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -118,6 +121,19 @@ struct AppDependencies: Sendable {
             cache: cache,
             formatters: formatters(for: session),
             clinicID: session.clinicID
+        )
+    }
+
+    /// Product detail for one product of the signed-in clinic (MS-116).
+    @MainActor
+    func makeProductDetailViewModel(productID: UUID, session: Session) -> ProductDetailViewModel {
+        ProductDetailViewModel(
+            repository: productDetailRepository,
+            cache: cache,
+            formatters: formatters(for: session),
+            clinicID: session.clinicID,
+            userID: session.userID,
+            productID: productID
         )
     }
 
