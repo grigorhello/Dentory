@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 06:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 07:00 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -45,7 +45,7 @@ Then M1 continues MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111 and MS-112 are in Feature QA for Grigor to try. MS-115 is in PR review. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in PR review and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111 and MS-112 are in Feature QA for Grigor to try. MS-115 is in PR review. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
@@ -58,11 +58,11 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109
 
 ## Brand assets (outside the build order)
 
-Grigor delivered the visual identity on 2026-10-19 (MS-100 D17): `design/brand/` holds the molar mark, the lockups and wordmark, the iOS icon set, the web favicons and the Android icons, with a README of rules and an inventory. The brand tickets are GitHub issues #152 to #156; their source is `docs/handoff/ticket-sources/brand/brand-assets.md` and their generator `build_brand.py` (see `engineering-process.md` section 9). They are not in `docs/BUILD-ORDER.md` and, apart from the icon, wait for Grigor's word.
+Grigor delivered the visual identity on 2026-10-19 (MS-100 D17): `design/brand/` holds the molar mark, the lockups and wordmark, the iOS icon set, the web favicons and the Android icons, with a README of rules and an inventory. The brand tickets are GitHub issues #152 to #156; their source is `docs/handoff/ticket-sources/brand/brand-assets.md` and their generator `build_brand.py` (see `engineering-process.md` section 9). They are not in `docs/BUILD-ORDER.md`; the icon is merged and the other four wait for Grigor's word.
 
 | Ticket | State | What it delivers |
 |---|---|---|
-| MS-158 · App icon from the brand package (#152) | PR [#157](https://github.com/grigorhello/Dentory/pull/157) open; this file is part of it | The single-size 1024 px icon with dark and tinted appearances in `Assets.xcassets/AppIcon.appiconset`, copied from `design/brand/ios/`. |
+| MS-158 · App icon from the brand package (#152) | Merged as [#157](https://github.com/grigorhello/Dentory/pull/157) on 2026-10-19 06:56; card in Feature QA (home-screen check on the simulators is part of the QA, the cloud session could not capture it) | The single-size 1024 px icon with dark and tinted appearances in `Assets.xcassets/AppIcon.appiconset`, copied from `design/brand/ios/`. |
 | MS-159 · Brand mark and wordmark in the app (#153) | Backlog | Vector image sets and an `MSLogo` design-system component; the lockup replaces the "Dentory" text on the sign-in screen. |
 | MS-160 · Launch screen with the mark on cream (#154) | Backlog | A `UILaunchScreen` with the mark on cream instead of the generated blank screen. |
 | MS-161 · Landing page dentory.ca with the brand (#155) | Backlog; Grigor said he will ask for it | Restyle of `site/` (PR #137) with the lockup, favicons, manifest and brand colours; `CNAME` and the GitHub Pages custom domain; the DNS records are his. |
