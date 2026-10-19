@@ -74,10 +74,10 @@ final class ProductFormViewModel {
             name = product.name
             unit = product.unit
             packUnit = product.packUnit ?? ""
-            packSizeText = product.packSize.map(String.init) ?? ""
+            packSizeText = product.packSize.map { QuantityText.plain(Decimal($0), locale: formatters.locale) } ?? ""
             isMultiUse = product.tracking == .multiUse
-            minimumText = Self.plainText(product.minimum, locale: formatters.locale)
-            targetText = Self.plainText(product.target, locale: formatters.locale)
+            minimumText = QuantityText.plain(product.minimum, locale: formatters.locale)
+            targetText = QuantityText.plain(product.target, locale: formatters.locale)
             supplier = product.supplier ?? ""
             location = product.location ?? ""
         }
@@ -119,13 +119,14 @@ final class ProductFormViewModel {
             + "1 \(pack) adds \(size) \(countedUnitWord)."
     }
 
-    var packSize: Int? { Int(trimmed(packSizeText)) }
+    var packSize: Int? { QuantityText.count(packSizeText, locale: formatters.locale) }
     var trackingCaption: String { "Tracked as unopened and open items." }
 
     /// The switch moves unless the product holds stock (G1): then the inline error stays until it is 0.
     func setMultiUse(_ isOn: Bool) {
         guard isOn != isMultiUse else { return }
-        if case .edit(let product) = mode, product.quantity > 0 {
+        // Any stock blocks it, negative (MS-100 D9) or in open bottles: a quantity of 0 can be -1 unopened + 1 open.
+        if case .edit(let product) = mode, product.unopened != 0 || product.openCount > 0 {
             trackingError = "Set stock to 0 before changing how it is tracked."
             return
         }
@@ -213,8 +214,8 @@ final class ProductFormViewModel {
     /// Both levels as numbers (empty reads 0), the target at least the minimum; otherwise the failing field
     /// carries its error and nothing is sent.
     private func validatedLevels() -> (minimum: Decimal, target: Decimal)? {
-        let minimum = Self.quantity(from: minimumText, locale: formatters.locale)
-        let target = Self.quantity(from: targetText, locale: formatters.locale)
+        let minimum = QuantityText.parse(minimumText, locale: formatters.locale)
+        let target = QuantityText.parse(targetText, locale: formatters.locale)
         if minimum == nil, !trimmed(minimumText).isEmpty { minimumError = "Enter a number" }
         if target == nil, !trimmed(targetText).isEmpty { targetError = "Enter a number" }
         guard minimumError == nil, targetError == nil else { return nil }
@@ -241,35 +242,6 @@ final class ProductFormViewModel {
 
     private func trimmed(_ text: String) -> String {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// "1000" or "20,5" in the clinic's locale, without digit grouping, so the field reads back what the
-    /// person would type and `quantity(from:locale:)` returns the same number.
-    nonisolated static func plainText(_ value: Decimal, locale: Locale) -> String {
-        value.formatted(Decimal.FormatStyle(locale: locale).grouping(.never))
-    }
-
-    /// "20", "20.5", "1,000.5" in en_US, "1 000,5" in fr_CA or "١٠٠٠" in ar_SA, as typed on the number pad:
-    /// native digits are read, the locale's grouping separators dropped and its decimal separator taken;
-    /// anything else is not a quantity.
-    nonisolated static func quantity(from text: String, locale: Locale) -> Decimal? {
-        var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleaned.isEmpty else { return nil }
-        cleaned = cleaned.map { character -> String in
-            if let digit = character.wholeNumberValue, (0...9).contains(digit) { return String(digit) }
-            return String(character)
-        }.joined()
-        let decimalSeparator = locale.decimalSeparator ?? "."
-        let groupingSeparators = Set([locale.groupingSeparator ?? ",", " ", "\u{00A0}", "\u{202F}"])
-        for separator in groupingSeparators where separator != decimalSeparator {
-            cleaned = cleaned.replacingOccurrences(of: separator, with: "")
-        }
-        cleaned = cleaned.replacingOccurrences(of: decimalSeparator, with: ".")
-        let digitsAndPoint = cleaned.allSatisfy { $0.isASCII && ($0.isNumber || $0 == ".") }
-        guard digitsAndPoint, cleaned.filter({ $0 == "." }).count <= 1, cleaned.first != ".", cleaned.last != "." else {
-            return nil
-        }
-        return Decimal(string: cleaned, locale: Locale(identifier: "en_US_POSIX"))
     }
 
     /// "box" → "boxes", "bottle" → "bottles", "packs" stays: enough for the units a clinic types.

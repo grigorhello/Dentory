@@ -1,7 +1,7 @@
 -- MS-117 · Create, edit and delete products: categories found or created, levels and tracking rules, alerts
 -- following the levels, and Delete product archiving with the templates and open To buy lines cleared.
 begin;
-select plan(37);
+select plan(39);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000e31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -121,6 +121,24 @@ select throws_ok(
 select lives_ok(
   $$ update public.products set tracking = 'multi_use' where id = '00000000-0000-4000-8000-000000000e63' $$,
   'a product without stock can change how it is tracked');
+reset role;
+-- Stock may go negative (D9): Bonding at -1 unopened with a bottle open reads quantity 0, a countable
+-- product at -2 reads -2; neither is at 0, so neither may change how it is tracked.
+insert into public.products (id, clinic_id, name, unit, tracking, minimum, target) values
+  ('00000000-0000-4000-8000-000000000e64', '00000000-0000-4000-8000-000000000e41', 'Etch gel 37%', 'syringes', 'multi_use', 0, 3),
+  ('00000000-0000-4000-8000-000000000e65', '00000000-0000-4000-8000-000000000e41', 'Gauze', 'packs', 'countable', 0, 10);
+insert into public.batches (clinic_id, product_id, expiry_month, lot, qty) values
+  ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e64', null, null, -1),
+  ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e65', null, null, -2);
+insert into public.open_items (clinic_id, product_id, opened_by, opened_at) values
+  ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e64', '00000000-0000-4000-8000-000000000e31', now());
+select pg_temp.act_as('00000000-0000-4000-8000-000000000e31');
+select throws_ok(
+  $$ update public.products set tracking = 'countable' where id = '00000000-0000-4000-8000-000000000e64' $$,
+  '22023', 'Set stock to 0 before changing how it is tracked.', 'a multi-use product at -1 unopened with a bottle open keeps its tracking');
+select throws_ok(
+  $$ update public.products set tracking = 'multi_use' where id = '00000000-0000-4000-8000-000000000e65' $$,
+  '22023', 'Set stock to 0 before changing how it is tracked.', 'a countable product at -2 keeps its tracking');
 reset role;
 select is((select t.qty from public.to_buy_items t where t.product_id = '00000000-0000-4000-8000-000000000e63' and t.status = 'to_buy'), 10::numeric,
   'the first change to an out-of-stock product opens its auto To buy line for the target');

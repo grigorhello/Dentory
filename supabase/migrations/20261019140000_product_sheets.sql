@@ -9,7 +9,9 @@
 -- Levels and tracking -------------------------------------------------------------------------------
 
 -- Target at least the minimum (the sheet says "Reorder up to"), and no change of how a product is
--- tracked while it has stock: the app shows "Set stock to 0 before changing how it is tracked."
+-- tracked while it holds any stock: the app shows "Set stock to 0 before changing how it is tracked."
+-- Stock may go negative (MS-100 D9) and a multi-use product's quantity adds its open bottles, so a
+-- quantity of 0 can still hide -1 unopened and 1 open: the batches and the open bottles are checked.
 create function public.products_validate()
 returns trigger
 language plpgsql
@@ -17,14 +19,16 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_quantity numeric;
+  v_unopened numeric;
+  v_open integer;
 begin
   if new.target < new.minimum then
     raise exception 'Target must be at least the minimum.' using errcode = '22023';
   end if;
   if tg_op = 'UPDATE' and new.tracking is distinct from old.tracking then
-    select coalesce(s.quantity, 0) into v_quantity from public.product_stock s where s.product_id = new.id;
-    if v_quantity > 0 then
+    select coalesce(s.unopened, 0), coalesce(s.open_count, 0) into v_unopened, v_open
+    from public.product_stock s where s.product_id = new.id;
+    if coalesce(v_unopened, 0) <> 0 or coalesce(v_open, 0) > 0 then
       raise exception 'Set stock to 0 before changing how it is tracked.' using errcode = '22023';
     end if;
   end if;
