@@ -23,9 +23,15 @@ extension ProcedureEditViewModel {
         return "\(category) · multi-use"
     }
 
-    /// What Add item says with nothing to list: nothing while the products load.
+    /// Every product can join a template, so no row reads "Out of stock" here.
+    var outOfStockProductID: UUID? { nil }
+
+    func addCaptionTone(for product: ProductSummary) -> StatusTone? { nil }
+
+    /// What Add item says with nothing to list: nothing while the products load, and how to retry when they failed.
     var addItemEmptyText: String {
-        hasLoadedProducts ? "No products match." : ""
+        if hasLoadedProducts { return "No products match." }
+        return productsFailed ? "Couldn't load products. Close and reopen Add item to try again." : ""
     }
 
     /// "Root canal · 12 default supplies" under "Procedure saved".

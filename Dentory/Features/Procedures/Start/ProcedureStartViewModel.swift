@@ -46,6 +46,10 @@ final class ProcedureStartViewModel: ProcedureItemPicking {
     /// The clinic's products for Add item, loaded when the sheet opens.
     private(set) var products: [ProductSummary] = []
     private(set) var hasLoadedProducts = false
+    /// The products did not load: Add item says so in place of its list (a toast would sit behind the sheet).
+    private(set) var productsFailed = false
+    /// The multi-use product Add item could not take new: its row reads "Out of stock" while the sheet is open.
+    private(set) var outOfStockProductID: UUID?
     var sheet: Sheet?
     var searchText = ""
     /// Set once the procedure started: the screen shows it as a toast and goes back to Procedures.
@@ -103,6 +107,7 @@ final class ProcedureStartViewModel: ProcedureItemPicking {
 
     func openAddItem() {
         searchText = ""
+        outOfStockProductID = nil
         sheet = .addItem
     }
 
@@ -110,8 +115,9 @@ final class ProcedureStartViewModel: ProcedureItemPicking {
         do {
             products = try await repository.products(clinicID: clinicID)
             hasLoadedProducts = true
+            productsFailed = false
         } catch {
-            generalError = AppError(error)
+            productsFailed = true
         }
     }
 
@@ -126,8 +132,8 @@ final class ProcedureStartViewModel: ProcedureItemPicking {
     }
 
     /// A countable product joins the supplies with quantity 1; a multi-use one is taken new for this procedure
-    /// (one unopened opened under the user, reversed if the procedure is cancelled), or reads "Out of stock" when
-    /// none is unopened. The sheet closes once something was added.
+    /// (one unopened opened under the user, reversed if the procedure is cancelled). With none unopened its row in
+    /// the sheet reads "Out of stock" and nothing is added. The sheet closes once something was added.
     func add(_ product: ProductSummary) {
         guard !supplies.contains(where: { $0.id == product.id }), !bottles.contains(where: { $0.id == product.id })
         else { return }
@@ -141,7 +147,7 @@ final class ProcedureStartViewModel: ProcedureItemPicking {
             supplies.append(Supply(item: item, quantity: 1, defaultQuantity: 1))
         case .multiUse:
             guard product.unopened > 0 else {
-                message = Message(title: "Out of stock", detail: product.name)
+                outOfStockProductID = product.id
                 return
             }
             bottles.append(Bottle(item: item, takesNew: true, isAdded: true))

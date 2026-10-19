@@ -113,6 +113,16 @@ struct ProcedureEditViewModelTests {
         #expect(viewModel.addItemEmptyText == "No products match.")
     }
 
+    @Test func productsThatFailToLoadAreExplainedInTheSheet() async {
+        let repository = FakeProcedureEditRepository()
+        repository.productsResult = .failure(AppError.network)
+        let viewModel = await make(repository)
+        viewModel.openAddItem()
+        await viewModel.loadProducts()
+        #expect(viewModel.addItemEmptyText == "Couldn't load products. Close and reopen Add item to try again.")
+        #expect(viewModel.generalError == nil, "No toast: it would sit behind the sheet")
+    }
+
     @Test func addingAppendsACountableWithOneAndAMultiUseWithZero() async throws {
         let viewModel = await make()
         await viewModel.loadProducts()

@@ -82,7 +82,8 @@ final class ProcedureStartUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["\(rubberDam).warning"].exists)
     }
 
-    /// Add item offers a multi-use product outside the template and takes a new one for this procedure.
+    /// Add item offers multi-use products outside the template: one with nothing unopened says "Out of stock" on its
+    /// row, where it can be seen, and another is taken new for this procedure, listed with the supplies only.
     @MainActor
     func testAddingAMultiUseProductTakesANewOne() {
         let app = XCUIApplication()
@@ -91,12 +92,24 @@ final class ProcedureStartUITests: XCTestCase {
         app.swipeUp()
         app.buttons["procDetail.addItem"].tap()
         XCTAssertTrue(app.staticTexts["addItem.title"].waitForExistence(timeout: 3), "Add item did not open")
+        let bonding = app.buttons["addItem.row[00000000-0000-4000-8000-0000000000d4].add"]
+        XCTAssertTrue(bonding.waitForExistence(timeout: 5), "Bonding agent is not offered")
+        bonding.tap()
+        // Inside the sheet: the Inventory tab, kept alive behind it, has an "Out of stock" badge of its own.
+        let outOfStock = app.otherElements["addItem"].staticTexts["Out of stock"]
+        XCTAssertTrue(outOfStock.waitForExistence(timeout: 2), "Nothing says Bonding agent is out of stock")
+        XCTAssertTrue(outOfStock.isHittable, "Out of stock is hidden behind the sheet")
+        XCTAssertTrue(app.staticTexts["addItem.title"].exists, "The sheet closed")
+
         let composite = app.buttons["addItem.row[00000000-0000-4000-8000-0000000000d3].add"]
-        XCTAssertTrue(composite.waitForExistence(timeout: 5), "Composite A2 is not offered")
         XCTAssertTrue(app.staticTexts["1 unopened · 1 open"].exists, "The multi-use caption is off")
         composite.tap()
         XCTAssertFalse(app.staticTexts["addItem.title"].waitForExistence(timeout: 2), "The sheet did not close")
         XCTAssertEqual(start.label, "Start procedure · 11 items", "Composite A2 was not taken new")
         XCTAssertEqual(app.staticTexts["procDetail.item[00000000-0000-4000-8000-0000000000d3].value"].label, "1")
+        XCTAssertFalse(
+            app.buttons["procDetail.bottle[00000000-0000-4000-8000-0000000000d3].takeNew"].exists,
+            "Composite A2 is listed under Opened a new one? too"
+        )
     }
 }

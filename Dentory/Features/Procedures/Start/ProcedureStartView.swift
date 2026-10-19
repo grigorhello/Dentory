@@ -54,7 +54,7 @@ struct ProcedureStartView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("procDetail.summary")
             ProcedureSuppliesCard(viewModel: viewModel)
-            if !viewModel.bottles.isEmpty {
+            if !viewModel.templateBottles.isEmpty {
                 ProcedureBottlesSection(viewModel: viewModel)
             }
         case .failed(let error):

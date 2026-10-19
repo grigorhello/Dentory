@@ -44,6 +44,8 @@ final class ProcedureEditViewModel: ProcedureItemPicking {
     /// The clinic's products for Add item, loaded when the sheet opens.
     private(set) var products: [ProductSummary] = []
     private(set) var hasLoadedProducts = false
+    /// The products did not load: Add item says so in place of its list (a toast would sit behind the sheet).
+    private(set) var productsFailed = false
     var searchText = ""
     var sheet: Sheet?
     private(set) var outcome: Outcome?
@@ -110,8 +112,9 @@ final class ProcedureEditViewModel: ProcedureItemPicking {
         do {
             products = try await repository.products(clinicID: clinicID)
             hasLoadedProducts = true
+            productsFailed = false
         } catch {
-            generalError = AppError(error)
+            productsFailed = true
         }
     }
 
