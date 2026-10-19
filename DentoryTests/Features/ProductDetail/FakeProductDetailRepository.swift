@@ -8,6 +8,10 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
     var adjustResult: Result<WriteOutcome, Error> =
         .success(.applied(actionID: UUID(uuidString: "00000000-0000-4000-8000-0000000000ac") ?? UUID()))
     var undoResult: Result<Void, Error> = .success(())
+    var openResult: Result<WriteOutcome, Error> = .success(.applied(actionID: UUID()))
+    var finishResult: Result<WriteOutcome, Error> = .success(.applied(actionID: UUID()))
+    private(set) var opens: [UUID] = []
+    private(set) var finishes: [UUID] = []
     private(set) var detailCalls: [UUID] = []
     struct Adjust: Equatable {
         let productID: UUID
@@ -57,5 +61,15 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
     func undoAdjustment(actionID: UUID) async throws {
         undos.append(actionID)
         try undoResult.get()
+    }
+
+    func openBottle(productID: UUID) async throws -> WriteOutcome {
+        opens.append(productID)
+        return try openResult.get()
+    }
+
+    func finishBottle(openItemID: UUID) async throws -> WriteOutcome {
+        finishes.append(openItemID)
+        return try finishResult.get()
     }
 }

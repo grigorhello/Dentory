@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The bottles card of a multi-use product (PRD §6.4): unopened and open counts, one row per open bottle
-/// with Finished, and Open a new bottle. The actions open MS-120's flows.
+/// The bottles card of a multi-use product (PRD §6.4, MS-120): unopened and open counts, one row per open
+/// bottle with Finished, and Open a new bottle (disabled when nothing is unopened: a stock rule, not a role rule).
 struct ProductBottlesCard: View {
     let viewModel: ProductDetailViewModel
     let onFinished: (UUID) -> Void
@@ -21,12 +21,13 @@ struct ProductBottlesCard: View {
                 ListRow(row.title, caption: row.subtitle) {
                     Button("Finished") { onFinished(row.id) }
                         .buttonStyle(.ms(.text, size: .small))
+                        .disabled(viewModel.isBottleBusy)
                         .accessibilityIdentifier("product.bottle[\(row.id.uuidString.lowercased())].finished")
                 }
             }
             MSButton(
-                "Open a new bottle", variant: .tertiary, isFullWidth: true,
-                isDisabled: !viewModel.canOpenNewBottle, action: onOpenNew
+                viewModel.openNewBottleTitle, variant: .tertiary, isFullWidth: true,
+                isLoading: viewModel.isBottleBusy, isDisabled: !viewModel.canOpenNewBottle, action: onOpenNew
             )
             .padding(.vertical, Spacing.md)
             .accessibilityIdentifier("product.openNewBottle")
