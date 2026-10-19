@@ -46,8 +46,24 @@ extension ToBuyViewModel {
     /// "Mark 3 as ordered".
     var markOrderedTitle: String { "Mark \(selectedItems.count) as ordered" }
 
-    /// The selection bar and the pinned button: the admin's, on a To buy segment with lines.
-    var showsOrdering: Bool { isAdmin && segment == .toBuy && !toBuy.isEmpty }
+    /// The pinned Mark N as ordered: the admin's, on the To buy segment, and disabled rather than hidden while
+    /// nothing is selected, even with no lines (PRD §6.6, §7).
+    var showsMarkOrdered: Bool { isAdmin && segment == .toBuy }
+
+    /// The selection bar above the lines: the admin's, on a To buy segment with lines.
+    var showsSelection: Bool { showsMarkOrdered && !toBuy.isEmpty }
+
+    /// "Added to To buy · Gauze · suggested 2 packs" with Undo; "Already on To buy · Gauze · 2 packs" without, for a
+    /// product whose line was already there.
+    func addedMessage(_ added: AddedToBuy, product: ProductSummary) -> Message {
+        let quantity = formatters.quantity(added.qty, unit: product.unit)
+        guard added.created else {
+            return Message(title: "Already on To buy", detail: "\(product.name) · \(quantity)", undoItemID: nil)
+        }
+        return Message(
+            title: "Added to To buy", detail: "\(product.name) · suggested \(quantity)", undoItemID: added.id
+        )
+    }
 
     /// "54 cartridges in stock" under a product in Add item; "1 unopened · 2 open" for a multi-use one.
     func addCaption(for product: ProductSummary) -> String {

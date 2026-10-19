@@ -44,7 +44,9 @@ final class ToBuyUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["order.selectionBar.summary"].label, "0 of 3 selected")
         XCTAssertFalse(markOrdered.isEnabled, "Mark as ordered works with nothing selected")
         app.buttons["order.selectionBar.toggle"].tap()
-        element("\(rubberDam).select", in: app).tap()
+        // A tap 2 pt inside the leading edge of the 44 pt target, in the card's padding, still lands (PRD §7).
+        let checkbox = element("\(rubberDam).select", in: app)
+        checkbox.coordinate(withNormalizedOffset: CGVector(dx: 2 / checkbox.frame.width, dy: 0.5)).tap()
         XCTAssertEqual(markOrdered.label, "Mark 2 as ordered")
 
         markOrdered.tap()

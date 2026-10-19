@@ -6,6 +6,7 @@ struct ToBuyRow: View {
     let item: ToBuyItem
     let line: String
     let isAdmin: Bool
+    var showsDivider = true
     @Binding var isSelected: Bool
     @Binding var quantity: Int
     let onRemove: () -> Void
@@ -34,13 +35,16 @@ struct ToBuyRow: View {
                     QuantityStepper(value: $quantity, minimum: 1, identifier: identifier)
                 }
                 .padding(.vertical, Spacing.md)
-                ListDivider()
+                if showsDivider {
+                    ListDivider()
+                }
             }
             .background(Color.ms.surfaceCard)
         }
     }
 
-    /// The 24 pt box lines up with the card's edge as f25 draws it; its 44 pt target reaches into the padding.
+    /// The 24 pt box lines up with the card's content edge as f25 draws it; its 44 pt target reaches 10 pt into the
+    /// card's padding, which the swipe row spans, so a tap there lands.
     private var checkbox: some View {
         Button {
             isSelected.toggle()

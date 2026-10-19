@@ -2,7 +2,8 @@ import Foundation
 import Supabase
 
 /// The list and Add item through the MS-128 functions; quantities and removals straight to `to_buy_items` under
-/// the MS-105 policies, which let every member change a line still to buy.
+/// the MS-105 policies, which let every member change a line still to buy. A quantity saved just after the line
+/// was marked ordered changes nothing.
 struct SupabaseToBuyRepository: ToBuyRepository {
     let client: SupabaseClient
 
@@ -38,7 +39,10 @@ struct SupabaseToBuyRepository: ToBuyRepository {
             "qty_edited": .bool(true)
         ]
         do {
-            try await client.from("to_buy_items").update(values).eq("id", value: itemID.uuidString).execute()
+            try await client.from("to_buy_items").update(values)
+                .eq("id", value: itemID.uuidString)
+                .eq("status", value: "to_buy")
+                .execute()
         } catch {
             throw AppError(error)
         }

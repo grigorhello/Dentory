@@ -105,17 +105,20 @@ select results_eq(
 reset role;
 
 select pg_temp.act_as('00000000-0000-4000-8000-000000000e32');
-select is(
-  (public.to_buy_add('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e64') ->> 'qty')::numeric,
-  8::numeric, 'Add item puts Gloves on the list with 20 − 12');
+select results_eq(
+  $$ select (r ->> 'qty')::numeric, (r ->> 'created')::boolean
+     from (select public.to_buy_add('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e64') r) s $$,
+  $$ values (8::numeric, true) $$,
+  'Add item puts Gloves on the list with 20 − 12, as a line it created');
 select results_eq(
   $$ select source::text, added_by, qty_edited from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000e64' $$,
   $$ values ('manual', '00000000-0000-4000-8000-000000000e32'::uuid, false) $$,
   'as a manual line by Michael');
-select is(
-  (public.to_buy_add('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e64') ->> 'id')::uuid,
-  pg_temp.line('00000000-0000-4000-8000-000000000e64'),
-  'adding it again keeps the one line');
+select results_eq(
+  $$ select (r ->> 'id')::uuid, (r ->> 'created')::boolean
+     from (select public.to_buy_add('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e64') r) s $$,
+  $$ values (pg_temp.line('00000000-0000-4000-8000-000000000e64'), false) $$,
+  'adding it again keeps the one line and says it was already there, so the app offers no Undo');
 select throws_ok($$ select public.to_buy_add('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e66') $$,
   '22023', 'This product no longer exists.', 'an archived product cannot be added');
 select throws_ok($$ select public.to_buy_add('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e67') $$,

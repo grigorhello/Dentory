@@ -159,8 +159,8 @@ struct AppDependencies: Sendable {
     @MainActor
     func makeToBuyViewModel(session: Session) -> ToBuyViewModel {
         ToBuyViewModel(
-            repository: toBuyRepository, formatters: formatters(for: session), clinicID: session.clinicID,
-            isAdmin: session.isAdmin
+            repository: toBuyRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, isAdmin: session.isAdmin
         )
     }
 

@@ -141,7 +141,8 @@ revoke execute on function public.to_buy_list(uuid) from public, anon;
 grant execute on function public.to_buy_list(uuid) to authenticated, service_role;
 
 -- Add to To buy (sheet `addOrder`, both roles): the product joins with target − current, at least 1, as a manual
--- line. A product already on the list keeps its line, which comes back. Answers the line's id and quantity.
+-- line. A product already on the list keeps its line, which comes back. Answers the line's id and quantity, and
+-- whether this call created it: only then does the app offer Undo, which deletes the line.
 create function public.to_buy_add(p_clinic_id uuid, p_product_id uuid)
 returns jsonb
 language plpgsql
@@ -153,6 +154,7 @@ declare
   v_quantity numeric;
   v_id uuid;
   v_qty numeric;
+  v_created boolean := false;
 begin
   if not public.clinic_can_write(p_clinic_id) then
     raise exception 'The clinic is read-only until a payment method is added' using errcode = '42501';
@@ -168,8 +170,9 @@ begin
     insert into public.to_buy_items (clinic_id, product_id, qty, source, added_by)
     values (p_clinic_id, p_product_id, greatest(v_product.target - coalesce(v_quantity, 0), 1), 'manual', auth.uid())
     returning id, qty into v_id, v_qty;
+    v_created := true;
   end if;
-  return jsonb_build_object('id', v_id, 'qty', v_qty);
+  return jsonb_build_object('id', v_id, 'qty', v_qty, 'created', v_created);
 end;
 $$;
 revoke execute on function public.to_buy_add(uuid, uuid) from public, anon;

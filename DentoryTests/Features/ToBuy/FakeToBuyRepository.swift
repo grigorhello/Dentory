@@ -4,7 +4,7 @@ import Foundation
 final class FakeToBuyRepository: ToBuyRepository, @unchecked Sendable {
     var itemsResult: Result<[ToBuyItem], Error> = .success(ToBuyItem.demo(now: Session.demoNow))
     var productsResult: Result<[ProductSummary], Error> = .success(ProductSummary.demo + DemoSupplies.extraProducts)
-    var addResult: Result<AddedToBuy, Error> = .success(AddedToBuy(id: UUID(), qty: 2))
+    var addResult: Result<AddedToBuy, Error> = .success(AddedToBuy(id: UUID(), qty: 2, created: true))
     var setQuantityError: Error?
     var removeError: Error?
     var markOrderedResult: Result<Int, Error>?

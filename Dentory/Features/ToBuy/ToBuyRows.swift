@@ -13,6 +13,7 @@ struct ToBuyRows: View {
                 case .toBuy:
                     ToBuyRow(
                         item: item, line: viewModel.line(for: item), isAdmin: viewModel.isAdmin,
+                        showsDivider: item.id != viewModel.rows.last?.id,
                         isSelected: $viewModel[isSelected: item.id], quantity: $viewModel[quantityOf: item.id]
                     ) {
                         Task { await viewModel.remove(item.id) }

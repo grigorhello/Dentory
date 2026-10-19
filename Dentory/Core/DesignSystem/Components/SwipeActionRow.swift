@@ -3,9 +3,15 @@ import SwiftUI
 /// A row that slides left to reveal one trailing action in danger red, as iOS lists do (To buy's "swipe left →
 /// Remove", Appendix B `order.row[id].remove`). It is a horizontal paging scroll view, so it never fights the
 /// page's vertical scroll, and VoiceOver reaches the action as the button after the row's content.
+///
+/// The row reaches past its card's leading padding to the card's edge and gives its content that padding back, so a
+/// control at the content's leading edge, such as To buy's checkbox, keeps its whole 44 pt target inside the scroll
+/// view, where taps land.
 struct SwipeActionRow<Content: View>: View {
     let actionTitle: String
     let actionIdentifier: String
+    /// The leading padding of the card the row sits in; `ListCard`'s by default.
+    var leadingInset: CGFloat = Spacing.lg
     let action: () -> Void
     @ViewBuilder let content: () -> Content
 
@@ -15,6 +21,7 @@ struct SwipeActionRow<Content: View>: View {
         ScrollView(.horizontal) {
             HStack(spacing: 0) {
                 content()
+                    .padding(.leading, leadingInset)
                     .containerRelativeFrame(.horizontal)
                 Button(action: action) {
                     Text(actionTitle)
@@ -32,6 +39,7 @@ struct SwipeActionRow<Content: View>: View {
         }
         .scrollTargetBehavior(SwipeActionSnap(actionWidth: Self.actionWidth))
         .scrollIndicators(.hidden)
+        .padding(.leading, -leadingInset)
     }
 }
 

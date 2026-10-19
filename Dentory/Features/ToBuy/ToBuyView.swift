@@ -17,7 +17,7 @@ struct ToBuyView: View {
         content
             .rootScreen(title: "To buy", identifier: "order.header")
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if viewModel.showsOrdering {
+                if viewModel.showsMarkOrdered {
                     PinnedPrimaryBar {
                         MSButton(
                             viewModel.markOrderedTitle, isFullWidth: true, isLoading: viewModel.isMarking,
@@ -54,7 +54,7 @@ struct ToBuyView: View {
             .accessibilityIdentifier("order.seg")
         if case .failed(let error) = viewModel.state {
             Notice(error.userMessage, tone: .danger)
-        } else if viewModel.state == .loading {
+        } else if viewModel.state == .loading && viewModel.items.isEmpty {
             ListCard {
                 SkeletonRow()
                 SkeletonRow()
@@ -62,7 +62,7 @@ struct ToBuyView: View {
             }
             .accessibilityIdentifier("order.loading")
         } else {
-            if viewModel.showsOrdering {
+            if viewModel.showsSelection {
                 ToBuySelectionBar(viewModel: viewModel)
             }
             if viewModel.rows.isEmpty {

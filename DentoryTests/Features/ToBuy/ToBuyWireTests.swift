@@ -30,9 +30,10 @@ struct ToBuyWireTests {
     }
 
     @Test func anAddedLineDecodes() throws {
-        let json = #"{"id":"d0000000-0000-4000-8000-000000000301","qty":8.00}"#
+        let json = #"{"id":"d0000000-0000-4000-8000-000000000301","qty":8.00,"created":false}"#
         let added = try JSONDecoder.supabase.decode(AddedToBuy.self, from: Data(json.utf8))
         #expect(added.qty == 8)
+        #expect(added.created == false, "Already on the list: no Undo")
     }
 
     @Test func markOrderedSendsTheClinicAndTheLines() throws {

@@ -12,11 +12,12 @@ struct ToBuyViewModelTests {
     private let demo = ToBuyItem.demo(now: Session.demoNow)
 
     private func make(
-        _ repository: FakeToBuyRepository = FakeToBuyRepository(), isAdmin: Bool = true
+        _ repository: FakeToBuyRepository = FakeToBuyRepository(), isAdmin: Bool = true,
+        cache: ResponseCaching = InMemoryResponseCache()
     ) async -> ToBuyViewModel {
         let viewModel = ToBuyViewModel(
-            repository: repository, formatters: formatters, clinicID: Session.demo.clinicID, isAdmin: isAdmin,
-            saveDelay: .seconds(60)
+            repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
+            isAdmin: isAdmin, saveDelay: .seconds(60)
         )
         await viewModel.load()
         return viewModel
@@ -59,7 +60,8 @@ struct ToBuyViewModelTests {
 
     @Test func everyLineStartsSelectedAndClearUnticksThemAll() async throws {
         let viewModel = await make()
-        #expect(viewModel.showsOrdering)
+        #expect(viewModel.showsSelection)
+        #expect(viewModel.showsMarkOrdered)
         #expect(viewModel.selectionSummary == "3 of 3 selected")
         #expect(viewModel.selectionAction == "Clear")
         #expect(viewModel.markOrderedTitle == "Mark 3 as ordered")
@@ -77,10 +79,23 @@ struct ToBuyViewModelTests {
     @Test func staffHaveNoSelectionAndCannotMarkOrdered() async {
         let repository = FakeToBuyRepository()
         let viewModel = await make(repository, isAdmin: false)
-        #expect(!viewModel.showsOrdering)
+        #expect(!viewModel.showsSelection)
+        #expect(!viewModel.showsMarkOrdered, "Hidden by role, never shown disabled")
         #expect(!viewModel.canMarkOrdered)
         await viewModel.markOrdered()
         #expect(repository.orders.isEmpty)
+    }
+
+    @Test func withNothingLeftToBuyMarkOrderedStaysDisabledForTheAdmin() async {
+        let repository = FakeToBuyRepository()
+        repository.itemsResult = .success(demo.filter { $0.status != .toBuy })
+        let viewModel = await make(repository)
+        #expect(viewModel.toBuy.isEmpty)
+        #expect(viewModel.showsMarkOrdered, "Disabled only when 0 selected, never hidden")
+        #expect(!viewModel.canMarkOrdered)
+        #expect(!viewModel.showsSelection, "No selection bar over an empty list")
+        viewModel.segment = .ordered
+        #expect(!viewModel.showsMarkOrdered, "Only on the To buy segment")
     }
 
     @Test func aRunOfTapsIsSavedOnceAndNeverBelowOne() async throws {
@@ -164,7 +179,7 @@ struct ToBuyViewModelTests {
 
     @Test func addingClosesTheSheetAndOffersUndo() async throws {
         let repository = FakeToBuyRepository()
-        let added = AddedToBuy(id: UUID(), qty: 2)
+        let added = AddedToBuy(id: UUID(), qty: 2, created: true)
         repository.addResult = .success(added)
         let viewModel = await make(repository)
         viewModel.segment = .ordered
@@ -179,6 +194,17 @@ struct ToBuyViewModelTests {
         ))
         await viewModel.undoAdd(added.id)
         #expect(repository.removals == [added.id])
+    }
+
+    @Test func addingAProductAlreadyOnTheListOffersNoUndo() async throws {
+        let repository = FakeToBuyRepository()
+        repository.addResult = .success(AddedToBuy(id: try line("Endo file kit #15-40").id, qty: 4, created: false))
+        let viewModel = await make(repository)
+        let endo = try product("Endo file kit #15-40")
+        await viewModel.add(endo)
+        #expect(viewModel.message == .init(
+            title: "Already on To buy", detail: "Endo file kit #15-40 · 4 kits", undoItemID: nil
+        ))
     }
 
     @Test func productsThatFailToLoadAreExplainedInTheSheet() async {
@@ -203,7 +229,21 @@ struct ToBuyViewModelTests {
         await viewModel.load()
         #expect(viewModel.state == .loaded)
         #expect(viewModel.toBuy.count == 3, "The list stays on screen")
-        #expect(viewModel.generalError == .network)
+        #expect(viewModel.generalError == nil, "No toast: reloads run on every tab change")
+    }
+
+    @Test func offlineTheLastListShowsFromTheCache() async {
+        let cache = InMemoryResponseCache()
+        _ = await make(cache: cache)
+        let offline = FakeToBuyRepository()
+        offline.itemsResult = .failure(AppError.network)
+        let viewModel = ToBuyViewModel(
+            repository: offline, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID, isAdmin: true
+        )
+        #expect(viewModel.toBuyCount == 3, "The cached list and its badge show at once")
+        await viewModel.load()
+        #expect(viewModel.state == .loaded)
+        #expect(viewModel.items.count == demo.count)
     }
 
     @Test func theCountsReadInTheSingularToo() {

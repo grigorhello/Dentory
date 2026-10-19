@@ -3,7 +3,8 @@ import Observation
 
 /// To buy (f25 Admin, f26 Staff): the segments To buy, Ordered and Received; quantities both roles change; the
 /// admin's selection and Mark N as ordered; the swipe that removes a line; Add item. A quantity is saved a moment
-/// after the last tap, so a run of taps is one write. The copy is in `ToBuyViewModel+Copy.swift`.
+/// after the last tap, so a run of taps is one write. The last list is served from the cache while a fresh one loads
+/// or the network is gone (MS-108). The copy is in `ToBuyViewModel+Copy.swift`.
 @MainActor
 @Observable
 final class ToBuyViewModel {
@@ -43,6 +44,7 @@ final class ToBuyViewModel {
     let isAdmin: Bool
     let formatters: ClinicFormatters
     private let repository: ToBuyRepository
+    private let cache: ResponseCaching
     private let clinicID: UUID
     private let saveDelay: Duration
     private let markGuard = SubmitGuard()
@@ -51,14 +53,20 @@ final class ToBuyViewModel {
     private var pendingSaves: [UUID: Task<Void, Never>] = [:]
 
     init(
-        repository: ToBuyRepository, formatters: ClinicFormatters, clinicID: UUID, isAdmin: Bool,
-        saveDelay: Duration = .milliseconds(600)
+        repository: ToBuyRepository, cache: ResponseCaching, formatters: ClinicFormatters, clinicID: UUID,
+        isAdmin: Bool, saveDelay: Duration = .milliseconds(600)
     ) {
         self.repository = repository
+        self.cache = cache
         self.formatters = formatters
         self.clinicID = clinicID
         self.isAdmin = isAdmin
         self.saveDelay = saveDelay
+        items = cache.load([ToBuyItem].self, for: Self.cacheKey(clinicID)) ?? []
+    }
+
+    private static func cacheKey(_ clinicID: UUID) -> CacheKey {
+        CacheKey(method: "ToBuyRepository.items", clinicID: clinicID)
     }
 
     var toBuy: [ToBuyItem] { items.filter { $0.status == .toBuy } }
@@ -70,17 +78,19 @@ final class ToBuyViewModel {
 
     var isMarking: Bool { markGuard.isBusy }
 
+    /// Reads the list. A reload that fails keeps the last list on screen without a word: it runs on every tab
+    /// change, and the offline banner already says why the list may be stale.
     func load() async {
         do {
             var fresh = try await repository.items(clinicID: clinicID)
+            cache.store(fresh, for: Self.cacheKey(clinicID))
             for index in fresh.indices {
                 if let pending = pendingQuantities[fresh[index].id] { fresh[index].buyQuantity = pending }
             }
             items = fresh
             state = .loaded
         } catch {
-            let appError = AppError(error)
-            if items.isEmpty { state = .failed(appError) } else { generalError = appError }
+            state = items.isEmpty ? .failed(AppError(error)) : .loaded
         }
     }
 
@@ -207,17 +217,14 @@ final class ToBuyViewModel {
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
-    /// Closes the sheet and adds the product with its suggested quantity; the toast offers Undo.
+    /// Closes the sheet and adds the product with its suggested quantity. The toast offers Undo only for a line this
+    /// add created: a product already on the list (from another device, say) keeps its line.
     func add(_ product: ProductSummary) async {
         sheet = nil
         do {
             let added = try await repository.add(clinicID: clinicID, productID: product.id)
             segment = .toBuy
-            message = Message(
-                title: "Added to To buy",
-                detail: "\(product.name) · suggested \(formatters.quantity(added.qty, unit: product.unit))",
-                undoItemID: added.id
-            )
+            message = addedMessage(added, product: product)
             await load()
         } catch {
             generalError = AppError(error)

@@ -29,7 +29,7 @@ final class DemoToBuyRepository: ToBuyRepository, @unchecked Sendable {
         else { throw AppError.notFound }
         return lock.withLock {
             if let line = lines.first(where: { $0.productID == productID && $0.status == .toBuy }) {
-                return AddedToBuy(id: line.id, qty: line.buyQuantity)
+                return AddedToBuy(id: line.id, qty: line.buyQuantity, created: false)
             }
             let target = ToBuyItem.demoTargets[product.name] ?? product.minimum * 3
             let line = ToBuyItem(
@@ -39,14 +39,14 @@ final class DemoToBuyRepository: ToBuyRepository, @unchecked Sendable {
             )
             let end = lines.firstIndex { $0.status != .toBuy } ?? lines.endIndex
             lines.insert(line, at: end)
-            return AddedToBuy(id: line.id, qty: line.buyQuantity)
+            return AddedToBuy(id: line.id, qty: line.buyQuantity, created: true)
         }
     }
 
     func setQuantity(itemID: UUID, quantity: Decimal) async throws {
         try await Task.sleep(for: .milliseconds(100))
         lock.withLock {
-            guard let index = lines.firstIndex(where: { $0.id == itemID }) else { return }
+            guard let index = lines.firstIndex(where: { $0.id == itemID && $0.status == .toBuy }) else { return }
             lines[index].buyQuantity = quantity
         }
     }
