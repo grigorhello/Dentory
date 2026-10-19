@@ -19,7 +19,8 @@ final class ProcedureStartUITests: XCTestCase {
         let row = app.descendants(matching: .any)[rootCanal]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "No Root canal template")
         row.tap()
-        XCTAssertTrue(app.staticTexts["procDetail.summary"].waitForExistence(timeout: 5), "Adjust, then start did not open")
+        let summary = app.staticTexts["procDetail.summary"]
+        XCTAssertTrue(summary.waitForExistence(timeout: 5), "Adjust, then start did not open")
     }
 
     /// The acceptance flow: Procedures → Root canal → +1 Septocaine → Start → toast.
