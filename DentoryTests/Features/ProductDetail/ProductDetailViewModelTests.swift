@@ -75,12 +75,37 @@ struct ProductDetailViewModelTests {
         #expect(viewModel.expiryTotalLine == "54 of 58 tracked · 54 expire within 90 days")
     }
 
+    @Test func batchesSortAcrossYearsAndAPastMonthReadsExpired() async {
+        let detail = ProductDetail.fixture(batches: [
+            ProductBatch(id: UUID(), expiryMonth: CalendarDay(year: 2027, month: 3, day: 1), lot: "C3", quantity: 5),
+            ProductBatch(id: UUID(), expiryMonth: CalendarDay(year: 2026, month: 9, day: 1), lot: "S9", quantity: 2),
+            ProductBatch(id: UUID(), expiryMonth: CalendarDay(year: 2026, month: 12, day: 1), lot: "D12", quantity: 7)
+        ])
+        let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
+        await viewModel.load()
+        let rows = viewModel.batchRows
+        #expect(rows.map(\.lot) == ["S9", "D12", "C3"], "Soonest first across years")
+        #expect(rows.map(\.dateText) == ["Sep 2026", "Dec 2026", "Mar 2027"])
+        #expect(rows[0].daysText == "Expired" && rows[0].daysTone == .danger)
+        #expect(rows[2].daysTone == .success, "Green beyond 90 days")
+        #expect(rows.map(\.isEmphasized) == [true, false, false], "The soonest batch within 90 days stands out")
+    }
+
+    @Test func noBatchIsEmphasisedWhenTheSoonestIsFarOff() async {
+        let detail = ProductDetail.fixture(batches: [
+            ProductBatch(id: UUID(), expiryMonth: CalendarDay(year: 2028, month: 6, day: 1), lot: nil, quantity: 5)
+        ])
+        let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
+        await viewModel.load()
+        #expect(viewModel.batchRows.map(\.isEmphasized) == [false])
+    }
+
     @Test func daysLeftTonesFollowThePRD() {
         #expect(ProductDetailViewModel.tone(forDaysLeft: -1) == .danger)
         #expect(ProductDetailViewModel.tone(forDaysLeft: 30) == .danger)
         #expect(ProductDetailViewModel.tone(forDaysLeft: 31) == .warning)
         #expect(ProductDetailViewModel.tone(forDaysLeft: 90) == .warning)
-        #expect(ProductDetailViewModel.tone(forDaysLeft: 91) == .neutral)
+        #expect(ProductDetailViewModel.tone(forDaysLeft: 91) == .success, "Green beyond 90 days (MS-119)")
     }
 
     @Test func historyRowsReadTheDeltaWhatHappenedAndWho() async {

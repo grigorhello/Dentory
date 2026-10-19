@@ -10,6 +10,8 @@ extension ProductDetailViewModel {
         let daysTone: StatusTone
         let quantityText: String
         let lot: String
+        /// The soonest batch within the 90-day window gets the ink hairline (MS-119).
+        let isEmphasized: Bool
     }
 
     /// One row of the bottles card.
@@ -30,13 +32,15 @@ extension ProductDetailViewModel {
 
     // MARK: - Expiry card
 
-    /// Dated batches with stock, soonest first.
+    /// Dated batches with stock, soonest first across years; the first one is emphasised when it is due
+    /// within 90 days.
     var batchRows: [BatchRow] {
         guard let detail else { return [] }
         return detail.batches
             .filter { $0.expiryMonth != nil && $0.quantity > 0 }
             .sorted { ($0.expiryMonth ?? .distantFuture) < ($1.expiryMonth ?? .distantFuture) }
-            .map { batch in
+            .enumerated()
+            .map { index, batch in
                 let days = batch.expiryMonth.map(formatters.daysToExpiry(month:)) ?? 0
                 return BatchRow(
                     id: batch.id,
@@ -44,17 +48,18 @@ extension ProductDetailViewModel {
                     daysText: formatters.daysLeft(days),
                     daysTone: Self.tone(forDaysLeft: days),
                     quantityText: formatters.number(batch.quantity),
-                    lot: batch.lot ?? ""
+                    lot: batch.lot ?? "",
+                    isEmphasized: index == 0 && days <= 90
                 )
             }
     }
 
-    /// Danger within 30 days or expired, warning within 90, ink beyond (PRD §6.4).
+    /// Danger within 30 days or expired, warning within 90, success beyond (MS-119, PRD §6.4).
     nonisolated static func tone(forDaysLeft days: Int) -> StatusTone {
         switch days {
         case ..<31: .danger
         case ..<91: .warning
-        default: .neutral
+        default: .success
         }
     }
 

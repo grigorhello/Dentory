@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 17:00 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 18:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -35,19 +35,21 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 ## In progress
 
 - **MS-117 · Create, edit and delete products (#88)**, build step 22, in PR review: [#161](https://github.com/grigorhello/Dentory/pull/161), opened 2026-10-19 13:43 UTC from the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`), branch `ms-117-product-sheets`. Three review rounds ran; every finding is fixed and pushed, and the branch carries the default branch with MS-118 merged in (conflicts in `Features/ProductDetail` resolved: Edit, Delete and Adjust sheets side by side). Under CLAUDE.md's three-round rule it waits for Grigor's word in the build thread before it is merged. This file is part of its PR. If #161 is merged when you read this, go to the next step.
+- **MS-119 · Track expiry per batch: Add expiry and Edit batch (#90)**, build step 24, started 2026-10-19 17:10 UTC in the build thread, branch `ms-119-batch-expiry`, stacked on MS-117's branch because both change Product detail: its PR opens once #161 is merged. `MSMonthField` (month and year wheels) in the design system, the `batch` sheet (`BatchViewModel`, `BatchSheet`) under `Features/ProductDetail/Sheets/` with the other sheets, `ProductDetailRepository.upsertBatch` through `WriteCoordinator` (`batch_upsert`), the expiry card's empty state, green beyond 90 days and the soonest batch's hairline, 14 pgTAP assertions on Missing expiry clearing. Product detail's view and view model are split by responsibility (`ProductDetailSheet`, `ProductActionsRow`, `ProductDetailViewModel+Sheets`).
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
 
 | Step | Ticket | Blocked by |
 |---|---|---|
-| 24 | MS-119 · Track expiry per batch: Add expiry and Edit batch (#90) | MS-106 (merged), MS-116 (merged) |
+| 25 | MS-120 · Multi-use products: open a new bottle and mark it finished (#91) | MS-106 (merged), MS-116 (merged) |
+| 26 | MS-121 · Count stock with review before applying (#92) | MS-106 (merged), MS-115 (merged) |
 
-Then M1 continues MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
+Then M1 continues MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-117 is in PR review. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-117 is in PR review and MS-119 in In progress. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
