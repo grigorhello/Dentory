@@ -41,9 +41,10 @@ extension ProcedureStartViewModel {
         return "\(supplies) · \(stock). Add or remove items before you start."
     }
 
-    /// "Start procedure · 10 items" (the count only).
+    /// "Start procedure · 10 items" (the count only); "Start procedure" until the template is in.
     var startTitle: String {
-        "Start procedure · \(itemCount == 1 ? "1 item" : "\(itemCount) items")"
+        guard state == .loaded else { return "Start procedure" }
+        return "Start procedure · \(itemCount == 1 ? "1 item" : "\(itemCount) items")"
     }
 
     /// Start waits for the template and needs at least one supply; a short item never blocks it.
@@ -75,9 +76,17 @@ extension ProcedureStartViewModel {
     /// The bottles taken new, listed with the supplies as one item each.
     var takenNew: [Bottle] { bottles.filter(\.takesNew) }
 
-    /// "40 needles in stock" under a product in Add item.
+    /// "40 needles in stock" under a product in Add item; "1 unopened · 2 open" for a multi-use one.
     func addCaption(for product: ProductSummary) -> String {
-        "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
+        switch product.tracking {
+        case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened · \(product.openCount) open"
+        }
+    }
+
+    /// What Add item says with nothing to list: nothing while the products load.
+    var addItemEmptyText: String {
+        hasLoadedProducts ? "No products match." : ""
     }
 
     /// "10 items deducted" under "{name} started".

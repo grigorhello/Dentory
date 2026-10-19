@@ -18,10 +18,13 @@ final class ProcedureStartViewModel {
         var id: UUID { item.id }
     }
 
-    /// A multi-use product of the template: its open one is used, or a new one is taken from stock.
+    /// A multi-use product: one of the template's, whose open one is used or a new one taken from stock, or one
+    /// Add item brought in, which is always taken new.
     struct Bottle: Identifiable, Equatable {
         let item: ProcedureTemplateItem
         var takesNew = false
+        /// Not in the template: Add item put it here taken new, and turning Take new off removes it.
+        var isAdded = false
         var id: UUID { item.id }
     }
 
@@ -42,6 +45,7 @@ final class ProcedureStartViewModel {
     private(set) var bottles: [Bottle] = []
     /// The clinic's products for Add item, loaded when the sheet opens.
     private(set) var products: [ProductSummary] = []
+    private(set) var hasLoadedProducts = false
     var sheet: Sheet?
     var searchText = ""
     /// Set once the procedure started: the screen shows it as a toast and goes back to Procedures.
@@ -105,37 +109,56 @@ final class ProcedureStartViewModel {
     func loadProducts() async {
         do {
             products = try await repository.products(clinicID: clinicID)
+            hasLoadedProducts = true
         } catch {
             generalError = AppError(error)
         }
     }
 
-    /// Countable products not on the list yet, matching the search, by name.
+    /// The products not on this procedure yet, countable and multi-use, matching the search, by name.
     var addableProducts: [ProductSummary] {
-        let listed = Set(supplies.map(\.id))
+        let listed = Set(supplies.map(\.id) + bottles.map(\.id))
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return products
-            .filter { $0.tracking == .countable && !listed.contains($0.id) }
+            .filter { !listed.contains($0.id) }
             .filter { query.isEmpty || $0.name.localizedStandardContains(query) }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
-    /// Appends the product with quantity 1 and closes the sheet.
+    /// A countable product joins the supplies with quantity 1; a multi-use one is taken new for this procedure
+    /// (one unopened opened under the user, reversed if the procedure is cancelled), or reads "Out of stock" when
+    /// none is unopened. The sheet closes once something was added.
     func add(_ product: ProductSummary) {
-        guard !supplies.contains(where: { $0.id == product.id }) else { return }
+        guard !supplies.contains(where: { $0.id == product.id }), !bottles.contains(where: { $0.id == product.id })
+        else { return }
         let item = ProcedureTemplateItem(
-            id: product.id, name: product.name, unit: product.unit, tracking: product.tracking, defaultQty: 1,
+            id: product.id, name: product.name, unit: product.unit, tracking: product.tracking,
+            defaultQty: product.tracking == .multiUse ? 0 : 1,
             quantity: product.quantity, unopened: product.unopened, openCount: product.openCount
         )
-        supplies.append(Supply(item: item, quantity: 1, defaultQuantity: 1))
+        switch product.tracking {
+        case .countable:
+            supplies.append(Supply(item: item, quantity: 1, defaultQuantity: 1))
+        case .multiUse:
+            guard product.unopened > 0 else {
+                message = Message(title: "Out of stock", detail: product.name)
+                return
+            }
+            bottles.append(Bottle(item: item, takesNew: true, isAdded: true))
+        }
         sheet = nil
     }
 
     // MARK: - Take new
 
-    /// On: one unopened bottle is taken into use and counts as an item; again: off. Nothing unopened: a toast.
+    /// On: one unopened bottle is taken into use and counts as an item; again: off, and a product Add item brought
+    /// in leaves the procedure. Nothing unopened: a toast.
     func toggleTakeNew(_ id: UUID) {
         guard let index = bottles.firstIndex(where: { $0.id == id }) else { return }
+        if bottles[index].isAdded && bottles[index].takesNew {
+            bottles.remove(at: index)
+            return
+        }
         if !bottles[index].takesNew && bottles[index].item.unopened <= 0 {
             message = Message(title: "Out of stock", detail: bottles[index].item.name)
             return

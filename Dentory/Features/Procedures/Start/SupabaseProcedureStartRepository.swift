@@ -22,15 +22,7 @@ struct SupabaseProcedureStartRepository: ProcedureStartRepository {
     }
 
     func products(clinicID: UUID) async throws -> [ProductSummary] {
-        do {
-            let rows: [InventoryRow] = try await client
-                .rpc("inventory_list", params: ["p_clinic_id": clinicID.uuidString.lowercased()])
-                .execute()
-                .value
-            return rows.map(ProductSummary.init(row:))
-        } catch {
-            throw AppError(error)
-        }
+        try await client.inventoryList(clinicID: clinicID)
     }
 
     func start(_ request: ProcedureStartRequest) async throws -> WriteOutcome {

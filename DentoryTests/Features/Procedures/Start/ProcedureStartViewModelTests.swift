@@ -104,7 +104,8 @@ struct ProcedureStartViewModelTests {
         await viewModel.loadProducts()
         let offered = viewModel.addableProducts.map(\.name)
         #expect(!offered.contains("Septocaine 4% 1:100,000"), "Already on the list")
-        #expect(!offered.contains("Composite A2"), "Multi-use products come from the template")
+        #expect(!offered.contains("Surface disinfectant"), "Already under Opened a new one?")
+        #expect(offered.contains("Composite A2"), "Multi-use products outside the template are offered too")
         #expect(offered.contains("Gauze"))
         viewModel.searchText = "gau"
         let gauze = try #require(viewModel.addableProducts.first)
@@ -115,6 +116,44 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.supplies.last?.item.name == "Gauze")
         #expect(viewModel.supplies.last?.quantity == 1)
         #expect(viewModel.startTitle == "Start procedure · 11 items")
+    }
+
+    @Test func addingAMultiUseProductTakesANewOneForThisProcedure() async throws {
+        let viewModel = await make()
+        await viewModel.loadProducts()
+        viewModel.openAddItem()
+        let composite = try #require(viewModel.addableProducts.first { $0.name == "Composite A2" })
+        #expect(viewModel.addCaption(for: composite) == "1 unopened · 1 open")
+        viewModel.add(composite)
+        #expect(viewModel.sheet == nil)
+        #expect(viewModel.takenNew.map(\.item.name) == ["Composite A2"])
+        #expect(viewModel.bottles.last?.isAdded == true)
+        #expect(viewModel.supplyCount == 13)
+        #expect(viewModel.startTitle == "Start procedure · 11 items")
+        viewModel.toggleTakeNew(composite.id)
+        #expect(viewModel.bottles.contains { $0.id == composite.id } == false, "Off removes what Add item brought")
+        #expect(viewModel.startTitle == "Start procedure · 10 items")
+    }
+
+    @Test func aMultiUseProductWithNothingUnopenedIsNotAdded() async throws {
+        let viewModel = await make()
+        await viewModel.loadProducts()
+        viewModel.openAddItem()
+        let bonding = try #require(viewModel.addableProducts.first { $0.name == "Bonding agent" })
+        viewModel.add(bonding)
+        #expect(viewModel.message == .init(title: "Out of stock", detail: "Bonding agent"))
+        #expect(viewModel.bottles.contains { $0.id == bonding.id } == false)
+        #expect(viewModel.sheet == .addItem, "The sheet stays open to pick another")
+    }
+
+    @Test func untilTheTemplateIsInStartHasNoCount() {
+        let viewModel = ProcedureStartViewModel(
+            repository: FakeProcedureStartRepository(), formatters: formatters, clinicID: Session.demo.clinicID,
+            templateID: rootCanal.id
+        )
+        #expect(viewModel.startTitle == "Start procedure")
+        #expect(viewModel.canStart == false)
+        #expect(viewModel.addItemEmptyText == "", "No 'No products match.' before the products are in")
     }
 
     @Test func startSendsEverySupplyAndTheBottlesTakenNew() async throws {

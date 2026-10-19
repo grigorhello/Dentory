@@ -81,4 +81,22 @@ final class ProcedureStartUITests: XCTestCase {
         XCTAssertEqual(start.label, "Start procedure · 11 items", "The X did not remove Rubber dam")
         XCTAssertFalse(app.staticTexts["\(rubberDam).warning"].exists)
     }
+
+    /// Add item offers a multi-use product outside the template and takes a new one for this procedure.
+    @MainActor
+    func testAddingAMultiUseProductTakesANewOne() {
+        let app = XCUIApplication()
+        openRootCanal(app)
+        let start = app.buttons["procDetail.start"]
+        app.swipeUp()
+        app.buttons["procDetail.addItem"].tap()
+        XCTAssertTrue(app.staticTexts["addItem.title"].waitForExistence(timeout: 3), "Add item did not open")
+        let composite = app.buttons["addItem.row[00000000-0000-4000-8000-0000000000d3].add"]
+        XCTAssertTrue(composite.waitForExistence(timeout: 5), "Composite A2 is not offered")
+        XCTAssertTrue(app.staticTexts["1 unopened · 1 open"].exists, "The multi-use caption is off")
+        composite.tap()
+        XCTAssertFalse(app.staticTexts["addItem.title"].waitForExistence(timeout: 2), "The sheet did not close")
+        XCTAssertEqual(start.label, "Start procedure · 11 items", "Composite A2 was not taken new")
+        XCTAssertEqual(app.staticTexts["procDetail.item[00000000-0000-4000-8000-0000000000d3].value"].label, "1")
+    }
 }
