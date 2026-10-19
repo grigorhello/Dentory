@@ -44,6 +44,14 @@ struct AppDependencies: Sendable {
         let networkMonitor = NetworkMonitor()
         let toasts = ToastCenter()
         let reporter = SentryErrorReporter()
+        let writes = WriteCoordinator(
+            rpc: rpc,
+            queue: PendingWriteQueue(store: FilePendingWriteStore()),
+            networkMonitor: networkMonitor,
+            clock: clock,
+            reporter: reporter,
+            toasts: toasts
+        )
         return AppDependencies(
             rpc: rpc,
             auth: SupabaseAuthService(client: client),
@@ -51,18 +59,11 @@ struct AppDependencies: Sendable {
             networkMonitor: networkMonitor,
             toasts: toasts,
             cache: FileResponseCache(),
-            writes: WriteCoordinator(
-                rpc: rpc,
-                queue: PendingWriteQueue(store: FilePendingWriteStore()),
-                networkMonitor: networkMonitor,
-                clock: clock,
-                reporter: reporter,
-                toasts: toasts
-            ),
+            writes: writes,
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
             inventoryRepository: SupabaseInventoryRepository(client: client),
-            productDetailRepository: SupabaseProductDetailRepository(client: client),
+            productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             productFormRepository: SupabaseProductFormRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
@@ -108,7 +109,9 @@ struct AppDependencies: Sendable {
             reporter: reporter,
             homeRepository: DemoHomeRepository(),
             inventoryRepository: DemoInventoryRepository(store: products),
-            productDetailRepository: DemoProductDetailRepository(store: products),
+            productDetailRepository: DemoProductDetailRepository(
+                store: products, byName: Session.demo(role: role).fullName
+            ),
             productFormRepository: DemoProductFormRepository(store: products),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,

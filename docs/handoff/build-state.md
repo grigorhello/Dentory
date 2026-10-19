@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 13:20 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 17:00 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -28,26 +28,26 @@ As of 2026-10-19 13:20 UTC. Before acting on this file, confirm the live state: 
 | – | MS-112 fix · Read-only address keeps the Join password field typeable | [#159](https://github.com/grigorhello/Dentory/pull/159) | 2026-10-19 08:21 | `MSReadOnlyField` for the invited address; iOS no longer covers the new-password field with its strong-password suggestion on a simulator whose software keyboard is hidden; Return moves from the name to the password. |
 | 20 | MS-115 · Inventory list: browse, search and filter (#86) | [#151](https://github.com/grigorhello/Dentory/pull/151) | 2026-10-19 08:40 | `inventory_list` (12 pgTAP assertions), `Features/Inventory`, `ProductSummary`, the chips with Low including Out of stock, case- and accent-insensitive search, status-priority sort, the Admin-only +, Home's Missing expiry tile preselecting the chip, the `-tab` and `-inventoryFilter` launch hooks, `tabBarInset`. |
 | 21 | MS-116 · Product detail (#87) | [#160](https://github.com/grigorhello/Dentory/pull/160) | 2026-10-19 13:04 | `product_detail` (23 pgTAP assertions; `used_in_30_days` nets edits and cancellations), `Features/ProductDetail` (quantity, expiry, bottles and history cards, Add to buy with Undo, a refused add reloads), `ProductDetail`, `TransactionType`, `PersonName`, the `.context` header style, `EqualWidthHStack`, `ClinicFormatters.shortMonth`, the trash icon. Three review rounds: the snake_case decoder reads `used_30d` as `used30D` (keys must not start a component with a digit; a decoding test on the seeded answer guards it), both roles read "Add to buy" (G2), batch rows show the month, zero-delta rows read "0". |
+| 23 | MS-118 · Adjust a quantity with a reason (#89) | [#162](https://github.com/grigorhello/Dentory/pull/162) | 2026-10-19 16:38 | Built in Grigor's cloud Claude Code session (branch `claude/ecstatic-noether-scu5l7`), outside this project's threads: `AdjustmentReason`, `ProductDetailRepository.adjust` and `undoAdjustment` through `WriteCoordinator` (`stock_adjust`, `undo_action`), the `adjust` sheet under `Features/ProductDetail` (`AdjustInventoryViewModel`, `AdjustInventorySheet`), Undo from the toast, history rows reading "Undo · Damaged". |
 
 Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`, `20261019040000_inventory_list.sql`, `20261019090000_product_detail.sql`.
 
 ## In progress
 
-- **MS-117 · Create, edit and delete products (#88)**, build step 22, started 2026-10-19 13:20 UTC in the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`), branch `ms-117-product-sheets`: the New / Edit product sheet (`newProduct`), the Delete product sheet (`deleteProduct`), the product save and archive rules in the database. This file is part of its PR. If the MS-117 PR is merged when you read this, go to the next step.
+- **MS-117 · Create, edit and delete products (#88)**, build step 22, in PR review: [#161](https://github.com/grigorhello/Dentory/pull/161), opened 2026-10-19 13:43 UTC from the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`), branch `ms-117-product-sheets`. Three review rounds ran; every finding is fixed and pushed, and the branch carries the default branch with MS-118 merged in (conflicts in `Features/ProductDetail` resolved: Edit, Delete and Adjust sheets side by side). Under CLAUDE.md's three-round rule it waits for Grigor's word in the build thread before it is merged. This file is part of its PR. If #161 is merged when you read this, go to the next step.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
 
 | Step | Ticket | Blocked by |
 |---|---|---|
-| 23 | MS-118 · Adjust a quantity with a reason (#89) | MS-106 (merged), MS-116 (merged) |
 | 24 | MS-119 · Track expiry per batch: Add expiry and Edit batch (#90) | MS-106 (merged), MS-116 (merged) |
 
 Then M1 continues MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115 and MS-116 are in Feature QA for Grigor to try. MS-117 is in In progress. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-117 is in PR review. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
