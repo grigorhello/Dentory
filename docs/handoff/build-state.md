@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 03:00 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 06:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -44,7 +44,7 @@ Then M1 continues MS-118, MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156 and MS-111 are in Feature QA for Grigor to try. MS-112 is in In progress. MS-100 is Done. Everything else is To do. The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156 and MS-111 are in Feature QA for Grigor to try. MS-112 is in In progress. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in PR review and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
@@ -53,6 +53,19 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109
 3. **Default branch.** Rename `claude/project-thread-ocu7tf` to `main` in GitHub settings (asked 2026-10-15 03:15 UTC). After the rename, update the base branch in local checkouts and in `docs/handoff`.
 4. **Production domain** is `dentory.ca` (links on `app.dentory.ca`, email from `@dentory.ca`, MS-100 D12). MS-112 built the app side; what Grigor adds, in this order: a Resend account with `dentory.ca` as a verified sending domain (Resend gives the SPF and DKIM records to add at the registrar) and its API key set with `supabase secrets set RESEND_API_KEY=…` on the hosted project; a static host for the `applinks/` folder at `https://app.dentory.ca` (its `apple-app-site-association` needs the Apple team id, so universal links only work once the Apple Developer team exists); until then the emails carry `https://app.dentory.ca/invite?token=…` links that the fallback page turns into `dentory://` links, and the simulator opens `dentory://invite?token=…` directly.
 5. **Try the merged tickets** in Feature QA and move the cards to Done.
+6. **Brand tickets.** MS-159 to MS-162 (#153 to #156) wait for his word on which to build and when; the landing page (MS-161) also needs the DNS records for GitHub Pages at the registrar, listed in the issue.
+
+## Brand assets (outside the build order)
+
+Grigor delivered the visual identity on 2026-10-19 (MS-100 D17): `design/brand/` holds the molar mark, the lockups and wordmark, the iOS icon set, the web favicons and the Android icons, with a README of rules and an inventory. The brand tickets are GitHub issues #152 to #156; their source is `docs/handoff/ticket-sources/brand/brand-assets.md` and their generator `build_brand.py` (see `engineering-process.md` section 9). They are not in `docs/BUILD-ORDER.md` and, apart from the icon, wait for Grigor's word.
+
+| Ticket | State | What it delivers |
+|---|---|---|
+| MS-158 · App icon from the brand package (#152) | PR [#157](https://github.com/grigorhello/Dentory/pull/157) open; this file is part of it | The single-size 1024 px icon with dark and tinted appearances in `Assets.xcassets/AppIcon.appiconset`, copied from `design/brand/ios/`. |
+| MS-159 · Brand mark and wordmark in the app (#153) | Backlog | Vector image sets and an `MSLogo` design-system component; the lockup replaces the "Dentory" text on the sign-in screen. |
+| MS-160 · Launch screen with the mark on cream (#154) | Backlog | A `UILaunchScreen` with the mark on cream instead of the generated blank screen. |
+| MS-161 · Landing page dentory.ca with the brand (#155) | Backlog; Grigor said he will ask for it | Restyle of `site/` (PR #137) with the lockup, favicons, manifest and brand colours; `CNAME` and the GitHub Pages custom domain; the DNS records are his. |
+| MS-162 · Brand in emails and link pages (#156) | Backlog | Shared email header and footer for the Edge Functions, Supabase Auth templates, the invite link page. |
 
 ## Known issues
 
