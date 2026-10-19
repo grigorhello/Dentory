@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Temporary tab content in the real shell until each feature ticket brings its screen (MS-115, MS-122,
-/// MS-126). Home is real (MS-114).
+/// Temporary tab content in the real shell until each feature ticket brings its screen (MS-122, MS-126).
+/// Home (MS-114) and Inventory (MS-115) are real.
 struct TabPlaceholderView: View {
     let tab: AppTab
 

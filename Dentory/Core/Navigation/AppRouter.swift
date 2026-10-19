@@ -11,10 +11,13 @@ final class AppRouter {
     var toBuyCount = 0
     /// Set by Home before selecting the Inventory tab; the list applies it once and clears it (MS-115).
     var inventoryFilter: InventoryFilter?
+    /// A category name set by Inventory value (MS-135) before selecting the Inventory tab; applied once, like the filter.
+    var inventoryCategory: String?
     private var paths: [AppTab: NavigationPath] = [:]
 
-    init(selectedTab: AppTab = .home) {
+    init(selectedTab: AppTab = .home, inventoryFilter: InventoryFilter? = nil) {
         self.selectedTab = selectedTab
+        self.inventoryFilter = inventoryFilter
     }
 
     func path(for tab: AppTab) -> NavigationPath {

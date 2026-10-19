@@ -9,7 +9,8 @@ struct DentoryApp: App {
     init() {
         // `-uiTesting` runs the app on the preview doubles: no network, a signed-in demo admin.
         // `-offline` with it makes the network monitor report no connection; `-signedOut` starts on Sign in;
-        // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there.
+        // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there;
+        // `-tab inventory` and `-inventoryFilter Low` open a tab and a chip (RootView).
         let arguments = ProcessInfo.processInfo.arguments
         let onboarding = UserDefaults.standard.string(forKey: "onboarding")
         startsOnSignUp = onboarding == "account"

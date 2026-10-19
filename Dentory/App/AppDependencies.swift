@@ -17,6 +17,7 @@ struct AppDependencies: Sendable {
     let writes: WriteCoordinator
     let reporter: ErrorReporting
     let homeRepository: HomeRepository
+    let inventoryRepository: InventoryRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
@@ -57,6 +58,7 @@ struct AppDependencies: Sendable {
             ),
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
+            inventoryRepository: SupabaseInventoryRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress()
         )
@@ -98,9 +100,21 @@ struct AppDependencies: Sendable {
             ),
             reporter: reporter,
             homeRepository: DemoHomeRepository(),
+            inventoryRepository: DemoInventoryRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             locale: Locale(identifier: "en_US")
+        )
+    }
+
+    /// The Inventory list of the signed-in clinic (MS-115).
+    @MainActor
+    func makeInventoryListViewModel(session: Session) -> InventoryListViewModel {
+        InventoryListViewModel(
+            repository: inventoryRepository,
+            cache: cache,
+            formatters: formatters(for: session),
+            clinicID: session.clinicID
         )
     }
 

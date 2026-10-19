@@ -10,6 +10,9 @@ nonisolated enum ProductStatus: String, Codable, Sendable, CaseIterable {
     case missingExpiry = "missing_expiry"
     case healthy
 
+    /// Where the status sorts in a list: Out of stock first, Healthy last (PRD §5 priority).
+    var sortRank: Int { Self.allCases.firstIndex(of: self) ?? 0 }
+
     /// The PRD §7 status word.
     var title: String {
         switch self {
