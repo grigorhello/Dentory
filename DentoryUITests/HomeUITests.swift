@@ -23,7 +23,7 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(latest.label.contains("12 supplies · Sarah"), "Latest reads \(latest.label)")
 
         app.descendants(matching: .any)["home.tile.toBuy"].tap()
-        XCTAssertTrue(app.staticTexts["tab.toBuy.header.title"].waitForExistence(timeout: 5), "To buy did not open")
+        XCTAssertTrue(app.staticTexts["order.header.title"].waitForExistence(timeout: 5), "To buy did not open")
         app.buttons["Home"].tap()
 
         app.descendants(matching: .any)["home.receive"].tap()

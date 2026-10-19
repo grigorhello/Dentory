@@ -21,6 +21,7 @@ struct AppDependencies: Sendable {
     let productDetailRepository: ProductDetailRepository
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
+    let toBuyRepository: ToBuyRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -67,6 +68,7 @@ struct AppDependencies: Sendable {
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
+            toBuyRepository: SupabaseToBuyRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -113,6 +115,7 @@ struct AppDependencies: Sendable {
             productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
+            toBuyRepository: DemoToBuyRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -149,6 +152,15 @@ struct AppDependencies: Sendable {
         ProcedureStartViewModel(
             repository: procedureStartRepository, formatters: formatters(for: session), clinicID: session.clinicID,
             templateID: templateID
+        )
+    }
+
+    /// To buy of the signed-in clinic (MS-128).
+    @MainActor
+    func makeToBuyViewModel(session: Session) -> ToBuyViewModel {
+        ToBuyViewModel(
+            repository: toBuyRepository, formatters: formatters(for: session), clinicID: session.clinicID,
+            isAdmin: session.isAdmin
         )
     }
 
