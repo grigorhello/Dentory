@@ -32,6 +32,9 @@ nonisolated struct ProductDetail: Codable, Equatable, Sendable {
     let openBottles: [OpenBottle]
     /// Newest first, at most 20.
     let history: [StockTransaction]
+    /// What the Edit product sheet starts from besides the fields above (MS-117).
+    var categoryID: UUID?
+    var supplier: String?
 }
 
 /// A batch of the product: a quantity with an expiry month and a lot, or undated.

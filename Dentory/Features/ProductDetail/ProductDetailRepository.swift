@@ -9,4 +9,6 @@ protocol ProductDetailRepository: Sendable {
     func addToBuy(clinicID: UUID, productID: UUID, quantity: Decimal, userID: UUID) async throws -> UUID
     /// Undo of `addToBuy`.
     func removeFromToBuy(itemID: UUID) async throws
+    /// "Delete product": archives it, history kept, off the templates and the open To buy lines (Admin).
+    func archiveProduct(id: UUID) async throws
 }

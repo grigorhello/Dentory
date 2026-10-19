@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 09:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 13:20 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -27,31 +27,31 @@ As of 2026-10-19 09:30 UTC. Before acting on this file, confirm the live state: 
 | 19 | MS-112 · Invite teammates and accept an invitation (#83) | [#150](https://github.com/grigorhello/Dentory/pull/150) | 2026-10-19 02:47 | Migration `20261019020000_invitations.sql` (`invitation_create`, `invitation_lookup`, `auth_user_id_for_email`, `invitation_accept`; `invite_members` dropped), Edge Functions `invite_member` (Resend) and `accept_invitation`, the Join screen (f5), the `dentory://` scheme and the `applinks:app.dentory.ca` entitlement, the `applinks/` static files for the domain. |
 | – | MS-112 fix · Read-only address keeps the Join password field typeable | [#159](https://github.com/grigorhello/Dentory/pull/159) | 2026-10-19 08:21 | `MSReadOnlyField` for the invited address; iOS no longer covers the new-password field with its strong-password suggestion on a simulator whose software keyboard is hidden; Return moves from the name to the password. |
 | 20 | MS-115 · Inventory list: browse, search and filter (#86) | [#151](https://github.com/grigorhello/Dentory/pull/151) | 2026-10-19 08:40 | `inventory_list` (12 pgTAP assertions), `Features/Inventory`, `ProductSummary`, the chips with Low including Out of stock, case- and accent-insensitive search, status-priority sort, the Admin-only +, Home's Missing expiry tile preselecting the chip, the `-tab` and `-inventoryFilter` launch hooks, `tabBarInset`. |
+| 21 | MS-116 · Product detail (#87) | [#160](https://github.com/grigorhello/Dentory/pull/160) | 2026-10-19 13:04 | `product_detail` (23 pgTAP assertions; `used_in_30_days` nets edits and cancellations), `Features/ProductDetail` (quantity, expiry, bottles and history cards, Add to buy with Undo, a refused add reloads), `ProductDetail`, `TransactionType`, `PersonName`, the `.context` header style, `EqualWidthHStack`, `ClinicFormatters.shortMonth`, the trash icon. Three review rounds: the snake_case decoder reads `used_30d` as `used30D` (keys must not start a component with a digit; a decoding test on the seeded answer guards it), both roles read "Add to buy" (G2), batch rows show the month, zero-delta rows read "0". |
 
-Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`, `20261019040000_inventory_list.sql`.
+Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`, `20261019040000_inventory_list.sql`, `20261019090000_product_detail.sql`.
 
 ## In progress
 
-- **MS-116 · Product detail (#87)**, build step 21, started 2026-10-19 08:45 UTC in the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`): migration `20261019090000_product_detail.sql` (`product_detail`, one JSON answer with the figures, batches, open bottles, history and the To buy state), `ProductDetail` and `TransactionType`, the screen under `Features/ProductDetail` with Add to buy and its Undo, the `.context` header style, the trash icon. Edit, Adjust, batches, bottles, history and Delete show "arrives with a later update" toasts until their tickets. This file is part of its PR. If the MS-116 PR is merged when you read this, go to the next step.
+- **MS-117 · Create, edit and delete products (#88)**, build step 22, started 2026-10-19 13:20 UTC in the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`), branch `ms-117-product-sheets`: the New / Edit product sheet (`newProduct`), the Delete product sheet (`deleteProduct`), the product save and archive rules in the database. This file is part of its PR. If the MS-117 PR is merged when you read this, go to the next step.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
 
 | Step | Ticket | Blocked by |
 |---|---|---|
-| 22 | MS-117 · Create, edit and delete products (#88) | MS-116 |
-| 23 | MS-118 · Adjust a quantity with a reason (#89) | MS-106 (merged), MS-116 |
-| 24 | MS-119 · Track expiry per batch: Add expiry and Edit batch (#90) | MS-106 (merged), MS-116 |
+| 23 | MS-118 · Adjust a quantity with a reason (#89) | MS-106 (merged), MS-116 (merged) |
+| 24 | MS-119 · Track expiry per batch: Add expiry and Edit batch (#90) | MS-106 (merged), MS-116 (merged) |
 
 Then M1 continues MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112 and MS-115 are in Feature QA for Grigor to try. MS-116 is in In progress. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115 and MS-116 are in Feature QA for Grigor to try. MS-117 is in In progress. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
-1. **Hosted database.** None of the eight migrations is on the hosted staging project yet, and the two Edge Functions are not deployed there (`supabase functions deploy`). Say "push now" in the build thread; it opens a terminal tab for `supabase db push`, where he types the database password. The thread proposed batching the push and he has not answered yet.
+1. **Hosted database.** None of the nine migrations is on the hosted staging project yet, and the two Edge Functions are not deployed there (`supabase functions deploy`). Say "push now" in the build thread; it opens a terminal tab for `supabase db push`, where he types the database password. The thread proposed batching the push and he has not answered yet.
 2. **Apple Developer team.** The bundle id is `ca.dentory.app` (confirmed 2026-10-17); an Apple Developer team and the App Store Connect record are still needed before a device build or TestFlight (MS-152). MS-157 lists the other accounts to rename (Claude project, Supabase project name, DNS for dentory.ca).
 3. **Default branch.** Rename `claude/project-thread-ocu7tf` to `main` in GitHub settings (asked 2026-10-15 03:15 UTC). After the rename, update the base branch in local checkouts and in `docs/handoff`.
 4. **Production domain** is `dentory.ca` (links on `app.dentory.ca`, email from `@dentory.ca`, MS-100 D12). MS-112 built the app side; what Grigor adds, in this order: a Resend account with `dentory.ca` as a verified sending domain (Resend gives the SPF and DKIM records to add at the registrar) and its API key set with `supabase secrets set RESEND_API_KEY=…` on the hosted project; a static host for the `applinks/` folder at `https://app.dentory.ca` (its `apple-app-site-association` needs the Apple team id, so universal links only work once the Apple Developer team exists); until then the emails carry `https://app.dentory.ca/invite?token=…` links that the fallback page turns into `dentory://` links, and the simulator opens `dentory://invite?token=…` directly.

@@ -130,6 +130,53 @@ struct ProductDetailViewModelTests {
         )
     }
 
+    @Test func deleteProductAsksThenArchivesAndLeaves() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        viewModel.askToDelete()
+        #expect(viewModel.sheet == .delete)
+        #expect(viewModel.deleteTitle == "Delete Septocaine 4% 1:100,000?")
+        #expect(viewModel.deleteMessage == "54 cartridges still in stock. The product and its history are archived, "
+            + "not erased. It disappears from Inventory, To buy and procedures.")
+        viewModel.keepProduct()
+        #expect(viewModel.sheet == nil)
+        viewModel.askToDelete()
+        await viewModel.deleteProduct()
+        #expect(repository.archived == [ProductSummary.demo[0].id])
+        #expect(viewModel.sheet == nil)
+        #expect(viewModel.isDeleted)
+    }
+
+    @Test func deleteOfAnEmptyProductSkipsTheStockSentence() async {
+        let detail = ProductDetail.fixture(status: .outOfStock, quantity: 0, unopened: 0, batches: [])
+        let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
+        await viewModel.load()
+        #expect(viewModel.deleteMessage.hasPrefix("The product and its history are archived"))
+    }
+
+    @Test func aRefusedDeleteStaysOnTheScreen() async {
+        let repository = FakeProductDetailRepository()
+        repository.archiveResult = .failure(AppError.forbidden)
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        viewModel.askToDelete()
+        await viewModel.deleteProduct()
+        #expect(viewModel.generalError == .forbidden)
+        #expect(!viewModel.isDeleted)
+    }
+
+    @Test func editOpensTheSheetAndSavingReloads() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        viewModel.edit()
+        #expect(viewModel.sheet == .edit)
+        await viewModel.productSaved()
+        #expect(viewModel.sheet == nil)
+        #expect(repository.detailCalls.count == 2, "The saved fields are read back")
+    }
+
     @Test func aRowWithoutReasonOrReferenceNamesItsKind() {
         let disposal = StockTransaction(
             id: UUID(), type: .disposal, delta: -3, quantityBefore: 10, quantityAfter: 7, reason: nil,

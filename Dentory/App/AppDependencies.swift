@@ -19,6 +19,7 @@ struct AppDependencies: Sendable {
     let homeRepository: HomeRepository
     let inventoryRepository: InventoryRepository
     let productDetailRepository: ProductDetailRepository
+    let productFormRepository: ProductFormRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -62,6 +63,7 @@ struct AppDependencies: Sendable {
             homeRepository: SupabaseHomeRepository(client: client),
             inventoryRepository: SupabaseInventoryRepository(client: client),
             productDetailRepository: SupabaseProductDetailRepository(client: client),
+            productFormRepository: SupabaseProductFormRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -87,6 +89,7 @@ struct AppDependencies: Sendable {
             )
         }
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
+        let products = DemoProductStore()
         return AppDependencies(
             rpc: rpc,
             auth: auth,
@@ -104,8 +107,9 @@ struct AppDependencies: Sendable {
             ),
             reporter: reporter,
             homeRepository: DemoHomeRepository(),
-            inventoryRepository: DemoInventoryRepository(),
-            productDetailRepository: DemoProductDetailRepository(),
+            inventoryRepository: DemoInventoryRepository(store: products),
+            productDetailRepository: DemoProductDetailRepository(store: products),
+            productFormRepository: DemoProductFormRepository(store: products),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -121,6 +125,15 @@ struct AppDependencies: Sendable {
             cache: cache,
             formatters: formatters(for: session),
             clinicID: session.clinicID
+        )
+    }
+
+    /// The New / Edit product sheet of the signed-in clinic (MS-117).
+    @MainActor
+    func makeProductFormViewModel(mode: ProductFormViewModel.Mode, session: Session) -> ProductFormViewModel {
+        ProductFormViewModel(
+            repository: productFormRepository, formatters: formatters(for: session), clinicID: session.clinicID,
+            mode: mode
         )
     }
 

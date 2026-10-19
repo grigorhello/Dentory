@@ -7,6 +7,7 @@ struct InventoryListView: View {
     @Environment(\.tabBarInset) private var tabBarInset
     @Environment(AppRouter.self) private var router
     @State private var viewModel: InventoryListViewModel
+    @State private var isNewProductPresented = false
     let session: Session
 
     init(session: Session, dependencies: AppDependencies) {
@@ -46,6 +47,18 @@ struct InventoryListView: View {
                 guard let category else { return }
                 viewModel.apply(category: category)
                 router.inventoryCategory = nil
+            }
+            .onChange(of: router.inventoryNeedsReload) { _, needsReload in
+                guard needsReload else { return }
+                router.inventoryNeedsReload = false
+                Task { await viewModel.load() }
+            }
+            .msSheet(isPresented: $isNewProductPresented) {
+                ProductFormSheet(mode: .create, session: session, dependencies: dependencies) { _ in
+                    isNewProductPresented = false
+                    dependencies.toasts.show("Product created")
+                    Task { await viewModel.load() }
+                }
             }
     }
 
@@ -87,7 +100,7 @@ struct InventoryListView: View {
 
     /// The New product sheet arrives with MS-117.
     private func newProduct() {
-        dependencies.toasts.show("New product arrives with a later update.")
+        isNewProductPresented = true
     }
 }
 

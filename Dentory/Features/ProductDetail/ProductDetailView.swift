@@ -6,6 +6,7 @@ import SwiftUI
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.dismiss) private var dismiss
     @State private var viewModel: ProductDetailViewModel
     let session: Session
 
@@ -21,7 +22,8 @@ struct ProductDetailView: View {
             .pushedScreen(
                 title: viewModel.contextLine,
                 identifier: "product",
-                action: session.isAdmin ? .init(title: "Edit", identifier: "product.edit", perform: edit) : nil,
+                action: session.isAdmin
+                    ? .init(title: "Edit", identifier: "product.edit", perform: viewModel.edit) : nil,
                 style: .context
             )
             .reloadOnReturn { await viewModel.load() }
@@ -37,6 +39,30 @@ struct ProductDetailView: View {
                 }
                 viewModel.clearAddedToBuy()
             }
+            .onChange(of: viewModel.isDeleted) { _, isDeleted in
+                guard isDeleted else { return }
+                dependencies.toasts.show("Product deleted")
+                router.inventoryNeedsReload = true
+                dismiss()
+            }
+            .msSheet(item: $viewModel.sheet) { sheet in
+                switch sheet {
+                case .edit:
+                    if let detail = viewModel.detail {
+                        ProductFormSheet(mode: .edit(detail), session: session, dependencies: dependencies) { _ in
+                            dependencies.toasts.show("Changes saved")
+                            Task { await viewModel.productSaved() }
+                        }
+                    }
+                case .delete:
+                    DeleteProductSheet(
+                        title: viewModel.deleteTitle, message: viewModel.deleteMessage,
+                        isDeleting: viewModel.isSubmitting,
+                        onDelete: { Task { await viewModel.deleteProduct() } },
+                        onKeep: viewModel.keepProduct
+                    )
+                }
+            }
     }
 
     @ViewBuilder private var content: some View {
@@ -50,7 +76,7 @@ struct ProductDetailView: View {
             }
             ProductHistoryCard(rows: viewModel.historyRows, onShowAll: showAllHistory)
             if session.isAdmin {
-                Button(action: deleteProduct) {
+                Button(action: viewModel.askToDelete) {
                     HStack(spacing: Spacing.sm) {
                         IconView(.trash, size: 16)
                         Text("Delete product")
@@ -111,15 +137,13 @@ struct ProductDetailView: View {
         }
     }
 
-    // Placeholders until the tickets that bring these screens (MS-117 to MS-120, MS-134).
-    private func edit() { dependencies.toasts.show("Edit product arrives with a later update.") }
+    // Placeholders until the tickets that bring these screens (MS-118 to MS-120, MS-134).
     private func adjust() { dependencies.toasts.show("Adjust arrives with a later update.") }
     private func editBatch(_ id: UUID) { dependencies.toasts.show("Edit batch arrives with a later update.") }
     private func addExpiry() { dependencies.toasts.show("Add expiry arrives with a later update.") }
     private func finishBottle(_ id: UUID) { dependencies.toasts.show("Finished arrives with a later update.") }
     private func openNewBottle() { dependencies.toasts.show("Open a new bottle arrives with a later update.") }
     private func showAllHistory() { dependencies.toasts.show("History arrives with a later update.") }
-    private func deleteProduct() { dependencies.toasts.show("Delete product arrives with a later update.") }
 }
 
 #Preview("Product detail · Admin") {

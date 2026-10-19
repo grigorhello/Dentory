@@ -1,11 +1,12 @@
 import Foundation
 
-/// The products of frames f16 and f19 for previews and UI tests.
+/// The products of frames f16 and f19 for previews and UI tests, read from the shared demo store so the
+/// sheets of MS-117 change what the list shows.
 struct DemoInventoryRepository: InventoryRepository {
-    var products = ProductSummary.demo
+    let store: DemoProductStore
 
     func products(clinicID: UUID) async throws -> [ProductSummary] {
-        products
+        store.products
     }
 }
 

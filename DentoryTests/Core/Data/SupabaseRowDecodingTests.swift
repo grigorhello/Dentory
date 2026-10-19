@@ -61,6 +61,23 @@ struct SupabaseRowDecodingTests {
         #expect(row.role == .admin)
     }
 
+    @Test func categoryRowsAndTheFindOrCreateAnswer() throws {
+        let rows = try decoder.decode(
+            [ProductCategory].self,
+            from: Data(#"[{"id":"00000000-0000-4000-8000-0000000000c0","name":"Anesthetic"}]"#.utf8)
+        )
+        #expect(rows.first?.name == "Anesthetic")
+        let created = try decoder.decode(
+            ProductCategory.self,
+            from: Data(#"{"id":"00000000-0000-4000-8000-0000000000c9","name":"Orthodontics"}"#.utf8)
+        )
+        #expect(created.id == UUID(uuidString: "00000000-0000-4000-8000-0000000000c9"))
+        let inserted = try decoder.decode(
+            ProductIDRow.self, from: Data(#"{"id":"d0000000-0000-4000-8000-000000000301"}"#.utf8)
+        )
+        #expect(inserted.id == UUID(uuidString: "d0000000-0000-4000-8000-000000000301"))
+    }
+
     /// The answer `product_detail` gave for the seeded Surface disinfectant (`make seed-demo`), with the count
     /// and To buy fields filled in the same formats: timestamps with an offset, numerics with a fraction, a
     /// `date` for the expiry month. `used_in_30_days` is named so no key component starts with a digit.
@@ -74,6 +91,7 @@ struct SupabaseRowDecodingTests {
         "delta":0.0,"reason":null,"by_name":"Michael Reyes","qty_after":3.0,
         "ref_label":"Opened a new bottle","qty_before":3.0}],
         "product":{"id":"d0000000-0000-4000-8000-000000000206","name":"Surface disinfectant",
+        "category_id":"00000000-0000-4000-8000-0000000000c7","supplier":"Benco",
         "unit":"bottles","status":"healthy","target":4.0,"minimum":0.0,"location":"Sterilization · Cabinet",
         "quantity":3.0,"tracking":"multi_use","unopened":1.0,"pack_size":null,"pack_unit":null,
         "open_count":2,"category_name":"Sterilization","missing_expiry_qty":0.0},
@@ -88,6 +106,8 @@ struct SupabaseRowDecodingTests {
         #expect(product.id == UUID(uuidString: "d0000000-0000-4000-8000-000000000206"))
         #expect(product.name == "Surface disinfectant")
         #expect(product.categoryName == "Sterilization")
+        #expect(product.categoryId == UUID(uuidString: "00000000-0000-4000-8000-0000000000c7"))
+        #expect(product.supplier == "Benco")
         #expect(product.unit == "bottles")
         #expect(product.packUnit == nil && product.packSize == nil)
         #expect(product.minimum == 0 && product.target == 4)

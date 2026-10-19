@@ -10,6 +10,13 @@ import Observation
 final class ProductDetailViewModel {
     enum LoadState: Equatable { case loading, loaded, failed(AppError) }
 
+    /// The sheets this screen presents (Appendix C `newProduct` in edit mode, `deleteProduct`).
+    enum Sheet: Identifiable, Equatable {
+        case edit
+        case delete
+        var id: Self { self }
+    }
+
     /// What the toast says after Add to buy; the view offers Undo on it.
     struct AddedToBuy: Equatable {
         let itemID: UUID
@@ -20,6 +27,9 @@ final class ProductDetailViewModel {
     private(set) var state: LoadState = .loading
     private(set) var detail: ProductDetail?
     private(set) var addedToBuy: AddedToBuy?
+    var sheet: Sheet?
+    /// Set once "Delete product" went through: the view leaves the screen with its toast.
+    private(set) var isDeleted = false
     /// A refusal that belongs to no field; the view shows it as a toast.
     private(set) var generalError: AppError?
 
@@ -155,6 +165,50 @@ final class ProductDetailViewModel {
 
     func clearAddedToBuy() {
         addedToBuy = nil
+    }
+
+    // MARK: - Edit and Delete product (MS-117)
+
+    func edit() {
+        sheet = .edit
+    }
+
+    /// "Save changes" closed the Edit sheet: the screen shows the saved fields.
+    func productSaved() async {
+        sheet = nil
+        await load()
+    }
+
+    func askToDelete() {
+        sheet = .delete
+    }
+
+    func keepProduct() {
+        sheet = nil
+    }
+
+    var deleteTitle: String { "Delete \(detail?.name ?? "")?" }
+
+    /// "54 cartridges still in stock. The product and its history are archived, not erased. …"
+    var deleteMessage: String {
+        let archived = "The product and its history are archived, not erased. "
+            + "It disappears from Inventory, To buy and procedures."
+        guard let detail, detail.quantity > 0 else { return archived }
+        return "\(formatters.quantity(detail.quantity, unit: detail.unit)) still in stock. " + archived
+    }
+
+    func deleteProduct() async {
+        guard let detail else { return }
+        await submitGuard.run {
+            generalError = nil
+            do {
+                try await repository.archiveProduct(id: detail.id)
+                sheet = nil
+                isDeleted = true
+            } catch {
+                generalError = AppError(error)
+            }
+        }
     }
 
     func clearGeneralError() {
