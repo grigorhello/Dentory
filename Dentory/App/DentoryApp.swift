@@ -6,18 +6,21 @@ struct DentoryApp: App {
     private let startsOnSignUp: Bool
     /// `-invite <token>` opens the Join screen for that invitation (UI tests use the preview's `demo-invite`).
     private let invitationToken: String?
+    /// `-resetPassword <tokenHash>` opens Set a new password for that reset link (UI tests use `demo-reset`).
+    private let resetTokenHash: String?
     @State private var sessionStore: SessionStore
 
     init() {
         // `-uiTesting` runs the app on the preview doubles: no network, a signed-in demo admin.
         // `-offline` with it makes the network monitor report no connection; `-signedOut` starts on Sign in;
         // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there;
-        // `-invite <token>` opens the Join screen of an invitation; `-tab inventory` and `-inventoryFilter Low`
-        // open a tab and a chip (RootView).
+        // `-invite <token>` opens the Join screen of an invitation; `-resetPassword <tokenHash>` opens Set a new
+        // password; `-tab inventory` and `-inventoryFilter Low` open a tab and a chip (RootView).
         let arguments = ProcessInfo.processInfo.arguments
         let onboarding = UserDefaults.standard.string(forKey: "onboarding")
         startsOnSignUp = onboarding == "account"
         invitationToken = UserDefaults.standard.string(forKey: "invite")
+        resetTokenHash = UserDefaults.standard.string(forKey: "resetPassword")
         let dependencies = arguments.contains("-uiTesting")
             ? AppDependencies.preview(
                 signedIn: !arguments.contains("-signedOut") && onboarding != "account",
@@ -34,9 +37,14 @@ struct DentoryApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(sessionStore: sessionStore, startsOnSignUp: startsOnSignUp, invitationToken: invitationToken)
-                .environment(\.appDependencies, dependencies)
-                .task { await sessionStore.restore() }
+            RootView(
+                sessionStore: sessionStore,
+                startsOnSignUp: startsOnSignUp,
+                invitationToken: invitationToken,
+                resetTokenHash: resetTokenHash
+            )
+            .environment(\.appDependencies, dependencies)
+            .task { await sessionStore.restore() }
         }
     }
 }

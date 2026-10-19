@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 17:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 19:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -31,6 +31,7 @@ As of 2026-10-19 17:30 UTC. Before acting on this file, confirm the live state: 
 | 23 | MS-118 · Adjust a quantity with a reason (#89) | [#162](https://github.com/grigorhello/Dentory/pull/162) | 2026-10-19 16:38 | `AdjustmentReason`, the `adjust` sheet (`AdjustInventoryViewModel`, `AdjustInventorySheet`), `stock_adjust` and `undo_action` through `WriteCoordinator`, toast "Inventory adjusted" with Undo, undo rows read "Undo · {reason}", `identifier` on `MSPicker`. Built in a cloud session; no simulator screenshots on the PR. |
 | 25 | MS-120 · Multi-use products: open a new bottle and mark it finished (#91) | [#163](https://github.com/grigorhello/Dentory/pull/163) | 2026-10-19 18:11 | `ProductDetailRepository.openBottle` and `finishBottle` through `WriteCoordinator` (`bottle_open`, `bottle_finish`), the bottles card's "Open a new {bottle|syringe|kit}" and Finished with their toasts, "opened yesterday", the demo repository replaying bottles in memory. Built in Grigor's cloud session; no simulator screenshots on the PR. |
 | 27 | MS-122 · Procedures list and history (#93) | [#168](https://github.com/grigorhello/Dentory/pull/168) | 2026-10-19 19:41 | `procedure_templates_list` and `procedure_history` (migration `20261019180000_procedures_list.sql`, 18 pgTAP assertions; history pages after the last row's id, found in review round 1), the Procedures tab under `Features/Procedures` in f11's creation order, `IconButton`'s quiet variant. Also merged: #169, a test-only fix for MS-118's and MS-120's Product detail UI flows. |
+| 30 | MS-113 · Reset a forgotten password (#84) | [#167](https://github.com/grigorhello/Dentory/pull/167) | 2026-10-19 19:55 | Forgot password and the reset link, built in Grigor's cloud session (see open item 7 for the hosted setup it needs). |
 
 Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`, `20261019040000_inventory_list.sql`, `20261019090000_product_detail.sql`, `20261019180000_procedures_list.sql` (MS-122), `20261019203000_procedure_template_detail.sql` (MS-123).
 
@@ -40,6 +41,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 - **MS-119 · Track expiry per batch: Add expiry and Edit batch (#90)**, build step 24, draft [#164](https://github.com/grigorhello/Dentory/pull/164) from the Mac build thread, stacked on #161: its base is `ms-117-product-sheets` until #161 is merged, then it is rebased onto the default branch, retargeted and reviewed.
 - **MS-121 · Count stock with review before applying (#92)**, build step 26, draft [#166](https://github.com/grigorhello/Dentory/pull/166) from the Mac build thread, stacked on #161 like #164.
 - **MS-123 · Adjust, then start a procedure (#94)**, build step 28, in PR review from branch `ms-123-start-procedure`. `procedure_template_detail` (migration `20261019203000_procedure_template_detail.sql`), the screen under `Features/Procedures/Start` (steppers, X, Add item, Take new, Start through `stock_procedure_start`); the history row and the pencils still push placeholders until MS-124 and MS-125.
+- **MS-126 · Receive delivery: choose how (#97)**, build step 32, claimed 2026-10-19 by the same cloud session (Notion card In progress).
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
@@ -49,11 +51,11 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 | 29 | MS-124 · Procedure from history: edit usage or cancel (#95) | MS-123 (in review) |
 | 31 | MS-125 · Edit procedure templates (#96) | MS-122 (merged) |
 
-MS-113 (step 30) and MS-126 (step 32, the first of M2) are with Grigor's other session. Then the rest of M2; M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
+Then M1 continues MS-124 and MS-125 here; MS-126 (step 32, the first of M2) is with Grigor's other session, and M2 continues from step 33 (MS-127); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-120 is in Feature QA too. MS-122 is in Feature QA. MS-117, MS-121 and MS-123 are in PR review; MS-119 is In progress (draft #164). MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-120 is in Feature QA too. MS-122 and MS-113 are in Feature QA too. MS-117, MS-121 and MS-123 are in PR review; MS-119 is In progress (draft #164). MS-126 is In progress in a cloud session. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
@@ -63,6 +65,7 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109
 4. **Production domain** is `dentory.ca` (links on `app.dentory.ca`, email from `@dentory.ca`, MS-100 D12). MS-112 built the app side; what Grigor adds, in this order: a Resend account with `dentory.ca` as a verified sending domain (Resend gives the SPF and DKIM records to add at the registrar) and its API key set with `supabase secrets set RESEND_API_KEY=…` on the hosted project; a static host for the `applinks/` folder at `https://app.dentory.ca` (its `apple-app-site-association` needs the Apple team id, so universal links only work once the Apple Developer team exists); until then the emails carry `https://app.dentory.ca/invite?token=…` links that the fallback page turns into `dentory://` links, and the simulator opens `dentory://invite?token=…` directly.
 5. **Try the merged tickets** in Feature QA and move the cards to Done.
 6. **Brand tickets.** MS-159 to MS-162 (#153 to #156) wait for his word on which to build and when; the landing page (MS-161) also needs the DNS records for GitHub Pages at the registrar, listed in the issue.
+7. **Password reset on the hosted projects (MS-113).** Once per project in the Supabase dashboard: Authentication, Emails, SMTP Settings, custom SMTP through Resend (`smtp.resend.com`, sender on `dentory.ca`), since Supabase's own mailer reaches only the project team; Authentication, URL Configuration, add `https://app.dentory.ca/reset-password` to Redirect URLs; Authentication, Emails, Reset password, subject "Reset your Dentory password" and the body of `supabase/templates/recovery.html`. The link then needs `app.dentory.ca` serving `applinks/` (item 4). Steps in `supabase/README.md`.
 
 ## Brand assets (outside the build order)
 

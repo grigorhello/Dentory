@@ -12,6 +12,16 @@ protocol AuthServicing: Sendable {
     /// Creates the auth user (admin sign-up step 1). Throws `AppError.emailTaken` for a known address.
     func signUp(fullName: String, email: String, password: String) async throws -> Account
     func signOut() async throws
+    /// Emails a password reset link (MS-113). Succeeds the same way for an unknown address, so the screen
+    /// never tells who has an account. Throws `AppError.validation(field: "email", …)` for a malformed
+    /// address or too many requests.
+    func sendPasswordReset(email: String) async throws
+    /// Opens the reset link: signs the link's account in for the password change. Throws
+    /// `AppError.notFound` when the link has expired or was already used.
+    func verifyPasswordReset(tokenHash: String) async throws
+    /// Sets the signed-in account's password. Throws `AppError.validation(field: "password", …)` when the
+    /// server refuses it.
+    func updatePassword(_ password: String) async throws
 }
 
 extension AppError {
@@ -20,10 +30,29 @@ extension AppError {
     static let emailTaken = AppError.validation(
         field: "email", message: "An account with this email already exists. Sign in instead."
     )
+    static let invalidEmail = AppError.validation(field: "email", message: "Enter a valid email address.")
+    static let tooManyRequests = AppError.validation(
+        field: "email", message: "Too many requests. Wait a minute, then try again."
+    )
+    static let shortPassword = AppError.validation(field: "password", message: "At least 8 characters.")
+    static let longPassword = AppError.validation(field: "password", message: "At most 72 characters.")
+    static let leakedPassword = AppError.validation(
+        field: "password", message: "This password is known from data leaks. Choose another one."
+    )
+    static let simplePassword = AppError.validation(
+        field: "password", message: "Use a mix of letters, digits and symbols."
+    )
+    static let samePassword = AppError.validation(
+        field: "password", message: "Choose a new password, not the current one."
+    )
 }
 
 struct SupabaseAuthService: AuthServicing {
     let client: SupabaseClient
+    /// Where the reset email's link points: `dentory://reset-password` on the local stack, the universal
+    /// `https://app.dentory.ca/reset-password` for the hosted project (MS-100 D12). The email template adds
+    /// `?token_hash=…&type=recovery` (`supabase/templates/recovery.html`). Nil leaves it to the project's site URL.
+    let passwordResetRedirect: URL?
 
     func restore() async throws -> RestoredSession {
         guard let stored = client.auth.currentSession else { return .none }
@@ -86,13 +115,14 @@ struct SupabaseAuthService: AuthServicing {
     /// Supabase answers a wrong password and an unknown email alike (`invalid_credentials`), so both
     /// show under the password field; `user_not_found` is the one case it names the email.
     static func appError(for error: AuthError) -> AppError {
+        if case .weakPassword(_, let reasons) = error { return weakPasswordError(reasons: reasons) }
         guard case .api(_, let code, _, _) = error else { return AppError(error) }
         switch code {
         case .userNotFound: return .unknownEmail
         case .invalidCredentials: return .wrongPassword
         case .emailNotConfirmed: return .validation(field: "email", message: "Confirm your email first.")
         case .userAlreadyExists, .emailExists: return .emailTaken
-        case .weakPassword: return .validation(field: "password", message: "At least 8 characters.")
+        case .samePassword: return .samePassword
         default: return .unknown(error.localizedDescription)
         }
     }
@@ -102,6 +132,74 @@ struct SupabaseAuthService: AuthServicing {
             try await client.auth.signOut()
         } catch {
             throw AppError(error)
+        }
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        do {
+            try await client.auth.resetPasswordForEmail(email, redirectTo: passwordResetRedirect)
+        } catch let error as AuthError {
+            if let refusal = Self.resetRequestError(for: error) { throw refusal }
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    func verifyPasswordReset(tokenHash: String) async throws {
+        do {
+            try await client.auth.verifyOTP(tokenHash: tokenHash, type: .recovery)
+        } catch let error as AuthError {
+            throw Self.resetLinkError(for: error)
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    func updatePassword(_ password: String) async throws {
+        do {
+            try await client.auth.update(user: UserAttributes(password: password))
+        } catch let error as AuthError {
+            throw Self.newPasswordError(for: error)
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    /// `POST /recover` answers an unknown address with 200 before any limit applies, so a refusal only a known
+    /// address can get (its own email limit, a recipient the project's mailer may not reach) reads as sent: the
+    /// screen must not tell who has an account (MS-113). What it refuses for every address is a malformed one
+    /// and a burst of requests from this device. Nil means the confirmation shows.
+    static func resetRequestError(for error: AuthError) -> AppError? {
+        guard case .api(_, let code, _, _) = error else { return AppError(error) }
+        switch code {
+        case .validationFailed: return .invalidEmail
+        case .overRequestRateLimit: return .tooManyRequests
+        case .overEmailSendRateLimit, .emailAddressNotAuthorized: return nil
+        default: return .unknown(error.localizedDescription)
+        }
+    }
+
+    /// `PUT /user` refuses a new password as weak (with reasons), as the current one, or past 72 bytes
+    /// (`validation_failed`); every refusal shows under the field in the app's own words.
+    static func newPasswordError(for error: AuthError) -> AppError {
+        if case .api(_, .validationFailed, _, _) = error { return .longPassword }
+        return appError(for: error)
+    }
+
+    /// supabase-swift reports `weak_password` as its own case, with GoTrue's reasons: `length`, `characters`
+    /// (the project's character rules) and `pwned` (leaked-password protection).
+    static func weakPasswordError(reasons: [String]) -> AppError {
+        if reasons.contains("pwned") { return .leakedPassword }
+        if reasons.contains("characters") { return .simplePassword }
+        return .shortPassword
+    }
+
+    /// An expired link and a used one both answer `otp_expired`; the screen offers a new link for either.
+    static func resetLinkError(for error: AuthError) -> AppError {
+        guard case .api(_, let code, _, _) = error else { return AppError(error) }
+        switch code {
+        case .otpExpired, .flowStateExpired, .flowStateNotFound: return .notFound
+        default: return .unknown(error.localizedDescription)
         }
     }
 

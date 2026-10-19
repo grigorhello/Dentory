@@ -1,0 +1,26 @@
+{{/*
+  The password reset email (ticket MS-113, MS-100 D12). Supabase Auth renders it with Go's html/template.
+  The link opens Set a new password in the app, which verifies `token_hash` with type `recovery`.
+  The app sends `redirect_to`: `dentory://reset-password` from Debug builds on the local stack, the universal
+  `https://app.dentory.ca/reset-password` otherwise. Each link prefix is written out as literal text below,
+  because html/template replaces a non-http scheme that comes from a variable with "#ZgotmplZ".
+  The same file goes into the hosted projects' "Reset password" template (supabase/README.md).
+*/}}<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f7f5f2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#201515;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f5f2;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background:#ffffff;border-radius:12px;padding:32px;">
+        <tr><td style="font-size:14px;letter-spacing:1px;text-transform:uppercase;color:#7a6f6f;padding-bottom:8px;">Password reset</td></tr>
+        <tr><td style="font-size:24px;font-weight:600;padding-bottom:16px;">Set a new password</td></tr>
+        <tr><td style="font-size:16px;line-height:24px;padding-bottom:24px;">Someone asked to reset the Dentory password for {{ .Email }}. Open the link on the iPhone or iPad that has Dentory installed to choose a new one.</td></tr>
+        <tr><td style="padding-bottom:24px;">
+          <a href="{{ if eq .RedirectTo "dentory://reset-password" }}dentory://reset-password{{ else }}https://app.dentory.ca/reset-password{{ end }}?token_hash={{ .TokenHash }}&amp;type=recovery" style="display:inline-block;background:#1a63d6;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;padding:14px 24px;border-radius:8px;">Set a new password</a>
+        </td></tr>
+        <tr><td style="font-size:14px;line-height:20px;color:#7a6f6f;padding-bottom:8px;">The link works for 1 hour and only once. If you did not ask for this, you can ignore this email; your password stays as it is.</td></tr>
+        <tr><td style="font-size:12px;line-height:18px;color:#7a6f6f;word-break:break-all;">If the button does not open the app, copy this link: {{ if eq .RedirectTo "dentory://reset-password" }}dentory://reset-password{{ else }}https://app.dentory.ca/reset-password{{ end }}?token_hash={{ .TokenHash }}&amp;type=recovery</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

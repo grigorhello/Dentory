@@ -14,16 +14,28 @@ struct RootView: View {
     /// Set while step 3 of admin sign-up is still due for the signed-in clinic.
     @State private var pendingInviteClinicID: UUID?
     @State private var didReadProgress = false
-    /// `-onboarding account` (screenshots) starts Sign in with step 1 already pushed.
-    @State private var signInPath: [OnboardingViewModel.Step]
+    /// Admin sign-up steps and Reset password, pushed on Sign in. `-onboarding account` (screenshots) starts
+    /// with step 1 already pushed.
+    @State private var signInPath: NavigationPath
     /// The token of the invitation link that opened the app: the Join screen (f5) shows whatever the
     /// session is, and the new session replaces the old one when the invitee joins (MS-112).
     @State private var invitationToken: String?
+    /// The token hash of the password reset link that opened the app: Set a new password shows whatever
+    /// the session is, and the account of the link is signed in once the password is saved (MS-113).
+    @State private var resetTokenHash: String?
 
-    init(sessionStore: SessionStore, startsOnSignUp: Bool = false, invitationToken: String? = nil) {
+    init(
+        sessionStore: SessionStore,
+        startsOnSignUp: Bool = false,
+        invitationToken: String? = nil,
+        resetTokenHash: String? = nil
+    ) {
         self.sessionStore = sessionStore
-        _signInPath = State(initialValue: startsOnSignUp ? [.account] : [])
+        _signInPath = State(
+            initialValue: startsOnSignUp ? NavigationPath([OnboardingViewModel.Step.account]) : NavigationPath()
+        )
         _invitationToken = State(initialValue: invitationToken)
+        _resetTokenHash = State(initialValue: resetTokenHash)
     }
 
     var body: some View {
@@ -39,13 +51,37 @@ struct RootView: View {
                     )
                     .id(invitationToken)
                 }
+            } else if let resetTokenHash {
+                NavigationStack {
+                    SetPasswordView(
+                        viewModel: dependencies.makeSetPasswordViewModel(
+                            tokenHash: resetTokenHash, sessionStore: sessionStore
+                        ),
+                        onFinished: {
+                            dependencies.toasts.show("Password updated")
+                            self.resetTokenHash = nil
+                        },
+                        onSignIn: { self.resetTokenHash = nil }
+                    )
+                    .navigationDestination(for: PasswordResetRoute.self) { resetPassword($0) }
+                }
+                // A newer link starts over, even when Reset password is pushed over the expired one.
+                .id(resetTokenHash)
             } else {
                 sessionContent
             }
         }
         .onOpenURL { url in
+            // A link takes over the root; Sign in starts clean behind it, so leaving the link shows Sign in
+            // itself, not a screen pushed before the link was opened (Reset password, sign-up).
             if let token = InvitationLink.token(from: url) {
+                signInPath = NavigationPath()
+                resetTokenHash = nil
                 invitationToken = token
+            } else if let tokenHash = PasswordResetLink.tokenHash(from: url) {
+                signInPath = NavigationPath()
+                invitationToken = nil
+                resetTokenHash = tokenHash
             }
         }
         .onAppear {
@@ -76,6 +112,7 @@ struct RootView: View {
                             viewModel: dependencies.makeOnboardingViewModel(sessionStore: sessionStore)
                         ) { pendingInviteClinicID = nil }
                     }
+                    .navigationDestination(for: PasswordResetRoute.self) { resetPassword($0) }
             }
         case .needsClinic(let account):
             NavigationStack {
@@ -94,6 +131,11 @@ struct RootView: View {
                 .environment(router)
                 .environment(\.session, session)
         }
+    }
+
+    /// Reset password, from Sign in's Forgot password or from an expired reset link (MS-113).
+    private func resetPassword(_ route: PasswordResetRoute) -> some View {
+        ResetPasswordView(viewModel: dependencies.makeResetPasswordViewModel(email: route.email))
     }
 }
 
