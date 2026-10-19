@@ -150,8 +150,9 @@ struct PushedScreenModifier: ViewModifier {
 }
 
 /// The page both screen kinds share: the header and the offline banner pinned at the top, the content in a
-/// scroll view under them, both in the 720 pt column on the cream page.
-struct ScreenScaffold<Header: View, Content: View>: View {
+/// scroll view under them, both in the 720 pt column on the cream page. The 16 pt gap under the header is split
+/// so scrolled content clips 8 pt below the pinned block, where the frames cut it (f13-2, f20-2).
+private struct ScreenScaffold<Header: View, Content: View>: View {
     @ViewBuilder let header: () -> Header
     @ViewBuilder let content: () -> Content
 
@@ -161,12 +162,13 @@ struct ScreenScaffold<Header: View, Content: View>: View {
                 header()
                 OfflineBannerHost()
             }
+            .padding(.bottom, Spacing.sm)
             .column()
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     content()
                 }
-                .padding(.top, Spacing.lg)
+                .padding(.top, Spacing.sm)
                 .padding(.bottom, Spacing.xl)
                 .column()
             }
