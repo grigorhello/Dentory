@@ -37,12 +37,11 @@ revoke execute on function public.procedure_templates_list(uuid) from public, an
 grant execute on function public.procedure_templates_list(uuid) to authenticated, service_role;
 
 -- Past procedures, newest first, cancelled ones included: name, when, who (the member's full name, empty when
--- the membership is gone), how many supplies were recorded, and when it was cancelled. Pages continue after
--- the last row of the previous page (`p_before_at`, `p_before_id`), so a procedure started meanwhile neither
--- repeats nor hides a row.
-create function public.procedure_history(
-  p_clinic_id uuid, p_before_at timestamptz default null, p_before_id uuid default null, p_limit integer default 30
-)
+-- the membership is gone), how many supplies were recorded, and when it was cancelled. A page continues after
+-- the previous page's last row, named by its id (`p_after_id`): the server looks up that row's exact time, so
+-- a procedure started meanwhile neither repeats nor hides a row, even one started in the same second. (A time
+-- sent by the app would come back rounded to the second and skip such rows.)
+create function public.procedure_history(p_clinic_id uuid, p_after_id uuid default null, p_limit integer default 30)
 returns table (
   id uuid,
   name text,
@@ -66,10 +65,12 @@ as $$
   from public.procedure_events e
   left join public.memberships m on m.clinic_id = e.clinic_id and m.user_id = e.started_by
   where e.clinic_id = p_clinic_id
-    and (p_before_at is null
-      or (e.started_at, e.id) < (p_before_at, coalesce(p_before_id, 'ffffffff-ffff-ffff-ffff-ffffffffffff'::uuid)))
+    and (p_after_id is null
+      or (e.started_at, e.id) < (
+        select c.started_at, c.id from public.procedure_events c where c.id = p_after_id and c.clinic_id = p_clinic_id
+      ))
   order by e.started_at desc, e.id desc
   limit least(greatest(coalesce(p_limit, 30), 1), 100);
 $$;
-revoke execute on function public.procedure_history(uuid, timestamptz, uuid, integer) from public, anon;
-grant execute on function public.procedure_history(uuid, timestamptz, uuid, integer) to authenticated, service_role;
+revoke execute on function public.procedure_history(uuid, uuid, integer) from public, anon;
+grant execute on function public.procedure_history(uuid, uuid, integer) to authenticated, service_role;

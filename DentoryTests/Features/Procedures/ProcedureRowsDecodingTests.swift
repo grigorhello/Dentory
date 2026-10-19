@@ -27,16 +27,23 @@ struct ProcedureRowsDecodingTests {
         #expect(rows.last?.startedByName == "")
     }
 
-    @Test func theFirstPageSendsTheCursorAsNulls() throws {
-        let params = ProcedureHistoryParams(
-            pClinicId: Session.demo.clinicID, pBeforeAt: nil, pBeforeId: nil, pLimit: 30
-        )
-        let object = try #require(
-            try JSONSerialization.jsonObject(with: JSONEncoder.supabase.encode(params)) as? [String: Any]
-        )
-        #expect(Set(object.keys) == ["p_clinic_id", "p_before_at", "p_before_id", "p_limit"])
-        #expect(object["p_before_at"] is NSNull)
-        #expect(object["p_before_id"] is NSNull)
+    @Test func theFirstPageSendsTheCursorAsNull() throws {
+        let params = ProcedureHistoryParams(pClinicId: Session.demo.clinicID, pAfterId: nil, pLimit: 30)
+        let object = try encoded(params)
+        #expect(Set(object.keys) == ["p_clinic_id", "p_after_id", "p_limit"])
+        #expect(object["p_after_id"] is NSNull)
         #expect((object["p_limit"] as? NSNumber)?.intValue == 30)
+    }
+
+    @Test func theNextPageNamesTheLastRowByItsIdAlone() throws {
+        let last = ProcedureEventSummary.demo[2]
+        let params = ProcedureHistoryParams(pClinicId: Session.demo.clinicID, pAfterId: last.id, pLimit: 30)
+        let object = try encoded(params)
+        #expect((object["p_after_id"] as? String)?.lowercased() == last.id.uuidString.lowercased())
+        #expect(Set(object.keys) == ["p_clinic_id", "p_after_id", "p_limit"], "No time goes out; the server reads it")
+    }
+
+    private func encoded(_ params: ProcedureHistoryParams) throws -> [String: Any] {
+        try #require(try JSONSerialization.jsonObject(with: JSONEncoder.supabase.encode(params)) as? [String: Any])
     }
 }

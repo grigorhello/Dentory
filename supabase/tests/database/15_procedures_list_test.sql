@@ -1,6 +1,6 @@
 -- MS-122 · procedure_templates_list and procedure_history: what the Procedures tab reads, clinic-isolated.
 begin;
-select plan(17);
+select plan(18);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000e31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -43,13 +43,16 @@ insert into public.procedure_template_items (clinic_id, template_id, product_id,
   ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e71', '00000000-0000-4000-8000-000000000e65', 1, 5),
   ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e72', '00000000-0000-4000-8000-000000000e61', 1, 1),
   ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e72', '00000000-0000-4000-8000-000000000e64', 1, 2);
--- History: a Filling yesterday by Sarah, a cancelled Crown this morning by Michael, a Root canal an hour ago by
--- someone who has left the clinic, and another clinic's procedure.
+-- History: a Filling yesterday by Sarah, a cancelled Crown this morning by Michael, two Extractions by Sarah
+-- within the same second three hours ago (the second one a few hundred milliseconds earlier), a Root canal an
+-- hour ago by someone who has left the clinic, and another clinic's procedure.
 insert into public.procedure_events (id, clinic_id, template_id, name, started_by, started_at, cancelled_at, cancelled_by, cancel_note) values
   ('00000000-0000-4000-8000-000000000e81', '00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e73', 'Filling', '00000000-0000-4000-8000-000000000e31', now() - interval '1 day', null, null, null),
   ('00000000-0000-4000-8000-000000000e82', '00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e72', 'Crown', '00000000-0000-4000-8000-000000000e32', now() - interval '5 hours', now() - interval '4 hours', '00000000-0000-4000-8000-000000000e32', 'Logged by mistake'),
   ('00000000-0000-4000-8000-000000000e83', '00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e71', 'Root canal', '00000000-0000-4000-8000-000000000e34', now() - interval '1 hour', null, null, null),
-  ('00000000-0000-4000-8000-000000000e84', '00000000-0000-4000-8000-000000000e42', null, 'Other clinic procedure', '00000000-0000-4000-8000-000000000e33', now(), null, null, null);
+  ('00000000-0000-4000-8000-000000000e84', '00000000-0000-4000-8000-000000000e42', null, 'Other clinic procedure', '00000000-0000-4000-8000-000000000e33', now(), null, null, null),
+  ('00000000-0000-4000-8000-000000000e85', '00000000-0000-4000-8000-000000000e41', null, 'Extraction A', '00000000-0000-4000-8000-000000000e31', date_trunc('second', now() - interval '3 hours') + interval '900 milliseconds', null, null, null),
+  ('00000000-0000-4000-8000-000000000e86', '00000000-0000-4000-8000-000000000e41', null, 'Extraction B', '00000000-0000-4000-8000-000000000e31', date_trunc('second', now() - interval '3 hours') + interval '500 milliseconds', null, null, null);
 insert into public.procedure_event_items (clinic_id, event_id, product_id, qty) values
   ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e81', '00000000-0000-4000-8000-000000000e61', 1),
   ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e82', '00000000-0000-4000-8000-000000000e61', 1),
@@ -66,8 +69,8 @@ end;
 $$;
 
 select ok(not has_function_privilege('anon', 'public.procedure_templates_list(uuid)', 'execute'), 'anon cannot list templates');
-select ok(not has_function_privilege('anon', 'public.procedure_history(uuid, timestamptz, uuid, integer)', 'execute'), 'nor read the history');
-select ok(has_function_privilege('authenticated', 'public.procedure_history(uuid, timestamptz, uuid, integer)', 'execute'), 'members can');
+select ok(not has_function_privilege('anon', 'public.procedure_history(uuid, uuid, integer)', 'execute'), 'nor read the history');
+select ok(has_function_privilege('authenticated', 'public.procedure_history(uuid, uuid, integer)', 'execute'), 'members can');
 
 select pg_temp.act_as('00000000-0000-4000-8000-000000000e32');
 select results_eq(
@@ -85,20 +88,23 @@ select is(
   'taking the last unopened bottle of a multi-use product new uses it up');
 select results_eq(
   $$ select name, started_by_name, item_count, cancelled_at is not null from public.procedure_history('00000000-0000-4000-8000-000000000e41') $$,
-  $$ values ('Root canal', '', 3, false), ('Crown', 'Michael Reyes', 2, true), ('Filling', 'Sarah Mitchell', 1, false) $$,
+  $$ values ('Root canal', '', 3, false), ('Extraction A', 'Sarah Mitchell', 0, false), ('Extraction B', 'Sarah Mitchell', 0, false),
+            ('Crown', 'Michael Reyes', 2, true), ('Filling', 'Sarah Mitchell', 1, false) $$,
   'history is newest first with who started each, its supply count and whether it was cancelled');
 select results_eq(
-  $$ select name from public.procedure_history('00000000-0000-4000-8000-000000000e41', null, null, 2) $$,
-  $$ values ('Root canal'), ('Crown') $$,
+  $$ select name from public.procedure_history('00000000-0000-4000-8000-000000000e41', null, 2) $$,
+  $$ values ('Root canal'), ('Extraction A') $$,
   'a page holds at most the limit');
 select results_eq(
-  $$ select h.name from public.procedure_history('00000000-0000-4000-8000-000000000e41',
-       (select started_at from public.procedure_events where id = '00000000-0000-4000-8000-000000000e82'),
-       '00000000-0000-4000-8000-000000000e82', 2) h $$,
+  $$ select name from public.procedure_history('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e85', 2) $$,
+  $$ values ('Extraction B'), ('Crown') $$,
+  'the next page starts with the procedure started in the same second as the last row');
+select results_eq(
+  $$ select name from public.procedure_history('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e82', 2) $$,
   $$ values ('Filling') $$,
-  'the next page continues after the last row of the previous one');
+  'and the last page ends with the oldest');
 select is(
-  (select count(*) from public.procedure_history('00000000-0000-4000-8000-000000000e41', null, null, 0)), 1::bigint,
+  (select count(*) from public.procedure_history('00000000-0000-4000-8000-000000000e41', null, 0)), 1::bigint,
   'a limit below 1 still returns one row');
 select is((select count(*) from public.procedure_templates_list('00000000-0000-4000-8000-000000000e42')), 0::bigint,
   'another clinic''s templates stay hidden');

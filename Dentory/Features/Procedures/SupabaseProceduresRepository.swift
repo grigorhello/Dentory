@@ -19,9 +19,7 @@ struct SupabaseProceduresRepository: ProceduresRepository {
 
     func history(clinicID: UUID, after: ProcedureEventSummary?, limit: Int) async throws -> [ProcedureEventSummary] {
         do {
-            let params = ProcedureHistoryParams(
-                pClinicId: clinicID, pBeforeAt: after?.startedAt, pBeforeId: after?.id, pLimit: limit
-            )
+            let params = ProcedureHistoryParams(pClinicId: clinicID, pAfterId: after?.id, pLimit: limit)
             return try await client.rpc("procedure_history", params: params).execute().value
         } catch {
             throw AppError(error)
