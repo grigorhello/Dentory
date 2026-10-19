@@ -109,7 +109,7 @@ struct PushedHeader: View {
 }
 
 /// A root screen: cream page, custom header, offline banner, 720 pt column. The system
-/// navigation bar is hidden; the header is drawn (PRD §7).
+/// navigation bar is hidden; the header is drawn (PRD §7) and stays pinned while the content scrolls under it.
 struct RootScreenModifier<Trailing: View>: ViewModifier {
     var eyebrow: String?
     let title: String
@@ -117,25 +117,18 @@ struct RootScreenModifier<Trailing: View>: ViewModifier {
     let trailing: () -> Trailing
 
     func body(content: Content) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                RootHeader(eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing)
-                OfflineBannerHost()
-                content
-            }
-            .padding(.horizontal, Spacing.page)
-            .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+        ScreenScaffold {
+            RootHeader(eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing)
+        } content: {
+            content
         }
-        .scrollDismissesKeyboard(.interactively)
-        .background(Color.ms.canvas)
         .toolbar(.hidden, for: .navigationBar)
         .navigationTitle(title)
     }
 }
 
-/// A pushed screen: back chevron header, cream page, 720 pt column. The tab bar hides
+/// A pushed screen: back chevron header, cream page, 720 pt column. The header stays pinned while the content
+/// scrolls under it (f13-2, f15-2, f20-2), so a header action such as Save is always in reach. The tab bar hides
 /// because the tab's path is no longer empty (`AppTabsView`).
 struct PushedScreenModifier: ViewModifier {
     let title: String
@@ -145,22 +138,50 @@ struct PushedScreenModifier: ViewModifier {
     var style: PushedHeaderStyle = .title
 
     func body(content: Content) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                PushedHeader(title: title, subtitle: subtitle, identifier: identifier, action: action, style: style)
-                OfflineBannerHost()
-                content
-            }
-            .padding(.horizontal, Spacing.page)
-            .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+        ScreenScaffold {
+            PushedHeader(title: title, subtitle: subtitle, identifier: identifier, action: action, style: style)
+        } content: {
+            content
         }
-        .scrollDismissesKeyboard(.interactively)
-        .background(Color.ms.canvas)
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
         .navigationTitle(title)
+    }
+}
+
+/// The page both screen kinds share: the header and the offline banner pinned at the top, the content in a
+/// scroll view under them, both in the 720 pt column on the cream page.
+struct ScreenScaffold<Header: View, Content: View>: View {
+    @ViewBuilder let header: () -> Header
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                header()
+                OfflineBannerHost()
+            }
+            .column()
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    content()
+                }
+                .padding(.top, Spacing.lg)
+                .padding(.bottom, Spacing.xl)
+                .column()
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .background(Color.ms.canvas)
+    }
+}
+
+private extension View {
+    /// The page gutter and the 720 pt column, centred on a wide screen.
+    func column() -> some View {
+        padding(.horizontal, Spacing.page)
+            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
+            .frame(maxWidth: .infinity)
     }
 }
 
