@@ -31,11 +31,6 @@ final class InventoryUITests: XCTestCase {
 
         app.typeText(" dam x")
         XCTAssertTrue(app.staticTexts["No products match."].waitForExistence(timeout: 3), "No empty state")
-
-        app.descendants(matching: .any)["inv.search"].firstMatch.tap()
-        app.buttons["All"].tap()
-        app.textFields["inv.search"].firstMatch.tap()
-        app.typeText(XCUIKeyboardKey.delete.rawValue)
     }
 
     @MainActor

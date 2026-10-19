@@ -151,6 +151,7 @@ private struct InventoryEmptyClinic: View {
         InventoryListView(session: .demo, dependencies: .preview())
     }
     .environment(AppRouter(selectedTab: .inventory))
+    .environment(\.session, Session.demo)
 }
 
 #Preview("Inventory · Staff") {

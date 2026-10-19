@@ -22,8 +22,8 @@ extension ProductSummary {
         demo(8, "Gutta percha F2", "Endodontics", "packs", .countable, 7, 7, 0, 3, .missingExpiry),
         demo(9, "Root canal sealer", "Endodontics", "kits", .multiUse, 1, 0, 1, 0, .low),
         demo(10, "Temporary cement", "Restorative", "kits", .multiUse, 1, 0, 1, 0, .low),
-        demo(11, "Suction tips", "Disposable", "bags", .countable, 8, 8, 0, 4, .healthy),
-        demo(12, "Alginate impression", "Impression", "bags", .multiUse, 3, 2, 1, 1, .healthy)
+        demo(11, "Suction tips", "Disposable", "bags", .countable, 9, 9, 0, 4, .healthy),
+        demo(12, "Alginate impression", "Impression", "bags", .multiUse, 4, 3, 1, 1, .healthy)
     ]
 
     // swiftlint:disable:next function_parameter_count
