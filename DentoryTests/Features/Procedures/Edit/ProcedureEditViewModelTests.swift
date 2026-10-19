@@ -166,7 +166,9 @@ struct ProcedureEditViewModelTests {
 
     @Test func aTakenNameShowsUnderTheFieldUntilItChanges() async {
         let repository = FakeProcedureEditRepository()
-        repository.saveError = AppError.validation(field: "name", message: "Another procedure is already called Filling.")
+        repository.saveError = AppError.validation(
+            field: "name", message: "Another procedure is already called Filling."
+        )
         let viewModel = await make(repository)
         viewModel.name = "filling"
         await viewModel.save()

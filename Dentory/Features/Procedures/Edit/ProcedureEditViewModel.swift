@@ -149,9 +149,13 @@ final class ProcedureEditViewModel: ProcedureItemPicking {
         }
         await saveGuard.run {
             generalError = nil
+            let lines = items.map { item in
+                ProcedureTemplateSaveRequest.Line(
+                    productID: item.id, defaultQuantity: item.tracking == .countable ? item.quantity : 0
+                )
+            }
             let request = ProcedureTemplateSaveRequest(
-                clinicID: clinicID, templateID: templateID, name: trimmed,
-                lines: items.map { .init(productID: $0.id, defaultQuantity: $0.tracking == .countable ? $0.quantity : 0) }
+                clinicID: clinicID, templateID: templateID, name: trimmed, lines: lines
             )
             do {
                 let saved = try await repository.save(request)
