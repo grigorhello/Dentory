@@ -87,12 +87,14 @@ final class ProductDetailUITests: XCTestCase {
         XCTAssertTrue(historyRow(app, reading: "Damaged · Sarah").exists, "No adjustment row in History")
     }
 
-    /// The Available column of the quantity card is one combined element ("Available, 52, cartridges").
+    /// The Available column of the quantity card is one combined element ("Available, 52, cartridges") that
+    /// carries the card's identifier itself, so it is matched directly rather than among the card's children.
     @MainActor
     private func availableColumn(_ app: XCUIApplication, reads value: String) -> XCUIElement {
-        app.descendants(matching: .any)["product.quantity"]
-            .descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", "Available, \(value)"))
+        app.descendants(matching: .any)
+            .matching(NSPredicate(
+                format: "identifier == %@ AND label BEGINSWITH %@", "product.quantity", "Available, \(value),"
+            ))
             .firstMatch
     }
 
