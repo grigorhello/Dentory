@@ -31,7 +31,7 @@ final class FakeInvitationRepository: InvitationRepository, @unchecked Sendable 
 }
 
 extension Invitation {
-    static let fixture = Invitation(
+    nonisolated static let fixture = Invitation(
         clinicName: "Smile Dental",
         invitedByName: "Sarah Mitchell",
         role: .staff,
