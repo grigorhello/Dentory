@@ -12,6 +12,16 @@ protocol AuthServicing: Sendable {
     /// Creates the auth user (admin sign-up step 1). Throws `AppError.emailTaken` for a known address.
     func signUp(fullName: String, email: String, password: String) async throws -> Account
     func signOut() async throws
+    /// Emails a password reset link (MS-113). Succeeds the same way for an unknown address, so the screen
+    /// never tells who has an account. Throws `AppError.validation(field: "email", …)` for a malformed
+    /// address or too many requests.
+    func sendPasswordReset(email: String) async throws
+    /// Opens the reset link: signs the link's account in for the password change. Throws
+    /// `AppError.notFound` when the link has expired or was already used.
+    func verifyPasswordReset(tokenHash: String) async throws
+    /// Sets the signed-in account's password. Throws `AppError.validation(field: "password", …)` when the
+    /// server refuses it.
+    func updatePassword(_ password: String) async throws
 }
 
 extension AppError {
@@ -20,10 +30,22 @@ extension AppError {
     static let emailTaken = AppError.validation(
         field: "email", message: "An account with this email already exists. Sign in instead."
     )
+    static let invalidEmail = AppError.validation(field: "email", message: "Enter a valid email address.")
+    static let tooManyResetLinks = AppError.validation(
+        field: "email", message: "Too many links sent. Wait a minute, then try again."
+    )
+    static let shortPassword = AppError.validation(field: "password", message: "At least 8 characters.")
+    static let samePassword = AppError.validation(
+        field: "password", message: "Choose a new password, not the current one."
+    )
 }
 
 struct SupabaseAuthService: AuthServicing {
     let client: SupabaseClient
+    /// Where the reset email's link points: `dentory://reset-password` on the local stack, the universal
+    /// `https://app.dentory.ca/reset-password` for the hosted project (MS-100 D12). The email template adds
+    /// `?token_hash=…&type=recovery` (`supabase/templates/recovery.html`). Nil leaves it to the project's site URL.
+    let passwordResetRedirect: URL?
 
     func restore() async throws -> RestoredSession {
         guard let stored = client.auth.currentSession else { return .none }
@@ -92,7 +114,8 @@ struct SupabaseAuthService: AuthServicing {
         case .invalidCredentials: return .wrongPassword
         case .emailNotConfirmed: return .validation(field: "email", message: "Confirm your email first.")
         case .userAlreadyExists, .emailExists: return .emailTaken
-        case .weakPassword: return .validation(field: "password", message: "At least 8 characters.")
+        case .weakPassword: return .shortPassword
+        case .samePassword: return .samePassword
         default: return .unknown(error.localizedDescription)
         }
     }
@@ -102,6 +125,56 @@ struct SupabaseAuthService: AuthServicing {
             try await client.auth.signOut()
         } catch {
             throw AppError(error)
+        }
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        do {
+            try await client.auth.resetPasswordForEmail(email, redirectTo: passwordResetRedirect)
+        } catch let error as AuthError {
+            throw Self.resetRequestError(for: error)
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    func verifyPasswordReset(tokenHash: String) async throws {
+        do {
+            try await client.auth.verifyOTP(tokenHash: tokenHash, type: .recovery)
+        } catch let error as AuthError {
+            throw Self.resetLinkError(for: error)
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    func updatePassword(_ password: String) async throws {
+        do {
+            try await client.auth.update(user: UserAttributes(password: password))
+        } catch let error as AuthError {
+            throw Self.appError(for: error)
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    /// `POST /recover` answers an unknown address like a known one; what it does refuse is a malformed
+    /// address and a burst of requests.
+    static func resetRequestError(for error: AuthError) -> AppError {
+        guard case .api(_, let code, _, _) = error else { return AppError(error) }
+        switch code {
+        case .validationFailed: return .invalidEmail
+        case .overEmailSendRateLimit, .overRequestRateLimit: return .tooManyResetLinks
+        default: return .unknown(error.localizedDescription)
+        }
+    }
+
+    /// An expired link and a used one both answer `otp_expired`; the screen offers a new link for either.
+    static func resetLinkError(for error: AuthError) -> AppError {
+        guard case .api(_, let code, _, _) = error else { return AppError(error) }
+        switch code {
+        case .otpExpired, .flowStateExpired, .flowStateNotFound: return .notFound
+        default: return .unknown(error.localizedDescription)
         }
     }
 

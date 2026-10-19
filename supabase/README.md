@@ -31,3 +31,20 @@ Deploy with `supabase functions deploy invite_member` and `supabase functions de
 1. `make db-start`, `make db-reset seed-demo`, run the Debug build, sign in as sarah@smiledental.ca (Admin, password `smiledental`) or sign up a new clinic and invite someone at step 3; or call the function by hand with a signed-in user's token.
 2. `make invite-links` prints the links from the function log, as `dentory://invite?token=…`.
 3. `xcrun simctl openurl booted "dentory://invite?token=…"` opens the Join screen on the running simulator. The universal `https://app.dentory.ca/invite?token=…` form needs the domain and the Apple team id (`applinks/README.md`).
+
+## Password reset email (MS-113)
+
+Supabase Auth sends it, not an Edge Function. Its template is `templates/recovery.html` (`[auth.email.template.recovery]` in `config.toml`): the link is `dentory://reset-password?token_hash=…&type=recovery` when the app sent `redirect_to=dentory://reset-password` (Debug builds, `Config/Debug.xcconfig`) and the universal `https://app.dentory.ca/reset-password?token_hash=…&type=recovery` otherwise. The app verifies the token hash with `verifyOTP(type: .recovery)`, so the link works on any device that has the app, with no PKCE code stored on the one that asked. An expired or used link answers `otp_expired`; the app offers a new one.
+
+### Trying it locally
+
+1. `make db-start`, `make db-reset seed-demo`, run the Debug build signed out, tap Forgot password, enter sarah@smiledental.ca and tap Send link.
+2. Open the local mail catcher at http://127.0.0.1:54324 in the simulator's Safari and tap Set a new password in the newest email: the simulator asks to open Dentory, which shows Set a new password. From the Mac, copy the link from the email and run `xcrun simctl openurl booted "dentory://reset-password?token_hash=…&type=recovery"`.
+3. Save a new password of at least 8 characters: Home opens with the toast "Password updated". Opening the same link again shows "This link has expired".
+
+### Hosted projects (once per project, by hand)
+
+- Authentication, URL Configuration, Redirect URLs: add `https://app.dentory.ca/reset-password` (and `dentory://reset-password` on staging if a Debug build points at it).
+- Authentication, Emails, Reset password: subject "Reset your Dentory password", body the whole of `templates/recovery.html`. `supabase config push` would also send it, together with the rest of `config.toml`, so the dashboard is the safer way.
+- The universal link needs `applinks/` served on `app.dentory.ca` with the Apple team id (`applinks/README.md`). Until that domain is live the hosted emails' links lead nowhere, the same open item as the invitation links.
+

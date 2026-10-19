@@ -3,6 +3,10 @@
 // put its values in Secrets.debug.xcconfig (git-ignored); it is included last and wins.
 // xcconfig treats "//" as a comment, so the URL scheme is written as http:/$()/
 SUPABASE_URL = http:/$()/127.0.0.1:54321
+
+// Where the password reset email's link points (MS-113): the app's own scheme, so the link opens the
+// simulator's app from the local mail catcher (http://127.0.0.1:54324) with no web page in between.
+PASSWORD_RESET_URL = dentory:/$()/reset-password
 SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
 
 // No crash reporting from Debug builds unless Secrets.debug.xcconfig sets a DSN.

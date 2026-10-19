@@ -160,7 +160,13 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# `dentory://reset-password` and the universal link are where the password reset email points (MS-113,
+# supabase/templates/recovery.html); the app sends one of them as `redirect_to`.
+additional_redirect_urls = [
+  "https://127.0.0.1:3000",
+  "dentory://reset-password",
+  "https://app.dentory.ca/reset-password",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -247,6 +253,13 @@ otp_expiry = 3600
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
+
+# The password reset email (MS-113): its link carries the token hash the app verifies with
+# `verifyOTP(type: .recovery)`. The hosted projects need the same subject and file under
+# Authentication, Emails, "Reset password" (supabase/README.md). The path is relative to the repository.
+[auth.email.template.recovery]
+subject = "Reset your Dentory password"
+content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

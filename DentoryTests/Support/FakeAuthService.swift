@@ -50,4 +50,29 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
         signOutCount += 1
         storedSession = nil
     }
+
+    var resetResult: Result<Void, Error> = .success(())
+    var verifyResult: Result<Void, Error> = .success(())
+    var updatePasswordResult: Result<Void, Error> = .success(())
+    /// The session `restore()` answers once the new password is saved, as the recovery session would.
+    var sessionAfterReset: Session? = .demo
+    private(set) var resetEmails: [String] = []
+    private(set) var verifiedTokenHashes: [String] = []
+    private(set) var updatedPasswords: [String] = []
+
+    func sendPasswordReset(email: String) async throws {
+        resetEmails.append(email)
+        try resetResult.get()
+    }
+
+    func verifyPasswordReset(tokenHash: String) async throws {
+        verifiedTokenHashes.append(tokenHash)
+        try verifyResult.get()
+    }
+
+    func updatePassword(_ password: String) async throws {
+        updatedPasswords.append(password)
+        try updatePasswordResult.get()
+        storedSession = sessionAfterReset
+    }
 }
