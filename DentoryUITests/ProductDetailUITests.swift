@@ -135,7 +135,9 @@ final class ProductDetailUITests: XCTestCase {
             .firstMatch
         XCTAssertTrue(finished.exists, "No Finished button")
         finished.tap()
-        XCTAssertTrue(app.staticTexts["0 unopened · 2 open"].waitForExistence(timeout: 5), "Finished did not remove the row")
+        XCTAssertTrue(
+            app.staticTexts["0 unopened · 2 open"].waitForExistence(timeout: 5), "Finished did not remove the row"
+        )
         XCTAssertTrue(toast.staticTexts["Bottle finished"].waitForExistence(timeout: 5), "No toast after Finished")
         XCTAssertTrue(toast.staticTexts["Surface disinfectant · 0 unopened · 2 open"].exists, "Toast detail is off")
     }

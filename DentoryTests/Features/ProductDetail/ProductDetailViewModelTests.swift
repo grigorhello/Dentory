@@ -400,7 +400,8 @@ extension ProductDetail {
             tracking: .multiUse, quantity: unopened + 2, unopened: unopened, openCount: 2,
             openBottles: [
                 OpenBottle(
-                    id: UUID(), openedAt: Session.demoNow.addingTimeInterval(-3 * 86_400), openedByName: "Sarah Mitchell"
+                    id: UUID(), openedAt: Session.demoNow.addingTimeInterval(-3 * 86_400),
+                    openedByName: "Sarah Mitchell"
                 ),
                 OpenBottle(id: UUID(), openedAt: Session.demoNow, openedByName: "Michael Reyes")
             ]
