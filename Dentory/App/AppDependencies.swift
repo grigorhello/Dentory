@@ -19,6 +19,7 @@ struct AppDependencies: Sendable {
     let homeRepository: HomeRepository
     let inventoryRepository: InventoryRepository
     let productDetailRepository: ProductDetailRepository
+    let proceduresRepository: ProceduresRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -63,6 +64,7 @@ struct AppDependencies: Sendable {
             homeRepository: SupabaseHomeRepository(client: client),
             inventoryRepository: SupabaseInventoryRepository(client: client),
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
+            proceduresRepository: SupabaseProceduresRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -107,6 +109,7 @@ struct AppDependencies: Sendable {
             homeRepository: DemoHomeRepository(),
             inventoryRepository: DemoInventoryRepository(),
             productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
+            proceduresRepository: DemoProceduresRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -122,6 +125,18 @@ struct AppDependencies: Sendable {
             cache: cache,
             formatters: formatters(for: session),
             clinicID: session.clinicID
+        )
+    }
+
+    /// The Procedures tab of the signed-in clinic (MS-122).
+    @MainActor
+    func makeProceduresViewModel(session: Session) -> ProceduresViewModel {
+        ProceduresViewModel(
+            repository: proceduresRepository,
+            cache: cache,
+            formatters: formatters(for: session),
+            clinicID: session.clinicID,
+            isAdmin: session.isAdmin
         )
     }
 
