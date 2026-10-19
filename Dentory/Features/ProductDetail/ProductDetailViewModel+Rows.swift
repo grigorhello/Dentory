@@ -87,13 +87,28 @@ extension ProductDetailViewModel {
 
     var canOpenNewBottle: Bool { (detail?.unopened ?? 0) > 0 }
 
+    /// What one of the product is called: "syringe" for syringes, "kit" for kits, else "bottle" (PRD §4).
+    var bottleNoun: String {
+        Self.bottleNoun(forUnit: unit)
+    }
+
+    nonisolated static func bottleNoun(forUnit unit: String) -> String {
+        let lowered = unit.lowercased()
+        if lowered.contains("syringe") { return "syringe" }
+        if lowered.contains("kit") { return "kit" }
+        return "bottle"
+    }
+
+    /// "Open a new bottle", "Open a new syringe", "Open a new kit".
+    var openNewBottleTitle: String { "Open a new \(bottleNoun)" }
+
     var bottleRows: [BottleRow] {
         guard let detail else { return [] }
         return detail.openBottles.map { bottle in
             let days = formatters.daysSince(bottle.openedAt)
             let when: String = switch days {
             case 0: "opened today"
-            case 1: "opened 1 day ago"
+            case 1: "opened yesterday"
             default: "opened \(days) days ago"
             }
             let title = "Open · \(PersonName.first(of: bottle.openedByName))"
