@@ -44,6 +44,7 @@ final class InventoryUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 5), "The Septocaine row is missing")
         row.tap()
         XCTAssertTrue(app.staticTexts["product.title"].waitForExistence(timeout: 5), "Product detail did not open")
+        XCTAssertEqual(app.staticTexts["product.title"].label, "Septocaine 4% 1:100,000")
         XCTAssertFalse(app.buttons["Inventory"].isHittable, "Tab bar is visible on a pushed screen")
         app.buttons["product.back"].tap()
         XCTAssertTrue(app.staticTexts["inv.header.title"].waitForExistence(timeout: 5))

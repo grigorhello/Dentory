@@ -57,8 +57,8 @@ struct HomeViewModelTests {
     }
 
     @Test func firstNamesComeFromTheFullName() {
-        #expect(SupabaseHomeRepository.firstName(of: "Sarah Chen") == "Sarah")
-        #expect(SupabaseHomeRepository.firstName(of: "Dr. Kim") == "Dr.")
-        #expect(SupabaseHomeRepository.firstName(of: "") == "")
+        #expect(PersonName.first(of: "Sarah Chen") == "Sarah")
+        #expect(PersonName.first(of: "Dr. Kim") == "Dr.")
+        #expect(PersonName.first(of: "") == "")
     }
 }

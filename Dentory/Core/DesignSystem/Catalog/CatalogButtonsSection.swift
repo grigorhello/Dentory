@@ -24,6 +24,19 @@ struct CatalogButtonsSection: View {
             MSButton("Start procedure · 6 items", icon: .clipboardCheck, isFullWidth: true) {}
             CatalogCaption("Full width primary action, 48 pt")
         }
+        CatalogSection("Button row") {
+            // Equal halves while both labels fit; a longer label falls through to Adjust at its own width.
+            ViewThatFits(in: .horizontal) {
+                EqualWidthHStack(spacing: Spacing.md) {
+                    MSButton("Adjust", icon: .slidersHorizontal, variant: .tertiary, isFullWidth: true) {}
+                    MSButton("Add to buy", icon: .shoppingCart, isFullWidth: true) {}
+                }
+                HStack(spacing: Spacing.md) {
+                    MSButton("Adjust", icon: .slidersHorizontal, variant: .tertiary) {}
+                    MSButton("Add to buy", icon: .shoppingCart, isFullWidth: true) {}
+                }
+            }
+        }
         CatalogSection("Icon buttons") {
             ForEach(IconButtonVariant.allCases, id: \.self) { variant in
                 HStack(spacing: Spacing.sm) {

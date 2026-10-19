@@ -1,0 +1,312 @@
+import Foundation
+import Observation
+
+/// Product detail (f20 Admin, f21 Staff): the figures, the expiry and bottle cards and the history of one
+/// product, with Add to buy and its Undo. The last answer is served from the cache while a fresh one loads
+/// or the network is gone (MS-108). Adjust, Edit, batches, bottles and Delete arrive with their own tickets.
+@MainActor
+@Observable
+final class ProductDetailViewModel {
+    enum LoadState: Equatable { case loading, loaded, failed(AppError) }
+
+    /// What the toast says after Add to buy; the view offers Undo on it.
+    struct AddedToBuy: Equatable {
+        let itemID: UUID
+        let title: String
+        let detail: String
+    }
+
+    /// One row of the expiry card.
+    struct BatchRow: Identifiable, Equatable {
+        let id: UUID
+        let dateText: String
+        let daysText: String
+        let daysTone: StatusTone
+        let quantityText: String
+        let lot: String
+    }
+
+    /// One row of the bottles card.
+    struct BottleRow: Identifiable, Equatable {
+        let id: UUID
+        let title: String
+        let subtitle: String
+    }
+
+    /// One row of the history card.
+    struct HistoryRow: Identifiable, Equatable {
+        let id: UUID
+        let deltaText: String
+        let deltaTone: StatusTone
+        let description: String
+        let dateText: String
+    }
+
+    private(set) var state: LoadState = .loading
+    private(set) var detail: ProductDetail?
+    private(set) var addedToBuy: AddedToBuy?
+    /// A refusal that belongs to no field; the view shows it as a toast.
+    private(set) var generalError: AppError?
+
+    private let repository: ProductDetailRepository
+    private let cache: ResponseCaching
+    private let formatters: ClinicFormatters
+    private let clinicID: UUID
+    private let userID: UUID
+    private let productID: UUID
+    let isAdmin: Bool
+    private let submitGuard = SubmitGuard()
+
+    init(
+        repository: ProductDetailRepository,
+        cache: ResponseCaching,
+        formatters: ClinicFormatters,
+        clinicID: UUID,
+        userID: UUID,
+        isAdmin: Bool,
+        productID: UUID
+    ) {
+        self.repository = repository
+        self.cache = cache
+        self.formatters = formatters
+        self.clinicID = clinicID
+        self.userID = userID
+        self.isAdmin = isAdmin
+        self.productID = productID
+        detail = cache.load(ProductDetail.self, for: cacheKey)
+    }
+
+    private var cacheKey: CacheKey {
+        CacheKey(method: "ProductDetailRepository.detail/\(productID.uuidString.lowercased())", clinicID: clinicID)
+    }
+
+    var isSubmitting: Bool { submitGuard.isBusy }
+
+    func load() async {
+        do {
+            let fresh = try await repository.detail(productID: productID)
+            detail = fresh
+            cache.store(fresh, for: cacheKey)
+            state = .loaded
+        } catch {
+            let appError = AppError(error)
+            state = detail == nil ? .failed(appError) : .loaded
+        }
+    }
+
+    // MARK: - Header and quantity card
+
+    /// "Anesthetic · 1 box = 50 cartridges", or "Anesthetic · cartridges" without a pack.
+    var contextLine: String {
+        guard let detail else { return "" }
+        let pack: String = if let packUnit = detail.packUnit, let packSize = detail.packSize {
+            "1 \(packUnit) = \(formatters.number(Decimal(packSize))) \(detail.unit)"
+        } else {
+            detail.unit
+        }
+        return [detail.categoryName, pack].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    var availableText: String { detail.map { formatters.number($0.quantity) } ?? "" }
+    var minimumText: String { detail.map { formatters.number($0.minimum) } ?? "" }
+    var targetText: String { detail.map { formatters.number($0.target) } ?? "" }
+
+    /// "System estimate · 38 cartridges used in 30 days"
+    var estimateLine: String {
+        guard let detail else { return "" }
+        return "System estimate · \(formatters.quantity(detail.usedInLast30Days, unit: detail.unit)) used in 30 days"
+    }
+
+    /// "Counted Oct 1" or "Never counted"
+    var countedLine: String {
+        guard let detail else { return "" }
+        return detail.lastCountedAt.map { "Counted \(formatters.monthDay($0))" } ?? "Never counted"
+    }
+
+    /// "Recommended: add 6 cartridges" when Low or Out of stock and the target is above the quantity.
+    var recommendationLine: String? {
+        guard let detail, detail.status == .low || detail.status == .outOfStock, detail.target > detail.quantity else {
+            return nil
+        }
+        return "Recommended: add \(formatters.quantity(detail.target - detail.quantity, unit: detail.unit))"
+    }
+
+    // MARK: - Add to buy
+
+    var isOnToBuy: Bool { detail?.toBuyItemID != nil }
+
+    /// "Add to buy" (Staff: "Report low stock", same effect, G2); "On To buy" once it is on the list.
+    var addToBuyTitle: String {
+        if isOnToBuy { return "On To buy" }
+        return isAdmin ? "Add to buy" : "Report low stock"
+    }
+
+    /// Target minus quantity, at least 1.
+    var suggestedToBuyQuantity: Decimal {
+        guard let detail else { return 1 }
+        return max(detail.target - detail.quantity, 1)
+    }
+
+    func addToBuy() async {
+        guard let detail, !isOnToBuy else { return }
+        await submitGuard.run {
+            generalError = nil
+            do {
+                let quantity = suggestedToBuyQuantity
+                let itemID = try await repository.addToBuy(
+                    clinicID: clinicID, productID: productID, quantity: quantity, userID: userID
+                )
+                self.detail = detail.onToBuy(itemID)
+                addedToBuy = AddedToBuy(
+                    itemID: itemID,
+                    title: "Added to To buy",
+                    detail: "\(detail.name) · \(formatters.quantity(quantity, unit: detail.unit))"
+                )
+            } catch {
+                generalError = AppError(error)
+            }
+        }
+    }
+
+    func undoAddToBuy() async {
+        guard let detail, let itemID = detail.toBuyItemID else { return }
+        addedToBuy = nil
+        do {
+            try await repository.removeFromToBuy(itemID: itemID)
+            self.detail = detail.onToBuy(nil)
+        } catch {
+            generalError = AppError(error)
+        }
+    }
+
+    func clearAddedToBuy() {
+        addedToBuy = nil
+    }
+
+    func clearGeneralError() {
+        generalError = nil
+    }
+
+    // MARK: - Expiry card
+
+    /// Dated batches with stock, soonest first.
+    var batchRows: [BatchRow] {
+        guard let detail else { return [] }
+        return detail.batches
+            .filter { $0.expiryMonth != nil && $0.quantity > 0 }
+            .sorted { ($0.expiryMonth ?? .distantFuture) < ($1.expiryMonth ?? .distantFuture) }
+            .map { batch in
+                let days = batch.expiryMonth.map(formatters.daysToExpiry(month:)) ?? 0
+                return BatchRow(
+                    id: batch.id,
+                    dateText: batch.expiryMonth.map(formatters.date(_:)) ?? "",
+                    daysText: formatters.daysLeft(days),
+                    daysTone: Self.tone(forDaysLeft: days),
+                    quantityText: formatters.number(batch.quantity),
+                    lot: batch.lot ?? ""
+                )
+            }
+    }
+
+    /// Danger within 30 days or expired, warning within 90, ink beyond (PRD §6.4).
+    nonisolated static func tone(forDaysLeft days: Int) -> StatusTone {
+        switch days {
+        case ..<31: .danger
+        case ..<91: .warning
+        default: .neutral
+        }
+    }
+
+    /// "54 of 54 tracked · 54 expire within 90 days"
+    var expiryTotalLine: String {
+        guard let detail else { return "" }
+        let dated = detail.batches.filter { $0.expiryMonth != nil && $0.quantity > 0 }
+        let tracked = dated.reduce(Decimal(0)) { $0 + $1.quantity }
+        let expiring = dated
+            .filter { batch in batch.expiryMonth.map { formatters.daysToExpiry(month: $0) <= 90 } ?? false }
+            .reduce(Decimal(0)) { $0 + $1.quantity }
+        return "\(formatters.number(tracked)) of \(formatters.number(detail.quantity)) tracked · "
+            + "\(formatters.number(expiring)) expire within 90 days"
+    }
+
+    var unit: String { detail?.unit ?? "" }
+
+    // MARK: - Bottles card (multi-use)
+
+    var isMultiUse: Bool { detail?.tracking == .multiUse }
+
+    /// "1 unopened · 2 open"
+    var bottlesLine: String {
+        guard let detail else { return "" }
+        return "\(formatters.number(detail.unopened)) unopened · \(detail.openCount) open"
+    }
+
+    var canOpenNewBottle: Bool { (detail?.unopened ?? 0) > 0 }
+
+    var bottleRows: [BottleRow] {
+        guard let detail else { return [] }
+        return detail.openBottles.map { bottle in
+            let days = formatters.daysSince(bottle.openedAt)
+            let when: String = switch days {
+            case 0: "opened today"
+            case 1: "opened 1 day ago"
+            default: "opened \(days) days ago"
+            }
+            return BottleRow(id: bottle.id, title: "Open · \(PersonName.first(of: bottle.openedByName))", subtitle: when)
+        }
+    }
+
+    // MARK: - History card
+
+    var historyRows: [HistoryRow] {
+        guard let detail else { return [] }
+        return detail.history.map { row in
+            HistoryRow(
+                id: row.id,
+                deltaText: Self.deltaText(for: row, formatters: formatters),
+                deltaTone: row.type == .count ? .neutral : (row.delta < 0 ? .danger : .success),
+                description: "\(Self.label(for: row)) · \(PersonName.first(of: row.byName))",
+                dateText: formatters.monthDay(row.at)
+            )
+        }
+    }
+
+    /// "43 → 41" for a count, "+40" or "−2" otherwise.
+    nonisolated static func deltaText(for row: StockTransaction, formatters: ClinicFormatters) -> String {
+        if row.type == .count {
+            return "\(formatters.number(row.quantityBefore)) → \(formatters.number(row.quantityAfter))"
+        }
+        let sign = row.delta < 0 ? "−" : "+"
+        return sign + formatters.number(abs(row.delta))
+    }
+
+    /// The reason ("Damaged", "Physical count"), else the reference (the procedure, the invoice), else the kind.
+    nonisolated static func label(for row: StockTransaction) -> String {
+        if let reason = row.reason, !reason.isEmpty { return reason }
+        if let reference = row.referenceLabel, !reference.isEmpty { return reference }
+        switch row.type {
+        case .receiving: return "Received"
+        case .procedure: return "Procedure"
+        case .count: return "Physical count"
+        case .adjustment: return "Adjustment"
+        case .disposal: return "Disposed"
+        case .cancellation: return "Cancelled"
+        }
+    }
+}
+
+private extension ProductDetail {
+    func onToBuy(_ itemID: UUID?) -> ProductDetail {
+        ProductDetail(
+            id: id, name: name, categoryName: categoryName, unit: unit, packUnit: packUnit, packSize: packSize,
+            minimum: minimum, target: target, tracking: tracking, location: location, status: status,
+            quantity: quantity, unopened: unopened, openCount: openCount, missingExpiryQuantity: missingExpiryQuantity,
+            usedInLast30Days: usedInLast30Days, lastCountedAt: lastCountedAt, toBuyItemID: itemID,
+            batches: batches, openBottles: openBottles, history: history
+        )
+    }
+}
+
+private extension CalendarDay {
+    static let distantFuture = CalendarDay(year: 9999, month: 12, day: 31)
+}
