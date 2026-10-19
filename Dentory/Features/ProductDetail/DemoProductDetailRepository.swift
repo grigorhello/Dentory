@@ -163,7 +163,7 @@ extension ProductDetail {
                     reason: nil, referenceLabel: "Invoice INV-10092", at: september30, byName: "Michael Reyes"
                 )
             ],
-            categoryID: ProductCategory.demo[0].id
+            categoryID: ProductCategory.demo[0].id, supplier: "Patterson"
         )
     }
 

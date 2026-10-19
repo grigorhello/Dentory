@@ -56,6 +56,16 @@ struct ProductDetailEditDeleteTests {
         #expect(!viewModel.isDeleted)
     }
 
+    @Test func addToBuyKeepsWhatTheEditSheetStartsFrom() async {
+        let detail = ProductDetail.fixture()
+        let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
+        await viewModel.load()
+        await viewModel.addToBuy()
+        #expect(viewModel.isOnToBuy)
+        #expect(viewModel.detail?.categoryID == detail.categoryID, "Add to buy dropped the category")
+        #expect(viewModel.detail?.supplier == detail.supplier, "Add to buy dropped the supplier")
+    }
+
     @Test func editOpensTheSheetAndSavingReloads() async {
         let repository = FakeProductDetailRepository()
         let viewModel = make(repository: repository)

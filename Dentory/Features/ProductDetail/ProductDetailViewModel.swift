@@ -278,7 +278,7 @@ private extension ProductDetail {
             minimum: minimum, target: target, tracking: tracking, location: location, status: status,
             quantity: quantity, unopened: unopened, openCount: openCount, missingExpiryQuantity: missingExpiryQuantity,
             usedInLast30Days: usedInLast30Days, lastCountedAt: lastCountedAt, toBuyItemID: itemID,
-            batches: batches, openBottles: openBottles, history: history
+            batches: batches, openBottles: openBottles, history: history, categoryID: categoryID, supplier: supplier
         )
     }
 }
