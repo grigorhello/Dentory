@@ -63,18 +63,23 @@ struct RootView: View {
                         },
                         onSignIn: { self.resetTokenHash = nil }
                     )
-                    .id(resetTokenHash)
                     .navigationDestination(for: PasswordResetRoute.self) { resetPassword($0) }
                 }
+                // A newer link starts over, even when Reset password is pushed over the expired one.
+                .id(resetTokenHash)
             } else {
                 sessionContent
             }
         }
         .onOpenURL { url in
+            // A link takes over the root; Sign in starts clean behind it, so leaving the link shows Sign in
+            // itself, not a screen pushed before the link was opened (Reset password, sign-up).
             if let token = InvitationLink.token(from: url) {
+                signInPath = NavigationPath()
                 resetTokenHash = nil
                 invitationToken = token
             } else if let tokenHash = PasswordResetLink.tokenHash(from: url) {
+                signInPath = NavigationPath()
                 invitationToken = nil
                 resetTokenHash = tokenHash
             }

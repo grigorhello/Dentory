@@ -44,6 +44,7 @@ Supabase Auth sends it, not an Edge Function. Its template is `templates/recover
 
 ### Hosted projects (once per project, by hand)
 
+- Authentication, Emails, SMTP Settings: turn on custom SMTP with Resend (host `smtp.resend.com`, port 465, user `resend`, password a Resend API key, sender `Dentory <noreply@dentory.ca>` on the verified domain). Supabase's own mailer only writes to the project team's addresses and a few emails an hour, so without this clinics get no reset email.
 - Authentication, URL Configuration, Redirect URLs: add `https://app.dentory.ca/reset-password` (and `dentory://reset-password` on staging if a Debug build points at it).
 - Authentication, Emails, Reset password: subject "Reset your Dentory password", body the whole of `templates/recovery.html`. `supabase config push` would also send it, together with the rest of `config.toml`, so the dashboard is the safer way.
 - The universal link needs `applinks/` served on `app.dentory.ca` with the Apple team id (`applinks/README.md`). Until that domain is live the hosted emails' links lead nowhere, the same open item as the invitation links.

@@ -74,4 +74,37 @@ final class PasswordResetUITests: XCTestCase {
         signIn.tap()
         XCTAssertTrue(app.buttons["signin.submit"].waitForExistence(timeout: 5), "Sign in did not appear")
     }
+
+    @MainActor
+    func testALinkOpenedOverResetPasswordLeavesToSignInItself() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-signedOut"]
+        app.launch()
+
+        let forgot = app.buttons["signin.forgot"]
+        XCTAssertTrue(forgot.waitForExistence(timeout: 5), "Sign in did not appear")
+        forgot.tap()
+        XCTAssertTrue(app.staticTexts["resetPassword.title"].waitForExistence(timeout: 5), "Reset password missing")
+
+        app.open(try XCTUnwrap(URL(string: "dentory://reset-password?token_hash=old-link")))
+        XCTAssertTrue(app.staticTexts["This link has expired"].waitForExistence(timeout: 5), "The link did not open")
+        app.buttons["setPassword.signIn"].tap()
+        XCTAssertTrue(app.buttons["signin.submit"].waitForExistence(timeout: 5), "Sign in did not appear")
+        XCTAssertFalse(app.staticTexts["resetPassword.title"].exists, "Reset password was left pushed on Sign in")
+    }
+
+    @MainActor
+    func testANewerLinkReplacesTheExpiredOne() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-signedOut", "-resetPassword", "old-link"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["This link has expired"].waitForExistence(timeout: 5), "No expired state")
+        app.buttons["setPassword.sendNew"].tap()
+        XCTAssertTrue(app.staticTexts["resetPassword.title"].waitForExistence(timeout: 5), "Reset password missing")
+
+        app.open(try XCTUnwrap(URL(string: "dentory://reset-password?token_hash=demo-reset")))
+        XCTAssertTrue(app.staticTexts["Set a new password"].waitForExistence(timeout: 5), "The new link is hidden")
+        XCTAssertFalse(app.staticTexts["resetPassword.title"].exists, "Reset password is still on top")
+    }
 }

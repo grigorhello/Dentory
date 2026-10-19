@@ -51,10 +51,11 @@ struct ResetPasswordViewModelTests {
 
     @Test func tooManyRequestsShowUnderTheField() async {
         let auth = FakeAuthService()
-        auth.resetResult = .failure(AppError.tooManyResetLinks)
+        auth.resetResult = .failure(AppError.tooManyRequests)
         let viewModel = ResetPasswordViewModel(email: "sarah@smiledental.ca", auth: auth)
         await viewModel.send()
-        #expect(viewModel.emailError == "Too many links sent. Wait a minute, then try again.")
+        #expect(viewModel.emailError == "Too many requests. Wait a minute, then try again.")
+        #expect(viewModel.confirmation == nil)
     }
 
     @Test func aNetworkFailureIsAToastAndKeepsTheInput() async {
