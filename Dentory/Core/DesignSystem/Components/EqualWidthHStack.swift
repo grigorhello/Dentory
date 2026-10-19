@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A row whose children share the width equally, as f20 draws Adjust beside Add to buy. Its ideal width
 /// is the widest child times the count, so inside `ViewThatFits` it wins only when every label fits in
-/// its half; a longer label such as Staff's "Report low stock" (G2) falls through to the next layout.
+/// its half; a longer label falls through to the next layout.
 nonisolated struct EqualWidthHStack: Layout {
     let spacing: CGFloat
 

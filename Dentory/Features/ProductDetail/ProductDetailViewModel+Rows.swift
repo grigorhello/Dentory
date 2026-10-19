@@ -58,15 +58,18 @@ extension ProductDetailViewModel {
         }
     }
 
-    /// "54 of 54 tracked · 54 expire within 90 days"
+    /// "54 of 54 tracked · 54 expire within 90 days": N dated of M in batches, so M − N is the undated
+    /// quantity (PRD §6.4). Open bottles are not batches, so a multi-use product counts its unopened stock.
     var expiryTotalLine: String {
         guard let detail else { return "" }
-        let dated = detail.batches.filter { $0.expiryMonth != nil && $0.quantity > 0 }
+        let stocked = detail.batches.filter { $0.quantity > 0 }
+        let dated = stocked.filter { $0.expiryMonth != nil }
+        let total = stocked.reduce(Decimal(0)) { $0 + $1.quantity }
         let tracked = dated.reduce(Decimal(0)) { $0 + $1.quantity }
         let expiring = dated
             .filter { batch in batch.expiryMonth.map { formatters.daysToExpiry(month: $0) <= 90 } ?? false }
             .reduce(Decimal(0)) { $0 + $1.quantity }
-        return "\(formatters.number(tracked)) of \(formatters.number(detail.quantity)) tracked · "
+        return "\(formatters.number(tracked)) of \(formatters.number(total)) tracked · "
             + "\(formatters.number(expiring)) expire within 90 days"
     }
 
@@ -106,18 +109,20 @@ extension ProductDetailViewModel {
             HistoryRow(
                 id: row.id,
                 deltaText: Self.deltaText(for: row, formatters: formatters),
-                deltaTone: row.type == .count ? .neutral : (row.delta < 0 ? .danger : .success),
+                deltaTone: row.type == .count || row.delta == 0 ? .neutral : (row.delta < 0 ? .danger : .success),
                 description: "\(Self.label(for: row)) · \(PersonName.first(of: row.byName))",
                 dateText: formatters.monthDay(row.at)
             )
         }
     }
 
-    /// "43 → 41" for a count, "+40" or "−2" otherwise.
+    /// "43 → 41" for a count, "+40" or "−2" otherwise, and a plain "0" for a row that moved nothing, such as
+    /// "Opened a new bottle" (MS-100 D5).
     nonisolated static func deltaText(for row: StockTransaction, formatters: ClinicFormatters) -> String {
         if row.type == .count {
             return "\(formatters.number(row.quantityBefore)) → \(formatters.number(row.quantityAfter))"
         }
+        if row.delta == 0 { return formatters.number(0) }
         let sign = row.delta < 0 ? "−" : "+"
         return sign + formatters.number(abs(row.delta))
     }

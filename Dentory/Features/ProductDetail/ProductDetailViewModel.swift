@@ -29,7 +29,6 @@ final class ProductDetailViewModel {
     private let clinicID: UUID
     private let userID: UUID
     private let productID: UUID
-    let isAdmin: Bool
     private let submitGuard = SubmitGuard()
 
     init(
@@ -38,7 +37,6 @@ final class ProductDetailViewModel {
         formatters: ClinicFormatters,
         clinicID: UUID,
         userID: UUID,
-        isAdmin: Bool,
         productID: UUID
     ) {
         self.repository = repository
@@ -46,7 +44,6 @@ final class ProductDetailViewModel {
         self.formatters = formatters
         self.clinicID = clinicID
         self.userID = userID
-        self.isAdmin = isAdmin
         self.productID = productID
         detail = cache.load(ProductDetail.self, for: cacheKey)
     }

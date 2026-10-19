@@ -133,7 +133,6 @@ struct AppDependencies: Sendable {
             formatters: formatters(for: session),
             clinicID: session.clinicID,
             userID: session.userID,
-            isAdmin: session.isAdmin,
             productID: productID
         )
     }

@@ -71,9 +71,8 @@ struct ProductDetailView: View {
         }
     }
 
-    /// Adjust beside Add to buy in equal halves (f20); when a label such as "Report low stock" (f21) does not
-    /// fit its half, Adjust keeps its own width and the primary button takes the rest, and on a narrower
-    /// screen the two stack.
+    /// Adjust beside Add to buy in equal halves (f20); when a label does not fit its half, Adjust keeps its
+    /// own width and the primary button takes the rest, and on a narrower screen the two stack.
     private var actions: some View {
         ViewThatFits(in: .horizontal) {
             EqualWidthHStack(spacing: Spacing.md) {

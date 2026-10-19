@@ -12,12 +12,11 @@ struct ProductDetailViewModelTests {
 
     private func make(
         repository: FakeProductDetailRepository = FakeProductDetailRepository(),
-        cache: ResponseCaching = InMemoryResponseCache(),
-        isAdmin: Bool = true
+        cache: ResponseCaching = InMemoryResponseCache()
     ) -> ProductDetailViewModel {
         ProductDetailViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            userID: Session.demo.userID, isAdmin: isAdmin, productID: ProductSummary.demo[0].id
+            userID: Session.demo.userID, productID: ProductSummary.demo[0].id
         )
     }
 
@@ -96,6 +95,41 @@ struct ProductDetailViewModelTests {
         #expect(rows.map(\.dateText) == ["Oct 1", "Oct 1", "Sep 30"])
     }
 
+    @Test func aRowThatMovedNothingReadsZeroInTheNeutralTone() async {
+        let opened = StockTransaction(
+            id: UUID(), type: .adjustment, delta: 0, quantityBefore: 3, quantityAfter: 3,
+            reason: nil, referenceLabel: "Opened a new bottle", at: Session.demoNow, byName: "Sarah Mitchell"
+        )
+        let detail = ProductDetail.fixture(
+            tracking: .multiUse, quantity: 3, unopened: 1, openCount: 2, history: [opened]
+        )
+        let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
+        await viewModel.load()
+        let row = viewModel.historyRows.first
+        #expect(row?.deltaText == "0", "A bottle opened is no addition (MS-100 D5)")
+        #expect(row?.deltaTone == .neutral)
+        #expect(row?.description == "Opened a new bottle · Sarah")
+    }
+
+    @Test func theExpiryTotalOfAMultiUseProductCountsBatchesNotOpenBottles() async {
+        let unopened = ProductBatch(
+            id: UUID(), expiryMonth: CalendarDay(year: 2028, month: 6, day: 1), lot: nil, quantity: 1
+        )
+        let detail = ProductDetail.fixture(
+            tracking: .multiUse, quantity: 3, unopened: 1, openCount: 2, batches: [unopened],
+            openBottles: [
+                OpenBottle(id: UUID(), openedAt: Session.demoNow, openedByName: "Sarah Mitchell"),
+                OpenBottle(id: UUID(), openedAt: Session.demoNow, openedByName: "Michael Reyes")
+            ]
+        )
+        let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
+        await viewModel.load()
+        #expect(
+            viewModel.expiryTotalLine == "1 of 1 tracked · 0 expire within 90 days",
+            "Open bottles are not undated stock"
+        )
+    }
+
     @Test func aRowWithoutReasonOrReferenceNamesItsKind() {
         let disposal = StockTransaction(
             id: UUID(), type: .disposal, delta: -3, quantityBefore: 10, quantityAfter: 7, reason: nil,
@@ -143,14 +177,6 @@ struct ProductDetailViewModelTests {
         #expect(repository.removals.count == 1)
         #expect(!viewModel.isOnToBuy)
         #expect(viewModel.addToBuyTitle == "Add to buy")
-    }
-
-    @Test func staffReadsAddToBuyTooAndAddsTheSameWay() async {
-        let viewModel = make(isAdmin: false)
-        await viewModel.load()
-        #expect(viewModel.addToBuyTitle == "Add to buy", "Both roles read Add to buy (MS-100 G2)")
-        await viewModel.addToBuy()
-        #expect(viewModel.addToBuyTitle == "On To buy")
     }
 
     @Test func aProductAlreadyOnTheListDoesNotAddAgain() async {
@@ -207,7 +233,8 @@ extension ProductDetail {
         openCount: Int = 0,
         lastCountedAt: Date? = Date(timeIntervalSince1970: 1_790_882_040),
         batches: [ProductBatch]? = nil,
-        openBottles: [OpenBottle] = []
+        openBottles: [OpenBottle] = [],
+        history: [StockTransaction]? = nil
     ) -> ProductDetail {
         let base = ProductDetail.demoSeptocaine()
         return ProductDetail(
@@ -215,7 +242,8 @@ extension ProductDetail {
             packSize: packSize, minimum: base.minimum, target: base.target, tracking: tracking,
             location: base.location, status: status, quantity: quantity, unopened: unopened, openCount: openCount,
             missingExpiryQuantity: 0, usedInLast30Days: base.usedInLast30Days, lastCountedAt: lastCountedAt,
-            toBuyItemID: nil, batches: batches ?? base.batches, openBottles: openBottles, history: base.history
+            toBuyItemID: nil, batches: batches ?? base.batches, openBottles: openBottles,
+            history: history ?? base.history
         )
     }
 }
