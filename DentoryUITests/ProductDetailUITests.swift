@@ -104,6 +104,42 @@ final class ProductDetailUITests: XCTestCase {
             .firstMatch
     }
 
+    /// MS-120: opening moves one unopened to open; Finished removes the open item; the card line follows.
+    @MainActor
+    func testOpenANewBottleThenFinishOneUpdatesTheBottlesCard() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-tab", "inventory"]
+        app.launch()
+
+        // Surface disinfectant: 1 unopened · 2 open in the demo clinic.
+        let row = app.descendants(matching: .any)["inv.row[00000000-0000-4000-8000-0000000000d6]"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "The Surface disinfectant row is missing")
+        row.tap()
+        XCTAssertTrue(app.staticTexts["product.title"].waitForExistence(timeout: 5), "Product detail did not open")
+        let line = app.staticTexts["product.bottles"]
+        XCTAssertTrue(line.waitForExistence(timeout: 5), "No bottles card")
+        XCTAssertEqual(line.label, "1 unopened · 2 open")
+
+        let openNew = app.buttons["product.openNewBottle"]
+        XCTAssertEqual(openNew.label, "Open a new bottle")
+        XCTAssertTrue(openNew.isEnabled)
+        openNew.tap()
+        let toast = app.descendants(matching: .any)["toast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Open a new bottle")
+        XCTAssertTrue(toast.staticTexts["Bottle opened"].exists, "Toast title is off")
+        XCTAssertTrue(app.staticTexts["0 unopened · 3 open"].waitForExistence(timeout: 5), "The line did not move")
+        XCTAssertFalse(openNew.isEnabled, "Nothing is unopened, so the button is disabled (stock rule)")
+
+        let finished = app.buttons
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'product.bottle['"))
+            .firstMatch
+        XCTAssertTrue(finished.exists, "No Finished button")
+        finished.tap()
+        XCTAssertTrue(app.staticTexts["0 unopened · 2 open"].waitForExistence(timeout: 5), "Finished did not remove the row")
+        XCTAssertTrue(toast.staticTexts["Bottle finished"].waitForExistence(timeout: 5), "No toast after Finished")
+        XCTAssertTrue(toast.staticTexts["Surface disinfectant · 0 unopened · 2 open"].exists, "Toast detail is off")
+    }
+
     @MainActor
     func testStaffSeesAddToBuyButNoEditOrDelete() {
         let app = XCUIApplication()

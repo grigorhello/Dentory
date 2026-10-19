@@ -1,7 +1,8 @@
 import Foundation
 
-/// Reads one product for Product detail, puts it on the To buy list (MS-116) and adjusts its quantity with
-/// a reason (MS-118). Stock itself only moves through the engine RPCs, with an idempotency key.
+/// Reads one product for Product detail, puts it on the To buy list (MS-116), adjusts its quantity with a
+/// reason (MS-118) and opens or finishes its bottles (MS-120). Stock itself only moves through the engine
+/// RPCs, with an idempotency key.
 protocol ProductDetailRepository: Sendable {
     /// `product_detail`: throws `AppError.notFound` for a product the caller cannot see or that is archived.
     func detail(productID: UUID) async throws -> ProductDetail
@@ -15,4 +16,9 @@ protocol ProductDetailRepository: Sendable {
         -> WriteOutcome
     /// `undo_action`: reverses an adjustment within 10 seconds, by the person who made it (MS-100 D10).
     func undoAdjustment(actionID: UUID) async throws
+    /// `bottle_open`: moves one unopened bottle, syringe or kit to an open item under the current user.
+    /// Refused with "Out of stock" when nothing is unopened.
+    func openBottle(productID: UUID) async throws -> WriteOutcome
+    /// `bottle_finish`: removes the open item.
+    func finishBottle(openItemID: UUID) async throws -> WriteOutcome
 }

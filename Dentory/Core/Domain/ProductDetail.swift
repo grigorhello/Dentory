@@ -36,13 +36,29 @@ nonisolated struct ProductDetail: Codable, Equatable, Sendable {
     /// The same product with `delta` added to its quantity and unopened count (an increase lands on the
     /// undated quantity, MS-100 D9) and the given history. Status is left to the server's next answer.
     func adjusted(by delta: Decimal, history: [StockTransaction]) -> ProductDetail {
+        replacing(quantity: quantity + delta, unopened: unopened + delta, history: history)
+    }
+
+    /// The same product with the open bottles replaced: the quantity stays (an open one still counts), the
+    /// unopened count moves by `unopenedDelta` (−1 when one was opened, 0 when one was finished).
+    func replacingBottles(_ bottles: [OpenBottle], unopenedDelta: Decimal, quantityDelta: Decimal) -> ProductDetail {
+        replacing(quantity: quantity + quantityDelta, unopened: unopened + unopenedDelta, openBottles: bottles)
+    }
+
+    /// A copy with some figures replaced; the open count follows the open bottles.
+    func replacing(
+        quantity: Decimal? = nil,
+        unopened: Decimal? = nil,
+        openBottles: [OpenBottle]? = nil,
+        history: [StockTransaction]? = nil
+    ) -> ProductDetail {
         ProductDetail(
             id: id, name: name, categoryName: categoryName, unit: unit, packUnit: packUnit, packSize: packSize,
             minimum: minimum, target: target, tracking: tracking, location: location, status: status,
-            quantity: quantity + delta, unopened: unopened + delta, openCount: openCount,
-            missingExpiryQuantity: missingExpiryQuantity, usedInLast30Days: usedInLast30Days,
-            lastCountedAt: lastCountedAt, toBuyItemID: toBuyItemID, batches: batches, openBottles: openBottles,
-            history: history
+            quantity: quantity ?? self.quantity, unopened: unopened ?? self.unopened,
+            openCount: openBottles?.count ?? openCount, missingExpiryQuantity: missingExpiryQuantity,
+            usedInLast30Days: usedInLast30Days, lastCountedAt: lastCountedAt, toBuyItemID: toBuyItemID,
+            batches: batches, openBottles: openBottles ?? self.openBottles, history: history ?? self.history
         )
     }
 }
