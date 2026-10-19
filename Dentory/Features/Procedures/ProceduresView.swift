@@ -3,6 +3,7 @@ import SwiftUI
 /// Procedures (f11 Admin, f12 Staff): the templates with their shortages, the note under them, and the history
 /// of past procedures. Admin gets "+ Procedure" in the header and a pencil per template.
 struct ProceduresView: View {
+    @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
     @State private var viewModel: ProceduresViewModel
     let session: Session
@@ -23,7 +24,12 @@ struct ProceduresView: View {
             }
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: ProcedureRoute.self) { route in
-                ProcedureRoutePlaceholderView(route: route)
+                switch route {
+                case .start(let templateID):
+                    ProcedureStartView(templateID: templateID, session: session, dependencies: dependencies)
+                case .event, .editTemplate:
+                    ProcedureRoutePlaceholderView(route: route)
+                }
             }
     }
 

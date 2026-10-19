@@ -13,8 +13,7 @@ struct ProcedureRoutePlaceholderView: View {
 
     private var title: String {
         switch route {
-        case .start: "Adjust, then start"
-        case .event: "Procedure"
+        case .start, .event: "Procedure"
         case .editTemplate(let id): id == nil ? "New procedure" : "Edit procedure"
         }
     }
