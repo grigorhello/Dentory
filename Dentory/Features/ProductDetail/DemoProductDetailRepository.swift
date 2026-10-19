@@ -1,27 +1,48 @@
 import Foundation
 
 /// Product detail without a server: Septocaine as f20 draws it, and a plain detail for the other demo
-/// products. Add to buy and its Undo are remembered in memory.
+/// products. Add to buy and its Undo, adjustments and their Undo are remembered in memory, so the figures
+/// and the history move the way the server's would.
 final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sendable {
+    /// What an adjustment did, so Undo can reverse it.
+    private struct Adjustment {
+        let productID: UUID
+        let delta: Decimal
+        let reason: AdjustmentReason
+    }
+
     private(set) var toBuyItemIDs: [UUID: UUID] = [:]
+    private var quantityDeltas: [UUID: Decimal] = [:]
+    private var extraHistory: [UUID: [StockTransaction]] = [:]
+    private var adjustments: [UUID: Adjustment] = [:]
+    private let byName: String
     private let lock = NSLock()
+
+    /// `byName` is who the history rows name: the signed-in person of the demo clinic.
+    init(byName: String = "Sarah Mitchell") {
+        self.byName = byName
+    }
 
     func detail(productID: UUID) async throws -> ProductDetail {
         try await Task.sleep(for: .milliseconds(200))
         guard let summary = ProductSummary.demo.first(where: { $0.id == productID }) else { throw AppError.notFound }
         let onToBuy = lock.withLock { toBuyItemIDs[productID] }
-        if summary.id == ProductSummary.demo[0].id {
-            return ProductDetail.demoSeptocaine(toBuyItemID: onToBuy)
+        let delta = lock.withLock { quantityDeltas[productID] ?? 0 }
+        let history = lock.withLock { extraHistory[productID] ?? [] }
+        let base: ProductDetail = if summary.id == ProductSummary.demo[0].id {
+            ProductDetail.demoSeptocaine(toBuyItemID: onToBuy)
+        } else {
+            ProductDetail(
+                id: summary.id, name: summary.name, categoryName: summary.categoryName, unit: summary.unit,
+                packUnit: nil, packSize: nil, minimum: summary.minimum, target: summary.minimum * 3,
+                tracking: summary.tracking, location: nil, status: summary.status, quantity: summary.quantity,
+                unopened: summary.unopened, openCount: summary.openCount, missingExpiryQuantity: 0,
+                usedInLast30Days: 0, lastCountedAt: nil, toBuyItemID: onToBuy, batches: [],
+                openBottles: summary.tracking == .multiUse ? ProductDetail.demoBottles(count: summary.openCount) : [],
+                history: []
+            )
         }
-        return ProductDetail(
-            id: summary.id, name: summary.name, categoryName: summary.categoryName, unit: summary.unit,
-            packUnit: nil, packSize: nil, minimum: summary.minimum, target: summary.minimum * 3,
-            tracking: summary.tracking, location: nil, status: summary.status, quantity: summary.quantity,
-            unopened: summary.unopened, openCount: summary.openCount, missingExpiryQuantity: 0,
-            usedInLast30Days: 0, lastCountedAt: nil, toBuyItemID: onToBuy, batches: [],
-            openBottles: summary.tracking == .multiUse ? ProductDetail.demoBottles(count: summary.openCount) : [],
-            history: []
-        )
+        return base.adjusted(by: delta, history: history + base.history)
     }
 
     func addToBuy(clinicID: UUID, productID: UUID, quantity: Decimal, userID: UUID) async throws -> UUID {
@@ -34,6 +55,47 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
     func removeFromToBuy(itemID: UUID) async throws {
         try await Task.sleep(for: .milliseconds(200))
         lock.withLock { toBuyItemIDs = toBuyItemIDs.filter { $0.value != itemID } }
+    }
+
+    func adjust(
+        productID: UUID, actualQuantity: Decimal, reason: AdjustmentReason, note: String?
+    ) async throws -> WriteOutcome {
+        try await Task.sleep(for: .milliseconds(200))
+        let current = try await detail(productID: productID)
+        let delta = actualQuantity - current.unopened
+        let actionID = UUID()
+        lock.withLock {
+            adjustments[actionID] = Adjustment(productID: productID, delta: delta, reason: reason)
+            quantityDeltas[productID, default: 0] += delta
+            extraHistory[productID, default: []].insert(
+                StockTransaction(
+                    id: UUID(), type: .adjustment, delta: delta, quantityBefore: current.quantity,
+                    quantityAfter: current.quantity + delta, reason: reason.rawValue, referenceLabel: reason.rawValue,
+                    at: Session.demoNow, byName: byName
+                ),
+                at: 0
+            )
+        }
+        return .applied(actionID: actionID)
+    }
+
+    func undoAdjustment(actionID: UUID) async throws {
+        try await Task.sleep(for: .milliseconds(200))
+        guard let adjustment = lock.withLock({ adjustments.removeValue(forKey: actionID) }) else {
+            throw AppError.validation(field: nil, message: "already undone")
+        }
+        let current = try await detail(productID: adjustment.productID)
+        lock.withLock {
+            quantityDeltas[adjustment.productID, default: 0] -= adjustment.delta
+            extraHistory[adjustment.productID, default: []].insert(
+                StockTransaction(
+                    id: UUID(), type: .adjustment, delta: -adjustment.delta, quantityBefore: current.quantity,
+                    quantityAfter: current.quantity - adjustment.delta, reason: adjustment.reason.rawValue,
+                    referenceLabel: "Undo · \(adjustment.reason.rawValue)", at: Session.demoNow, byName: byName
+                ),
+                at: 0
+            )
+        }
     }
 }
 
@@ -89,4 +151,5 @@ extension ProductDetail {
             )
         }
     }
+
 }

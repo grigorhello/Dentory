@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Product detail (f20 Admin, f21 Staff): context header, name and status, the quantity card, Adjust and
 /// Add to buy, the expiry card, the bottles card for multi-use products, the history, and Delete product
-/// for Admin. Edit, Adjust, batches, bottles, history and Delete open their own tickets' screens later.
+/// for Admin. Edit, batches, bottles, history and Delete open their own tickets' screens later.
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -36,6 +36,26 @@ struct ProductDetailView: View {
                     Task { await viewModel.undoAddToBuy() }
                 }
                 viewModel.clearAddedToBuy()
+            }
+            .onChange(of: viewModel.adjusted) { _, adjusted in
+                guard let adjusted else { return }
+                // Undo needs the server's action id; a write queued offline has none (MS-100 D10).
+                var undo: (@MainActor () -> Void)?
+                if adjusted.actionID != nil {
+                    undo = { Task { await viewModel.undoAdjustment() } }
+                }
+                dependencies.toasts.show(adjusted.title, detail: adjusted.detail, undo: undo)
+                viewModel.clearAdjusted()
+            }
+            .msSheet(item: $viewModel.sheet) { sheet in
+                switch sheet {
+                case .adjust:
+                    if let adjustViewModel = viewModel.makeAdjustInventoryViewModel() {
+                        AdjustInventorySheet(viewModel: adjustViewModel) { saved in
+                            Task { await viewModel.adjustmentSaved(saved) }
+                        }
+                    }
+                }
             }
     }
 
@@ -91,8 +111,10 @@ struct ProductDetailView: View {
     }
 
     private func adjustButton(isFullWidth: Bool) -> some View {
-        MSButton("Adjust", icon: .slidersHorizontal, variant: .tertiary, isFullWidth: isFullWidth, action: adjust)
-            .accessibilityIdentifier("product.adjust")
+        MSButton("Adjust", icon: .slidersHorizontal, variant: .tertiary, isFullWidth: isFullWidth) {
+            viewModel.openAdjust()
+        }
+        .accessibilityIdentifier("product.adjust")
     }
 
     private var addToBuyButton: some View {
@@ -111,9 +133,8 @@ struct ProductDetailView: View {
         }
     }
 
-    // Placeholders until the tickets that bring these screens (MS-117 to MS-120, MS-134).
+    // Placeholders until the tickets that bring these screens (MS-117, MS-119, MS-120, MS-134).
     private func edit() { dependencies.toasts.show("Edit product arrives with a later update.") }
-    private func adjust() { dependencies.toasts.show("Adjust arrives with a later update.") }
     private func editBatch(_ id: UUID) { dependencies.toasts.show("Edit batch arrives with a later update.") }
     private func addExpiry() { dependencies.toasts.show("Add expiry arrives with a later update.") }
     private func finishBottle(_ id: UUID) { dependencies.toasts.show("Finished arrives with a later update.") }

@@ -201,6 +201,92 @@ struct ProductDetailViewModelTests {
         #expect(viewModel.generalError == nil)
     }
 
+    @Test func anUndoRowReadsTheEngineLabelOverItsReason() {
+        let undone = StockTransaction(
+            id: UUID(), type: .adjustment, delta: 2, quantityBefore: 52, quantityAfter: 54, reason: "Damaged",
+            referenceLabel: "Undo · Damaged", at: Session.demoNow, byName: "Sarah Mitchell"
+        )
+        #expect(ProductDetailViewModel.label(for: undone) == "Undo · Damaged")
+        #expect(ProductDetailViewModel.deltaText(for: undone, formatters: formatters) == "+2")
+    }
+
+    @Test func adjustOpensTheSheetOnTheLoadedProductOnly() async {
+        let viewModel = make()
+        viewModel.openAdjust()
+        #expect(viewModel.sheet == nil, "Nothing loaded yet")
+        #expect(viewModel.makeAdjustInventoryViewModel() == nil)
+        await viewModel.load()
+        viewModel.openAdjust()
+        #expect(viewModel.sheet == .adjust)
+        let sheet = viewModel.makeAdjustInventoryViewModel()
+        #expect(sheet?.productName == "Septocaine 4% 1:100,000")
+        #expect(sheet?.estimate == 54)
+    }
+
+    @Test func aSavedAdjustmentClosesTheSheetMovesTheFiguresAndQueuesTheToastWithUndo() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        viewModel.openAdjust()
+        let actionID = UUID()
+        await viewModel.adjustmentSaved(.init(actionID: actionID, before: 54, after: 52))
+        #expect(viewModel.sheet == nil)
+        #expect(viewModel.adjusted == .init(
+            actionID: actionID, title: "Inventory adjusted", detail: "Septocaine 4% 1:100,000 · 54 → 52"
+        ))
+        #expect(repository.detailCalls.count == 2, "The fresh detail is loaded after the adjustment")
+        viewModel.clearAdjusted()
+        #expect(viewModel.adjusted == nil)
+    }
+
+    @Test func theFiguresMoveAtOnceWhenTheFreshDetailIsNotAvailable() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        repository.detailResult = .failure(AppError.network)
+        await viewModel.adjustmentSaved(.init(actionID: nil, before: 54, after: 52))
+        #expect(viewModel.availableText == "52")
+        #expect(viewModel.detail?.unopened == 52)
+        #expect(viewModel.state == .loaded, "The screen keeps what it has while offline")
+        #expect(viewModel.adjusted?.actionID == nil, "A queued write offers no Undo")
+    }
+
+    @Test func undoReversesTheActionAndReloads() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        let actionID = UUID()
+        await viewModel.adjustmentSaved(.init(actionID: actionID, before: 54, after: 52))
+        viewModel.clearAdjusted()
+        #expect(viewModel.undoableAdjustmentID == actionID, "The toast is shown and cleared before Undo is tapped")
+        await viewModel.undoAdjustment()
+        #expect(repository.undos == [actionID])
+        #expect(viewModel.undoableAdjustmentID == nil)
+        #expect(repository.detailCalls.count == 3)
+        #expect(viewModel.generalError == nil)
+        await viewModel.undoAdjustment()
+        #expect(repository.undos.count == 1, "An adjustment is undone once")
+    }
+
+    @Test func undoWithoutAnActionIDDoesNothing() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        await viewModel.adjustmentSaved(.init(actionID: nil, before: 54, after: 52))
+        await viewModel.undoAdjustment()
+        #expect(repository.undos.isEmpty)
+    }
+
+    @Test func aRefusedUndoBecomesAToast() async {
+        let repository = FakeProductDetailRepository()
+        repository.undoResult = .failure(AppError.validation(field: nil, message: "the undo window has passed"))
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        await viewModel.adjustmentSaved(.init(actionID: UUID(), before: 54, after: 52))
+        await viewModel.undoAdjustment()
+        #expect(viewModel.generalError == .validation(field: nil, message: "the undo window has passed"))
+    }
+
     @Test func aFailureWithNothingCachedIsShown() async {
         let viewModel = make(repository: FakeProductDetailRepository(detailResult: .failure(AppError.network)))
         await viewModel.load()

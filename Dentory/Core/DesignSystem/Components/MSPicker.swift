@@ -1,12 +1,14 @@
 import SwiftUI
 
 /// Single choice from a short list, drawn like a text field and opening a menu. `nil` shows the placeholder.
+/// Pass the Appendix B id as `identifier`: it goes on the menu button, so UI tests can open it.
 struct MSPicker<Value: Hashable & Sendable>: View {
     @Environment(\.isEnabled) private var isEnabled
     let label: String?
     @Binding var selection: Value?
     let options: [Value]
     let title: (Value) -> String
+    var identifier: String?
     var placeholder = "Select"
     var hint: String?
     var error: String?
@@ -15,6 +17,7 @@ struct MSPicker<Value: Hashable & Sendable>: View {
         _ label: String?,
         selection: Binding<Value?>,
         options: [Value],
+        identifier: String? = nil,
         placeholder: String = "Select",
         hint: String? = nil,
         error: String? = nil,
@@ -23,6 +26,7 @@ struct MSPicker<Value: Hashable & Sendable>: View {
         self.label = label
         _selection = selection
         self.options = options
+        self.identifier = identifier
         self.placeholder = placeholder
         self.hint = hint
         self.error = error
@@ -62,6 +66,7 @@ struct MSPicker<Value: Hashable & Sendable>: View {
             }
             .accessibilityLabel(label ?? placeholder)
             .accessibilityValue(selection.map(title) ?? "")
+            .accessibilityIdentifier(identifier ?? "")
             if let error {
                 Text(error).textStyle(.caption12).foregroundStyle(Color.ms.danger)
             } else if let hint {
