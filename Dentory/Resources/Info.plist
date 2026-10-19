@@ -6,6 +6,8 @@
 	<string>$(SUPABASE_URL)</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>PASSWORD_RESET_URL</key>
+	<string>$(PASSWORD_RESET_URL)</string>
 	<key>SENTRY_DSN</key>
 	<string>$(SENTRY_DSN)</string>
 	<key>CFBundleURLTypes</key>

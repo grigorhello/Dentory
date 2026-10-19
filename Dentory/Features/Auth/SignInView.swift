@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Sign in (f1): title, caption, email, password with show/hide, Sign in, Forgot password, footer.
-/// No Google button (MS-100 D4).
+/// Sign in (f1): title, caption, email, password with show/hide, Sign in, Forgot password (pushes Reset
+/// password with the typed email, MS-113), footer. No Google button (MS-100 D4).
 struct SignInView: View {
     @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: SignInViewModel
@@ -56,8 +56,8 @@ struct SignInView: View {
             }
             .padding(.top, Spacing.sm)
             .accessibilityIdentifier("signin.submit")
-            Button("Forgot password") {
-                dependencies.toasts.show("Password reset arrives with a later update.")
+            NavigationLink(value: PasswordResetRoute(email: viewModel.email)) {
+                Text("Forgot password")
             }
             .buttonStyle(.ms(.text, size: .medium, fullWidth: true))
             .accessibilityIdentifier("signin.forgot")

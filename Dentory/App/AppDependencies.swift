@@ -54,7 +54,7 @@ struct AppDependencies: Sendable {
         )
         return AppDependencies(
             rpc: rpc,
-            auth: SupabaseAuthService(client: client),
+            auth: SupabaseAuthService(client: client, passwordResetRedirect: PasswordResetLink.redirectURL()),
             clock: clock,
             networkMonitor: networkMonitor,
             toasts: toasts,
@@ -167,6 +167,18 @@ struct AppDependencies: Sendable {
         )
     }
 
+    /// Reset password with the email typed on Sign in (MS-113).
+    @MainActor
+    func makeResetPasswordViewModel(email: String) -> ResetPasswordViewModel {
+        ResetPasswordViewModel(email: email, auth: auth)
+    }
+
+    /// Set a new password for the token hash of a reset link (MS-113).
+    @MainActor
+    func makeSetPasswordViewModel(tokenHash: String, sessionStore: SessionStore) -> SetPasswordViewModel {
+        SetPasswordViewModel(tokenHash: tokenHash, auth: auth, sessionStore: sessionStore)
+    }
+
     /// The Join screen's view model for the token of an invitation link (MS-112).
     @MainActor
     func makeAcceptInvitationViewModel(token: String, sessionStore: SessionStore) -> AcceptInvitationViewModel {
@@ -229,8 +241,12 @@ final class PreviewAuthService: AuthServicing, @unchecked Sendable {
     var account: Account?
     /// Accounts the demo invitation flow created: address to the password set and the session it yields.
     private var registered: [String: (password: String, session: Session)] = [:]
+    /// The demo admin, signed in by a good reset link until the new password is saved (MS-113).
+    private var recovering: Session?
     static let demoPassword = "smiledental"
     static let demoEmails = ["sarah@smiledental.ca", "michael@smiledental.ca"]
+    /// The one reset link that works without a server; any other token hash reads as expired.
+    static let demoResetToken = "demo-reset"
 
     init(session: Session?) {
         self.session = session
@@ -269,5 +285,25 @@ final class PreviewAuthService: AuthServicing, @unchecked Sendable {
     func signOut() async throws {
         session = nil
         account = nil
+    }
+
+    /// Like Supabase: the same answer for a known and an unknown address; only a malformed one is refused.
+    func sendPasswordReset(email: String) async throws {
+        try await Task.sleep(for: .milliseconds(300))
+        guard email.contains("@") else { throw AppError.invalidEmail }
+    }
+
+    func verifyPasswordReset(tokenHash: String) async throws {
+        try await Task.sleep(for: .milliseconds(300))
+        guard tokenHash == Self.demoResetToken else { throw AppError.notFound }
+        recovering = .demo
+    }
+
+    func updatePassword(_ password: String) async throws {
+        try await Task.sleep(for: .milliseconds(300))
+        guard password.count >= 8 else { throw AppError.shortPassword }
+        guard let recovering else { throw AppError.unknown("No reset in progress") }
+        session = recovering
+        self.recovering = nil
     }
 }

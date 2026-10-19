@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 17:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 19:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -39,6 +39,8 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 - **MS-119 · Track expiry per batch: Add expiry and Edit batch (#90)**, build step 24, draft [#164](https://github.com/grigorhello/Dentory/pull/164) from the Mac build thread, stacked on #161: its base is `ms-117-product-sheets` until #161 is merged, then it is rebased onto the default branch, retargeted and reviewed.
 - **MS-121 · Count stock with review before applying (#92)**, build step 26, draft [#166](https://github.com/grigorhello/Dentory/pull/166) from the Mac build thread, stacked on #161 like #164.
 - **MS-122 · Procedures list and history (#93)**, build step 27, in PR review: [#168](https://github.com/grigorhello/Dentory/pull/168), branch `ms-122-procedures-list` (not stacked: it does not need MS-117). `procedure_templates_list` and `procedure_history` (migration `20261019180000_procedures_list.sql`), the Procedures tab under `Features/Procedures`; the template, history and + Procedure routes push placeholders until MS-123, MS-124 and MS-125.
+- **MS-113 · Reset a forgotten password (#84)**, build step 30, in PR review: [#167](https://github.com/grigorhello/Dentory/pull/167), from a cloud session (no Xcode there: CI is the first build). Forgot password pushes Reset password (email prefilled, Send link, the same confirmation for any address); the reset link `dentory://reset-password?token_hash=…` (local) or `https://app.dentory.ca/reset-password?token_hash=…` (hosted) opens Set a new password, verified with `verifyOTP(type: .recovery)`, then Home with "Password updated"; expired links offer a new one. Email template `supabase/templates/recovery.html`, `PASSWORD_RESET_URL` in the xcconfigs, `applinks/reset-password/`. This file is part of its PR.
+- **MS-126 · Receive delivery: choose how (#97)**, build step 32, claimed 2026-10-19 by the same cloud session (Notion card In progress).
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
@@ -47,11 +49,11 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 |---|---|---|
 | 28 | MS-123 · Adjust, then start a procedure (#94) | MS-106 (merged), MS-120 (merged), MS-122 (in review) |
 
-Then M1 continues MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
+Then M1 continues MS-124; M2 from step 33 (MS-127); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-120 is in Feature QA too. MS-117, MS-121 and MS-122 are in PR review; MS-119 is In progress (draft #164). MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-120 is in Feature QA too. MS-117, MS-121 and MS-122 are in PR review; MS-119 is In progress (draft #164). MS-113 is in PR review (#167) and MS-126 is In progress, both from a cloud session. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
@@ -61,6 +63,7 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109
 4. **Production domain** is `dentory.ca` (links on `app.dentory.ca`, email from `@dentory.ca`, MS-100 D12). MS-112 built the app side; what Grigor adds, in this order: a Resend account with `dentory.ca` as a verified sending domain (Resend gives the SPF and DKIM records to add at the registrar) and its API key set with `supabase secrets set RESEND_API_KEY=…` on the hosted project; a static host for the `applinks/` folder at `https://app.dentory.ca` (its `apple-app-site-association` needs the Apple team id, so universal links only work once the Apple Developer team exists); until then the emails carry `https://app.dentory.ca/invite?token=…` links that the fallback page turns into `dentory://` links, and the simulator opens `dentory://invite?token=…` directly.
 5. **Try the merged tickets** in Feature QA and move the cards to Done.
 6. **Brand tickets.** MS-159 to MS-162 (#153 to #156) wait for his word on which to build and when; the landing page (MS-161) also needs the DNS records for GitHub Pages at the registrar, listed in the issue.
+7. **Password reset on the hosted projects (MS-113).** Once per project in the Supabase dashboard: Authentication, Emails, SMTP Settings, custom SMTP through Resend (`smtp.resend.com`, sender on `dentory.ca`), since Supabase's own mailer reaches only the project team; Authentication, URL Configuration, add `https://app.dentory.ca/reset-password` to Redirect URLs; Authentication, Emails, Reset password, subject "Reset your Dentory password" and the body of `supabase/templates/recovery.html`. The link then needs `app.dentory.ca` serving `applinks/` (item 4). Steps in `supabase/README.md`.
 
 ## Brand assets (outside the build order)
 
