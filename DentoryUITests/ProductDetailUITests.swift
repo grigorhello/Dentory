@@ -88,6 +88,7 @@ final class ProductDetailUITests: XCTestCase {
     }
 
     /// The Available column of the quantity card is one combined element ("Available, 52, cartridges").
+    @MainActor
     private func availableColumn(_ app: XCUIApplication, reads value: String) -> XCUIElement {
         app.descendants(matching: .any)["product.quantity"]
             .descendants(matching: .any)
@@ -96,6 +97,7 @@ final class ProductDetailUITests: XCTestCase {
     }
 
     /// A history row is one combined element ("−2, Damaged · Sarah, Oct 2").
+    @MainActor
     private func historyRow(_ app: XCUIApplication, reading text: String) -> XCUIElement {
         app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "product.history[", text))
