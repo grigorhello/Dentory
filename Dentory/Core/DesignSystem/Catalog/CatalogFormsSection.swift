@@ -21,6 +21,7 @@ struct CatalogFormsSection: View {
             MSTextField("Expiry", text: .constant(""), placeholder: "- - - - - -", trailingIcon: .calendar)
             MSTextField("Minimum", text: $minimum, suffix: "cartridges", keyboard: .numberPad)
             MSTextField("Disabled", text: .constant("Read only")).disabled(true)
+            MSReadOnlyField("Email", value: "priya@smiledental.ca")
         }
         CatalogSection("Picker") {
             MSPicker("Category", selection: $category, options: ["Anesthetic", "Endodontics", "PPE"]) { $0 }
