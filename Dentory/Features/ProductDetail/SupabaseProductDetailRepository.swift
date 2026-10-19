@@ -119,6 +119,14 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
             )
         )
     }
+
+    func openBottle(productID: UUID) async throws -> WriteOutcome {
+        try await writes.write("bottle_open", params: BottleOpenParams(pProductId: productID))
+    }
+
+    func finishBottle(openItemID: UUID) async throws -> WriteOutcome {
+        try await writes.write("bottle_finish", params: BottleFinishParams(pOpenItemId: openItemID))
+    }
 }
 
 /// The parameters of `batch_upsert`; the coordinator adds `p_idempotency_key`. A new batch sends `p_batch_id`
@@ -142,6 +150,16 @@ nonisolated struct BatchUpsertParams: Encodable, Sendable {
         try container.encode(pQty, forKey: .pQty)
         try container.encode(pLot, forKey: .pLot)
     }
+}
+
+/// The parameters of `bottle_open`.
+nonisolated struct BottleOpenParams: Encodable, Sendable {
+    let pProductId: UUID
+}
+
+/// The parameters of `bottle_finish`.
+nonisolated struct BottleFinishParams: Encodable, Sendable {
+    let pOpenItemId: UUID
 }
 
 /// The parameters of `stock_adjust`; the coordinator adds `p_idempotency_key`. A missing note is sent as

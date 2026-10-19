@@ -2,9 +2,9 @@ import Foundation
 
 /// Product detail without a server: Septocaine as f20 draws it, and a plain detail for the other demo
 /// products, with whatever the Edit sheet saved applied on top. Add to buy and its Undo, adjustments
-/// and their Undo are remembered in memory, so the figures and the history move the way the server's
-/// would; Delete product takes the product out of the shared store. Add expiry and Edit batch keep the
-/// product's batches here, dating undated stock first like `batch_upsert` (MS-119).
+/// and their Undo, bottles opened and finished are remembered in memory, so the figures and the history
+/// move the way the server's would; Delete product takes the product out of the shared store. Add expiry and
+/// Edit batch keep the product's batches here, dating undated stock first like `batch_upsert` (MS-119).
 final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sendable {
     /// What an adjustment did, so Undo can reverse it.
     private struct Adjustment {
@@ -15,6 +15,10 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
 
     private(set) var toBuyItemIDs: [UUID: UUID] = [:]
     private var quantityDeltas: [UUID: Decimal] = [:]
+    private var unopenedDeltas: [UUID: Decimal] = [:]
+    private var finishedCounts: [UUID: Decimal] = [:]
+    private var openedBottles: [UUID: [OpenBottle]] = [:]
+    private var finishedBottleIDs: Set<UUID> = []
     private var extraHistory: [UUID: [StockTransaction]] = [:]
     private var adjustments: [UUID: Adjustment] = [:]
     private var batchEdits: [UUID: [ProductBatch]] = [:]
@@ -33,6 +37,10 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
         guard let summary = store.summary(id: productID) else { throw AppError.notFound }
         let onToBuy = lock.withLock { toBuyItemIDs[productID] }
         let delta = lock.withLock { quantityDeltas[productID] ?? 0 }
+        let unopenedDelta = lock.withLock { unopenedDeltas[productID] ?? 0 }
+        let finishedCount = lock.withLock { finishedCounts[productID] ?? 0 }
+        let opened = lock.withLock { openedBottles[productID] ?? [] }
+        let finished = lock.withLock { finishedBottleIDs }
         let history = lock.withLock { extraHistory[productID] ?? [] }
         let base: ProductDetail
         if summary.id == ProductSummary.demo[0].id {
@@ -47,7 +55,9 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
                 usedInLast30Days: 0, lastCountedAt: nil, toBuyItemID: onToBuy,
                 // A Missing expiry product holds its stock undated, so Add expiry has something to date.
                 batches: summary.status == .missingExpiry ? [Self.undatedBatch(of: summary)] : [],
-                openBottles: summary.tracking == .multiUse ? ProductDetail.demoBottles(count: summary.openCount) : [],
+                openBottles: summary.tracking == .multiUse
+                    ? ProductDetail.demoBottles(count: summary.openCount, of: summary.id)
+                    : [],
                 history: [],
                 categoryID: store.categories.first { $0.name == summary.categoryName }?.id
             )
@@ -56,7 +66,10 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
             base.applying($0, categoryName: store.categoryName(for: $0.categoryID), status: summary.status)
         } ?? base
         let dated = lock.withLock { batchEdits[productID] }.map { edited.with(batches: $0) } ?? edited
-        return dated.adjusted(by: delta, history: history + dated.history)
+        let bottles = (opened + dated.openBottles).filter { !finished.contains($0.id) }
+        return dated
+            .adjusted(by: delta, history: history + dated.history)
+            .replacingBottles(bottles, unopenedDelta: unopenedDelta, quantityDelta: -finishedCount)
     }
 
     func upsertBatch(
@@ -150,6 +163,58 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
         return .applied(actionID: actionID)
     }
 
+    func openBottle(productID: UUID) async throws -> WriteOutcome {
+        try await Task.sleep(for: .milliseconds(200))
+        let current = try await detail(productID: productID)
+        guard current.unopened > 0 else { throw AppError.validation(field: nil, message: "Out of stock") }
+        lock.withLock {
+            unopenedDeltas[productID, default: 0] -= 1
+            openedBottles[productID, default: []].insert(
+                OpenBottle(id: UUID(), openedAt: Session.demoNow, openedByName: byName), at: 0
+            )
+            extraHistory[productID, default: []].insert(
+                StockTransaction(
+                    id: UUID(), type: .adjustment, delta: 0, quantityBefore: current.quantity,
+                    quantityAfter: current.quantity, reason: nil, referenceLabel: "Opened a new bottle",
+                    at: Session.demoNow, byName: byName
+                ),
+                at: 0
+            )
+        }
+        return .applied(actionID: UUID())
+    }
+
+    func finishBottle(openItemID: UUID) async throws -> WriteOutcome {
+        try await Task.sleep(for: .milliseconds(200))
+        guard let productID = store.products.map(\.id).first(where: { id in
+            bottleIDs(of: id).contains(openItemID)
+        }) else { throw AppError.validation(field: nil, message: "unknown open item") }
+        let current = try await detail(productID: productID)
+        lock.withLock {
+            finishedBottleIDs.insert(openItemID)
+            finishedCounts[productID, default: 0] += 1
+            extraHistory[productID, default: []].insert(
+                StockTransaction(
+                    id: UUID(), type: .adjustment, delta: -1, quantityBefore: current.quantity,
+                    quantityAfter: current.quantity - 1, reason: nil, referenceLabel: "Finished",
+                    at: Session.demoNow, byName: byName
+                ),
+                at: 0
+            )
+        }
+        return .applied(actionID: UUID())
+    }
+
+    /// The ids of the product's open bottles, base and opened here, finished ones included.
+    private func bottleIDs(of productID: UUID) -> [UUID] {
+        guard let summary = store.summary(id: productID) else { return [] }
+        let base = summary.tracking == .multiUse
+            ? ProductDetail.demoBottles(count: summary.openCount, of: summary.id)
+            : []
+        let opened = lock.withLock { openedBottles[productID] ?? [] }
+        return (opened + base).map(\.id)
+    }
+
     func undoAdjustment(actionID: UUID) async throws {
         try await Task.sleep(for: .milliseconds(200))
         guard let adjustment = lock.withLock({ adjustments.removeValue(forKey: actionID) }) else {
@@ -241,10 +306,13 @@ extension ProductDetail {
         UUID(uuidString: "00000000-0000-4000-8000-0000000000\(suffix)") ?? UUID()
     }
 
-    nonisolated static func demoBottles(count: Int) -> [OpenBottle] {
-        (0..<count).map { index in
+    /// The open bottles of a demo product, with ids that end in the product's own last byte and the index,
+    /// so every bottle of the clinic has its own id.
+    nonisolated static func demoBottles(count: Int, of productID: UUID) -> [OpenBottle] {
+        let productByte = String(productID.uuidString.suffix(2))
+        return (0..<count).map { index in
             OpenBottle(
-                id: UUID(uuidString: String(format: "00000000-0000-4000-8000-0000000000c%01d", index)) ?? UUID(),
+                id: UUID(uuidString: "00000000-0000-4000-8000-00000000c\(index)\(productByte)") ?? UUID(),
                 openedAt: Session.demoNow.addingTimeInterval(Double(-(index + 1)) * 86_400 * 3),
                 openedByName: index == 0 ? "Sarah Mitchell" : "Michael Reyes"
             )

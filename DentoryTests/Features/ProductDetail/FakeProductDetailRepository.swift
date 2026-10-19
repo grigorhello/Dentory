@@ -20,6 +20,10 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
     }
 
     private(set) var upserts: [Upsert] = []
+    var openResult: Result<WriteOutcome, Error> = .success(.applied(actionID: UUID()))
+    var finishResult: Result<WriteOutcome, Error> = .success(.applied(actionID: UUID()))
+    private(set) var opens: [UUID] = []
+    private(set) var finishes: [UUID] = []
     private(set) var detailCalls: [UUID] = []
     struct Adjust: Equatable {
         let productID: UUID
@@ -83,5 +87,15 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
             Upsert(productID: productID, batchID: batchID, expiryMonth: expiryMonth, quantity: quantity, lot: lot)
         )
         return try upsertResult.get()
+    }
+
+    func openBottle(productID: UUID) async throws -> WriteOutcome {
+        opens.append(productID)
+        return try openResult.get()
+    }
+
+    func finishBottle(openItemID: UUID) async throws -> WriteOutcome {
+        finishes.append(openItemID)
+        return try finishResult.get()
     }
 }

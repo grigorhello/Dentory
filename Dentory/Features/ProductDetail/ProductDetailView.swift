@@ -3,7 +3,7 @@ import SwiftUI
 /// Product detail (f20 Admin, f21 Staff): context header, name and status, the quantity card, Adjust and
 /// Add to buy, the expiry card, the bottles card for multi-use products, the history, and Delete product
 /// for Admin. Its sheets (Edit, Delete, Adjust, Add expiry, Edit batch) are drawn by `ProductDetailSheet`;
-/// the bottles and the full history open their own tickets' screens later.
+/// the bottles are opened and finished in place (MS-120); the full history opens its own ticket's screen later.
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.dismiss) private var dismiss
@@ -43,6 +43,11 @@ struct ProductDetailView: View {
                 guard isDeleted else { return }
                 dependencies.toasts.show("Product deleted")
                 dismiss()
+            }
+            .onChange(of: viewModel.bottleToast) { _, toast in
+                guard let toast else { return }
+                dependencies.toasts.show(toast.title, detail: toast.detail)
+                viewModel.clearBottleToast()
             }
             .onChange(of: viewModel.adjusted) { _, adjusted in
                 guard let adjusted else { return }
@@ -91,9 +96,10 @@ struct ProductDetailView: View {
         }
     }
 
-    // Placeholders until the tickets that bring these screens (MS-120, MS-134).
-    private func finishBottle(_ id: UUID) { dependencies.toasts.show("Finished arrives with a later update.") }
-    private func openNewBottle() { dependencies.toasts.show("Open a new bottle arrives with a later update.") }
+    private func finishBottle(_ id: UUID) { Task { await viewModel.finishBottle(id) } }
+    private func openNewBottle() { Task { await viewModel.openNewBottle() } }
+
+    // Placeholders until the tickets that bring these screens (MS-134).
     private func showAllHistory() { dependencies.toasts.show("History arrives with a later update.") }
 }
 
