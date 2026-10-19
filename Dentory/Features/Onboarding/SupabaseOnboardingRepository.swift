@@ -33,15 +33,25 @@ struct SupabaseOnboardingRepository: OnboardingRepository {
         }
     }
 
+    /// One `invite_member` call per address, in order: each records the invited row with a fresh token and
+    /// sends the email. The first refusal stops the loop and names its address in `AppError.validation(field:)`.
     func invite(clinicID: UUID, invites: [TeamInvite]) async throws -> Int {
-        do {
-            let rows: [AnyJSON] = invites.map {
-                .object(["email": .string($0.email), "role": .string($0.role.rawValue)])
+        for invite in invites {
+            let body: [String: AnyJSON] = [
+                "clinic_id": .string(clinicID.uuidString.lowercased()),
+                "email": .string(invite.email),
+                "role": .string(invite.role.rawValue)
+            ]
+            do {
+                try await client.functions.invoke("invite_member", options: FunctionInvokeOptions(body: body))
+            } catch {
+                let appError = AppError(functionError: error)
+                if case .validation(_, let message) = appError {
+                    throw AppError.validation(field: invite.email, message: message)
+                }
+                throw appError
             }
-            let params: [String: AnyJSON] = ["p_clinic_id": .string(clinicID.uuidString), "p_invites": .array(rows)]
-            return try await client.rpc("invite_members", params: params).execute().value
-        } catch {
-            throw AppError(error)
         }
+        return invites.count
     }
 }

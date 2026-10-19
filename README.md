@@ -42,3 +42,5 @@ Adding a change: `supabase migration new <name>` creates the file under `supabas
 3. `supabase db push` applies the migrations that are not on the hosted project yet. Do this for staging after a merge. Pushing to prod is a deliberate manual step, never done from CI.
 
 The app's keys for a hosted project (Project Settings → API: the URL and the `anon public` key) go in `Config/Secrets.xcconfig` for Release builds, or `Config/Secrets.debug.xcconfig` to point a Debug build at it; both are git-ignored and must stay out of the repo and of chat. The local stack needs no secrets: its URL and anon key are the same on every machine and sit in `Config/Debug.xcconfig`.
+
+Edge Function secrets (the Resend key for invitation emails, MS-112) are set on the hosted project with `supabase secrets set`; `supabase/README.md` lists them. The local stack needs none: without a key the functions write the emails to their log (`make invite-links`).

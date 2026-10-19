@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-17 16:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 03:00 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -22,33 +22,36 @@ As of 2026-10-17 16:30 UTC. Before acting on this file, confirm the live state: 
 | 13 | MS-110 · Sign in (#81) | [#141](https://github.com/grigorhello/Dentory/pull/141) | 2026-10-17 15:06 | Sign in screen of f1 (no Google button), inline errors under the field Supabase named, show/hide password, one submission at a time, revoked-membership toast; the preview auth accepts the demo clinic's credentials for the UI flow. |
 | 14 | MS-114 · Home (#85) | [#142](https://github.com/grigorhello/Dentory/pull/142) | 2026-10-17 15:32 | Home of f6/f7/f36: attention tiles (ink at 0), dark procedure card with the latest procedure, value tiles, Admin-only Receive delivery row; `clinic_attention` + latest `procedure_events` + unseen alerts, cached for offline; placeholder pushed screens for the tickets that bring them; the Supabase client now decodes snake_case rows (`SupabaseClientProvider.options`). |
 | 15 | MS-155 · Rename to Dentory, code and repository (#143) | [#146](https://github.com/grigorhello/Dentory/pull/146) | 2026-10-17 15:49 | Repository `grigorhello/Dentory`; project, targets, folders `Dentory*`; bundle id `ca.dentory.app`; Makefile, lint, local Supabase (`supabase_db_Dentory`), pgTAP fixtures, skill `dentory-ios` (MS stays the design-system prefix), reviewer agent. |
+| 16 | MS-156 · Rename in the docs, the design files, the ticket sources and the issues (#144) | [#147](https://github.com/grigorhello/Dentory/pull/147) | 2026-10-17 17:19 | Docs, design files, ticket sources, issues and this handoff pack say Dentory; the re-rendered f01 frame merged as [#148](https://github.com/grigorhello/Dentory/pull/148). |
+| 18 | MS-111 · Admin sign-up: account, clinic and team invites (#82) | [#149](https://github.com/grigorhello/Dentory/pull/149) | 2026-10-17 17:57 | The three sign-up steps of f2, f3, f4: Supabase sign-up, `clinic_create` (clinic, admin membership, profile, ten categories, currency from the country), invited rows at step 3, resume at the pending step after a relaunch; `membership_state()`; 32 pgTAP assertions. |
 
-Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`.
+Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`.
 
 ## In progress
 
-- **MS-156 · Rename in the docs, the design files, the ticket sources and the issues (#144)**, build step 16, started 2026-10-17 15:40 UTC in the build thread on Grigor's Mac: this file is part of its PR; the re-rendered f01 frame merged separately as [#148](https://github.com/grigorhello/Dentory/pull/148). If the MS-156 PR is merged when you read this, go to the next step.
+- **MS-112 · Invite teammates and accept an invitation (#83)**, build step 19, started 2026-10-19 01:22 UTC in the build thread on Grigor's Mac (the checkout now lives in `/Users/grigorgrigoryan/Documents/Personal/Dentory`): migration `20261019020000_invitations.sql` (`invitation_create`, `invitation_lookup`, `auth_user_id_for_email`, `invitation_accept`; `invite_members` dropped), Edge Functions `invite_member` (Resend) and `accept_invitation`, the Join screen (f5), the `dentory://` scheme and the `applinks:app.dentory.ca` entitlement, the `applinks/` static files for the domain. This file is part of its PR. If the MS-112 PR is merged when you read this, go to the next step.
+- **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
 
 | Step | Ticket | Blocked by |
 |---|---|---|
-| 17 | MS-157 · Rename the services and accounts outside the repository (#145) | MS-155 (merged); mostly Grigor's own checklist |
-| 18 | MS-111 · Admin sign-up: account, clinic and team invites (#82) | MS-104, MS-110, MS-155 (all merged) |
-| 19 | MS-112 · Invite teammates and accept an invitation (#83) | MS-111 |
+| 20 | MS-115 · Inventory list: browse, search and filter (#86) | MS-107, MS-103 (merged) |
+| 21 | MS-116 · Product detail (#87) | MS-115 |
+| 22 | MS-117 · Create, edit and delete products (#88) | MS-116 |
 
-Then M1 continues MS-115, MS-116, MS-117, MS-118, MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
+Then M1 continues MS-118, MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114 and MS-155 are in Feature QA for Grigor to try. MS-156 is in In progress. MS-100 is Done. Everything else is To do. The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156 and MS-111 are in Feature QA for Grigor to try. MS-112 is in In progress. MS-100 is Done. Everything else is To do. The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
-1. **Hosted database.** None of the four migrations is on the hosted staging project yet. Say "push now" in the build thread; it opens a terminal tab for `supabase db push`, where he types the database password. The thread proposed batching the push and he has not answered yet.
+1. **Hosted database.** None of the six migrations is on the hosted staging project yet, and the two Edge Functions are not deployed there (`supabase functions deploy`). Say "push now" in the build thread; it opens a terminal tab for `supabase db push`, where he types the database password. The thread proposed batching the push and he has not answered yet.
 2. **Apple Developer team.** The bundle id is `ca.dentory.app` (confirmed 2026-10-17); an Apple Developer team and the App Store Connect record are still needed before a device build or TestFlight (MS-152). MS-157 lists the other accounts to rename (Claude project, Supabase project name, DNS for dentory.ca).
 3. **Default branch.** Rename `claude/project-thread-ocu7tf` to `main` in GitHub settings (asked 2026-10-15 03:15 UTC). After the rename, update the base branch in local checkouts and in `docs/handoff`.
-4. **Production domain** is `dentory.ca` (links on `app.dentory.ca`, email from `@dentory.ca`, MS-100 D12); DNS and the universal-link setup land with MS-112 and MS-157. Until then the Supabase project URL is used for testing.
+4. **Production domain** is `dentory.ca` (links on `app.dentory.ca`, email from `@dentory.ca`, MS-100 D12). MS-112 built the app side; what Grigor adds, in this order: a Resend account with `dentory.ca` as a verified sending domain (Resend gives the SPF and DKIM records to add at the registrar) and its API key set with `supabase secrets set RESEND_API_KEY=…` on the hosted project; a static host for the `applinks/` folder at `https://app.dentory.ca` (its `apple-app-site-association` needs the Apple team id, so universal links only work once the Apple Developer team exists); until then the emails carry `https://app.dentory.ca/invite?token=…` links that the fallback page turns into `dentory://` links, and the simulator opens `dentory://invite?token=…` directly.
 5. **Try the merged tickets** in Feature QA and move the cards to Done.
 
 ## Known issues
@@ -57,6 +60,7 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109
 - Sheets use the system scrim, not the PRD's `rgba(32,21,21,.4)`; SwiftUI does not expose the sheet scrim colour.
 - The reviewer agent needs `gh` to act as `grigorhello` on the Mac; it stops and reports if another account is active.
 - The Remote Control session draws on Grigor's own usage limit and may pause with "I've hit my usage limit"; "try again" in the thread resumes it after the reset.
+- `/usr/local/bin/git` on the Mac is an Intel-only Homebrew build that this Apple-silicon Mac cannot run ("bad CPU type in executable") and it comes first on the PATH: `gh` fails with it, and the Claude Desktop app's worktree sessions failed on it on 2026-10-18. Build sessions put Apple's git first (`PATH=/usr/bin:$PATH`) for `gh`; removing that git fixes it for good.
 
 ## How to re-derive this file
 
