@@ -371,6 +371,10 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
+# accept_invitation is called before the invitee has an account; the invitation token is the credential.
+[functions.accept_invitation]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

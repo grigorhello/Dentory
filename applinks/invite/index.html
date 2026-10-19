@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join your clinic on Dentory</title>
+  <meta name="robots" content="noindex">
+  <style>
+    body { margin: 0; background: #f7f5f2; color: #201515; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    main { max-width: 480px; margin: 48px auto; padding: 32px; background: #fff; border-radius: 12px; }
+    .eyebrow { font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: #7a6f6f; }
+    h1 { font-size: 28px; margin: 8px 0 16px; }
+    p { font-size: 16px; line-height: 24px; }
+    .button { display: inline-block; background: #1a63d6; color: #fff; text-decoration: none; font-weight: 600; padding: 14px 24px; border-radius: 8px; }
+    .muted { color: #7a6f6f; font-size: 14px; line-height: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Invitation</div>
+    <h1>Join your clinic on Dentory</h1>
+    <p>Open this invitation on the iPhone or iPad that has Dentory installed. The link works for 7 days.</p>
+    <p><a id="open" class="button" href="#">Open in Dentory</a></p>
+    <p class="muted">No Dentory yet? Install it from the App Store first, then open the link from your email again.</p>
+    <p class="muted" id="missing" hidden>This link has no invitation token. Open the link from your email again or ask your admin to resend.</p>
+  </main>
+  <script>
+    (function () {
+      var token = new URLSearchParams(location.search).get("token") || "";
+      var open = document.getElementById("open");
+      if (!token) {
+        open.hidden = true;
+        document.getElementById("missing").hidden = false;
+        return;
+      }
+      open.href = "dentory://invite?token=" + encodeURIComponent(token);
+    })();
+  </script>
+</body>
+</html>

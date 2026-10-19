@@ -15,6 +15,8 @@ protocol OnboardingRepository: Sendable {
     ) async throws -> UUID
     /// Stores the logo under `logos/{clinic_id}/` and points the clinic at it.
     func uploadLogo(clinicID: UUID, imageData: Data) async throws
-    /// `invite_members`: returns how many invitations were recorded.
+    /// Sends one invitation email per address through the `invite_member` function (MS-112) and returns how
+    /// many went out. A refusal of one address throws `AppError.validation(field: thatAddress, message:)`,
+    /// so the screen can show it under that row.
     func invite(clinicID: UUID, invites: [TeamInvite]) async throws -> Int
 }

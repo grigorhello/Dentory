@@ -234,7 +234,7 @@ private struct OnboardingInviteStep: View {
                     contentType: .emailAddress
                 )
                 MSPicker("Role", selection: roleBinding($row.role), options: [MembershipRole.staff, .admin]) {
-                    $0 == .admin ? "Admin" : "Staff"
+                    $0.label
                 }
                 .frame(width: 140)
                 .accessibilityIdentifier("onboard.inviteRow[\(index)].role")

@@ -20,7 +20,7 @@ How Dentory tickets go from "To do" to "Feature QA". This is the process the pre
 | Rules | `CLAUDE.md`, `.claude/skills/dentory-ios/SKILL.md` | Read both at the start of every ticket. |
 | Decisions | Issue MS-100 (#71) | Overrides the PRD. When frame and PRD disagree and MS-100 is silent: layout and copy follow the frame, business rules follow the PRD. |
 | Spec | `design/PRD-v1.1.md`, `design/frames/fNN.png` | Appendix B element ids are used verbatim as accessibility identifiers and analytics names. |
-| Machine | Grigor's Mac, folder `/Users/grigorgrigoryan/Documents/Personal/MediSave` | Xcode 26, simulators iPhone 16 and iPad Pro 11-inch (M4), Docker Desktop, Supabase CLI, `gh` as `grigorhello`. |
+| Machine | Grigor's Mac, folder `/Users/grigorgrigoryan/Documents/Personal/Dentory` (was `…/MediSave` until 2026-10-18) | Xcode 27, simulators iPhone 16 and iPad Pro 11-inch (M4), Docker Desktop (start it before `make db-start`), Supabase CLI, Deno, `gh` as `grigorhello` with Apple's git first on the PATH (`PATH=/usr/bin:$PATH`, see build-state.md). |
 | CI | `.github/workflows/ci.yml` | Runs on every PR: iOS job (`make project lint build test WARNINGS_AS_ERRORS=YES`) and database job (`make db-reset db-test`, `make functions-check`). |
 
 ## 3. The ticket loop
