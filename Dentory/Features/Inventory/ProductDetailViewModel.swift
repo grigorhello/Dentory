@@ -252,7 +252,8 @@ final class ProductDetailViewModel {
             case 1: "opened 1 day ago"
             default: "opened \(days) days ago"
             }
-            return BottleRow(id: bottle.id, title: "Open · \(PersonName.first(of: bottle.openedByName))", subtitle: when)
+            let title = "Open · \(PersonName.first(of: bottle.openedByName))"
+            return BottleRow(id: bottle.id, title: title, subtitle: when)
         }
     }
 
