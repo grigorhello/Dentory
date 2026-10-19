@@ -168,9 +168,10 @@ from (values
   (29, 'Suture', 'Surgical', 'packs', null, null, 1, 6, 'Henry Schein', 'Operatory 2 · Drawer A', 'countable')
 ) p (n, name, category, unit, pack_unit, pack_size, minimum, target, supplier, location, tracking);
 
--- Procedure templates (prototype T, f11). Multi-use products default to 0: the open one is used.
+-- Procedure templates (prototype T, f11), a minute apart so the list keeps f11's order (creation order,
+-- MS-122). Multi-use products default to 0: the open one is used.
 insert into public.procedure_templates (id, clinic_id, name, created_at)
-select pg_temp.tid(n), pg_temp.clinic(), name, pg_temp.ago(80, '12:00')
+select pg_temp.tid(n), pg_temp.clinic(), name, pg_temp.ago(80, '12:00') + make_interval(mins => n)
 from (values (1, 'Root canal'), (2, 'Cleaning'), (3, 'Filling'), (4, 'Crown'), (5, 'Extraction')) t (n, name);
 
 insert into public.procedure_template_items (clinic_id, template_id, product_id, default_qty, position)
