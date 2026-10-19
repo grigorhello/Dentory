@@ -41,7 +41,7 @@ final class ProceduresUITests: XCTestCase {
 
         rootCanal.tap()
         XCTAssertTrue(app.staticTexts["procDetail.title"].waitForExistence(timeout: 5), "The template did not open")
-        XCTAssertEqual(app.staticTexts["procDetail.title"].label, "Adjust, then start")
+        XCTAssertEqual(app.staticTexts["procDetail.title"].label, "Root canal", "Adjust, then start is not Root canal")
         goBack(from: "procDetail", in: app)
 
         app.buttons["\(rootCanalTemplate).edit"].tap()

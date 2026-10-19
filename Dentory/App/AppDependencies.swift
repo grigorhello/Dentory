@@ -20,6 +20,7 @@ struct AppDependencies: Sendable {
     let inventoryRepository: InventoryRepository
     let productDetailRepository: ProductDetailRepository
     let proceduresRepository: ProceduresRepository
+    let procedureStartRepository: ProcedureStartRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -65,6 +66,7 @@ struct AppDependencies: Sendable {
             inventoryRepository: SupabaseInventoryRepository(client: client),
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             proceduresRepository: SupabaseProceduresRepository(client: client),
+            procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -110,6 +112,7 @@ struct AppDependencies: Sendable {
             inventoryRepository: DemoInventoryRepository(),
             productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
             proceduresRepository: DemoProceduresRepository(),
+            procedureStartRepository: DemoProcedureStartRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -137,6 +140,15 @@ struct AppDependencies: Sendable {
             formatters: formatters(for: session),
             clinicID: session.clinicID,
             isAdmin: session.isAdmin
+        )
+    }
+
+    /// Adjust, then start for one template of the signed-in clinic (MS-123).
+    @MainActor
+    func makeProcedureStartViewModel(templateID: UUID, session: Session) -> ProcedureStartViewModel {
+        ProcedureStartViewModel(
+            repository: procedureStartRepository, formatters: formatters(for: session), clinicID: session.clinicID,
+            templateID: templateID
         )
     }
 
