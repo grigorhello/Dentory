@@ -128,6 +128,7 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.sheet == nil)
         #expect(viewModel.takenNew.map(\.item.name) == ["Composite A2"])
         #expect(viewModel.bottles.last?.isAdded == true)
+        #expect(!viewModel.templateBottles.contains { $0.id == composite.id }, "Listed with the supplies only")
         #expect(viewModel.supplyCount == 13)
         #expect(viewModel.startTitle == "Start procedure · 11 items")
         viewModel.toggleTakeNew(composite.id)
@@ -140,10 +141,30 @@ struct ProcedureStartViewModelTests {
         await viewModel.loadProducts()
         viewModel.openAddItem()
         let bonding = try #require(viewModel.addableProducts.first { $0.name == "Bonding agent" })
+        #expect(viewModel.addCaption(for: bonding) == "0 unopened · 1 open")
         viewModel.add(bonding)
-        #expect(viewModel.message == .init(title: "Out of stock", detail: "Bonding agent"))
+        #expect(viewModel.addCaption(for: bonding) == "Out of stock", "Said on the row, inside the sheet")
+        #expect(viewModel.addCaptionTone(for: bonding) == .danger)
+        #expect(viewModel.message == nil, "No toast: it would sit behind the sheet")
         #expect(viewModel.bottles.contains { $0.id == bonding.id } == false)
         #expect(viewModel.sheet == .addItem, "The sheet stays open to pick another")
+        viewModel.sheet = nil
+        viewModel.openAddItem()
+        #expect(viewModel.addCaption(for: bonding) == "0 unopened · 1 open", "A new look at the sheet starts fresh")
+    }
+
+    @Test func productsThatFailToLoadAreExplainedInTheSheet() async {
+        let repository = FakeProcedureStartRepository()
+        repository.productsResult = .failure(AppError.network)
+        let viewModel = await make(repository)
+        viewModel.openAddItem()
+        await viewModel.loadProducts()
+        #expect(viewModel.addableProducts.isEmpty)
+        #expect(viewModel.addItemEmptyText == "Couldn't load products. Close and reopen Add item to try again.")
+        #expect(viewModel.generalError == nil, "No toast: it would sit behind the sheet")
+        repository.productsResult = .success(ProductSummary.demo)
+        await viewModel.loadProducts()
+        #expect(viewModel.addItemEmptyText == "No products match.")
     }
 
     @Test func untilTheTemplateIsInStartHasNoCount() {

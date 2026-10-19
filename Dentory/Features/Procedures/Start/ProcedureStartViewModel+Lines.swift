@@ -76,18 +76,30 @@ extension ProcedureStartViewModel {
     /// The bottles taken new, listed with the supplies as one item each.
     var takenNew: [Bottle] { bottles.filter(\.takesNew) }
 
-    /// "40 needles in stock" under a product in Add item; "1 unopened · 2 open" for a multi-use one.
+    /// "40 needles in stock" under a product in Add item; "1 unopened · 2 open" for a multi-use one, and "Out of stock"
+    /// once + found nothing unopened.
     func addCaption(for product: ProductSummary) -> String {
-        switch product.tracking {
+        if product.id == outOfStockProductID { return "Out of stock" }
+        return switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
         case .multiUse: "\(formatters.number(product.unopened)) unopened · \(product.openCount) open"
         }
     }
 
-    /// What Add item says with nothing to list: nothing while the products load.
-    var addItemEmptyText: String {
-        hasLoadedProducts ? "No products match." : ""
+    /// "Out of stock" reads in danger; every other caption in the secondary color.
+    func addCaptionTone(for product: ProductSummary) -> StatusTone? {
+        product.id == outOfStockProductID ? .danger : nil
     }
+
+    /// What Add item says with nothing to list: nothing while the products load, and how to retry when they failed.
+    var addItemEmptyText: String {
+        if hasLoadedProducts { return "No products match." }
+        return productsFailed ? "Couldn't load products. Close and reopen Add item to try again." : ""
+    }
+
+    /// The template's multi-use products, listed under "Opened a new one?"; one Add item brought in is listed with
+    /// the supplies only.
+    var templateBottles: [Bottle] { bottles.filter { !$0.isAdded } }
 
     /// "10 items deducted" under "{name} started".
     static func itemsDeducted(_ count: Int) -> String {

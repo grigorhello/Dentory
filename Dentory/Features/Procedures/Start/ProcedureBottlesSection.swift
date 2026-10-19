@@ -1,12 +1,12 @@
 import SwiftUI
 
 /// "Opened a new one?" (f13): the template's multi-use products with "1 open · 1 in stock" and Take new; the (i)
-/// explains it in a toast.
+/// explains it in a toast. A product Add item brought in is listed with the supplies only.
 struct ProcedureBottlesSection: View {
     let viewModel: ProcedureStartViewModel
 
     var body: some View {
-        let bottles = viewModel.bottles
+        let bottles = viewModel.templateBottles
         VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack(spacing: Spacing.xs) {
                 Eyebrow("Opened a new one?")
