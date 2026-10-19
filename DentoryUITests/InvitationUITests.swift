@@ -18,10 +18,10 @@ final class InvitationUITests: XCTestCase {
         XCTAssertFalse(join.isEnabled, "Join is enabled before the fields are filled")
 
         app.textFields["invite.name"].firstMatch.tap()
-        app.typeText("Priya Patel")
-        app.secureTextFields["invite.password"].firstMatch.tap()
+        // Return moves to the password, as on Sign in.
+        app.typeText("Priya Patel\n")
         app.typeText("smiledental")
-        XCTAssertTrue(join.isEnabled)
+        XCTAssertTrue(join.isEnabled, "Join stays disabled: name and password were not both filled")
         join.tap()
 
         XCTAssertTrue(app.staticTexts["Smile Dental"].waitForExistence(timeout: 8), "Home did not appear")
