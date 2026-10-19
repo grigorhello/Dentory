@@ -19,7 +19,7 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
-.PHONY: project build test uitest lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check
+.PHONY: project build test uitest lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check invite-links
 
 project:
 	xcodegen generate
@@ -65,3 +65,10 @@ functions-serve:
 # Type-checks every Edge Function (needs Deno: brew install deno).
 functions-check:
 	deno check supabase/functions/*/index.ts
+
+# The local stack has no Resend key, so invite_member writes each invitation email to the function log
+# instead of sending it. This prints the links of the last invitations; open one on the simulator with
+# `xcrun simctl openurl booted "dentory://invite?token=<token>"` (MS-112).
+EDGE_CONTAINER ?= supabase_edge_runtime_Dentory
+invite-links:
+	@docker logs $(EDGE_CONTAINER) 2>&1 | grep -oE 'invite\?token=[A-Za-z0-9_%-]+' | tail -5 | sed 's/^/dentory:\/\//'

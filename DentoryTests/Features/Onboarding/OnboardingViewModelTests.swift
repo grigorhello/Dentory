@@ -59,6 +59,25 @@ struct OnboardingViewModelTests {
         #expect(viewModel.step == .account)
     }
 
+    @Test func aRefusedAddressShowsUnderItsRow() async {
+        let repository = FakeOnboardingRepository()
+        repository.inviteResult = .failure(
+            AppError.validation(field: "priya@newclinic.ca", message: "priya@newclinic.ca is already on the team")
+        )
+        let (viewModel, _) = make(repository: repository, step: .invite, clinicID: Session.demo.clinicID)
+        viewModel.invites[0].email = " Priya@NewClinic.ca "
+        viewModel.invites[1].email = "kim@newclinic.ca"
+        await viewModel.sendInvites()
+        #expect(viewModel.invites[0].error == "priya@newclinic.ca is already on the team")
+        #expect(viewModel.invites[1].error == nil)
+        #expect(viewModel.generalError == nil)
+        #expect(!viewModel.isFinished)
+        viewModel.invites[0].email = "priya2@newclinic.ca"
+        repository.inviteResult = .success(2)
+        await viewModel.sendInvites()
+        #expect(viewModel.isFinished)
+    }
+
     @Test func theCountryDefaultsToTheDevice() {
         let (viewModel, _) = make()
         #expect(viewModel.country?.code == "CA")

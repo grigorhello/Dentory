@@ -2,4 +2,7 @@
 nonisolated enum MembershipRole: String, Codable, Sendable {
     case admin
     case staff
+
+    /// The word the UI uses for the role (PRD §7 vocabulary).
+    var label: String { self == .admin ? "Admin" : "Staff" }
 }

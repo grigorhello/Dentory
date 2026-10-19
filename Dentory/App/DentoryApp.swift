@@ -4,15 +4,19 @@ import SwiftUI
 struct DentoryApp: App {
     private let dependencies: AppDependencies
     private let startsOnSignUp: Bool
+    /// `-invite <token>` opens the Join screen for that invitation (UI tests use the preview's `demo-invite`).
+    private let invitationToken: String?
     @State private var sessionStore: SessionStore
 
     init() {
         // `-uiTesting` runs the app on the preview doubles: no network, a signed-in demo admin.
         // `-offline` with it makes the network monitor report no connection; `-signedOut` starts on Sign in;
-        // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there.
+        // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there;
+        // `-invite <token>` opens the Join screen of an invitation.
         let arguments = ProcessInfo.processInfo.arguments
         let onboarding = UserDefaults.standard.string(forKey: "onboarding")
         startsOnSignUp = onboarding == "account"
+        invitationToken = UserDefaults.standard.string(forKey: "invite")
         let dependencies = arguments.contains("-uiTesting")
             ? AppDependencies.preview(
                 signedIn: !arguments.contains("-signedOut") && onboarding != "account",
@@ -29,7 +33,7 @@ struct DentoryApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(sessionStore: sessionStore, startsOnSignUp: startsOnSignUp)
+            RootView(sessionStore: sessionStore, startsOnSignUp: startsOnSignUp, invitationToken: invitationToken)
                 .environment(\.appDependencies, dependencies)
                 .task { await sessionStore.restore() }
         }

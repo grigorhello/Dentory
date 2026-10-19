@@ -1,6 +1,6 @@
--- MS-111 · clinic_create and invite_members.
+-- MS-111 · clinic_create. (invite_members moved to invitation_create in MS-112: see 09_invitations_test.sql.)
 begin;
-select plan(32);
+select plan(23);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000a11', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'owner@dentory.test'),
@@ -59,23 +59,6 @@ select is(public.clinic_create('Another Dental', 'Ottawa', 'CA', 'America/Toront
 select is((select count(*)::integer from public.clinics where name = 'Another Dental'), 0, 'no second clinic was created');
 select is((select count(*)::integer from public.memberships where user_id = '00000000-0000-4000-8000-000000000a11'), 1, 'no second membership either');
 
--- Invitations.
-select throws_ok($$ select public.invite_members(pg_temp.clinic(), '{"email":"x"}') $$, '22023', 'Invitations must be a list', 'invites must be an array');
-select throws_ok($$ select public.invite_members(pg_temp.clinic(), '[{"email":"not-an-email","role":"staff"}]') $$, '22023', 'Enter a valid email',
-  'an invalid address is refused');
-select throws_ok($$ select public.invite_members(pg_temp.clinic(), '[{"email":"a@dentory.test","role":"owner"}]') $$, '22023', 'Role must be Staff or Admin',
-  'an unknown role is refused');
-select is(public.invite_members(pg_temp.clinic(), '[{"email":"Priya@Dentory.test","role":"staff"},{"email":"kim@dentory.test","role":"admin"},{"email":"owner@dentory.test","role":"staff"}]'), 2,
-  'two invitations are recorded; the owner, already active, is skipped');
-select results_eq($$ select email, role::text, status::text, invited_by from public.memberships where clinic_id = pg_temp.clinic() and status = 'invited' order by email $$,
-  $$ values ('kim@dentory.test', 'admin', 'invited', '00000000-0000-4000-8000-000000000a11'::uuid), ('priya@dentory.test', 'staff', 'invited', '00000000-0000-4000-8000-000000000a11'::uuid) $$,
-  'invited rows carry the lower-cased address, the role and who invited');
-select ok((select bool_and(invite_expires_at between now() + interval '6 days' and now() + interval '8 days') from public.memberships where clinic_id = pg_temp.clinic() and status = 'invited'),
-  'invitations expire in 7 days');
-select is(public.invite_members(pg_temp.clinic(), '[{"email":"priya@dentory.test","role":"admin"}]'), 1, 'inviting again refreshes the row');
-select is((select role::text from public.memberships where clinic_id = pg_temp.clinic() and email = 'priya@dentory.test'), 'admin', 'the refreshed invitation carries the new role');
-reset role;
-
 -- The owner is active; a revoked member is neither active nor new.
 select pg_temp.act_as('00000000-0000-4000-8000-000000000a11');
 select is(public.membership_state(), 'active', 'the owner is active');
@@ -90,12 +73,6 @@ reset role;
 select is((select count(*)::integer from public.clinics where name = 'Rogue Dental'), 0, 'no rogue clinic was created');
 select pg_temp.act_as('00000000-0000-4000-8000-000000000a12');
 select is(public.membership_state(), 'none', 'a stranger with no rows is new');
-reset role;
-
--- Someone who is not an admin of the clinic cannot invite.
-select pg_temp.act_as('00000000-0000-4000-8000-000000000a12');
-select throws_ok($$ select public.invite_members(pg_temp.clinic(), '[{"email":"z@dentory.test","role":"staff"}]') $$, '42501', 'Only an admin can invite',
-  'a stranger cannot invite into the clinic');
 reset role;
 
 select * from finish();

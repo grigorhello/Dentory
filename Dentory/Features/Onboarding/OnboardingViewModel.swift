@@ -152,7 +152,7 @@ final class OnboardingViewModel {
     /// Rows with an address; blank rows are ignored, a malformed one blocks sending.
     var filledInvites: [TeamInvite] {
         invites.compactMap { row in
-            let email = row.email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let email = Self.normalized(row.email)
             return email.isEmpty ? nil : TeamInvite(email: email, role: row.role)
         }
     }
@@ -174,7 +174,14 @@ final class OnboardingViewModel {
                 _ = try await repository.invite(clinicID: clinicID, invites: filledInvites)
                 finish(message: "Invitations sent · They get a link by email.")
             } catch {
-                handle(AppError(error))
+                let appError = AppError(error)
+                // A refusal of one address names it; it belongs under that row, not under step 1's email.
+                if case .validation(let field, let message) = appError,
+                   let index = invites.firstIndex(where: { Self.normalized($0.email) == field }) {
+                    invites[index].error = message
+                } else {
+                    handle(appError)
+                }
             }
         }
     }
@@ -200,6 +207,11 @@ final class OnboardingViewModel {
         case .validation(let field, let message) where field == "name": nameError = message
         default: generalError = error
         }
+    }
+
+    /// Trimmed and lower-cased, the form every address is sent and compared in.
+    nonisolated static func normalized(_ email: String) -> String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
     nonisolated static func looksLikeEmail(_ text: String) -> Bool {

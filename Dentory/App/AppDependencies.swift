@@ -19,6 +19,7 @@ struct AppDependencies: Sendable {
     let homeRepository: HomeRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
+    let invitationRepository: InvitationRepository
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
     var locale: Locale = .current
 
@@ -58,7 +59,8 @@ struct AppDependencies: Sendable {
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
-            onboardingProgress: UserDefaultsOnboardingProgress()
+            onboardingProgress: UserDefaultsOnboardingProgress(),
+            invitationRepository: SupabaseInvitationRepository(client: client)
         )
     }
 
@@ -100,6 +102,7 @@ struct AppDependencies: Sendable {
             homeRepository: DemoHomeRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
+            invitationRepository: DemoInvitationRepository(auth: auth),
             locale: Locale(identifier: "en_US")
         )
     }
@@ -116,6 +119,12 @@ struct AppDependencies: Sendable {
             auth: auth, repository: onboardingRepository, sessionStore: sessionStore, progress: onboardingProgress,
             locale: locale, startingAt: step, account: account, clinicID: clinicID
         )
+    }
+
+    /// The Join screen's view model for the token of an invitation link (MS-112).
+    @MainActor
+    func makeAcceptInvitationViewModel(token: String, sessionStore: SessionStore) -> AcceptInvitationViewModel {
+        AcceptInvitationViewModel(token: token, repository: invitationRepository, sessionStore: sessionStore)
     }
 }
 
@@ -172,6 +181,8 @@ struct PreviewRPCClient: RPCCalling {
 final class PreviewAuthService: AuthServicing, @unchecked Sendable {
     var session: Session?
     var account: Account?
+    /// Accounts the demo invitation flow created: address to the password set and the session it yields.
+    private var registered: [String: (password: String, session: Session)] = [:]
     static let demoPassword = "smiledental"
     static let demoEmails = ["sarah@smiledental.ca", "michael@smiledental.ca"]
 
@@ -185,8 +196,17 @@ final class PreviewAuthService: AuthServicing, @unchecked Sendable {
         return .none
     }
 
+    func register(email: String, password: String, session: Session) {
+        registered[email.lowercased()] = (password, session)
+    }
+
     func signIn(email: String, password: String) async throws -> Session {
         try await Task.sleep(for: .milliseconds(400))
+        if let account = registered[email.lowercased()] {
+            guard password == account.password else { throw AppError.wrongPassword }
+            session = account.session
+            return account.session
+        }
         guard Self.demoEmails.contains(email.lowercased()) else { throw AppError.unknownEmail }
         guard password == Self.demoPassword else { throw AppError.wrongPassword }
         return .demo
