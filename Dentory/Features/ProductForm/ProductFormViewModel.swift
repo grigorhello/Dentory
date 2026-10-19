@@ -36,7 +36,7 @@ final class ProductFormViewModel {
     var packUnit: String { didSet { if packUnit != oldValue { packSizeError = nil } } }
     var packSizeText: String { didSet { if packSizeText != oldValue { packSizeError = nil } } }
     private(set) var isMultiUse: Bool
-    var minimumText: String { didSet { if minimumText != oldValue { targetError = nil } } }
+    var minimumText: String { didSet { if minimumText != oldValue { minimumError = nil; targetError = nil } } }
     var targetText: String { didSet { if targetText != oldValue { targetError = nil } } }
     var supplier: String
     var location: String
@@ -46,6 +46,7 @@ final class ProductFormViewModel {
     private(set) var unitError: String?
     private(set) var packSizeError: String?
     private(set) var trackingError: String?
+    private(set) var minimumError: String?
     private(set) var targetError: String?
 
     private let repository: ProductFormRepository
@@ -188,12 +189,13 @@ final class ProductFormViewModel {
             packSizeError = "Enter how many \(countedUnitWord) make 1 \(pack), 2 or more"
             valid = false
         }
-        let minimum = Self.quantity(from: minimumText, locale: formatters.locale) ?? 0
-        let target = Self.quantity(from: targetText, locale: formatters.locale) ?? 0
-        if minimum < 0 || target < 0 { targetError = "Levels cannot be negative"; valid = false }
-        if target < minimum { targetError = "Target must be at least the minimum"; valid = false }
-        guard valid else { return nil }
-        let categoryID: UUID? = if case .existing(let category) = category { category.id } else { nil }
+        guard let levels = validatedLevels(), valid else { return nil }
+        // No choice on the Edit sheet (the list may not have loaded) keeps the product's category.
+        let categoryID: UUID? = switch (category, mode) {
+        case (.existing(let chosen), _): chosen.id
+        case (nil, .edit(let product)): product.categoryID
+        default: nil
+        }
         return ProductDraft(
             name: name,
             categoryID: categoryID,
@@ -201,11 +203,27 @@ final class ProductFormViewModel {
             packUnit: pack.isEmpty ? nil : pack,
             packSize: pack.isEmpty ? nil : packSize,
             tracking: isMultiUse ? .multiUse : .countable,
-            minimum: minimum,
-            target: target,
+            minimum: levels.minimum,
+            target: levels.target,
             supplier: trimmed(supplier).isEmpty ? nil : trimmed(supplier),
             location: trimmed(location).isEmpty ? nil : trimmed(location)
         )
+    }
+
+    /// Both levels as numbers (empty reads 0), the target at least the minimum; otherwise the failing field
+    /// carries its error and nothing is sent.
+    private func validatedLevels() -> (minimum: Decimal, target: Decimal)? {
+        let minimum = Self.quantity(from: minimumText, locale: formatters.locale)
+        let target = Self.quantity(from: targetText, locale: formatters.locale)
+        if minimum == nil, !trimmed(minimumText).isEmpty { minimumError = "Enter a number" }
+        if target == nil, !trimmed(targetText).isEmpty { targetError = "Enter a number" }
+        guard minimumError == nil, targetError == nil else { return nil }
+        let levels = (minimum: minimum ?? 0, target: target ?? 0)
+        if levels.target < levels.minimum {
+            targetError = "Target must be at least the minimum"
+            return nil
+        }
+        return levels
     }
 
     private func handle(_ error: AppError) {
@@ -231,11 +249,16 @@ final class ProductFormViewModel {
         value.formatted(Decimal.FormatStyle(locale: locale).grouping(.never))
     }
 
-    /// "20", "20.5", "1,000.5" in en_US or "1 000,5" in fr_CA, as typed on the number pad: the locale's
-    /// grouping separators are dropped and its decimal separator read; anything else is not a quantity.
+    /// "20", "20.5", "1,000.5" in en_US, "1 000,5" in fr_CA or "١٠٠٠" in ar_SA, as typed on the number pad:
+    /// native digits are read, the locale's grouping separators dropped and its decimal separator taken;
+    /// anything else is not a quantity.
     nonisolated static func quantity(from text: String, locale: Locale) -> Decimal? {
         var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { return nil }
+        cleaned = cleaned.map { character -> String in
+            if let digit = character.wholeNumberValue, (0...9).contains(digit) { return String(digit) }
+            return String(character)
+        }.joined()
         let decimalSeparator = locale.decimalSeparator ?? "."
         let groupingSeparators = Set([locale.groupingSeparator ?? ",", " ", "\u{00A0}", "\u{202F}"])
         for separator in groupingSeparators where separator != decimalSeparator {

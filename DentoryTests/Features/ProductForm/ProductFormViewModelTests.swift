@@ -183,15 +183,45 @@ struct ProductFormViewModelTests {
         #expect(ProductFormViewModel.plainText(Decimal(string: "20.5") ?? 0, locale: french) == "20,5")
     }
 
-    @Test(arguments: ["en_US", "fr_CA"])
+    @Test(arguments: ["en_US", "fr_CA", "ar_SA"])
     func editKeepsLevelsOfAThousandOrMore(localeID: String) async {
+        let locale = Locale(identifier: localeID)
         let repository = FakeProductFormRepository()
         let product = ProductDetail.fixture(quantity: 0, unopened: 0, minimum: 1000, target: 2500)
-        let viewModel = make(mode: .edit(product), repository: repository, locale: Locale(identifier: localeID))
-        #expect(viewModel.minimumText == "1000" && viewModel.targetText == "2500", "No digit grouping in the fields")
+        let viewModel = make(mode: .edit(product), repository: repository, locale: locale)
+        #expect(!viewModel.minimumText.contains(locale.groupingSeparator ?? ","), "No digit grouping in the fields")
+        #expect(ProductFormViewModel.quantity(from: viewModel.minimumText, locale: locale) == 1000)
         viewModel.name = "Patient bib"
         await viewModel.save()
         #expect(repository.updates.first?.draft.minimum == 1000)
         #expect(repository.updates.first?.draft.target == 2500)
+    }
+
+    @Test func aLevelThatIsNotANumberIsRefusedNotSavedAsZero() async {
+        let repository = FakeProductFormRepository()
+        let viewModel = make(mode: .edit(ProductDetail.fixture()), repository: repository)
+        viewModel.minimumText = "abc"
+        viewModel.targetText = "1o"
+        await viewModel.save()
+        #expect(viewModel.minimumError == "Enter a number")
+        #expect(viewModel.targetError == "Enter a number")
+        #expect(repository.updates.isEmpty)
+        viewModel.minimumText = "١٠"
+        #expect(viewModel.minimumError == nil)
+        #expect(ProductFormViewModel.quantity(from: "١٠", locale: Locale(identifier: "en_US")) == 10)
+    }
+
+    @Test func theCategoryStaysWhenTheListDidNotLoad() async {
+        let repository = FakeProductFormRepository()
+        repository.categoriesResult = .failure(AppError.network)
+        let product = ProductDetail.fixture()
+        let viewModel = make(mode: .edit(product), repository: repository)
+        await viewModel.load()
+        #expect(viewModel.category == nil && viewModel.generalError == .network)
+        viewModel.clearGeneralError()
+        viewModel.name = "Septocaine 4% 1:100,000 Gold"
+        await viewModel.save()
+        #expect(repository.updates.first?.draft.categoryID == product.categoryID)
+        #expect(product.categoryID != nil, "The fixture carries a category")
     }
 }

@@ -170,6 +170,7 @@ final class ProductDetailViewModel {
     // MARK: - Edit and Delete product (MS-117)
 
     func edit() {
+        guard detail != nil else { return }
         sheet = .edit
     }
 

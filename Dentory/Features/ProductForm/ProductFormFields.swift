@@ -85,7 +85,7 @@ struct ProductFormFields: View {
             HStack(alignment: .top, spacing: Spacing.md) {
                 MSTextField(
                     "Minimum", text: $viewModel.minimumText, identifier: "newProduct.minimum",
-                    placeholder: "Alert below", keyboard: .decimalPad
+                    placeholder: "Alert below", error: viewModel.minimumError, keyboard: .decimalPad
                 )
                 MSTextField(
                     "Target", text: $viewModel.targetText, identifier: "newProduct.target",

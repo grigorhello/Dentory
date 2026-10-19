@@ -169,6 +169,8 @@ struct ProductDetailViewModelTests {
     @Test func editOpensTheSheetAndSavingReloads() async {
         let repository = FakeProductDetailRepository()
         let viewModel = make(repository: repository)
+        viewModel.edit()
+        #expect(viewModel.sheet == nil, "Nothing to edit before the detail loaded")
         await viewModel.load()
         viewModel.edit()
         #expect(viewModel.sheet == .edit)
@@ -292,7 +294,7 @@ extension ProductDetail {
             location: base.location, status: status, quantity: quantity, unopened: unopened, openCount: openCount,
             missingExpiryQuantity: 0, usedInLast30Days: base.usedInLast30Days, lastCountedAt: lastCountedAt,
             toBuyItemID: nil, batches: batches ?? base.batches, openBottles: openBottles,
-            history: history ?? base.history
+            history: history ?? base.history, categoryID: base.categoryID, supplier: base.supplier
         )
     }
 }
