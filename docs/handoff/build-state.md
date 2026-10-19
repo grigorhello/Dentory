@@ -24,27 +24,28 @@ As of 2026-10-19 06:30 UTC. Before acting on this file, confirm the live state: 
 | 15 | MS-155 · Rename to Dentory, code and repository (#143) | [#146](https://github.com/grigorhello/Dentory/pull/146) | 2026-10-17 15:49 | Repository `grigorhello/Dentory`; project, targets, folders `Dentory*`; bundle id `ca.dentory.app`; Makefile, lint, local Supabase (`supabase_db_Dentory`), pgTAP fixtures, skill `dentory-ios` (MS stays the design-system prefix), reviewer agent. |
 | 16 | MS-156 · Rename in the docs, the design files, the ticket sources and the issues (#144) | [#147](https://github.com/grigorhello/Dentory/pull/147) | 2026-10-17 17:19 | Docs, design files, ticket sources, issues and this handoff pack say Dentory; the re-rendered f01 frame merged as [#148](https://github.com/grigorhello/Dentory/pull/148). |
 | 18 | MS-111 · Admin sign-up: account, clinic and team invites (#82) | [#149](https://github.com/grigorhello/Dentory/pull/149) | 2026-10-17 17:57 | The three sign-up steps of f2, f3, f4: Supabase sign-up, `clinic_create` (clinic, admin membership, profile, ten categories, currency from the country), invited rows at step 3, resume at the pending step after a relaunch; `membership_state()`; 32 pgTAP assertions. |
+| 19 | MS-112 · Invite teammates and accept an invitation (#83) | [#150](https://github.com/grigorhello/Dentory/pull/150) | 2026-10-19 02:47 | Migration `20261019020000_invitations.sql` (`invitation_create`, `invitation_lookup`, `auth_user_id_for_email`, `invitation_accept`; `invite_members` dropped), Edge Functions `invite_member` (Resend) and `accept_invitation`, the Join screen (f5), the `dentory://` scheme and the `applinks:app.dentory.ca` entitlement, the `applinks/` static files for the domain. |
 
-Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`.
+Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`.
 
 ## In progress
 
-- **MS-112 · Invite teammates and accept an invitation (#83)**, build step 19, started 2026-10-19 01:22 UTC in the build thread on Grigor's Mac (the checkout now lives in `/Users/grigorgrigoryan/Documents/Personal/Dentory`): migration `20261019020000_invitations.sql` (`invitation_create`, `invitation_lookup`, `auth_user_id_for_email`, `invitation_accept`; `invite_members` dropped), Edge Functions `invite_member` (Resend) and `accept_invitation`, the Join screen (f5), the `dentory://` scheme and the `applinks:app.dentory.ca` entitlement, the `applinks/` static files for the domain. This file is part of its PR. If the MS-112 PR is merged when you read this, go to the next step.
+- **MS-115 · Inventory list: browse, search and filter (#86)**, build step 20, in the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`): PR [#151](https://github.com/grigorhello/Dentory/pull/151) open since 2026-10-19 02:27 UTC on branch `ms-115-inventory-list`, in the review loop. If it is merged when you read this, go to the next step.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
 
 | Step | Ticket | Blocked by |
 |---|---|---|
-| 20 | MS-115 · Inventory list: browse, search and filter (#86) | MS-107, MS-103 (merged) |
 | 21 | MS-116 · Product detail (#87) | MS-115 |
 | 22 | MS-117 · Create, edit and delete products (#88) | MS-116 |
+| 23 | MS-118 · Adjust a quantity with a reason (#89) | MS-106 (merged), MS-116 |
 
-Then M1 continues MS-118, MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
+Then M1 continues MS-119, MS-120, MS-121, MS-122, MS-123, MS-124, MS-113, MS-125; M2 from step 32 (MS-126); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156 and MS-111 are in Feature QA for Grigor to try. MS-112 is in In progress. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in PR review and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111 and MS-112 are in Feature QA for Grigor to try. MS-115 is in PR review. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in PR review and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
