@@ -41,7 +41,7 @@ struct ProcedureStartView: View {
                 viewModel.clearGeneralError()
             }
             .msSheet(item: $viewModel.sheet) { _ in
-                AddProcedureItemSheet(viewModel: viewModel)
+                AddProcedureItemSheet(picker: viewModel)
             }
     }
 

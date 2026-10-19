@@ -77,7 +77,7 @@ extension ProcedureStartViewModel {
     var takenNew: [Bottle] { bottles.filter(\.takesNew) }
 
     /// "40 needles in stock" under a product in Add item; "1 unopened · 2 open" for a multi-use one.
-    func addCaption(for product: ProductSummary) -> String {
+    func addCaption(for product: ProductSummary) -> String? {
         switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
         case .multiUse: "\(formatters.number(product.unopened)) unopened · \(product.openCount) open"
