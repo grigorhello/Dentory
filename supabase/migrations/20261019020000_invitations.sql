@@ -1,7 +1,7 @@
 -- MS-112 · Invitations: a random token per invited membership (only its SHA-256 hash is stored), the public
 -- lookup behind the Join screen (f5) and the accept step that turns the invited row into an active member
 -- (PRD §6.1; MS-100 G4, D12). The Edge Functions invite_member and accept_invitation are the only callers of
--- invitation_create, auth_user_id_for_email and invitation_accept (service_role): the raw token travels in
+-- invitation_create, auth_user_id_for_email, invitation_check and invitation_accept (service_role): the raw token travels in
 -- the email alone, never back to the admin's app. invitation_lookup is open to the signed-out app, because
 -- the Join screen opens before the invitee has an account; the token is the credential.
 
@@ -163,24 +163,22 @@ as $$
   limit 1;
 $$;
 
--- Turns the invited row into the active membership of p_user_id (whose address must be the invited one),
--- consumes the token and records the name on the profile. Returns the clinic id.
-create function public.invitation_accept(p_token text, p_user_id uuid, p_full_name text)
+-- Whether p_user_id may take the invitation behind p_token: the clinic id when yes, the refusal as an
+-- error otherwise. accept_invitation asks before it touches an existing account's password, and
+-- invitation_accept asks again under its row lock, so a refused invitation changes nothing.
+create function public.invitation_check(p_token text, p_user_id uuid)
 returns uuid
 language plpgsql
+stable
 security definer
 set search_path = ''
 as $$
 declare
   v_row public.memberships%rowtype;
-  v_name text := btrim(coalesce(p_full_name, ''));
   v_email text;
 begin
   if p_user_id is null then
     raise exception 'Sign in first' using errcode = '42501';
-  end if;
-  if length(v_name) > 120 then
-    raise exception 'The name is too long' using errcode = '22023';
   end if;
   select m.* into v_row
   from public.memberships m
@@ -188,8 +186,7 @@ begin
     and m.invite_token_hash is not null
     and p_token is not null
     and length(p_token) between 20 and 200
-    and m.invite_token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
-  for update;
+    and m.invite_token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex');
   if v_row.id is null or v_row.invite_expires_at is null or v_row.invite_expires_at <= now() then
     raise exception 'This invitation has expired. Ask your admin to resend.' using errcode = '22023';
   end if;
@@ -209,6 +206,36 @@ begin
   ) then
     raise exception 'This account is already on the team' using errcode = '23505';
   end if;
+  return v_row.clinic_id;
+end;
+$$;
+
+-- Turns the invited row into the active membership of p_user_id (whose address must be the invited one),
+-- consumes the token and records the name on the profile. Returns the clinic id.
+create function public.invitation_accept(p_token text, p_user_id uuid, p_full_name text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_row public.memberships%rowtype;
+  v_name text := btrim(coalesce(p_full_name, ''));
+  v_clinic uuid;
+begin
+  if length(v_name) > 120 then
+    raise exception 'The name is too long' using errcode = '22023';
+  end if;
+  -- Lock the row first, so two accepts of one token cannot both pass the check.
+  select m.* into v_row
+  from public.memberships m
+  where m.status = 'invited'
+    and m.invite_token_hash is not null
+    and p_token is not null
+    and length(p_token) between 20 and 200
+    and m.invite_token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
+  for update;
+  v_clinic := public.invitation_check(p_token, p_user_id);
 
   update public.memberships
   set user_id = p_user_id,
@@ -222,7 +249,7 @@ begin
   values (p_user_id, case when v_name <> '' then v_name else v_row.full_name end)
   on conflict (user_id) do update set full_name = excluded.full_name where excluded.full_name <> '';
 
-  return v_row.clinic_id;
+  return v_clinic;
 end;
 $$;
 
@@ -230,12 +257,14 @@ revoke execute on function
   public.invitation_create(uuid, text, text, text, uuid),
   public.member_display_name(uuid, uuid),
   public.auth_user_id_for_email(text),
+  public.invitation_check(text, uuid),
   public.invitation_accept(text, uuid, text)
   from public, anon, authenticated;
 grant execute on function
   public.invitation_create(uuid, text, text, text, uuid),
   public.member_display_name(uuid, uuid),
   public.auth_user_id_for_email(text),
+  public.invitation_check(text, uuid),
   public.invitation_accept(text, uuid, text)
   to service_role;
 

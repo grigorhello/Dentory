@@ -43,6 +43,9 @@ Deno.serve(async (req) => {
     if (existingID) {
       // The address already has an account (another clinic revoked it, or the admin's own test account):
       // the link proves the address, so the new password replaces the old one, as a reset link would.
+      // Only once the server says this account may join; a refusal must leave the account untouched.
+      const check = await db.rpc("invitation_check", { p_token: token, p_user_id: existingID });
+      if (check.error) throw refusal(check.error);
       const { error } = await db.auth.admin.updateUserById(existingID, {
         password,
         email_confirm: true,
@@ -69,13 +72,27 @@ Deno.serve(async (req) => {
     });
     if (accepted.error) {
       if (created) await db.auth.admin.deleteUser(userID).catch((e) => console.error(e));
-      throw rpcError(accepted.error);
+      throw refusal(accepted.error);
     }
     return json({ ok: true, email: invitation.email, clinic_id: accepted.data });
   } catch (error) {
     return errorResponse(error);
   }
 });
+
+/**
+ * A refusal of invitation_check or invitation_accept, with the sentence the invitee should read: an
+ * expired, used or unknown token is 410 (the app shows the expired state); another clinic, another
+ * address or a seat already taken is 409 with the server's sentence (the app shows it as it is).
+ */
+function refusal(error: { code?: string | null; message?: string | null }): HttpError {
+  const message = error.message ?? "";
+  if (error.code === "22023" && message.startsWith("This invitation has expired")) return expired();
+  if (error.code === "42501" || error.code === "23505") {
+    return new HttpError(409, "cannot_join", message);
+  }
+  return rpcError(error);
+}
 
 function authError(error: { code?: string; message?: string } | null): HttpError {
   if (error?.code === "weak_password") {

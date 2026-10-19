@@ -1,6 +1,6 @@
 -- MS-112 · invitation_create, invitation_lookup, auth_user_id_for_email and invitation_accept.
 begin;
-select plan(57);
+select plan(66);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000b21', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'owner@dentory.test'),
@@ -22,6 +22,8 @@ select ok(not has_function_privilege('authenticated', 'public.invitation_create(
 select ok(not has_function_privilege('anon', 'public.invitation_accept(text, uuid, text)', 'execute'), 'anon cannot accept');
 select ok(not has_function_privilege('authenticated', 'public.invitation_accept(text, uuid, text)', 'execute'), 'a signed-in user cannot accept directly');
 select ok(not has_function_privilege('anon', 'public.auth_user_id_for_email(text)', 'execute'), 'anon cannot look up accounts by address');
+select ok(not has_function_privilege('authenticated', 'public.invitation_check(text, uuid)', 'execute'), 'a signed-in user cannot run the check directly');
+select ok(has_function_privilege('service_role', 'public.invitation_check(text, uuid)', 'execute'), 'service_role runs the check');
 select ok(has_function_privilege('anon', 'public.invitation_lookup(text)', 'execute'), 'anon can read an invitation by its token');
 select ok(has_function_privilege('service_role', 'public.invitation_create(uuid, text, text, text, uuid)', 'execute'), 'service_role creates');
 select ok(has_function_privilege('service_role', 'public.invitation_accept(text, uuid, text)', 'execute'), 'service_role accepts');
@@ -120,6 +122,19 @@ select throws_ok($$ select public.invitation_accept((select token from inv_token
   'This invitation was sent to another address', 'an account with another address cannot take the invitation');
 select is((select status::text from public.memberships where clinic_id = pg_temp.smile() and email = 'priya@dentory.test'), 'invited', 'the refusals left the row invited');
 
+-- The read-only check answers the same way, so accept_invitation can ask before changing a password.
+select throws_ok($$ select public.invitation_check((select token from inv_tokens where name = 'priya2'), null) $$, '42501',
+  'Sign in first', 'the check needs a user');
+select throws_ok($$ select public.invitation_check('not-the-token-at-all-not-the-token-at-all', '00000000-0000-4000-8000-000000000b25') $$, '22023',
+  'This invitation has expired. Ask your admin to resend.', 'the check reads a wrong token as expired');
+select throws_ok($$ select public.invitation_check((select token from inv_tokens where name = 'priya2'), '00000000-0000-4000-8000-000000000b22') $$, '42501',
+  'This invitation was sent to another address', 'the check refuses another address');
+select is(public.invitation_check((select token from inv_tokens where name = 'priya2'), '00000000-0000-4000-8000-000000000b25'), pg_temp.smile(),
+  'the check lets the invitee join');
+select results_eq(
+  $$ select status::text, user_id, invite_token_hash is not null from public.memberships where clinic_id = pg_temp.smile() and email = 'priya@dentory.test' $$,
+  $$ values ('invited', null::uuid, true) $$, 'and changes nothing');
+
 -- Accept: the row becomes the active membership, the token is consumed, the profile carries the name.
 select is(public.invitation_accept((select token from inv_tokens where name = 'priya2'), '00000000-0000-4000-8000-000000000b25', ' Priya P. '), pg_temp.smile(),
   'accept returns the clinic');
@@ -131,6 +146,8 @@ select is((select full_name from public.profiles where user_id = '00000000-0000-
 select is((select count(*)::integer from public.invitation_lookup((select token from inv_tokens where name = 'priya2'))), 0, 'a used token finds nothing');
 select throws_ok($$ select public.invitation_accept((select token from inv_tokens where name = 'priya2'), '00000000-0000-4000-8000-000000000b25', 'Priya') $$, '22023',
   'This invitation has expired. Ask your admin to resend.', 'a used token cannot be accepted twice');
+select throws_ok($$ select public.invitation_check((select token from inv_tokens where name = 'priya2'), '00000000-0000-4000-8000-000000000b25') $$, '22023',
+  'This invitation has expired. Ask your admin to resend.', 'the check reads a used token as expired');
 select pg_temp.act_as('00000000-0000-4000-8000-000000000b25');
 select is(public.membership_state(), 'active', 'the new member is active');
 select is(public.current_role_in(pg_temp.smile()), 'admin', 'with the role of the latest invitation');
@@ -141,6 +158,8 @@ select throws_ok($$ select * from public.invitation_create(pg_temp.smile(), 'pri
 -- A member of another clinic cannot take an invitation (one clinic per user in V1.1).
 insert into inv_tokens select 'other', token
   from public.invitation_create(pg_temp.smile(), 'other@dentory.test', 'staff', 'Dr. Other', '00000000-0000-4000-8000-000000000b21');
+select throws_ok($$ select public.invitation_check((select token from inv_tokens where name = 'other'), '00000000-0000-4000-8000-000000000b24') $$, '42501',
+  'This account belongs to another clinic', 'the check refuses an active member of another clinic before anything changes');
 select throws_ok($$ select public.invitation_accept((select token from inv_tokens where name = 'other'), '00000000-0000-4000-8000-000000000b24', 'Dr. Other') $$, '42501',
   'This account belongs to another clinic', 'an active member of another clinic cannot join');
 select is((select status::text from public.memberships where clinic_id = pg_temp.smile() and email = 'other@dentory.test'), 'invited', 'the row stays invited');
