@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Product detail (f20 Admin, f21 Staff): context header, name and status, the quantity card, Adjust and
 /// Add to buy, the expiry card, the bottles card for multi-use products, the history, and Delete product
-/// for Admin. Edit, batches, bottles, history and Delete open their own tickets' screens later.
+/// for Admin. Edit, batches, history and Delete open their own tickets' screens later.
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -43,6 +43,11 @@ struct ProductDetailView: View {
                 guard isDeleted else { return }
                 dependencies.toasts.show("Product deleted")
                 dismiss()
+            }
+            .onChange(of: viewModel.bottleToast) { _, toast in
+                guard let toast else { return }
+                dependencies.toasts.show(toast.title, detail: toast.detail)
+                viewModel.clearBottleToast()
             }
             .onChange(of: viewModel.adjusted) { _, adjusted in
                 guard let adjusted else { return }
@@ -154,11 +159,12 @@ struct ProductDetailView: View {
         }
     }
 
-    // Placeholders until the tickets that bring these screens (MS-119, MS-120, MS-134).
+    private func finishBottle(_ id: UUID) { Task { await viewModel.finishBottle(id) } }
+    private func openNewBottle() { Task { await viewModel.openNewBottle() } }
+
+    // Placeholders until the tickets that bring these screens (MS-119, MS-134).
     private func editBatch(_ id: UUID) { dependencies.toasts.show("Edit batch arrives with a later update.") }
     private func addExpiry() { dependencies.toasts.show("Add expiry arrives with a later update.") }
-    private func finishBottle(_ id: UUID) { dependencies.toasts.show("Finished arrives with a later update.") }
-    private func openNewBottle() { dependencies.toasts.show("Open a new bottle arrives with a later update.") }
     private func showAllHistory() { dependencies.toasts.show("History arrives with a later update.") }
 }
 

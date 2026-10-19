@@ -2,9 +2,10 @@ import Foundation
 import Observation
 
 /// Product detail (f20 Admin, f21 Staff): the figures, the expiry and bottle cards and the history of one
-/// product, with Add to buy and its Undo (MS-116) and the Adjust sheet with its Undo (MS-118). The last
-/// answer is served from the cache while a fresh one loads or the network is gone (MS-108). Edit, batches,
-/// bottles and Delete arrive with their own tickets. The card rows are built in `ProductDetailViewModel+Rows.swift`.
+/// product, with Add to buy and its Undo (MS-116), the Adjust sheet with its Undo (MS-118) and the bottles
+/// opened and finished (MS-120). The last answer is served from the cache while a fresh one loads or the
+/// network is gone (MS-108). Edit, batches and Delete arrive with their own tickets. The card rows are built
+/// in `ProductDetailViewModel+Rows.swift`.
 @MainActor
 @Observable
 final class ProductDetailViewModel {
@@ -35,7 +36,14 @@ final class ProductDetailViewModel {
     private(set) var state: LoadState = .loading
     private(set) var detail: ProductDetail?
     private(set) var addedToBuy: AddedToBuy?
+    /// What the toast says after a bottle was opened or finished.
+    struct BottleToast: Equatable {
+        let title: String
+        let detail: String?
+    }
+
     private(set) var adjusted: Adjusted?
+    private(set) var bottleToast: BottleToast?
     /// The last applied adjustment, undoable until Undo runs or the next adjustment replaces it.
     private(set) var undoableAdjustmentID: UUID?
     var sheet: Sheet?
@@ -51,6 +59,7 @@ final class ProductDetailViewModel {
     private let userID: UUID
     private let productID: UUID
     private let submitGuard = SubmitGuard()
+    private let bottleGuard = SubmitGuard()
 
     init(
         repository: ProductDetailRepository,
@@ -74,6 +83,8 @@ final class ProductDetailViewModel {
     }
 
     var isSubmitting: Bool { submitGuard.isBusy }
+    /// A bottle is being opened or finished; the bottles card shows it on its buttons.
+    var isBottleBusy: Bool { bottleGuard.isBusy }
 
     func load() async {
         do {
@@ -264,6 +275,47 @@ final class ProductDetailViewModel {
 
     func clearAdjusted() {
         adjusted = nil
+    }
+
+    // MARK: - Bottles (multi-use)
+
+    /// Takes one unopened bottle, syringe or kit into use under the current user (`bottle_open`); the fresh
+    /// detail brings the new row. Refusals ("Out of stock") show as a toast.
+    func openNewBottle() async {
+        guard let detail, detail.tracking == .multiUse, canOpenNewBottle else { return }
+        await bottleGuard.run {
+            generalError = nil
+            do {
+                _ = try await repository.openBottle(productID: productID)
+                bottleToast = BottleToast(title: "\(bottleNoun.capitalized) opened", detail: nil)
+            } catch {
+                generalError = AppError(error)
+            }
+            await load()
+        }
+    }
+
+    /// Removes the open item (`bottle_finish`): the row goes at once, the fresh detail confirms the figures.
+    func finishBottle(_ openItemID: UUID) async {
+        guard let detail, detail.openBottles.contains(where: { $0.id == openItemID }) else { return }
+        await bottleGuard.run {
+            generalError = nil
+            do {
+                _ = try await repository.finishBottle(openItemID: openItemID)
+                let remaining = detail.openBottles.filter { $0.id != openItemID }
+                self.detail = detail.replacingBottles(remaining, unopenedDelta: 0, quantityDelta: -1)
+                bottleToast = BottleToast(
+                    title: "\(bottleNoun.capitalized) finished", detail: "\(detail.name) · \(bottlesLine)"
+                )
+            } catch {
+                generalError = AppError(error)
+            }
+            await load()
+        }
+    }
+
+    func clearBottleToast() {
+        bottleToast = nil
     }
 
     func clearGeneralError() {
