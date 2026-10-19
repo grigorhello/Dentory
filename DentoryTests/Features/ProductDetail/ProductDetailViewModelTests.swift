@@ -59,7 +59,7 @@ struct ProductDetailViewModelTests {
         await viewModel.load()
         let rows = viewModel.batchRows
         #expect(rows.map(\.lot) == ["A112", "B441"])
-        #expect(rows.first?.dateText == "Dec 1, 2026")
+        #expect(rows.first?.dateText == "Dec 2026", "Batches have month precision, so no day is shown")
         #expect(rows.first?.daysText == "in 90 days", "Days run to the last day of the expiry month (PRD)")
         #expect(rows.first?.daysTone == .warning)
         #expect(rows.map(\.quantityText) == ["20", "34"])
@@ -145,10 +145,10 @@ struct ProductDetailViewModelTests {
         #expect(viewModel.addToBuyTitle == "Add to buy")
     }
 
-    @Test func staffReadsReportLowStockAndAddsTheSameWay() async {
+    @Test func staffReadsAddToBuyTooAndAddsTheSameWay() async {
         let viewModel = make(isAdmin: false)
         await viewModel.load()
-        #expect(viewModel.addToBuyTitle == "Report low stock")
+        #expect(viewModel.addToBuyTitle == "Add to buy", "Both roles read Add to buy (MS-100 G2)")
         await viewModel.addToBuy()
         #expect(viewModel.addToBuyTitle == "On To buy")
     }
@@ -170,6 +170,7 @@ struct ProductDetailViewModelTests {
         await viewModel.addToBuy()
         #expect(viewModel.generalError == .readOnly)
         #expect(!viewModel.isOnToBuy)
+        #expect(repository.detailCalls.count == 2, "A refused add reloads the detail, in case the list changed")
         viewModel.clearGeneralError()
         #expect(viewModel.generalError == nil)
     }

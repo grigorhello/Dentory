@@ -76,6 +76,11 @@ nonisolated struct ClinicFormatters: Sendable {
         expiryMonth.start(in: timeZone).formatted(style.month(.wide).year())
     }
 
+    /// "Dec 2026": the expiry month on a card row (f20), where a day would claim a precision batches lack.
+    func shortMonth(_ expiryMonth: CalendarDay) -> String {
+        expiryMonth.start(in: timeZone).formatted(style.month(.abbreviated).year())
+    }
+
     /// An empty date style in the clinic's locale and time zone; callers add the fields.
     private var style: Date.FormatStyle {
         Date.FormatStyle(date: nil, time: nil, locale: locale, timeZone: timeZone)

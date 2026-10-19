@@ -1,6 +1,7 @@
 -- MS-116 · Product detail in one query (PRD §6.4): the product with its figures and status, what procedures
--- used in the last 30 days, when it was last counted, whether it is on the To buy list, its batches, its
--- open bottles and the last 20 ledger rows with who wrote them. Security invoker: the policies on
+-- used in the last 30 days (net of usage edited down and of cancellations, which the engine writes as
+-- positive procedure and cancellation rows), when it was last counted, whether it is on the To buy list,
+-- its batches, its open bottles and the last 20 ledger rows with who wrote them. Security invoker: the policies on
 -- products, the stock tables and the ledger decide what the caller sees; a product of another clinic, or
 -- an archived one, comes back with a null "product".
 create function public.product_detail(p_product_id uuid)
@@ -23,10 +24,10 @@ as $$
       left join public.categories c on c.id = p.category_id
       where p.id = p_product_id and p.archived_at is null
     ),
-    'used_30d', (
-      select coalesce(-sum(t.delta), 0)
+    'used_in_30_days', (
+      select greatest(coalesce(-sum(t.delta), 0), 0)
       from public.transactions t
-      where t.product_id = p_product_id and t.type = 'procedure' and t.delta < 0
+      where t.product_id = p_product_id and t.type in ('procedure', 'cancellation')
         and t.at >= now() - interval '30 days'
     ),
     'last_counted_at', (

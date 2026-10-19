@@ -32,7 +32,7 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
             unopened: product.unopened,
             openCount: product.openCount,
             missingExpiryQuantity: product.missingExpiryQty,
-            usedInLast30Days: payload.used30d,
+            usedInLast30Days: payload.usedIn30Days,
             lastCountedAt: payload.lastCountedAt,
             toBuyItemID: payload.toBuyItemId,
             batches: payload.batches.map {
@@ -83,10 +83,11 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
     }
 }
 
-/// The object `product_detail` returns.
+/// The object `product_detail` returns. Its keys avoid a digit-led component: the snake_case decoder
+/// would read `used_30d` as `used30D` and fail.
 nonisolated struct ProductDetailPayload: Decodable, Sendable {
     let product: ProductDetailProductRow?
-    let used30d: Decimal
+    let usedIn30Days: Decimal
     let lastCountedAt: Date?
     let toBuyItemId: UUID?
     let batches: [ProductDetailBatchRow]

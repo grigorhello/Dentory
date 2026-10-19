@@ -32,7 +32,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 
 ## In progress
 
-- **MS-116 · Product detail (#87)**, build step 21, started 2026-10-19 08:45 UTC in the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`): migration `20261019090000_product_detail.sql` (`product_detail`, one JSON answer with the figures, batches, open bottles, history and the To buy state), `ProductDetail` and `TransactionType`, the screen under `Features/Inventory` with Add to buy and its Undo, the `.context` header style, the trash icon. Edit, Adjust, batches, bottles, history and Delete show "arrives with a later update" toasts until their tickets. This file is part of its PR. If the MS-116 PR is merged when you read this, go to the next step.
+- **MS-116 · Product detail (#87)**, build step 21, started 2026-10-19 08:45 UTC in the build thread on Grigor's Mac (checkout `/Users/grigorgrigoryan/Documents/Personal/Dentory`): migration `20261019090000_product_detail.sql` (`product_detail`, one JSON answer with the figures, batches, open bottles, history and the To buy state), `ProductDetail` and `TransactionType`, the screen under `Features/ProductDetail` with Add to buy and its Undo, the `.context` header style, the trash icon. Edit, Adjust, batches, bottles, history and Delete show "arrives with a later update" toasts until their tickets. This file is part of its PR. If the MS-116 PR is merged when you read this, go to the next step.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order

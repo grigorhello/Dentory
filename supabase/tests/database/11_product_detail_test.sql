@@ -1,6 +1,6 @@
 -- MS-116 · product_detail: the product, its figures, batches, open bottles, history and To buy state, clinic-isolated.
 begin;
-select plan(21);
+select plan(23);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000d31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -56,7 +56,7 @@ select is(pg_temp.detail('00000000-0000-4000-8000-000000000d61') -> 'product' ->
 select is((pg_temp.detail('00000000-0000-4000-8000-000000000d61') -> 'product' ->> 'pack_size')::integer, 50, 'and its pack size');
 select is((pg_temp.detail('00000000-0000-4000-8000-000000000d61') -> 'product' ->> 'quantity')::numeric, 58::numeric, 'the quantity is the sum of its batches (20 + 34 + 4 undated)');
 select is(pg_temp.detail('00000000-0000-4000-8000-000000000d61') -> 'product' ->> 'status', 'expiring', 'the status follows the soonest batch (two months out, inside the 90-day window)');
-select is((pg_temp.detail('00000000-0000-4000-8000-000000000d61') ->> 'used_30d')::numeric, 2::numeric, 'used in 30 days counts the recent procedure only');
+select is((pg_temp.detail('00000000-0000-4000-8000-000000000d61') ->> 'used_in_30_days')::numeric, 2::numeric, 'used in 30 days counts the recent procedure only');
 select ok((pg_temp.detail('00000000-0000-4000-8000-000000000d61') ->> 'last_counted_at')::timestamptz between now() - interval '3 days' and now() - interval '1 day',
   'last counted at is the count row');
 select is(pg_temp.detail('00000000-0000-4000-8000-000000000d61') ->> 'to_buy_item_id', null, 'Septocaine is not on the To buy list');
@@ -78,6 +78,21 @@ select results_eq(
 select is((pg_temp.detail('00000000-0000-4000-8000-000000000d62') -> 'product' ->> 'open_count')::integer, 1, 'and the product counts it');
 select is(pg_temp.detail('00000000-0000-4000-8000-000000000d64') -> 'product', 'null'::jsonb, 'an archived product has no detail');
 select is(pg_temp.detail('00000000-0000-4000-8000-000000000d63') -> 'product', 'null'::jsonb, 'another clinic''s product has no detail');
+reset role;
+
+-- A crown that used 4 five days ago and was edited down to 3 (the engine gives 1 back as a positive procedure row).
+insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, at, ref_type, ref_label, reason, action_id) values
+  ('00000000-0000-4000-8000-000000000d41', '00000000-0000-4000-8000-000000000d61', 'procedure', -4, 39, 35, '00000000-0000-4000-8000-000000000d31', now() - interval '5 days', 'procedure_event', 'Crown', null, gen_random_uuid()),
+  ('00000000-0000-4000-8000-000000000d41', '00000000-0000-4000-8000-000000000d61', 'procedure', 1, 35, 36, '00000000-0000-4000-8000-000000000d31', now() - interval '4 days', 'procedure_event', 'Crown', null, gen_random_uuid());
+select pg_temp.act_as('00000000-0000-4000-8000-000000000d32');
+select is((pg_temp.detail('00000000-0000-4000-8000-000000000d61') ->> 'used_in_30_days')::numeric, 5::numeric, 'usage edited down is netted (2 + 4 - 1)');
+reset role;
+-- A filling of 3 cancelled an hour later: the cancellation row gives everything back.
+insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, at, ref_type, ref_label, reason, action_id) values
+  ('00000000-0000-4000-8000-000000000d41', '00000000-0000-4000-8000-000000000d61', 'procedure', -3, 36, 33, '00000000-0000-4000-8000-000000000d31', now() - interval '6 days', 'procedure_event', 'Filling', null, gen_random_uuid()),
+  ('00000000-0000-4000-8000-000000000d41', '00000000-0000-4000-8000-000000000d61', 'cancellation', 3, 33, 36, '00000000-0000-4000-8000-000000000d31', now() - interval '6 days' + interval '1 hour', 'procedure_event', 'Filling', null, gen_random_uuid());
+select pg_temp.act_as('00000000-0000-4000-8000-000000000d32');
+select is((pg_temp.detail('00000000-0000-4000-8000-000000000d61') ->> 'used_in_30_days')::numeric, 5::numeric, 'a cancelled procedure adds nothing');
 reset role;
 
 select pg_temp.act_as('00000000-0000-4000-8000-000000000d33');
