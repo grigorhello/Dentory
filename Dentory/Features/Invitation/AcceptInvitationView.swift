@@ -101,26 +101,30 @@ private struct InvitationHeader: View {
     }
 }
 
-/// Name, the invited address (read-only) and the new password.
+/// Name, the invited address (read-only) and the new password. Return on the name moves to the
+/// password, as on Sign in; Return on the password joins.
 private struct InvitationFields: View {
     @Bindable var viewModel: AcceptInvitationViewModel
     let invitation: Invitation
+    @FocusState private var focus: Field?
+
+    private enum Field { case name, password }
 
     var body: some View {
         MSTextField(
             "Full name", text: $viewModel.fullName, identifier: "invite.name",
             placeholder: "Your name", error: viewModel.nameError, contentType: .name
         )
-        MSTextField(
-            "Email", text: .constant(invitation.email), identifier: "invite.email",
-            keyboard: .emailAddress, contentType: .emailAddress
-        )
-        .disabled(true)
+        .focused($focus, equals: .name)
+        .submitLabel(.next)
+        .onSubmit { focus = .password }
+        MSReadOnlyField("Email", value: invitation.email, identifier: "invite.email")
         MSTextField(
             "Password", text: $viewModel.password, identifier: "invite.password",
             placeholder: "At least 8 characters", error: viewModel.passwordError,
             isSecure: true, contentType: .newPassword
         )
+        .focused($focus, equals: .password)
         .submitLabel(.go)
         .onSubmit { Task { await viewModel.join() } }
     }
