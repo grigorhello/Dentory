@@ -55,8 +55,8 @@ final class ProceduresUITests: XCTestCase {
         goBack(from: "procEdit", in: app)
 
         app.descendants(matching: .any)[rootCanalEvent].tap()
-        XCTAssertTrue(app.staticTexts["procDetail.title"].waitForExistence(timeout: 5), "The history row did not open")
-        XCTAssertEqual(app.staticTexts["procDetail.title"].label, "Procedure")
+        XCTAssertTrue(app.staticTexts["procDetail.summary"].waitForExistence(timeout: 5), "The history row did not open")
+        XCTAssertEqual(app.staticTexts["procDetail.title"].label, "Root canal")
     }
 
     @MainActor

@@ -22,6 +22,7 @@ struct AppDependencies: Sendable {
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
     let procedureEditRepository: ProcedureEditRepository
+    let procedureEventRepository: ProcedureEventRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -69,6 +70,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
+            procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -116,6 +118,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
+            procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -159,6 +162,15 @@ struct AppDependencies: Sendable {
     @MainActor
     func makeProcedureEditViewModel(templateID: UUID?, session: Session) -> ProcedureEditViewModel {
         ProcedureEditViewModel(repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID)
+    }
+
+    /// A past procedure of the signed-in clinic, in editing mode straight away from Home's Edit usage (MS-124).
+    @MainActor
+    func makeProcedureEventViewModel(eventID: UUID, startsEditing: Bool, session: Session) -> ProcedureEventViewModel {
+        ProcedureEventViewModel(
+            repository: procedureEventRepository, formatters: formatters(for: session), clinicID: session.clinicID,
+            eventID: eventID, startsEditing: startsEditing
+        )
     }
 
     /// Product detail for one product of the signed-in clinic (MS-116).

@@ -45,7 +45,14 @@ struct HomeView: View {
             }
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: HomeRoute.self) { route in
-                HomeRoutePlaceholderView(route: route)
+                switch route {
+                case .editUsage(let eventID):
+                    ProcedureEventView(
+                        eventID: eventID, startsEditing: true, session: session, dependencies: dependencies
+                    )
+                default:
+                    HomeRoutePlaceholderView(route: route)
+                }
             }
             .debugHooks(
                 isCatalogPresented: debugCatalogBinding, launchSection: debugLaunchSection, onAppear: debugOnAppear
