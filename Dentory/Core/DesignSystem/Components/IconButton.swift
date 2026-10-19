@@ -2,6 +2,8 @@ import SwiftUI
 
 nonisolated enum IconButtonVariant: CaseIterable, Sendable {
     case ghost, outline, solid
+    /// A ghost button in secondary text, for an action on a list row (the template pencil of f11).
+    case quiet
 }
 
 nonisolated enum IconButtonSize: CaseIterable, Sendable {
@@ -50,7 +52,7 @@ struct IconButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(variant == .solid ? Color.ms.onPrimary : Color.ms.ink)
+            .foregroundStyle(foreground)
             .frame(width: size.box, height: size.box)
             .background(
                 background(pressed: configuration.isPressed),
@@ -66,10 +68,18 @@ struct IconButtonStyle: ButtonStyle {
             .animation(Motion.fastAnimation, value: configuration.isPressed)
     }
 
+    private var foreground: Color {
+        switch variant {
+        case .solid: .ms.onPrimary
+        case .quiet: .ms.textSecondary
+        case .ghost, .outline: .ms.ink
+        }
+    }
+
     private func background(pressed: Bool) -> Color {
         switch (variant, pressed) {
-        case (.ghost, false): .clear
-        case (.ghost, true): .ms.surfaceCard
+        case (.ghost, false), (.quiet, false): .clear
+        case (.ghost, true), (.quiet, true): .ms.surfaceCard
         case (.outline, false): .ms.surfacePage
         case (.outline, true): .ms.surfaceCard
         case (.solid, false): .ms.primary

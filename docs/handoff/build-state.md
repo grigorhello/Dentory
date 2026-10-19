@@ -35,6 +35,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 
 - **MS-117 · Create, edit and delete products (#88)**, build step 22, in PR review: [#161](https://github.com/grigorhello/Dentory/pull/161), opened 2026-10-19 13:43 UTC from the build thread on Grigor's Mac.
 - **MS-118 · Adjust a quantity with a reason (#89)**, build step 23, started 2026-10-19 14:00 UTC in a cloud session (no Xcode there: CI is the first build): `AdjustmentReason`, `ProductDetailRepository.adjust` and `undoAdjustment` through `WriteCoordinator` (`stock_adjust`, `undo_action`), the `adjust` sheet under `Features/ProductDetail` (`AdjustInventoryViewModel`, `AdjustInventorySheet`), the toast "Inventory adjusted" with Undo, undo rows labelled "Undo · {reason}" in History, `identifier` on `MSPicker`. This file is part of its PR.
+- **MS-122 · Procedures list and history (#93)**, build step 27, in PR review from branch `ms-122-procedures-list` (not stacked: it does not need MS-117). `procedure_templates_list` and `procedure_history` (migration `20261019180000_procedures_list.sql`), the Procedures tab under `Features/Procedures`; the template, history and + Procedure routes push placeholders until MS-123, MS-124 and MS-125.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order
