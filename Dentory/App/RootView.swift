@@ -145,7 +145,7 @@ struct AppTabsView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.session) private var session
     @Bindable var router: AppRouter
-    /// Measured from the bar; root screens read it as `tabBarInset` to float controls above the bar.
+    /// Measured from the bar, so a tab's root screen keeps its content above it.
     @State private var tabBarHeight: CGFloat = 0
 
     var body: some View {
@@ -153,19 +153,12 @@ struct AppTabsView: View {
             ForEach(AppTab.allCases) { tab in
                 let isSelected = tab == router.selectedTab
                 NavigationStack(path: router.pathBinding(for: tab)) {
-                    if tab == .home, let session {
-                        HomeView(session: session, dependencies: dependencies)
-                    } else if tab == .inventory, let session {
-                        InventoryListView(session: session, dependencies: dependencies)
-                    } else if tab == .procedures, let session {
-                        ProceduresView(session: session, dependencies: dependencies)
-                    } else if tab == .toBuy, let session {
-                        ToBuyView(session: session, dependencies: dependencies)
-                    } else {
-                        TabPlaceholderView(tab: tab)
-                    }
+                    root(of: tab)
+                        // The bar's safe-area inset does not reach the screens a NavigationStack hosts, so the
+                        // root gets it here: the last row scrolls clear of the bar, and pinned bars and the
+                        // round + sit above it.
+                        .safeAreaPadding(.bottom, tabBarHeight)
                 }
-                .environment(\.tabBarInset, router.path(for: tab).isEmpty ? tabBarHeight : 0)
                 .opacity(isSelected ? 1 : 0)
                 .allowsHitTesting(isSelected)
                 .accessibilityHidden(!isSelected)
@@ -184,6 +177,20 @@ struct AppTabsView: View {
             }
         }
         .background(Color.ms.canvas)
+    }
+
+    @ViewBuilder private func root(of tab: AppTab) -> some View {
+        if tab == .home, let session {
+            HomeView(session: session, dependencies: dependencies)
+        } else if tab == .inventory, let session {
+            InventoryListView(session: session, dependencies: dependencies)
+        } else if tab == .procedures, let session {
+            ProceduresView(session: session, dependencies: dependencies)
+        } else if tab == .toBuy, let session {
+            ToBuyView(session: session, dependencies: dependencies)
+        } else {
+            TabPlaceholderView(tab: tab)
+        }
     }
 }
 
