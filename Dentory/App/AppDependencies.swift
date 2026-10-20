@@ -27,6 +27,7 @@ struct AppDependencies: Sendable {
     let activityRepository: ActivityRepository
     let procedureEventRepository: ProcedureEventRepository
     let inventoryValueRepository: InventoryValueRepository
+    let accountRepository: AccountRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -81,6 +82,7 @@ struct AppDependencies: Sendable {
             activityRepository: SupabaseActivityRepository(client: client),
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
+            accountRepository: SupabaseAccountRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client),
@@ -138,6 +140,7 @@ struct AppDependencies: Sendable {
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
             inventoryValueRepository: DemoInventoryValueRepository(),
+            accountRepository: DemoAccountRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -229,6 +232,15 @@ struct AppDependencies: Sendable {
         InventoryValueViewModel(
             repository: inventoryValueRepository, cache: cache, formatters: formatters(for: session),
             clinicID: session.clinicID
+        )
+    }
+
+    /// Account of the signed-in member (MS-137); signing out clears this device's cache and queued writes.
+    @MainActor
+    func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
+        AccountViewModel(
+            session: session, repository: accountRepository, cache: cache,
+            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue)
         )
     }
 

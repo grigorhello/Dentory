@@ -51,6 +51,15 @@ final class AppRouter {
         paths[tab ?? selectedTab] = NavigationPath()
     }
 
+    /// Home, with every path, hand-over and badge cleared: what the next person to sign in starts from (MS-137).
+    func reset() {
+        selectedTab = .home
+        paths = [:]
+        inventoryFilter = nil
+        inventoryCategory = nil
+        toBuyCount = 0
+    }
+
     /// Selects a tab; selecting the current one again returns to its root, as the system tab bar does.
     func select(_ tab: AppTab) {
         if tab == selectedTab {
