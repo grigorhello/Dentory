@@ -61,7 +61,8 @@ struct RPCClientTests {
 
     @Test func userMessagesFollowThePRDCopy() {
         #expect(AppError.unknown("x").userMessage == "Couldn't save. Try again.")
-        #expect(AppError.readOnly.userMessage == "Add a payment method to keep making changes.")
+        #expect(AppError.readOnly.userMessage
+            == "Your clinic is in read-only mode. Add a card from the link in your billing email.")
         #expect(AppError.validation(field: nil, message: "Out of stock").userMessage == "Out of stock")
     }
 }

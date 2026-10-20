@@ -115,6 +115,21 @@ struct ToBuyViewModelTests {
         #expect(viewModel[quantityOf: gauze] == 5, "An ordered line keeps its quantity")
     }
 
+    /// MS-142: in read-only mode a quantity stays as it is, and each refused change asks the screen for the sheet.
+    @Test func readOnlyModeKeepsTheQuantities() async throws {
+        let repository = FakeToBuyRepository()
+        let viewModel = await make(repository)
+        viewModel.isReadOnly = true
+        let endo = try line("Endo file kit #15-40").id
+        let before = viewModel[quantityOf: endo]
+        viewModel[quantityOf: endo] = before + 1
+        viewModel[quantityOf: endo] = before + 2
+        #expect(viewModel[quantityOf: endo] == before)
+        #expect(viewModel.refusedChanges == 2)
+        await viewModel.flushPendingSaves()
+        #expect(repository.quantities.isEmpty, "Nothing is sent")
+    }
+
     @Test func aReloadKeepsAQuantityNotSavedYet() async throws {
         let viewModel = await make()
         let endo = try line("Endo file kit #15-40").id

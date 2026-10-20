@@ -17,7 +17,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .network: "No connection. Your change will be retried."
         case .notFound: "This item no longer exists."
         case .forbidden: "You don't have permission to do this."
-        case .readOnly: "Add a payment method to keep making changes."
+        case .readOnly: "Your clinic is in read-only mode. Add a card from the link in your billing email."
         case .validation(_, let message): message
         case .unknown: "Couldn't save. Try again."
         }

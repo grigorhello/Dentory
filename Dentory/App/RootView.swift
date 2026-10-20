@@ -208,6 +208,14 @@ struct AppTabsView: View {
             }
         }
         .toastHost()
+        .environment(\.writeAccess, WriteAccess(session: session, clock: dependencies.clock) { [router] in
+            router.isReadOnlySheetPresented = true
+        })
+        .msSheet(isPresented: $router.isReadOnlySheetPresented) {
+            ReadOnlySheet(isAdmin: session?.isAdmin == true, onBilling: openBilling) {
+                router.isReadOnlySheetPresented = false
+            }
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if router.path(for: router.selectedTab).isEmpty {
                 AppTabBar(selected: router.selectedTab, toBuyCount: router.toBuyCount) { router.select($0) }
@@ -219,6 +227,14 @@ struct AppTabsView: View {
             }
         }
         .background(Color.ms.canvas)
+    }
+
+    /// "Go to Billing" (MS-142): Billing on Home's stack, the status screen; the card is added from the billing email.
+    private func openBilling() {
+        router.isReadOnlySheetPresented = false
+        router.popToRoot(on: .home)
+        router.selectedTab = .home
+        router.push(HomeRoute.billing, on: .home)
     }
 
     @ViewBuilder private func root(of tab: AppTab) -> some View {

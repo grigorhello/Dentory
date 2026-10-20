@@ -43,6 +43,10 @@ final class ToBuyViewModel {
 
     let isAdmin: Bool
     let formatters: ClinicFormatters
+    /// Read-only mode (MS-142), set by the screen: a quantity stays as it is, and the screen opens the read-only sheet.
+    var isReadOnly = false
+    /// The quantity changes read-only mode refused; the screen shows the sheet for each.
+    private(set) var refusedChanges = 0
     private let repository: ToBuyRepository
     private let cache: ResponseCaching
     private let clinicID: UUID
@@ -101,6 +105,10 @@ final class ToBuyViewModel {
         get { items.first { $0.id == id }.map { Self.wholeNumber($0.buyQuantity) } ?? 1 }
         set {
             guard let index = items.firstIndex(where: { $0.id == id }), items[index].status == .toBuy else { return }
+            guard !isReadOnly else {
+                refusedChanges += 1
+                return
+            }
             let quantity = Decimal(max(newValue, 1))
             guard items[index].buyQuantity != quantity else { return }
             items[index].buyQuantity = quantity

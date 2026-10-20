@@ -139,8 +139,12 @@ struct AppDependencies: Sendable {
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
-            // `-billingNoCard YES` shows Billing before a card is added (screenshots, UI tests).
-            billingRepository: DemoBillingRepository(hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard")),
+            // `-billingNoCard YES` shows Billing before a card is added, `-trial ended` once the trial is over without
+            // one (screenshots, UI tests).
+            billingRepository: DemoBillingRepository(
+                hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard") && DemoTrial.launched != .ended,
+                trialEndsAt: DemoTrial.launched?.trialEndsAt ?? BillingSummary.demoTrialEnd
+            ),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
             teamRepository: DemoTeamRepository(),

@@ -5,6 +5,7 @@ import SwiftUI
 struct ProceduresView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ProceduresViewModel
     let session: Session
 
@@ -60,12 +61,13 @@ struct ProceduresView: View {
         }
     }
 
+    /// New and edit open the read-only sheet instead in read-only mode (MS-142).
     private func newTemplate() {
-        router.push(ProcedureRoute.editTemplate(nil), on: .procedures)
+        writeAccess.perform { router.push(ProcedureRoute.editTemplate(nil), on: .procedures) }
     }
 
     private func editTemplate(_ id: UUID) {
-        router.push(ProcedureRoute.editTemplate(id), on: .procedures)
+        writeAccess.perform { router.push(ProcedureRoute.editTemplate(id), on: .procedures) }
     }
 }
 

@@ -209,7 +209,9 @@ struct SupabaseAuthService: AuthServicing {
         do {
             row = try await client
                 .from("memberships")
-                .select("role, full_name, clinic:clinics(id, name, currency, time_zone)")
+                .select(
+                    "role, full_name, clinic:clinics(id, name, currency, time_zone, subscription_status, trial_ends_at)"
+                )
                 .eq("user_id", value: user.id.uuidString)
                 .eq("status", value: "active")
                 .limit(1)
@@ -227,7 +229,9 @@ struct SupabaseAuthService: AuthServicing {
             clinicName: row.clinic.name,
             role: row.role,
             currency: row.clinic.currency,
-            timeZone: row.clinic.timeZone
+            timeZone: row.clinic.timeZone,
+            subscriptionStatus: row.clinic.subscriptionStatus,
+            trialEndsAt: row.clinic.trialEndsAt
         )
     }
 
@@ -245,4 +249,6 @@ nonisolated struct MembershipClinicRow: Decodable {
     let name: String
     let currency: String
     let timeZone: String
+    let subscriptionStatus: SubscriptionStatus
+    let trialEndsAt: Date
 }

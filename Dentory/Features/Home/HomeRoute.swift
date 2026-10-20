@@ -15,4 +15,6 @@ enum HomeRoute: Hashable {
     case receive
     /// A procedure event in editing mode (MS-124).
     case editUsage(eventID: UUID)
+    /// Billing, from the read-only notice and sheet (MS-142).
+    case billing
 }

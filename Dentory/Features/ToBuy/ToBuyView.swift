@@ -6,6 +6,7 @@ import SwiftUI
 struct ToBuyView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ToBuyViewModel
 
     init(session: Session, dependencies: AppDependencies) {
@@ -32,6 +33,12 @@ struct ToBuyView: View {
             .onChange(of: dependencies.writes.appliedWrites) { reload() }
             .onChange(of: viewModel.toBuyCount, initial: true) { _, count in
                 router.toBuyCount = count
+            }
+            .onChange(of: writeAccess.canWrite, initial: true) { _, canWrite in
+                viewModel.isReadOnly = !canWrite
+            }
+            .onChange(of: viewModel.refusedChanges) {
+                writeAccess.showReadOnly()
             }
             .onChange(of: viewModel.message) { _, message in
                 guard let message else { return }
@@ -70,7 +77,9 @@ struct ToBuyView: View {
                 ToBuyRows(viewModel: viewModel)
             }
             if viewModel.segment == .toBuy {
-                MSButton("Add item", icon: .plus, variant: .text, size: .small, action: viewModel.openAddItem)
+                MSButton("Add item", icon: .plus, variant: .text, size: .small) {
+                    writeAccess.perform(viewModel.openAddItem)
+                }
                     .frame(maxWidth: .infinity)
                     .accessibilityIdentifier("order.add")
             }
@@ -82,8 +91,9 @@ struct ToBuyView: View {
         return { Task { await viewModel.undoAdd(itemID) } }
     }
 
+    /// Add item, Mark as ordered, the steppers and Remove open the read-only sheet instead in read-only mode (MS-142).
     private func markOrdered() {
-        Task { await viewModel.markOrdered() }
+        writeAccess.perform { Task { await viewModel.markOrdered() } }
     }
 
     private func reload() {
