@@ -5,15 +5,15 @@ import Supabase
 /// (snake_case keys); `SupabaseRowDecodingTests` decodes sample PostgREST payloads with it.
 ///
 /// One row of `clinic_attention`, the latest `procedure_events` row with its item count and starter,
-/// and the newest open alert against the user's `alert_reads` mark.
+/// and `alerts_unseen` for the bell's dot.
 struct SupabaseHomeRepository: HomeRepository {
     let client: SupabaseClient
 
-    func summary(clinicID: UUID, userID: UUID) async throws -> HomeSummary {
+    func summary(clinicID: UUID) async throws -> HomeSummary {
         do {
             async let attention = attentionRow(clinicID: clinicID)
             async let latest = latestProcedure(clinicID: clinicID)
-            async let unseen = hasUnseenAlerts(clinicID: clinicID, userID: userID)
+            async let unseen = hasUnseenAlerts(clinicID: clinicID)
             let (row, procedure, hasUnseen) = try await (attention, latest, unseen)
             return HomeSummary(
                 toBuyCount: row.toBuyCount,
@@ -64,26 +64,14 @@ struct SupabaseHomeRepository: HomeRepository {
         )
     }
 
-    /// An alert opened after the user's last visit to Alerts (or ever, when they never visited).
-    private func hasUnseenAlerts(clinicID: UUID, userID: UUID) async throws -> Bool {
-        let alerts: [HomeAlertRow] = try await client.from("alerts")
-            .select("opened_at")
-            .eq("clinic_id", value: clinicID.uuidString)
-            .is("resolved_at", value: nil)
-            .order("opened_at", ascending: false)
-            .limit(1)
+    /// An alert on the member's Alerts list that opened after their last visit to it (or any, when they never
+    /// visited). The server counts what `activity_alerts` lists for them, so a delivery waiting for review lights
+    /// only an admin's bell and an archived product's alert lights none.
+    private func hasUnseenAlerts(clinicID: UUID) async throws -> Bool {
+        try await client
+            .rpc("alerts_unseen", params: ["p_clinic_id": clinicID.uuidString.lowercased()])
             .execute()
             .value
-        guard let newest = alerts.first else { return false }
-        let reads: [HomeReadRow] = try await client.from("alert_reads")
-            .select("last_seen_at")
-            .eq("clinic_id", value: clinicID.uuidString)
-            .eq("user_id", value: userID.uuidString)
-            .limit(1)
-            .execute()
-            .value
-        guard let lastSeen = reads.first?.lastSeenAt else { return true }
-        return newest.openedAt > lastSeen
     }
 
 }
@@ -110,12 +98,4 @@ nonisolated struct HomeCountRow: Decodable {
 
 nonisolated struct HomeMemberRow: Decodable {
     let fullName: String
-}
-
-nonisolated struct HomeAlertRow: Decodable {
-    let openedAt: Date
-}
-
-nonisolated struct HomeReadRow: Decodable {
-    let lastSeenAt: Date
 }
