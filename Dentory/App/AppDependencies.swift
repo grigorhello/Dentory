@@ -27,6 +27,7 @@ struct AppDependencies: Sendable {
     let activityRepository: ActivityRepository
     let procedureEventRepository: ProcedureEventRepository
     let inventoryValueRepository: InventoryValueRepository
+    let accountRepository: AccountRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -79,6 +80,7 @@ struct AppDependencies: Sendable {
             activityRepository: SupabaseActivityRepository(client: client),
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
+            accountRepository: SupabaseAccountRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -95,14 +97,8 @@ struct AppDependencies: Sendable {
         let networkMonitor = FixedNetworkMonitor(isConnected: isConnected)
         let toasts = ToastCenter()
         let reporter = NoopErrorReporter()
-        let auth = PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil)
-        // `-onboarding clinic` resumes admin sign-up at step 2, `-onboarding invite` at step 3 (screenshots).
-        if onboarding == "clinic" {
-            auth.session = nil
-            auth.account = Account(
-                userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell"
-            )
-        }
+        let auth = PreviewAuthService.demo(signedIn: signedIn, role: role, onboarding: onboarding)
+        // `-onboarding invite` resumes admin sign-up at step 3 (screenshots).
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         let expiring = DemoExpiringRepository()
         let activity = DemoActivityRepository()
@@ -136,6 +132,7 @@ struct AppDependencies: Sendable {
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
             inventoryValueRepository: DemoInventoryValueRepository(),
+            accountRepository: DemoAccountRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -226,6 +223,15 @@ struct AppDependencies: Sendable {
         )
     }
 
+    /// Account of the signed-in member (MS-137); signing out clears this device's cache and queued writes.
+    @MainActor
+    func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
+        AccountViewModel(
+            session: session, repository: accountRepository, cache: cache,
+            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue)
+        )
+    }
+
     /// Product detail for one product of the signed-in clinic (MS-116).
     @MainActor
     func makeProductDetailViewModel(productID: UUID, session: Session) -> ProductDetailViewModel {
@@ -280,116 +286,5 @@ extension EnvironmentValues {
     var appDependencies: AppDependencies {
         get { self[AppDependenciesKey.self] }
         set { self[AppDependenciesKey.self] = newValue }
-    }
-}
-
-// MARK: - Preview doubles
-
-extension Session {
-    /// October 2, 2026, 9:41 in New York, the moment every frame shows (the frames label it a Thursday; it is a Friday).
-    nonisolated static let demoNow = Date(timeIntervalSince1970: 1_790_933_260)
-
-    nonisolated static let demo = demo(role: .admin)
-
-    /// Sarah (Admin) or Michael (Staff) of the demo clinic (MS-109).
-    nonisolated static func demo(role: MembershipRole) -> Session {
-        Session(
-            userID: UUID(uuidString: "00000000-0000-4000-8000-0000000000a1") ?? UUID(),
-            email: role == .admin ? "sarah@smiledental.ca" : "michael@smiledental.ca",
-            fullName: role == .admin ? "Sarah Mitchell" : "Michael Reyes",
-            clinicID: UUID(uuidString: "00000000-0000-4000-8000-000000000001") ?? UUID(),
-            clinicName: "Smile Dental",
-            role: role,
-            currency: "USD",
-            timeZone: "America/New_York"
-        )
-    }
-}
-
-/// Answers every function with an empty object; feature previews swap in their own fakes.
-struct PreviewRPCClient: RPCCalling {
-    func call<Params: Encodable & Sendable, Result: Decodable & Sendable>(
-        _ function: String,
-        params: Params,
-        idempotencyKey: UUID?
-    ) async throws -> Result {
-        if let empty = try? JSONDecoder.supabase.decode(Result.self, from: Data("{}".utf8)) {
-            return empty
-        }
-        throw AppError.unknown("No preview data for \(function)")
-    }
-}
-
-/// Signs in the demo clinic's people with the seed password (MS-109); anything else is refused the
-/// way Supabase would. Sign-up creates an account in memory; `DemoOnboardingRepository` then sets the session.
-final class PreviewAuthService: AuthServicing, @unchecked Sendable {
-    var session: Session?
-    var account: Account?
-    /// Accounts the demo invitation flow created: address to the password set and the session it yields.
-    private var registered: [String: (password: String, session: Session)] = [:]
-    /// The demo admin, signed in by a good reset link until the new password is saved (MS-113).
-    private var recovering: Session?
-    static let demoPassword = "smiledental"
-    static let demoEmails = ["sarah@smiledental.ca", "michael@smiledental.ca"]
-    /// The one reset link that works without a server; any other token hash reads as expired.
-    static let demoResetToken = "demo-reset"
-
-    init(session: Session?) {
-        self.session = session
-    }
-
-    func restore() async throws -> RestoredSession {
-        if let session { return .signedIn(session) }
-        if let account { return .needsClinic(account) }
-        return .none
-    }
-
-    func register(email: String, password: String, session: Session) {
-        registered[email.lowercased()] = (password, session)
-    }
-
-    func signIn(email: String, password: String) async throws -> Session {
-        try await Task.sleep(for: .milliseconds(400))
-        if let account = registered[email.lowercased()] {
-            guard password == account.password else { throw AppError.wrongPassword }
-            session = account.session
-            return account.session
-        }
-        guard Self.demoEmails.contains(email.lowercased()) else { throw AppError.unknownEmail }
-        guard password == Self.demoPassword else { throw AppError.wrongPassword }
-        return .demo
-    }
-
-    func signUp(fullName: String, email: String, password: String) async throws -> Account {
-        try await Task.sleep(for: .milliseconds(300))
-        guard !Self.demoEmails.contains(email.lowercased()) else { throw AppError.emailTaken }
-        let account = Account(userID: UUID(), email: email, fullName: fullName)
-        self.account = account
-        return account
-    }
-
-    func signOut() async throws {
-        session = nil
-        account = nil
-    }
-
-    /// Like Supabase: the same answer for a known and an unknown address; only a malformed one is refused.
-    func sendPasswordReset(email: String) async throws {
-        try await Task.sleep(for: .milliseconds(300))
-        guard email.contains("@") else { throw AppError.invalidEmail }
-    }
-
-    func verifyPasswordReset(tokenHash: String) async throws {
-        try await Task.sleep(for: .milliseconds(300))
-        guard tokenHash == Self.demoResetToken else { throw AppError.notFound }
-        recovering = .demo
-    }
-
-    func updatePassword(_ password: String) async throws {
-        try await Task.sleep(for: .milliseconds(300))
-        guard password.count >= 8 else { throw AppError.shortPassword }
-        guard let recovering else { throw AppError.unknown("No reset in progress") }
-        session = recovering
-        self.recovering = nil
     }
 }
