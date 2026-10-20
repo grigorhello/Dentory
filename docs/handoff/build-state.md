@@ -62,6 +62,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 - **MS-121 · Count stock with review before applying (#92)**, build step 26, draft [#166](https://github.com/grigorhello/Dentory/pull/166) from the Mac build thread, stacked on #161 like #164.
 - **MS-126 · Receive delivery: choose how (#97)**, build step 32, claimed 2026-10-19 by Grigor's cloud session (Notion card In progress).
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
+- **MS-139 fix · A failed logo survives the screens' rebuild**, in PR review: [#192](https://github.com/grigorhello/Dentory/pull/192), branch `ms-139-pending-logo`. `PendingClinicLogo` (held by `AppDependencies`, cleared on Sign out) keeps a logo whose upload failed, and Clinic settings picks it up again after a return to the foreground rebuilds the screens; it goes once uploaded or discarded.
 - **MS-141 · Billing invoices and billing emails (#112)**, build step 49, in PR review: [#188](https://github.com/grigorhello/Dentory/pull/188), branch `ms-141-billing-invoices`. Invoices (f35) from `billing_invoices`, an open invoice Stripe could not charge reading Failed; the billing emails sheet through `billing_emails_list` and `billing_emails_save` (migration `20261020220000_billing_emails.sql`, 32 pgTAP assertions), its first address the one the Stripe customer bills; and `billing_receipt_copy` and `billing_receipt_finish`, with which `stripe_webhook` emails Dentory's copy of each paid invoice's receipt, in one Resend call, to every address but Stripe's.
 
 ## Next, in build order
@@ -104,7 +105,6 @@ Grigor delivered the visual identity on 2026-10-19 (MS-100 D17): `design/brand/`
 
 ## Known issues
 
-- **Clinic settings, a logo that failed with a new name (MS-139).** The logo's retry waits, but a return from the background checks the session and rebuilds the screen, dropping the picked logo; the toast said it was not saved, and picking it again works. A fix keeps the pending logo outside the tabs.
 - The demo clinic's inventory value is about $1,616 where frame f6 shows $12,420: the prototype has no unit costs and the seed uses realistic ones, pinned so f27 reads $82 + $104. Reaching the frame's figure with the frame's quantities would need implausible prices; Grigor decides whether the number matters for demos.
 - Sheets use the system scrim, not the PRD's `rgba(32,21,21,.4)`; SwiftUI does not expose the sheet scrim colour.
 - Headers are pinned (#172), but search fields, segments and status chips still scroll with the content where f16-2, f17-2, f18-2 to f18-5 and f09-2 pin them under the title. `rootScreen` and `pushedScreen` (f09-2 is a pushed screen) need a pinned slot under the header; it waits for MS-121 (#166) and MS-126, which edit those screens.
