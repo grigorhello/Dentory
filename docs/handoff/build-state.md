@@ -56,6 +56,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 - **MS-138 · Team: invite, resend, change role, remove (#109)**, build step 44, in PR review: [#183](https://github.com/grigorhello/Dentory/pull/183), branch `ms-138-team`. `team_members`, `team_set_role` and `team_remove` (migration `20261020120000_team.sql`, 24 pgTAP assertions) and Team under `Features/Team`: the list, the admin's menu, the invite sheet through `invite_member` and the removal's confirmation. The app checks the member again as screens load (at most once a minute) and on every return to the foreground, so a changed role shows and a removed member is signed out on their next request.
 - **MS-126 · Receive delivery: choose how (#97)**, build step 32, claimed 2026-10-19 by Grigor's cloud session (Notion card In progress).
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
+- **MS-143 · Export CSV (#114)**, build step 50, in PR review, branch `ms-143-export-csv`. `export_job_start`, `export_job_finish`, `export_data` and the private `exports` bucket (migration `20261020180000_export_csv.sql`, 20 pgTAP assertions), the `export_csv` Edge Function with dependency-free CSV and ZIP writers (`_shared/csv.ts`, `_shared/zip.ts`, 9 Deno tests), and Account's Export CSV, whose toast says where the link goes. On staging it needs `RESEND_API_KEY` (as invitations do) and `supabase functions deploy export_csv`.
 
 ## Next, in build order
 
@@ -63,7 +64,6 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 |---|---|---|
 | 45 | MS-140 · Billing: trial, price and payment method with Stripe (#111) | MS-104, MS-137 (merged): next here |
 | 47 | MS-139 · Clinic settings (#110) | MS-137 (merged) |
-| 50 | MS-143 · Export CSV (#114) | MS-137 (merged) |
 
 Receiving and invoices (steps 33 and 35 to 37, MS-127 and MS-129 to MS-131) wait for MS-117 (#161, Grigor's word) and MS-126 (Grigor's cloud session); the pilot readiness pass (step 41, MS-136) waits for them too. MS-142 (step 46) follows MS-140. M4 runs from step 54 (MS-151) to step 58 (MS-152, TestFlight and the App Store). The full table is `docs/BUILD-ORDER.md`.
 

@@ -4,16 +4,25 @@ import Observation
 /// Account (f29 Admin, f30 Staff), pushed from Home's account button: who is signed in, the Team row with the team's
 /// size, the admin's Clinic settings, Billing and Export CSV, Help, and Sign out after a confirmation (PRD §6.9,
 /// Appendix B `more`). The team size shows from the cache while a fresh one loads or the network is gone (MS-108).
+/// Export CSV asks the server for the clinic's data by email and says where it goes (MS-143).
 @MainActor
 @Observable
 final class AccountViewModel {
     /// The help centre on the production domain (MS-100 D12), a placeholder until Grigor names the page.
     static let helpCentre = URL(string: "https://dentory.ca/help")
 
+    /// A toast: "Export started" with where the link goes, or why it did not start.
+    struct Message: Equatable {
+        let title: String
+        var detail: String?
+    }
+
     /// Active members; nil until the cache or the server has an answer.
     private(set) var teamSize: Int?
     var isConfirmingSignOut = false
     private(set) var isSigningOut = false
+    private(set) var isExporting = false
+    private(set) var message: Message?
     let isAdmin: Bool
 
     private let session: Session
@@ -73,6 +82,34 @@ final class AccountViewModel {
         case 1: return "\(reassurance) 1 change made offline has not synced and will be lost."
         case let count: return "\(reassurance) \(count) changes made offline have not synced and will be lost."
         }
+    }
+
+    /// Export CSV (Admin): the server zips products, batches and transactions and emails the admin a link valid 7
+    /// days. A second tap while one starts does nothing; one export every 10 minutes, as the server says.
+    func startExport() async {
+        guard isAdmin, !isExporting else { return }
+        isExporting = true
+        defer { isExporting = false }
+        do {
+            let email = try await repository.startExport(clinicID: session.clinicID)
+            let address = email.isEmpty ? session.email : email
+            message = Message(title: "Export started", detail: "We'll email it to \(address).")
+        } catch {
+            message = Message(title: Self.exportRefusal(AppError(error)))
+        }
+    }
+
+    /// The server's sentence for the 10 minute limit, the permission line for a refusal, else a retry.
+    static func exportRefusal(_ error: AppError) -> String {
+        switch error {
+        case .validation(_, let message): message
+        case .forbidden: error.userMessage
+        case .network, .notFound, .readOnly, .unknown: "Couldn't start the export. Try again."
+        }
+    }
+
+    func clearMessage() {
+        message = nil
     }
 
     func askToSignOut() {
