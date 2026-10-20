@@ -23,6 +23,7 @@ struct AppDependencies: Sendable {
     let procedureStartRepository: ProcedureStartRepository
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
+    let clinicSettingsRepository: ClinicSettingsRepository
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
     let procedureEventRepository: ProcedureEventRepository
@@ -80,6 +81,7 @@ struct AppDependencies: Sendable {
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
+            clinicSettingsRepository: SupabaseClinicSettingsRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
@@ -136,14 +138,11 @@ struct AppDependencies: Sendable {
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
             toBuyRepository: DemoToBuyRepository(),
+            clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
-            // `-billingNoCard YES` shows Billing before a card is added (screenshots, UI tests).
-            billingRepository: DemoBillingRepository(
-                hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard"),
-                withInvoices: UserDefaults.standard.bool(forKey: "billingInvoices")
-            ),
+            billingRepository: DemoBillingRepository.launched(),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
             teamRepository: DemoTeamRepository(),
@@ -167,32 +166,6 @@ struct AppDependencies: Sendable {
             formatters: formatters(for: session),
             clinicID: session.clinicID
         )
-    }
-
-    /// Billing of the signed-in clinic, for its admin (MS-140).
-    @MainActor
-    func makeBillingViewModel(session: Session) -> BillingViewModel {
-        BillingViewModel(
-            clinicID: session.clinicID, repository: billingRepository, cache: cache,
-            formatters: formatters(for: session)
-        )
-    }
-
-    /// Billing's invoices (f35, MS-141); `trialEndsAt` dates the empty state.
-    @MainActor
-    func makeInvoicesViewModel(session: Session, trialEndsAt: Date?) -> InvoicesViewModel {
-        InvoicesViewModel(
-            clinicID: session.clinicID, repository: billingRepository, cache: cache,
-            formatters: formatters(for: session), trialEndsAt: trialEndsAt
-        )
-    }
-
-    /// The billing emails sheet (MS-141); `onSaved` refreshes Billing's row.
-    @MainActor
-    func makeBillingEmailsViewModel(
-        session: Session, onSaved: @escaping () async -> Void
-    ) -> BillingEmailsViewModel {
-        BillingEmailsViewModel(clinicID: session.clinicID, repository: billingRepository, onSaved: onSaved)
     }
 
     /// The Procedures tab of the signed-in clinic (MS-122).
@@ -237,6 +210,16 @@ struct AppDependencies: Sendable {
         ExpiringViewModel(
             repository: expiringRepository, cache: cache, formatters: formatters(for: session),
             clinicID: session.clinicID, isAdmin: session.isAdmin, window: window
+        )
+    }
+
+    /// Clinic settings of the signed-in clinic, for its admin (MS-139). A save refreshes the session, so the clinic's
+    /// name, currency and time zone follow everywhere.
+    @MainActor
+    func makeClinicSettingsViewModel(session: Session, sessionStore: SessionStore?) -> ClinicSettingsViewModel {
+        ClinicSettingsViewModel(
+            clinicID: session.clinicID, repository: clinicSettingsRepository, locale: locale,
+            onSaved: { await sessionStore?.revalidate() }
         )
     }
 

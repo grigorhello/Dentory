@@ -14,6 +14,14 @@ final class DemoBillingRepository: BillingRepository, @unchecked Sendable {
         demoInvoices = withInvoices ? BillingInvoice.demo : []
     }
 
+    /// Billing as the launch arguments ask (screenshots, UI tests).
+    static func launched() -> DemoBillingRepository {
+        DemoBillingRepository(
+            hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard"),
+            withInvoices: UserDefaults.standard.bool(forKey: "billingInvoices")
+        )
+    }
+
     func summary(clinicID: UUID) async throws -> BillingSummary {
         let current = lock.withLock { self.emails }
         return BillingSummary.demo(hasCard: hasCard, invoiceCount: demoInvoices.count, emails: current)
