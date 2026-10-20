@@ -18,6 +18,9 @@ final class WriteCoordinator {
     private(set) var isReplaying = false
     /// Set when a replay failed; the view model or the shell shows "Couldn't save. Try again.".
     private(set) var lastReplayError: AppError?
+    /// Counts the writes the server applied, now or on replay. Screens whose figures follow stock from elsewhere
+    /// (To buy and its tab badge, MS-128) reload when it changes.
+    private(set) var appliedWrites = 0
 
     private let rpc: RPCCalling
     let queue: PendingWriteQueue
@@ -63,6 +66,7 @@ final class WriteCoordinator {
         }
         do {
             let result: AnyJSON = try await rpc.call(function, params: object, idempotencyKey: idempotencyKey)
+            appliedWrites += 1
             return .applied(actionID: Self.actionID(from: result))
         } catch {
             let appError = AppError(error)
@@ -87,6 +91,7 @@ final class WriteCoordinator {
             do {
                 let _: AnyJSON = try await rpc.call(write.function, params: write.params, idempotencyKey: write.id)
                 queue.remove(write.id)
+                appliedWrites += 1
             } catch {
                 let appError = AppError(error)
                 reporter.record(appError, function: write.function)

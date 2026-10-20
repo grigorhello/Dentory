@@ -22,6 +22,7 @@ struct AppDependencies: Sendable {
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
     let procedureEditRepository: ProcedureEditRepository
+    let toBuyRepository: ToBuyRepository
     let expiringRepository: ExpiringRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
@@ -70,6 +71,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
+            toBuyRepository: SupabaseToBuyRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
@@ -119,6 +121,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
+            toBuyRepository: DemoToBuyRepository(),
             expiringRepository: expiring,
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
@@ -163,6 +166,15 @@ struct AppDependencies: Sendable {
     @MainActor
     func makeProcedureEditViewModel(templateID: UUID?, session: Session) -> ProcedureEditViewModel {
         ProcedureEditViewModel(repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID)
+    }
+
+    /// To buy of the signed-in clinic (MS-128).
+    @MainActor
+    func makeToBuyViewModel(session: Session) -> ToBuyViewModel {
+        ToBuyViewModel(
+            repository: toBuyRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, isAdmin: session.isAdmin
+        )
     }
 
     /// Expiring soon of the signed-in clinic (MS-132) on `window` days, or the clinic's own window.
