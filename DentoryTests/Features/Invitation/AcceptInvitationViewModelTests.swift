@@ -12,10 +12,13 @@ struct AcceptInvitationViewModelTests {
     private func make(
         auth: FakeAuthService = FakeAuthService(signInResult: .success(staffSession)),
         repository: FakeInvitationRepository = FakeInvitationRepository(),
-        token: String = "token-1"
+        token: String = "token-1",
+        analytics: SpyAnalytics = SpyAnalytics()
     ) -> (AcceptInvitationViewModel, SessionStore) {
         let store = SessionStore(auth: auth, state: .signedOut)
-        let viewModel = AcceptInvitationViewModel(token: token, repository: repository, sessionStore: store)
+        let viewModel = AcceptInvitationViewModel(
+            token: token, repository: repository, sessionStore: store, analytics: analytics
+        )
         return (viewModel, store)
     }
 
@@ -69,7 +72,8 @@ struct AcceptInvitationViewModelTests {
     @Test func joinAcceptsThenSignsInAsTheInvitee() async {
         let repository = FakeInvitationRepository()
         let auth = FakeAuthService(signInResult: .success(Self.staffSession))
-        let (viewModel, store) = make(auth: auth, repository: repository, token: "token-9")
+        let analytics = SpyAnalytics()
+        let (viewModel, store) = make(auth: auth, repository: repository, token: "token-9", analytics: analytics)
         await viewModel.load()
         viewModel.fullName = " Priya P. "
         viewModel.password = "smiledental"
@@ -81,6 +85,7 @@ struct AcceptInvitationViewModelTests {
         #expect(store.state == .signedIn(Self.staffSession))
         #expect(viewModel.isFinished)
         #expect(viewModel.generalError == nil)
+        #expect(analytics.events == [.invitationAccepted], "MS-147: never the name or the password")
     }
 
     @Test func aRefusedPasswordShowsUnderTheField() async {

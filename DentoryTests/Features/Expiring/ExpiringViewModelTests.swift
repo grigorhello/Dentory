@@ -13,11 +13,11 @@ struct ExpiringViewModelTests {
 
     private func make(
         _ repository: FakeExpiringRepository = FakeExpiringRepository(), isAdmin: Bool = true, window: Int? = nil,
-        cache: ResponseCaching = InMemoryResponseCache()
+        cache: ResponseCaching = InMemoryResponseCache(), analytics: SpyAnalytics = SpyAnalytics()
     ) async -> ExpiringViewModel {
         let viewModel = ExpiringViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            isAdmin: isAdmin, window: window
+            isAdmin: isAdmin, window: window, analytics: analytics
         )
         await viewModel.load()
         return viewModel
@@ -114,13 +114,15 @@ struct ExpiringViewModelTests {
 
     @Test func disposingTheWholeBatchRemovesTheCardAndOffersUndo() async throws {
         let repository = FakeExpiringRepository()
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         viewModel.askToDispose(septocaine)
         #expect(viewModel.disposing == septocaine)
         let actionID = UUID()
         repository.listResult = .success(ExpiringList(window: 90, batches: [bonding]))
         await viewModel.disposed(.init(batch: septocaine, quantity: 34, actionID: actionID))
         #expect(viewModel.disposing == nil)
+        #expect(analytics.events == [.batchDisposed], "MS-147")
         #expect(viewModel.batches.map(\.name) == ["Bonding agent"])
         #expect(viewModel.summary == "1 product · $82 at risk within 90 days.")
         #expect(viewModel.message == .init(
@@ -137,7 +139,7 @@ struct ExpiringViewModelTests {
         repository.listResult = .failure(AppError.network)
         let viewModel = ExpiringViewModel(
             repository: repository, cache: InMemoryResponseCache(), formatters: formatters,
-            clinicID: Session.demo.clinicID, isAdmin: true
+            clinicID: Session.demo.clinicID, isAdmin: true, analytics: SpyAnalytics()
         )
         repository.listResult = .success(ExpiringList(window: 90, batches: ExpiringBatch.demo))
         await viewModel.load()
@@ -154,7 +156,8 @@ struct ExpiringViewModelTests {
         let offline = FakeExpiringRepository()
         offline.listResult = .failure(AppError.network)
         let viewModel = ExpiringViewModel(
-            repository: offline, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID, isAdmin: true
+            repository: offline, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID, isAdmin: true,
+            analytics: SpyAnalytics()
         )
         #expect(viewModel.batches.count == 2, "The cached list shows at once")
         await viewModel.load()

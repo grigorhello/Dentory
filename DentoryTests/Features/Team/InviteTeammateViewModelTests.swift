@@ -7,15 +7,19 @@ import Testing
 @MainActor
 struct InviteTeammateViewModelTests {
     private func make(
-        _ repository: FakeTeamRepository = FakeTeamRepository(), onSent: @escaping () async -> Void = {}
+        _ repository: FakeTeamRepository = FakeTeamRepository(), analytics: SpyAnalytics = SpyAnalytics(),
+        onSent: @escaping () async -> Void = {}
     ) -> InviteTeammateViewModel {
-        InviteTeammateViewModel(clinicID: Session.demo.clinicID, repository: repository, onSent: onSent)
+        InviteTeammateViewModel(
+            clinicID: Session.demo.clinicID, repository: repository, analytics: analytics, onSent: onSent
+        )
     }
 
     @Test func sendsTheTrimmedAddressWithStaffByDefault() async {
         var sent = 0
         let repository = FakeTeamRepository()
-        let viewModel = make(repository, onSent: { sent += 1 })
+        let analytics = SpyAnalytics()
+        let viewModel = make(repository, analytics: analytics, onSent: { sent += 1 })
         #expect(viewModel.canSend == false, "Nothing to send without an address")
         #expect(viewModel.role == .staff)
         viewModel.name = "  Priya Shah "
@@ -24,6 +28,8 @@ struct InviteTeammateViewModelTests {
         await viewModel.send()
         #expect(repository.invites == [.init(fullName: "Priya Shah", email: "priya@smiledental.ca", role: .staff)])
         #expect(sent == 1)
+        #expect(analytics.events == [.teammateInvited(role: .staff)], "The role, never the name or the address")
+        #expect(analytics.events.first?.payload == ["role": .text("staff")])
     }
 
     @Test func aMalformedAddressIsSaidUnderTheField() async {

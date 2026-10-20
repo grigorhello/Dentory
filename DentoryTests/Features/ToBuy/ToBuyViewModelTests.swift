@@ -13,11 +13,11 @@ struct ToBuyViewModelTests {
 
     private func make(
         _ repository: FakeToBuyRepository = FakeToBuyRepository(), isAdmin: Bool = true,
-        cache: ResponseCaching = InMemoryResponseCache()
+        cache: ResponseCaching = InMemoryResponseCache(), analytics: SpyAnalytics = SpyAnalytics()
     ) async -> ToBuyViewModel {
         let viewModel = ToBuyViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            isAdmin: isAdmin, saveDelay: .seconds(60)
+            isAdmin: isAdmin, saveDelay: .seconds(60), analytics: analytics
         )
         await viewModel.load()
         return viewModel
@@ -125,7 +125,8 @@ struct ToBuyViewModelTests {
 
     @Test func markOrderedSavesPendingQuantitiesThenMovesTheSelection() async throws {
         let repository = FakeToBuyRepository()
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         let endo = try line("Endo file kit #15-40").id
         let composite = try line("Composite A2").id
         viewModel[quantityOf: endo] = 6
@@ -135,6 +136,7 @@ struct ToBuyViewModelTests {
         #expect(repository.orders == [[endo, composite]])
         #expect(viewModel.message == .init(title: "Marked as ordered", detail: "2 items", undoItemID: nil))
         #expect(repository.itemCalls == 2, "The list reloads")
+        #expect(analytics.events == [.markedOrdered(items: 2)])
     }
 
     @Test func aRefusedMarkOrderedIsAToast() async {
@@ -181,13 +183,15 @@ struct ToBuyViewModelTests {
         let repository = FakeToBuyRepository()
         let added = AddedToBuy(id: UUID(), qty: 2, created: true)
         repository.addResult = .success(added)
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         viewModel.segment = .ordered
         viewModel.openAddItem()
         let gauze = try product("Gauze")
         await viewModel.add(gauze)
         #expect(viewModel.sheet == nil)
         #expect(repository.adds == [gauze.id])
+        #expect(analytics.events == [.toBuyAdded])
         #expect(viewModel.segment == .toBuy)
         #expect(viewModel.message == .init(
             title: "Added to To buy", detail: "Gauze · suggested 2 packs", undoItemID: added.id
@@ -238,7 +242,8 @@ struct ToBuyViewModelTests {
         let offline = FakeToBuyRepository()
         offline.itemsResult = .failure(AppError.network)
         let viewModel = ToBuyViewModel(
-            repository: offline, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID, isAdmin: true
+            repository: offline, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID, isAdmin: true,
+            analytics: SpyAnalytics()
         )
         #expect(viewModel.toBuyCount == 3, "The cached list and its badge show at once")
         await viewModel.load()

@@ -36,9 +36,10 @@ struct DentoryApp: App {
             : AppDependencies.live()
         self.dependencies = dependencies
         _sessionStore = State(initialValue: SessionStore(
-            auth: dependencies.auth, clearDevice: { dependencies.clearClinicData() }
+            auth: dependencies.auth, clearDevice: { dependencies.clearClinicData() }, analytics: dependencies.analytics
         ))
         dependencies.reporter.start()
+        dependencies.analytics.start()
         dependencies.writes.startWatchingNetwork()
     }
 

@@ -27,14 +27,19 @@ final class AccountViewModel {
 
     private let session: Session
     private let repository: AccountRepository
+    private let analytics: Analytics
     private let cache: ResponseCaching
     private let signingOut: SigningOut
 
-    init(session: Session, repository: AccountRepository, cache: ResponseCaching, signingOut: SigningOut) {
+    init(
+        session: Session, repository: AccountRepository, cache: ResponseCaching, signingOut: SigningOut,
+        analytics: Analytics
+    ) {
         self.session = session
         self.repository = repository
         self.cache = cache
         self.signingOut = signingOut
+        self.analytics = analytics
         isAdmin = session.isAdmin
         teamSize = cache.load(Int.self, for: Self.cacheKey(session.clinicID))
     }
@@ -92,6 +97,7 @@ final class AccountViewModel {
         defer { isExporting = false }
         do {
             let email = try await repository.startExport(clinicID: session.clinicID)
+            analytics.track(.exportStarted)
             let address = email.isEmpty ? session.email : email
             message = Message(title: "Export started", detail: "We'll email it to \(address).")
         } catch {

@@ -112,6 +112,13 @@ nonisolated struct ProcedureUsageDraft: Equatable, Sendable {
             || bottles.contains { $0.takesNew != $0.recordedTakesNew || $0.isAdded }
     }
 
+    /// How many supplies and bottles Save changes: quantities, supplies removed or added, bottles taken or given back.
+    var changeCount: Int {
+        supplies.count { $0.quantity != $0.recorded }
+            + Set(recordedSupplies.keys).subtracting(supplies.map(\.id)).count
+            + bottles.count { $0.takesNew != $0.recordedTakesNew || $0.isAdded }
+    }
+
     /// What Save sends: every supply still listed with its quantity, each multi-use product at 0, and the bottles
     /// taken new.
     func edit(eventID: UUID) -> ProcedureUsageEdit {

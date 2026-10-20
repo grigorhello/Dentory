@@ -7,10 +7,11 @@ import Testing
 @MainActor
 struct ClinicSettingsViewModelTests {
     private func make(_ repository: FakeClinicSettingsRepository = FakeClinicSettingsRepository(),
+                      analytics: Analytics = NoopAnalytics(),
                       onSaved: @escaping () async -> Void = {}) async -> ClinicSettingsViewModel {
         let viewModel = ClinicSettingsViewModel(
-            clinicID: Session.demo.clinicID, repository: repository, locale: Locale(identifier: "en_US"),
-            onSaved: onSaved
+            clinicID: Session.demo.clinicID, repository: repository, analytics: analytics,
+            locale: Locale(identifier: "en_US"), onSaved: onSaved
         )
         await viewModel.load()
         return viewModel
@@ -34,8 +35,9 @@ struct ClinicSettingsViewModelTests {
 
     @Test func savingSendsTheFieldsSaysSoAndRefreshesTheSession() async {
         let repository = FakeClinicSettingsRepository()
+        let analytics = SpyAnalytics()
         var refreshed = 0
-        let viewModel = await make(repository, onSaved: { refreshed += 1 })
+        let viewModel = await make(repository, analytics: analytics, onSaved: { refreshed += 1 })
         viewModel.name = "  Smile Dental Group "
         viewModel.city = "  "
         viewModel.expiryWarning = .sixtyNinety
@@ -49,11 +51,13 @@ struct ClinicSettingsViewModelTests {
         #expect(viewModel.message == "Settings saved")
         #expect(refreshed == 1)
         #expect(viewModel.canSave == false, "Saved is the new starting point")
+        #expect(analytics.events == [.settingsSaved(digest: false, expiryWarningDays: 60)])
     }
 
     @Test func aBlankNameAndTheServersRefusalsAreSaid() async {
         let repository = FakeClinicSettingsRepository()
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         viewModel.name = "   "
         await viewModel.save()
         #expect(viewModel.nameError == "Enter the clinic name")
@@ -68,6 +72,7 @@ struct ClinicSettingsViewModelTests {
         await viewModel.save()
         #expect(viewModel.generalError?.userMessage == "Couldn't save. Try again.", "Not queued, so nothing is retried")
         #expect(viewModel.message == nil)
+        #expect(analytics.events.isEmpty, "Only a save that went through counts")
         viewModel.clearGeneralError()
         #expect(viewModel.generalError == nil, "Shown once as a toast")
     }

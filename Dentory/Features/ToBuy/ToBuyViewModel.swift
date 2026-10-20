@@ -47,6 +47,7 @@ final class ToBuyViewModel {
     private let cache: ResponseCaching
     private let clinicID: UUID
     private let saveDelay: Duration
+    private let analytics: Analytics
     private let markGuard = SubmitGuard()
     /// Quantities typed but not saved yet; a reload keeps them over the server's older figure.
     private var pendingQuantities: [UUID: Decimal] = [:]
@@ -54,7 +55,7 @@ final class ToBuyViewModel {
 
     init(
         repository: ToBuyRepository, cache: ResponseCaching, formatters: ClinicFormatters, clinicID: UUID,
-        isAdmin: Bool, saveDelay: Duration = .milliseconds(600)
+        isAdmin: Bool, saveDelay: Duration = .milliseconds(600), analytics: Analytics
     ) {
         self.repository = repository
         self.cache = cache
@@ -62,6 +63,7 @@ final class ToBuyViewModel {
         self.clinicID = clinicID
         self.isAdmin = isAdmin
         self.saveDelay = saveDelay
+        self.analytics = analytics
         items = cache.load([ToBuyItem].self, for: Self.cacheKey(clinicID)) ?? []
     }
 
@@ -164,6 +166,7 @@ final class ToBuyViewModel {
             await flushPendingSaves()
             do {
                 let count = try await repository.markOrdered(clinicID: clinicID, itemIDs: ids)
+                analytics.track(.markedOrdered(items: count))
                 message = Message(title: "Marked as ordered", detail: Self.items(count), undoItemID: nil)
                 deselected.subtract(ids)
                 await load()
@@ -223,6 +226,7 @@ final class ToBuyViewModel {
         sheet = nil
         do {
             let added = try await repository.add(clinicID: clinicID, productID: product.id)
+            analytics.track(.toBuyAdded)
             segment = .toBuy
             message = addedMessage(added, product: product)
             await load()
