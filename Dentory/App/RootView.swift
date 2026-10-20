@@ -90,9 +90,15 @@ struct RootView: View {
             pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
         }
         .onChange(of: sessionStore.state) { _, state in
-            // Step 2 just finished in this launch: step 3 shows before the tabs.
-            if case .signedIn = state {
+            switch state {
+            case .signedIn:
+                // Step 2 just finished in this launch: step 3 shows before the tabs.
                 pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
+            case .signedOut:
+                // Whoever signs in next starts on Home, with nothing pushed or filtered (MS-137).
+                router.reset()
+            default:
+                break
             }
         }
     }
@@ -129,6 +135,7 @@ struct RootView: View {
         case .signedIn(let session):
             AppTabsView(router: router)
                 .environment(router)
+                .environment(sessionStore)
                 .environment(\.session, session)
         }
     }

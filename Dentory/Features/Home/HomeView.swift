@@ -4,6 +4,8 @@ import SwiftUI
 struct HomeView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    /// Account's Sign out ends it (MS-137); the root puts it in the tabs' environment.
+    @Environment(SessionStore.self) private var sessionStore: SessionStore?
     @State private var viewModel: HomeViewModel
     let session: Session
     #if DEBUG
@@ -45,7 +47,14 @@ struct HomeView: View {
             }
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: HomeRoute.self) { route in
-                HomeRoutePlaceholderView(route: route)
+                switch route {
+                case .account:
+                    if let sessionStore {
+                        AccountView(session: session, sessionStore: sessionStore, dependencies: dependencies)
+                    }
+                default:
+                    HomeRoutePlaceholderView(route: route)
+                }
             }
             .debugHooks(
                 isCatalogPresented: debugCatalogBinding, launchSection: debugLaunchSection, onAppear: debugOnAppear
