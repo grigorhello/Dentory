@@ -60,7 +60,9 @@ struct ProcedureStartView: View {
                 .accessibilityIdentifier("procDetail.summary")
             ProcedureSuppliesCard(viewModel: viewModel)
             if !viewModel.templateBottles.isEmpty {
-                ProcedureBottlesSection(viewModel: viewModel)
+                ProcedureBottlesSection(
+                    lines: viewModel.bottleLines, onToggle: viewModel.toggleTakeNew, onExplain: viewModel.explainTakeNew
+                )
             }
         case .failed(let error):
             Notice(error.userMessage, tone: .danger)

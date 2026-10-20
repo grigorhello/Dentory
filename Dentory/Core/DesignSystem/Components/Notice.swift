@@ -13,7 +13,8 @@ nonisolated enum NoticeTone: CaseIterable, Sendable {
     }
 }
 
-/// A one-line soft-tinted box for a notice ("AI read 4 lines. Check each one, then confirm.").
+/// A one-line soft-tinted box for a notice ("AI read 4 lines. Check each one, then confirm."), in the design system's
+/// caption-strong type (600, 14 pt), as the prototype draws every notice (f14's "10 items deducted" banner).
 struct Notice: View {
     let text: String
     var tone: NoticeTone = .info
@@ -25,7 +26,7 @@ struct Notice: View {
 
     var body: some View {
         Text(text)
-            .textStyle(.bodyStrong16)
+            .textStyle(.bodyStrong14)
             .foregroundStyle(tone.statusTone.foreground)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, Spacing.md)

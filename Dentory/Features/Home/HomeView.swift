@@ -49,6 +49,10 @@ struct HomeView: View {
                     ExpiringView(window: window, session: session, dependencies: dependencies)
                 case .alerts:
                     ActivityView(session: session, dependencies: dependencies)
+                case .editUsage(let eventID):
+                    ProcedureEventView(
+                        eventID: eventID, startsEditing: true, session: session, dependencies: dependencies
+                    )
                 case .inventoryValue:
                     InventoryValueView(session: session, dependencies: dependencies)
                 default:

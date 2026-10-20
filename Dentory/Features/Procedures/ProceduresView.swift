@@ -29,8 +29,8 @@ struct ProceduresView: View {
                     ProcedureStartView(templateID: templateID, session: session, dependencies: dependencies)
                 case .editTemplate(let templateID):
                     ProcedureEditView(templateID: templateID, session: session, dependencies: dependencies)
-                case .event:
-                    ProcedureRoutePlaceholderView()
+                case .event(let eventID):
+                    ProcedureEventView(eventID: eventID, session: session, dependencies: dependencies)
                 }
             }
     }
