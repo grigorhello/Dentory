@@ -49,6 +49,18 @@ struct ProcedureUsageDraftTests {
         #expect(draft.contains(id(of: "Suction tips")) == false)
     }
 
+    @Test func aSupplyRemovedAndAddedBackComesBackAsRecorded() throws {
+        var draft = ProcedureUsageDraft(recording: rootCanal.items)
+        let suctionTips = id(of: "Suction tips")
+        let recorded = try #require(draft.supplies.first { $0.id == suctionTips })
+        draft.remove(suctionTips)
+        let product = try #require(ProductSummary.demo.first { $0.name == "Suction tips" })
+        let added = draft.add(product)
+        #expect(added)
+        #expect(draft.supplies.first { $0.id == suctionTips } == recorded, "Not \"Recorded 0\"")
+        #expect(draft.hasChanges == false, "Nothing differs from the record again")
+    }
+
     @Test func takeNewOnABottleWithNothingUnopenedChangesNothing() {
         var draft = ProcedureUsageDraft(recording: rootCanal.items)
         #expect(draft.toggleTakeNew(id(of: "Root canal sealer")) == .outOfStock)

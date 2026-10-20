@@ -33,7 +33,8 @@ nonisolated struct ProcedureUsageDraft: Equatable, Sendable {
 
     private(set) var supplies: [Supply] = []
     private(set) var bottles: [Bottle] = []
-    private var recordedSupplies: Set<UUID> = []
+    /// The supplies as recorded, so one removed with the X and added back keeps what was recorded.
+    private var recordedSupplies: [UUID: Supply] = [:]
 
     init() {}
 
@@ -46,7 +47,7 @@ nonisolated struct ProcedureUsageDraft: Equatable, Sendable {
         bottles = items.filter { $0.tracking == .multiUse }.map { item in
             Bottle(item: item, takesNew: item.takenNew, recordedTakesNew: item.takenNew)
         }
-        recordedSupplies = Set(supplies.map(\.id))
+        recordedSupplies = Dictionary(uniqueKeysWithValues: supplies.map { ($0.id, $0) })
     }
 
     /// The stepper's value, never below 0.
@@ -67,10 +68,15 @@ nonisolated struct ProcedureUsageDraft: Equatable, Sendable {
         supplies.removeAll { $0.id == id }
     }
 
-    /// Add item, as on Adjust, then start: a countable product joins with 1 and a multi-use one is taken new. Returns
-    /// false, adding nothing, for a multi-use product with nothing unopened.
+    /// Add item, as on Adjust, then start: a countable product joins with 1 and a multi-use one is taken new; a supply
+    /// the procedure recorded and the X removed comes back as it was recorded. Returns false, adding nothing, for a
+    /// multi-use product with nothing unopened.
     mutating func add(_ product: ProductSummary) -> Bool {
         guard !contains(product.id) else { return true }
+        if let recorded = recordedSupplies[product.id] {
+            supplies.append(recorded)
+            return true
+        }
         let item = ProcedureEventDetail.Item(
             id: product.id, name: product.name, unit: product.unit, tracking: product.tracking, qty: 0,
             takenNew: false, quantity: product.quantity, unopened: product.unopened, openCount: product.openCount
@@ -102,7 +108,7 @@ nonisolated struct ProcedureUsageDraft: Equatable, Sendable {
     /// Anything Save would write: a quantity, a supply removed or added, a bottle taken new or given back.
     var hasChanges: Bool {
         supplies.contains { $0.quantity != $0.recorded }
-            || Set(supplies.map(\.id)) != recordedSupplies
+            || Set(supplies.map(\.id)) != Set(recordedSupplies.keys)
             || bottles.contains { $0.takesNew != $0.recordedTakesNew || $0.isAdded }
     }
 
