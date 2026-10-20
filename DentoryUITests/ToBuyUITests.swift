@@ -35,6 +35,9 @@ final class ToBuyUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["order.selectionBar.summary"].label, "3 of 3 selected")
         let markOrdered = app.buttons["order.markOrdered"]
         XCTAssertEqual(markOrdered.label, "Mark 3 as ordered")
+        XCTAssertLessThanOrEqual(
+            markOrdered.frame.maxY, app.buttons["tab.toBuy"].frame.minY, "Mark as ordered sits under the tab bar"
+        )
         XCTAssertEqual(app.staticTexts["\(endo).value"].label, "4")
 
         app.buttons["\(endo).inc"].tap()
