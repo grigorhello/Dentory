@@ -30,6 +30,8 @@ struct AppDependencies: Sendable {
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
+    /// Push notifications on this device (MS-144).
+    let push: PushNotifications
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
     var locale: Locale = .current
 
@@ -81,28 +83,28 @@ struct AppDependencies: Sendable {
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
-            invitationRepository: SupabaseInvitationRepository(client: client)
+            invitationRepository: SupabaseInvitationRepository(client: client),
+            push: PushNotifications(
+                authorizer: SystemNotificationAuthorizer(), repository: SupabasePushTokenRepository(client: client),
+                store: UserDefaultsPushExplainerStore()
+            )
         )
     }
 
     /// No network: a demo clinic, a signed-in admin and a fixed moment, for previews and UI tests.
+    /// `offersPush` starts the device as one that never offered notifications, so the explainer shows (MS-144).
     @MainActor
     static func preview(
-        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin, onboarding: String? = nil
+        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin, onboarding: String? = nil,
+        offersPush: Bool = false
     ) -> AppDependencies {
         let rpc = PreviewRPCClient()
         let clock = FixedClock(Session.demoNow)
         let networkMonitor = FixedNetworkMonitor(isConnected: isConnected)
         let toasts = ToastCenter()
         let reporter = NoopErrorReporter()
-        let auth = PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil)
-        // `-onboarding clinic` resumes admin sign-up at step 2, `-onboarding invite` at step 3 (screenshots).
-        if onboarding == "clinic" {
-            auth.session = nil
-            auth.account = Account(
-                userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell"
-            )
-        }
+        let auth = PreviewAuthService.demo(signedIn: signedIn, role: role, onboarding: onboarding)
+        // `-onboarding invite` resumes admin sign-up at step 3 (screenshots).
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         let expiring = DemoExpiringRepository()
         let activity = DemoActivityRepository()
@@ -139,6 +141,10 @@ struct AppDependencies: Sendable {
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
+            push: PushNotifications(
+                authorizer: SystemNotificationAuthorizer(), repository: DemoPushTokenRepository(),
+                store: InMemoryPushExplainerStore(hasOffered: !offersPush)
+            ),
             locale: Locale(identifier: "en_US")
         )
     }

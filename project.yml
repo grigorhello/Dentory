@@ -51,11 +51,14 @@ targets:
       - package: Sentry
     # Universal links `https://app.dentory.ca/invite?token=…` (MS-100 D12, MS-112). The domain serves
     # applinks/.well-known/apple-app-site-association with the Apple team id once the team exists.
+    # Push notifications through APNs (MS-144); Xcode turns `development` into `production` when it exports for
+    # TestFlight and the App Store.
     entitlements:
       path: Dentory/Resources/Dentory.entitlements
       properties:
         com.apple.developer.associated-domains:
           - applinks:app.dentory.ca
+        aps-environment: development
     settings:
       base:
         PRODUCT_NAME: Dentory
