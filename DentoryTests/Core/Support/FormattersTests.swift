@@ -15,6 +15,13 @@ struct FormattersTests {
         #expect(formatters.money(186) == "$186.00")
     }
 
+    @Test func unitCostsKeepTheirCents() {
+        #expect(formatters.unitCost(Decimal(180) / 100) == "$1.80")
+        #expect(formatters.unitCost(42) == "$42.00")
+        #expect(formatters.unitCost(Decimal(425) / 10_000) == "$0.0425", "A last unit cost keeps up to four decimals")
+        #expect(formatters.wholeMoney(Decimal(9_720) / 100) == "$97")
+    }
+
     @Test func quantitiesWithTheirUnit() {
         #expect(formatters.quantity(54, unit: "cartridges") == "54 cartridges")
         #expect(formatters.quantity(2.5, unit: "bags") == "2.5 bags")

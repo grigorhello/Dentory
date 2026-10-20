@@ -26,6 +26,7 @@ struct AppDependencies: Sendable {
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
     let procedureEventRepository: ProcedureEventRepository
+    let inventoryValueRepository: InventoryValueRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -77,6 +78,7 @@ struct AppDependencies: Sendable {
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
+            inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -133,6 +135,7 @@ struct AppDependencies: Sendable {
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
+            inventoryValueRepository: DemoInventoryValueRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -211,6 +214,15 @@ struct AppDependencies: Sendable {
         ProcedureEventViewModel(
             repository: procedureEventRepository, formatters: formatters(for: session), clinicID: session.clinicID,
             eventID: eventID, startsEditing: startsEditing
+        )
+    }
+
+    /// Inventory value of the signed-in clinic (MS-135).
+    @MainActor
+    func makeInventoryValueViewModel(session: Session) -> InventoryValueViewModel {
+        InventoryValueViewModel(
+            repository: inventoryValueRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID
         )
     }
 
