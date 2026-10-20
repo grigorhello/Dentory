@@ -42,6 +42,8 @@ struct Notice: View {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 label
                 MSButton(action.title, variant: .text, size: .small, action: action.perform)
+                    // The label lines up with the text above; the button's own inset reaches into the notice's.
+                    .padding(.leading, -MSButtonSize.small.horizontalPadding)
                     .accessibilityIdentifier(action.identifier)
             }
             .modifier(NoticeBox(tone: tone))
