@@ -65,7 +65,8 @@ final class BillingViewModel {
         isOpeningPayment = true
         defer { isOpeningPayment = false }
         do {
-            if let url = try await repository.paymentPage(clinicID: clinicID, hasSubscription: summary.hasSubscription) {
+            let url = try await repository.paymentPage(clinicID: clinicID, hasSubscription: summary.hasSubscription)
+            if let url {
                 paymentPage = PaymentPage(url: url)
             } else {
                 await waitForStripe(since: summary)

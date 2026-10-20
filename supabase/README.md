@@ -11,6 +11,9 @@ Commands are in the root `Makefile` (`make db-start db-reset db-test seed-demo`;
 | `health` | nobody | `GET` answers `{ "ok": true }` so the stack and the Deno toolchain can be checked. |
 | `invite_member` | the app, as a signed-in admin | `POST { clinic_id, email, role?, full_name? }`: records the invited membership with a fresh 7-day token through `invitation_create` (only the SHA-256 of the token is stored) and emails the invitee the link `https://app.dentory.ca/invite?token=…`. Calling it again for the same address resends with a new token; the old link stops working (MS-112). |
 | `accept_invitation` | the Join screen, before the invitee has an account (`verify_jwt = false`) | `POST { token, full_name, password }`: reads the invitation (`invitation_lookup`), creates the account confirmed (or, after `invitation_check` says the account may join, sets the password of the account that already has the address) and makes the membership active (`invitation_accept`). A refusal (another clinic, another address, a seat already taken) answers 409 with the server's sentence and changes nothing; an expired or used link answers 410. The app then signs in with the address and password. |
+| `billing_checkout` | Billing's Add, as a signed-in admin | `POST { clinic_id }` answers `{ url }`: Stripe Checkout in subscription mode for the clinic's Stripe customer (created here the first time, with the clinic's name and first billing email), the `$99` monthly price, the 50% lifetime coupon for a clinic with `promo_lifetime_50`, and `trial_end` at the clinic's trial end when it is more than 48 hours away, so nothing is charged during the free months (MS-140). Refused for Staff (403) and for a clinic that already has a subscription (409). |
+| `billing_portal` | Billing's Change, as a signed-in admin | `POST { clinic_id }` answers `{ url }`: the Stripe Customer Portal of the clinic's customer, where the card changes (MS-140). |
+| `stripe_webhook` | Stripe (`verify_jwt = false`) | Checks the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET`, then: subscription events set the clinic's status, next payment and card from the subscription as Stripe holds it now (`billing_apply_subscription`, `billing_apply_card`); `customer.updated` changes the card; invoice events keep the invoices (`billing_record_invoice`); `checkout.session.completed` links a new subscription to its clinic. A card on file keeps the clinic writable through and after its trial (Stripe's `trialing` and `active` are `active`). |
 
 Every function answers refusals as `{ "error": { "code", "message", "field"? } }` with the HTTP status the app maps in `Core/Data/AppError+Functions.swift` (`supabase/functions/_shared/http.ts`).
 
@@ -23,8 +26,23 @@ The local runtime injects `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERV
 | `RESEND_API_KEY` | `invite_member` | A Resend API key for the `dentory.ca` sending domain (Resend, API keys). Without it the function sends nothing and writes the email, link included, to its log; that is how the local stack runs. |
 | `EMAIL_FROM` | `invite_member` | Optional. Defaults to `Dentory <invites@dentory.ca>`; the domain must be verified in Resend (SPF and DKIM records at the registrar). |
 | `APP_LINK_BASE` | `invite_member` | Optional. Defaults to `https://app.dentory.ca`, the universal-link host (`applinks/README.md`). |
+| `STRIPE_SECRET_KEY` | the billing functions | The Stripe secret key: `sk_test_…` on staging, `sk_live_…` on prod. Without it `billing_checkout` and `billing_portal` answer 503 "Billing isn't set up yet. Try again later.", as on the local stack. |
+| `STRIPE_PRICE_ID` | `billing_checkout` | The `price_…` of the product "Dentory clinic": $99 USD, recurring monthly. |
+| `STRIPE_PROMO_COUPON_ID` | `billing_checkout` | The coupon for the lifetime promotion: 50% off, duration forever. Needed once a clinic has `promo_lifetime_50`. |
+| `STRIPE_WEBHOOK_SECRET` | `stripe_webhook` | The `whsec_…` signing secret of the webhook endpoint below. |
+| `BILLING_RETURN_URL` | the billing functions | Optional. Defaults to `https://app.dentory.ca/billing/done`, the page Checkout and the Customer Portal return to (`applinks/billing/done`). |
 
 Deploy with `supabase functions deploy invite_member` and `supabase functions deploy accept_invitation --no-verify-jwt` (the setting also lives in `config.toml`).
+
+### Stripe (MS-140, once per project, by hand)
+
+1. In the Stripe dashboard (test mode for staging): a product "Dentory clinic" with a $99 USD monthly price, and a coupon of 50% off, forever.
+2. Settings, Billing, Customer portal: let customers update their payment method and see invoices, then save the configuration (the portal answers an error until one is saved).
+3. Developers, Webhooks: an endpoint at `https://<project-ref>.supabase.co/functions/v1/stripe_webhook` for `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`, `customer.updated`, `invoice.finalized`, `invoice.paid`, `invoice.payment_failed`, `invoice.voided` and `invoice.marked_uncollectible`; its signing secret is `STRIPE_WEBHOOK_SECRET`.
+4. `supabase secrets set STRIPE_SECRET_KEY=… STRIPE_PRICE_ID=… STRIPE_PROMO_COUPON_ID=… STRIPE_WEBHOOK_SECRET=…`, then `supabase functions deploy billing_checkout`, `supabase functions deploy billing_portal` and `supabase functions deploy stripe_webhook --no-verify-jwt`.
+5. Grant a clinic the lifetime promotion with `update clinics set promo_lifetime_50 = true where id = '…';` in the SQL editor; the app never changes it.
+
+On a test clinic, Billing's Add opens Checkout; the card `4242 4242 4242 4242` with any future date and CVC adds the card, and Billing shows it once the webhook lands.
 
 ### Trying an invitation locally
 

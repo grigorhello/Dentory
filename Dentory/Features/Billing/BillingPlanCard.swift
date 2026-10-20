@@ -40,38 +40,53 @@ struct BillingPlanCard: View {
         }
     }
 
-    /// "After trial", then "$99" struck through, "$49.50 / month" and "50% off for life" with the promotion.
+    /// "After trial", then "$99" struck through, "$49.50 / month" and "50% off for life" with the promotion. With large
+    /// text they stack under the label.
     private var afterTrial: some View {
         VStack(alignment: .leading, spacing: 0) {
             Rectangle().fill(Color.ms.inkMid).frame(height: 1)
-            HStack(alignment: .center, spacing: Spacing.sm + Spacing.xxs) {
-                Text("After trial")
-                    .textStyle(.body14)
-                    .foregroundStyle(Color.ms.mute)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                Group {
-                    if viewModel.isPromo {
-                        Text(viewModel.regularPriceText)
-                            .strikethrough()
-                            .textStyle(.body14)
-                            .foregroundStyle(Color.ms.mute)
-                            .accessibilityLabel("was \(viewModel.regularPriceText)")
-                    }
-                    Text(viewModel.monthlyPriceText)
-                        .textStyle(.bodyStrong16)
-                        .foregroundStyle(Color.ms.textOnDark)
-                    if viewModel.isPromo {
-                        StatusBadge(BillingViewModel.promoBadge, tone: .success, size: .small)
-                    }
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: Spacing.sm + Spacing.xxs) {
+                    afterTrialLabel
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(alignment: .firstTextBaseline, spacing: Spacing.sm + Spacing.xxs) { price }
+                        .fixedSize()
+                    promoBadge.fixedSize()
                 }
-                .fixedSize()
-                .layoutPriority(1)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    afterTrialLabel
+                    HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) { price }
+                    promoBadge
+                }
             }
             .padding(.top, Spacing.md)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("billing.price")
         }
         .padding(.top, Spacing.lg - Spacing.xxs)
+    }
+
+    private var afterTrialLabel: some View {
+        Text("After trial").textStyle(.body14).foregroundStyle(Color.ms.mute)
+    }
+
+    @ViewBuilder private var price: some View {
+        if viewModel.isPromo {
+            Text(viewModel.regularPriceText)
+                .strikethrough()
+                .textStyle(.body14)
+                .foregroundStyle(Color.ms.mute)
+                .accessibilityLabel("was \(viewModel.regularPriceText)")
+        }
+        Text(viewModel.monthlyPriceText)
+            .textStyle(.bodyStrong16)
+            .foregroundStyle(Color.ms.textOnDark)
+    }
+
+    @ViewBuilder private var promoBadge: some View {
+        if viewModel.isPromo {
+            StatusBadge(BillingViewModel.promoBadge, tone: .success, size: .small)
+        }
     }
 }

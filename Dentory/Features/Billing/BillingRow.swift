@@ -10,17 +10,17 @@ struct BillingRow: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: Spacing.md) {
-                Text(title)
-                    .textStyle(.body16)
-                    .foregroundStyle(Color.ms.ink)
-                    .layoutPriority(1)
-                Spacer(minLength: Spacing.sm)
-                if let value {
-                    Text(value)
-                        .textStyle(.body14)
-                        .foregroundStyle(Color.ms.textSecondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                // The value sits beside the title while both fit whole, else under it (a long address, large text).
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Spacing.md) {
+                        titleText.frame(maxWidth: .infinity, alignment: .leading)
+                        valueText?.fixedSize()
+                    }
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        titleText
+                        valueText
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if navigates {
                     IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.ink)
@@ -33,5 +33,13 @@ struct BillingRow: View {
             }
         }
         .contentShape(Rectangle())
+    }
+
+    private var titleText: some View {
+        Text(title).textStyle(.body16).foregroundStyle(Color.ms.ink)
+    }
+
+    private var valueText: (some View)? {
+        value.map { Text($0).textStyle(.body14).foregroundStyle(Color.ms.textSecondary) }
     }
 }

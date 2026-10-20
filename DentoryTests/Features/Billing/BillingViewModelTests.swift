@@ -158,7 +158,8 @@ struct BillingViewModelTests {
 
     @Test func aRefusedPageIsSaid() async {
         let repository = FakeBillingRepository([summary()])
-        repository.page = .failure(AppError.validation(field: nil, message: "Billing isn't set up yet. Try again later."))
+        let sentence = "Billing isn't set up yet. Try again later."
+        repository.page = .failure(AppError.validation(field: nil, message: sentence))
         let (viewModel, _) = make(repository)
         await viewModel.load()
         await viewModel.managePayment()

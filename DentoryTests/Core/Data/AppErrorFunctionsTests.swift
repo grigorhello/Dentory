@@ -24,8 +24,9 @@ struct AppErrorFunctionsTests {
     }
 
     @Test func aServiceThatIsDownOrNotSetUpSaysSo() {
-        let unavailable = #"{"error":{"code":"billing_unavailable","message":"Billing isn't set up yet. Try again later."}}"#
-        #expect(failure(503, unavailable) == .validation(field: nil, message: "Billing isn't set up yet. Try again later."))
+        let sentence = "Billing isn't set up yet. Try again later."
+        let unavailable = #"{"error":{"code":"billing_unavailable","message":""# + sentence + #""}}"#
+        #expect(failure(503, unavailable) == .validation(field: nil, message: sentence))
         #expect(failure(502, "") == .unknown("The server answered 502"))
     }
 

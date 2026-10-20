@@ -159,7 +159,8 @@ struct AppDependencies: Sendable {
     @MainActor
     func makeBillingViewModel(session: Session) -> BillingViewModel {
         BillingViewModel(
-            clinicID: session.clinicID, repository: billingRepository, cache: cache, formatters: formatters(for: session)
+            clinicID: session.clinicID, repository: billingRepository, cache: cache,
+            formatters: formatters(for: session)
         )
     }
 

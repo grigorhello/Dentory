@@ -57,32 +57,45 @@ struct BillingView: View {
         }
     }
 
-    /// "Payment method", the card and Add or Change (f34).
+    /// "Payment method", the card and Add or Change (f34). With large text the card and the button move under the
+    /// title.
     private var paymentMethod: some View {
         ListCard {
-            HStack(spacing: Spacing.md) {
-                Text("Payment method")
-                    .textStyle(.body16)
-                    .foregroundStyle(Color.ms.ink)
-                    .layoutPriority(1)
-                Spacer(minLength: Spacing.sm)
-                if let card = viewModel.cardText {
-                    Text(card)
-                        .textStyle(.body14)
-                        .foregroundStyle(Color.ms.textSecondary)
-                        .lineLimit(1)
-                        .accessibilityIdentifier("billing.card")
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Spacing.sm) {
+                    paymentTitle.frame(maxWidth: .infinity, alignment: .leading)
+                    cardAndAction
                 }
-                MSButton(
-                    viewModel.paymentActionTitle, variant: .text, size: .small, isLoading: viewModel.isOpeningPayment
-                ) {
-                    Task { await viewModel.managePayment() }
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    paymentTitle
+                    HStack(spacing: Spacing.sm) {
+                        cardAndAction
+                    }
                 }
-                .accessibilityIdentifier("billing.paymentMethod")
             }
             .padding(.vertical, Spacing.md)
             .frame(minHeight: ControlHeight.hitTarget)
         }
+    }
+
+    private var paymentTitle: some View {
+        Text("Payment method").textStyle(.body16).foregroundStyle(Color.ms.ink)
+    }
+
+    /// The card and the button keep their whole width.
+    @ViewBuilder private var cardAndAction: some View {
+        if let card = viewModel.cardText {
+            Text(card)
+                .textStyle(.body14)
+                .foregroundStyle(Color.ms.textSecondary)
+                .fixedSize()
+                .accessibilityIdentifier("billing.card")
+        }
+        MSButton(viewModel.paymentActionTitle, variant: .text, size: .small, isLoading: viewModel.isOpeningPayment) {
+            Task { await viewModel.managePayment() }
+        }
+        .fixedSize()
+        .accessibilityIdentifier("billing.paymentMethod")
     }
 }
 
