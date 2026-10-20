@@ -28,7 +28,7 @@ struct AccountView: View {
                 case .settings:
                     ClinicSettingsView(session: session, sessionStore: sessionStore, dependencies: dependencies)
                 case .billing:
-                    AccountRoutePlaceholderView(route: route)
+                    BillingView(session: session, dependencies: dependencies)
                 }
             }
             .msSheet(isPresented: $viewModel.isConfirmingSignOut) {

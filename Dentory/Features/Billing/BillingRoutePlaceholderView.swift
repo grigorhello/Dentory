@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// A pushed screen that names the ticket bringing the real one.
-struct AccountRoutePlaceholderView: View {
-    let route: AccountRoute
+/// Invoices and Billing emails until MS-141 brings them.
+struct BillingRoutePlaceholderView: View {
+    let route: BillingRoute
 
     var body: some View {
         Text("\(title) arrives with its own ticket.")
@@ -13,18 +13,16 @@ struct AccountRoutePlaceholderView: View {
 
     private var title: String {
         switch route {
-        case .team: "Team"
-        case .settings: "Clinic settings"
-        case .billing: "Billing"
+        case .invoices: "Invoices"
+        case .emails: "Billing emails"
         }
     }
 
     /// The PRD Appendix B screen keys.
     private var identifier: String {
         switch route {
-        case .team: "team"
-        case .settings: "settings"
-        case .billing: "billing"
+        case .invoices: "invoices"
+        case .emails: "billingEmails"
         }
     }
 }

@@ -1,7 +1,7 @@
 // Supabase clients for the functions: the service client for the token RPCs (they are granted to
 // service_role only) and the caller's identity from the Authorization header the app sends.
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
-import { HttpError } from "./http.ts";
+import { HttpError, sameText } from "./http.ts";
 
 function env(name: string): string {
   const value = Deno.env.get(name);
@@ -14,6 +14,14 @@ export function serviceClient(): SupabaseClient {
   return createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+/** For the calls only Dentory makes (the cron job, Grigor's billing links): the bearer must be the service role key. */
+export function requireServiceRole(req: Request) {
+  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const header = req.headers.get("Authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+  if (!expected || !sameText(token, expected)) throw new HttpError(401, "unauthorized", "Not allowed.");
 }
 
 export interface Caller {
