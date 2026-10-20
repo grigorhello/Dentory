@@ -25,9 +25,12 @@ final class AccountUITests: XCTestCase {
         let team = app.buttons["more.team"]
         XCTAssertTrue(team.label.contains("3 people"), "Team reads \(team.label)")
 
-        // Team arrives with MS-138; its placeholder is pushed and Back returns.
+        // Team arrives with MS-138; its placeholder is pushed and Back returns. A tap while Account is still sliding
+        // in can be dropped by the navigation stack, so a second one follows if nothing opened.
         team.tap()
-        XCTAssertTrue(app.staticTexts["team.title"].waitForExistence(timeout: 5), "Team did not open")
+        let teamTitle = app.staticTexts["team.title"]
+        if !teamTitle.waitForExistence(timeout: 2) { team.tap() }
+        XCTAssertTrue(teamTitle.waitForExistence(timeout: 5), "Team did not open")
         app.buttons["team.back"].tap()
 
         // Keep changes nothing; Sign out ends on Sign in.
