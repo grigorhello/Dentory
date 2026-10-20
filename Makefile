@@ -62,9 +62,10 @@ seed-demo:
 functions-serve:
 	supabase functions serve
 
-# Type-checks every Edge Function (needs Deno: brew install deno).
+# Type-checks every Edge Function and runs their unit tests (`*_test.ts`; needs Deno: brew install deno).
 functions-check:
 	deno check supabase/functions/*/index.ts
+	deno test supabase/functions
 
 # The local stack has no Resend key, so invite_member writes each invitation email to the function log
 # instead of sending it. This prints the links of the last invitations; open one on the simulator with
