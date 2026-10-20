@@ -15,5 +15,7 @@ struct DeviceSignOut: SigningOut {
         cache.removeAll()
         writes.removeAll()
         await sessionStore.signOut()
+        // A read still in flight when the cache was cleared may have written its answer back since.
+        cache.removeAll()
     }
 }

@@ -97,14 +97,8 @@ struct AppDependencies: Sendable {
         let networkMonitor = FixedNetworkMonitor(isConnected: isConnected)
         let toasts = ToastCenter()
         let reporter = NoopErrorReporter()
-        let auth = PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil)
-        // `-onboarding clinic` resumes admin sign-up at step 2, `-onboarding invite` at step 3 (screenshots).
-        if onboarding == "clinic" {
-            auth.session = nil
-            auth.account = Account(
-                userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell"
-            )
-        }
+        let auth = PreviewAuthService.demo(signedIn: signedIn, role: role, onboarding: onboarding)
+        // `-onboarding invite` resumes admin sign-up at step 3 (screenshots).
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         let expiring = DemoExpiringRepository()
         let activity = DemoActivityRepository()

@@ -94,10 +94,14 @@ struct RootView: View {
             case .signedIn:
                 // Step 2 just finished in this launch: step 3 shows before the tabs.
                 pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
+                // Sign in shows clean after a later Sign out, without a sign-up step left pushed (MS-137).
+                signInPath = NavigationPath()
+            case .needsClinic:
+                signInPath = NavigationPath()
             case .signedOut:
                 // Whoever signs in next starts on Home, with nothing pushed or filtered (MS-137).
                 router.reset()
-            default:
+            case .restoring:
                 break
             }
         }

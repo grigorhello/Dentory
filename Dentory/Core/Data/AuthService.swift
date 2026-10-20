@@ -127,9 +127,10 @@ struct SupabaseAuthService: AuthServicing {
         }
     }
 
+    /// This device only: the member stays signed in on their other devices (PRD §6.1, MS-110).
     func signOut() async throws {
         do {
-            try await client.auth.signOut()
+            try await client.auth.signOut(scope: .local)
         } catch {
             throw AppError(error)
         }
