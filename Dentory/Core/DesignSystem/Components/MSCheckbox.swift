@@ -50,12 +50,13 @@ struct MSCheckboxStyle: ToggleStyle {
 
 /// The box alone, 24 pt: primary fill with a check when on, ink hairline on canvas when off.
 struct CheckboxBox: View {
+    static let size: CGFloat = 24
     let isOn: Bool
 
     var body: some View {
         RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
             .fill(isOn ? Color.ms.primary : Color.ms.surfacePage)
-            .frame(width: 24, height: 24)
+            .frame(width: Self.size, height: Self.size)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
                     .strokeBorder(isOn ? Color.ms.primary : Color.ms.ink, lineWidth: 1)

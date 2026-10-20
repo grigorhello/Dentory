@@ -22,6 +22,7 @@ struct AppDependencies: Sendable {
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
     let procedureEditRepository: ProcedureEditRepository
+    let toBuyRepository: ToBuyRepository
     let inventoryValueRepository: InventoryValueRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
@@ -70,6 +71,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
+            toBuyRepository: SupabaseToBuyRepository(client: client),
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
@@ -118,6 +120,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
+            toBuyRepository: DemoToBuyRepository(),
             inventoryValueRepository: DemoInventoryValueRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
@@ -162,6 +165,15 @@ struct AppDependencies: Sendable {
     @MainActor
     func makeProcedureEditViewModel(templateID: UUID?, session: Session) -> ProcedureEditViewModel {
         ProcedureEditViewModel(repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID)
+    }
+
+    /// To buy of the signed-in clinic (MS-128).
+    @MainActor
+    func makeToBuyViewModel(session: Session) -> ToBuyViewModel {
+        ToBuyViewModel(
+            repository: toBuyRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, isAdmin: session.isAdmin
+        )
     }
 
     /// Inventory value of the signed-in clinic (MS-135).

@@ -78,7 +78,11 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
 
     func removeFromToBuy(itemID: UUID) async throws {
         do {
-            try await client.from("to_buy_items").delete().eq("id", value: itemID.uuidString).execute()
+            // Only a line still to buy: Undo never deletes one marked ordered in the meantime (MS-128).
+            try await client.from("to_buy_items").delete()
+                .eq("id", value: itemID.uuidString)
+                .eq("status", value: "to_buy")
+                .execute()
         } catch {
             throw AppError(error)
         }
