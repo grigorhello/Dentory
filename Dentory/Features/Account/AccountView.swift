@@ -26,7 +26,9 @@ struct AccountView: View {
                 switch route {
                 case .team:
                     TeamView(session: session, sessionStore: sessionStore, dependencies: dependencies)
-                case .settings, .billing:
+                case .billing:
+                    BillingView(session: session, dependencies: dependencies)
+                case .settings:
                     AccountRoutePlaceholderView(route: route)
                 }
             }

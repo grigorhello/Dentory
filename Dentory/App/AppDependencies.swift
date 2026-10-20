@@ -26,6 +26,7 @@ struct AppDependencies: Sendable {
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
     let procedureEventRepository: ProcedureEventRepository
+    let billingRepository: BillingRepository
     let inventoryValueRepository: InventoryValueRepository
     let accountRepository: AccountRepository
     let teamRepository: TeamRepository
@@ -82,6 +83,7 @@ struct AppDependencies: Sendable {
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
+            billingRepository: SupabaseBillingRepository(client: client),
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             accountRepository: SupabaseAccountRepository(client: client),
             teamRepository: SupabaseTeamRepository(client: client),
@@ -120,12 +122,8 @@ struct AppDependencies: Sendable {
             toasts: toasts,
             cache: InMemoryResponseCache(),
             writes: WriteCoordinator(
-                rpc: rpc,
-                queue: PendingWriteQueue(store: InMemoryPendingWriteStore()),
-                networkMonitor: networkMonitor,
-                clock: clock,
-                reporter: reporter,
-                toasts: toasts
+                rpc: rpc, queue: PendingWriteQueue(store: InMemoryPendingWriteStore()), networkMonitor: networkMonitor,
+                clock: clock, reporter: reporter, toasts: toasts
             ),
             reporter: reporter,
             homeRepository: DemoHomeRepository(
@@ -141,6 +139,8 @@ struct AppDependencies: Sendable {
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
+            // `-billingNoCard YES` shows Billing before a card is added (screenshots, UI tests).
+            billingRepository: DemoBillingRepository(hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard")),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
             teamRepository: DemoTeamRepository(),
@@ -163,6 +163,15 @@ struct AppDependencies: Sendable {
             cache: cache,
             formatters: formatters(for: session),
             clinicID: session.clinicID
+        )
+    }
+
+    /// Billing of the signed-in clinic, for its admin (MS-140).
+    @MainActor
+    func makeBillingViewModel(session: Session) -> BillingViewModel {
+        BillingViewModel(
+            clinicID: session.clinicID, repository: billingRepository, cache: cache,
+            formatters: formatters(for: session)
         )
     }
 

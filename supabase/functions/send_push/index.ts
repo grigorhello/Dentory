@@ -4,7 +4,7 @@
 // left claimed and retried later; one that reached at least one device counts as sent. Without the APNs secrets (the
 // local stack) each push is logged instead of sent (PRD §8).
 import { errorResponse, HttpError, json } from "../_shared/http.ts";
-import { serviceClient } from "../_shared/supabase.ts";
+import { requireServiceRole, serviceClient } from "../_shared/supabase.ts";
 import {
   apnsConfig,
   type ApnsConfig,
@@ -57,21 +57,6 @@ Deno.serve(async (req) => {
     return errorResponse(error);
   }
 });
-
-/** Only the database's cron job may send: the bearer must be this project's service role key. */
-function requireServiceRole(req: Request) {
-  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const header = req.headers.get("Authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
-  if (!expected || !sameText(token, expected)) throw new HttpError(401, "unauthorized", "Not allowed.");
-}
-
-function sameText(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let difference = 0;
-  for (let index = 0; index < a.length; index++) difference |= a.charCodeAt(index) ^ b.charCodeAt(index);
-  return difference === 0;
-}
 
 /** The provider token every instance of this function shares, kept in the database. */
 function tokenStore(db: ReturnType<typeof serviceClient>): ProviderTokenStore {
