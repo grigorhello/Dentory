@@ -1,16 +1,18 @@
 -- MS-143 · Export CSV: who may start an export and how often, the job's end, and the rows of products.csv,
 -- batches.csv and transactions.csv.
 begin;
-select plan(20);
+select plan(22);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000018401', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
-  ('00000000-0000-4000-8000-000000018402', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'michael@dentory.test');
+  ('00000000-0000-4000-8000-000000018402', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'michael@dentory.test'),
+  ('00000000-0000-4000-8000-000000018403', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'daniel@dentory.test');
 insert into public.clinics (id, name, country, currency, time_zone) values
   ('00000000-0000-4000-8000-000000018411', 'Clinique Évangéline', 'CA', 'CAD', 'America/Toronto');
 insert into public.memberships (clinic_id, user_id, email, full_name, role, status) values
   ('00000000-0000-4000-8000-000000018411', '00000000-0000-4000-8000-000000018401', 'sarah@dentory.test', 'Sarah Mitchell', 'admin', 'active'),
-  ('00000000-0000-4000-8000-000000018411', '00000000-0000-4000-8000-000000018402', 'michael@dentory.test', 'Michael Reyes', 'staff', 'active');
+  ('00000000-0000-4000-8000-000000018411', '00000000-0000-4000-8000-000000018402', 'michael@dentory.test', 'Michael Reyes', 'staff', 'active'),
+  ('00000000-0000-4000-8000-000000018411', '00000000-0000-4000-8000-000000018403', 'daniel@dentory.test', 'Dr. Daniel Kim', 'admin', 'active');
 insert into public.categories (id, clinic_id, name) values
   ('00000000-0000-4000-8000-000000018421', '00000000-0000-4000-8000-000000018411', 'Anesthetic');
 insert into public.products (id, clinic_id, name, category_id, unit, pack_unit, pack_size, minimum, target, supplier,
@@ -66,6 +68,13 @@ select throws_ok(
   '22023', 'An export started less than 10 minutes ago. It is on its way to your email.',
   'one export every 10 minutes'
 );
+select throws_ok(
+  $$select * from public.export_job_start('00000000-0000-4000-8000-000000018411', '00000000-0000-4000-8000-000000018403')$$,
+  '22023', 'Sarah Mitchell started an export less than 10 minutes ago. It goes to sarah@dentory.test.',
+  'another admin is told whose export it is and where it went'
+);
+select ok((select local_time from started) ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$',
+  'the time at the clinic, for the files inside the zip');
 select public.export_job_finish((select job_id from started), null);
 select is((select status::text from public.export_jobs where id = (select job_id from started)), 'failed',
   'a job without a file failed');

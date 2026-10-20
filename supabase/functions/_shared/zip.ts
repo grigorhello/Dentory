@@ -79,7 +79,8 @@ function concat(parts: Uint8Array[]): Uint8Array {
   return out;
 }
 
-/** MS-DOS time and date, as ZIP keeps them; in UTC, which the files' readers show as is. */
+/** MS-DOS time and date, as ZIP keeps them, from the date's UTC fields: pass the wall-clock time to show (export_csv
+ * passes the clinic's), since readers show the fields as they are. */
 function dosDateTime(date: Date): { time: number; day: number } {
   const time = (date.getUTCHours() << 11) | (date.getUTCMinutes() << 5) | Math.floor(date.getUTCSeconds() / 2);
   const day = ((date.getUTCFullYear() - 1980) << 9) | ((date.getUTCMonth() + 1) << 5) | date.getUTCDate();

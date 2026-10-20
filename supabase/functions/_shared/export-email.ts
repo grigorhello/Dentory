@@ -38,6 +38,27 @@ export function exportEmail(input: ExportEmailInput): Email {
   return { to: input.to, subject, html, text };
 }
 
+/** When the export could not be made: no link, and how to try again. */
+export function exportFailedEmail(input: { to: string; clinicName: string }): Email {
+  const subject = `${input.clinicName}'s export from Dentory didn't go through`;
+  const text = `Dentory couldn't make ${input.clinicName}'s export this time, and nothing was sent. ` +
+    "Export again from Account in the app.";
+  const html = `<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f7f5f2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#201515;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f5f2;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background:#ffffff;border-radius:12px;padding:32px;">
+        <tr><td style="font-size:14px;letter-spacing:1px;text-transform:uppercase;color:#7a6f6f;padding-bottom:8px;">Export</td></tr>
+        <tr><td style="font-size:16px;line-height:24px;">${escapeHTML(text)}</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  return { to: input.to, subject, html, text };
+}
+
 function escapeHTML(value: string): string {
   return value
     .replaceAll("&", "&amp;")

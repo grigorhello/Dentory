@@ -1,6 +1,6 @@
 // deno test supabase/functions (make functions-check): the export's files and email.
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
-import { exportEmail } from "./export-email.ts";
+import { exportEmail, exportFailedEmail } from "./export-email.ts";
 import { exportFiles } from "./export-files.ts";
 
 function lines(data: Uint8Array): string[] {
@@ -80,4 +80,13 @@ Deno.test("the email names the clinic, links the zip and says how long the link 
   assertStringIncludes(email.html, "Smile &lt;Dental&gt; &amp; Co&#39;s data");
   assertStringIncludes(email.html, 'href="https://example.test/sign/exports/a.zip?token=x&amp;download=');
   assert(!email.html.includes("<Dental>"));
+});
+
+Deno.test("an export that failed says so, with no link", () => {
+  const email = exportFailedEmail({ to: "sarah@dentory.test", clinicName: "Smile <Dental>" });
+  assertEquals(email.to, "sarah@dentory.test");
+  assertEquals(email.subject, "Smile <Dental>'s export from Dentory didn't go through");
+  assertStringIncludes(email.text, "Export again from Account in the app.");
+  assertStringIncludes(email.html, "Smile &lt;Dental&gt;&#39;s export");
+  assert(!email.html.includes("href"));
 });

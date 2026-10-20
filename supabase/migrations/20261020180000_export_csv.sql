@@ -11,16 +11,19 @@ on conflict (id) do nothing;
 drop policy export_jobs_admin_insert on public.export_jobs;
 revoke insert on public.export_jobs from authenticated;
 
--- Starts an export for the admin p_user_id: a running job, the address the link goes to, the clinic's name and
--- today's date at the clinic. A read-only clinic may export: its data stays its own.
+-- Starts an export for the admin p_user_id: a running job, the address the link goes to, the clinic's name, and
+-- today's date and the time at the clinic. A read-only clinic may export: its data stays its own.
 create function public.export_job_start(p_clinic_id uuid, p_user_id uuid)
-returns table (job_id uuid, email text, clinic_name text, day text)
+returns table (job_id uuid, email text, clinic_name text, day text, local_time text)
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
   v_member_email text;
+  v_recent_by uuid;
+  v_recent_name text;
+  v_recent_email text;
   v_job uuid;
 begin
   select m.email into v_member_email
@@ -29,18 +32,36 @@ begin
   if v_member_email is null then
     perform engine.fail('42501', 'Only an admin can export the clinic''s data');
   end if;
-  if exists (
-    select 1 from public.export_jobs j
-    where j.clinic_id = p_clinic_id and j.status <> 'failed' and j.created_at > now() - interval '10 minutes'
-  ) then
-    perform engine.fail('22023', 'An export started less than 10 minutes ago. It is on its way to your email.');
+  -- One start at a time per clinic: a second call waits here, then sees the first one's job.
+  perform pg_advisory_xact_lock(hashtext('export_job_start'), hashtext(p_clinic_id::text));
+  select j.requested_by into v_recent_by
+  from public.export_jobs j
+  where j.clinic_id = p_clinic_id and j.status <> 'failed' and j.created_at > now() - interval '10 minutes'
+  order by j.created_at desc
+  limit 1;
+  if found then
+    if v_recent_by = p_user_id then
+      perform engine.fail('22023', 'An export started less than 10 minutes ago. It is on its way to your email.');
+    end if;
+    -- Another admin's export went to their address: say whose, and where.
+    select coalesce(u.email::text, m.email), coalesce(nullif(pr.full_name, ''), nullif(m.full_name, ''))
+    into v_recent_email, v_recent_name
+    from public.memberships m
+    left join auth.users u on u.id = m.user_id
+    left join public.profiles pr on pr.user_id = m.user_id
+    where m.clinic_id = p_clinic_id and m.user_id = v_recent_by;
+    perform engine.fail('22023', format(
+      '%s started an export less than 10 minutes ago. It goes to %s.',
+      coalesce(v_recent_name, 'Another admin'), coalesce(v_recent_email, 'their email')
+    ));
   end if;
   insert into public.export_jobs (clinic_id, requested_by, status)
   values (p_clinic_id, p_user_id, 'running')
   returning id into v_job;
   return query
   select v_job, coalesce((select u.email::text from auth.users u where u.id = p_user_id), v_member_email), c.name,
-         to_char(now() at time zone c.time_zone, 'YYYY-MM-DD')
+         to_char(now() at time zone c.time_zone, 'YYYY-MM-DD'),
+         to_char(now() at time zone c.time_zone, 'YYYY-MM-DD"T"HH24:MI:SS')
   from public.clinics c
   where c.id = p_clinic_id;
 end;

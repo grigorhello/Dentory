@@ -1,13 +1,14 @@
 // POST /functions/v1/export_csv { clinic_id } as a signed-in admin (MS-143, PRD §6.9 Export CSV). Answers at once with
 // the address the link goes to; then, in the background, writes products.csv, batches.csv and transactions.csv,
-// zips them into the private exports bucket and emails the admin a signed link valid 7 days. One export per clinic
-// every 10 minutes (export_job_start); a read-only clinic may export too. Each export also removes the clinic's
-// files whose links have expired. Without RESEND_API_KEY, as on the local stack, the email goes to the log.
+// zips them into the private exports bucket and emails the admin a signed link valid 7 days; if that fails, the email
+// says so. One export per clinic every 10 minutes (export_job_start); a read-only clinic may export too. Each export
+// also removes the clinic's files whose links have expired. Without RESEND_API_KEY, as on the local stack, the email
+// goes to the log, and its link names the stack's internal host (kong:8000) rather than 127.0.0.1:54321.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, isUUID, json, readJSON, text } from "../_shared/http.ts";
 import { caller, rpcError, serviceClient } from "../_shared/supabase.ts";
 import { sendEmail } from "../_shared/email.ts";
-import { exportEmail } from "../_shared/export-email.ts";
+import { exportEmail, exportFailedEmail } from "../_shared/export-email.ts";
 import { type ExportData, exportFiles } from "../_shared/export-files.ts";
 import { zip } from "../_shared/zip.ts";
 
@@ -19,6 +20,8 @@ interface StartedExport {
   email: string;
   clinic_name: string;
   day: string;
+  /** The clinic's wall-clock time, `YYYY-MM-DDTHH:MM:SS`, for the times inside the zip. */
+  local_time: string;
 }
 
 const linkSeconds = 7 * 24 * 60 * 60;
@@ -49,7 +52,7 @@ async function run(db: SupabaseClient, clinicID: string, job: StartedExport) {
   try {
     const { data, error } = await db.rpc("export_data", { p_clinic_id: clinicID });
     if (error) throw new Error(`export_data: ${error.message}`);
-    const archive = await zip(exportFiles(data as ExportData));
+    const archive = await zip(exportFiles(data as ExportData), new Date(`${job.local_time}Z`));
     const path = `${clinicID}/${job.job_id}.zip`;
     const bucket = db.storage.from("exports");
     const upload = await bucket.upload(path, archive, { contentType: "application/zip" });
@@ -62,6 +65,8 @@ async function run(db: SupabaseClient, clinicID: string, job: StartedExport) {
     await removeExpired(db, clinicID);
   } catch (error) {
     console.error("export failed", error);
+    await sendEmail(exportFailedEmail({ to: job.email, clinicName: job.clinic_name }))
+      .catch((failure) => console.error("export failure email", failure));
   } finally {
     const { error } = await db.rpc("export_job_finish", { p_job_id: job.job_id, p_file_path: sentPath });
     if (error) console.error("export_job_finish", error.message);
