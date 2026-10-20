@@ -26,11 +26,22 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
 
     private(set) var signUps: [SignUp] = []
 
+    private(set) var restoreCount = 0
+    /// How long `restore()` takes to answer; the answer is what was stored when it was called.
+    var restoreDelay: Duration = .zero
+
     func restore() async throws -> RestoredSession {
-        if let restoreError { throw restoreError }
-        if let storedSession { return .signedIn(storedSession) }
-        if let storedAccount { return .needsClinic(storedAccount) }
-        return .none
+        restoreCount += 1
+        let answer = storedAnswer()
+        if restoreDelay > .zero { try await Task.sleep(for: restoreDelay) }
+        return try answer.get()
+    }
+
+    private func storedAnswer() -> Result<RestoredSession, Error> {
+        if let restoreError { return .failure(restoreError) }
+        if let storedSession { return .success(.signedIn(storedSession)) }
+        if let storedAccount { return .success(.needsClinic(storedAccount)) }
+        return .success(.none)
     }
 
     func signUp(fullName: String, email: String, password: String) async throws -> Account {
