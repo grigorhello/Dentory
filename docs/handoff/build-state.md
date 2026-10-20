@@ -1,6 +1,6 @@
 # Build state
 
-As of 2026-10-19 19:30 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
+As of 2026-10-19 21:55 UTC. Before acting on this file, confirm the live state: open and merged PRs on GitHub, issue state, the Notion board. This file lags reality by design; GitHub does not.
 
 ## Merged (default branch `claude/project-thread-ocu7tf`)
 
@@ -32,15 +32,17 @@ As of 2026-10-19 19:30 UTC. Before acting on this file, confirm the live state: 
 | 25 | MS-120 · Multi-use products: open a new bottle and mark it finished (#91) | [#163](https://github.com/grigorhello/Dentory/pull/163) | 2026-10-19 18:11 | `ProductDetailRepository.openBottle` and `finishBottle` through `WriteCoordinator` (`bottle_open`, `bottle_finish`), the bottles card's "Open a new {bottle|syringe|kit}" and Finished with their toasts, "opened yesterday", the demo repository replaying bottles in memory. Built in Grigor's cloud session; no simulator screenshots on the PR. |
 | 27 | MS-122 · Procedures list and history (#93) | [#168](https://github.com/grigorhello/Dentory/pull/168) | 2026-10-19 19:41 | `procedure_templates_list` and `procedure_history` (migration `20261019180000_procedures_list.sql`, 18 pgTAP assertions; history pages after the last row's id, found in review round 1), the Procedures tab under `Features/Procedures` in f11's creation order, `IconButton`'s quiet variant. Also merged: #169, a test-only fix for MS-118's and MS-120's Product detail UI flows. |
 | 30 | MS-113 · Reset a forgotten password (#84) | [#167](https://github.com/grigorhello/Dentory/pull/167) | 2026-10-19 19:55 | Forgot password and the reset link, built in Grigor's cloud session (see open item 7 for the hosted setup it needs). |
+| 28 | MS-123 · Adjust, then start a procedure (#94) | [#170](https://github.com/grigorhello/Dentory/pull/170) | 2026-10-19 21:47 | `procedure_template_detail` (migration `20261019203000_procedure_template_detail.sql`, 20 pgTAP assertions) and `Features/Procedures/Start`: steppers, the X, Add item (countable and multi-use products, "Out of stock" said inside the sheet), Take new, and Start through `stock_procedure_start` with the toast. Multi-use products in Add item were Claude's recommended default, open for Grigor to change (decisions log 2026-10-19 20:45). Three review rounds: the shared inventory row moved to `Core/Data`, then Add item's messages moved into the sheet. |
+| – | MS-103 fix · Pinned headers | [#172](https://github.com/grigorhello/Dentory/pull/172) | 2026-10-19 23:45 | Root and pushed screens keep the header and the offline banner pinned while the content scrolls (`ScreenScaffold`), cut 8 pt under the header row as f13-2 and f20-2 draw it; UI flows check that Product detail's Edit and Back and Inventory's title row stay in reach. Two review rounds: the first asked for those tests, the 8 pt split and an Inventory screenshot. |
 
-Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`, `20261019040000_inventory_list.sql`, `20261019090000_product_detail.sql`, `20261019180000_procedures_list.sql` (MS-122), `20261019203000_procedure_template_detail.sql` (MS-123).
+Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_access.sql`, `20261016150000_stock_engine.sql`, `20261016170000_product_status.sql`, `20261017160000_onboarding.sql`, `20261019020000_invitations.sql`, `20261019040000_inventory_list.sql`, `20261019090000_product_detail.sql`, `20261019180000_procedures_list.sql` (MS-122), `20261019203000_procedure_template_detail.sql` (MS-123), `20261019223000_procedure_template_edit.sql` (MS-125).
 
 ## In progress
 
 - **MS-117 · Create, edit and delete products (#88)**, build step 22, in PR review: [#161](https://github.com/grigorhello/Dentory/pull/161), opened 2026-10-19 13:43 UTC from the build thread on Grigor's Mac.
 - **MS-119 · Track expiry per batch: Add expiry and Edit batch (#90)**, build step 24, draft [#164](https://github.com/grigorhello/Dentory/pull/164) from the Mac build thread, stacked on #161: its base is `ms-117-product-sheets` until #161 is merged, then it is rebased onto the default branch, retargeted and reviewed.
 - **MS-121 · Count stock with review before applying (#92)**, build step 26, draft [#166](https://github.com/grigorhello/Dentory/pull/166) from the Mac build thread, stacked on #161 like #164.
-- **MS-123 · Adjust, then start a procedure (#94)**, build step 28, in PR review: [#170](https://github.com/grigorhello/Dentory/pull/170), branch `ms-123-start-procedure`. `procedure_template_detail` (migration `20261019203000_procedure_template_detail.sql`), the screen under `Features/Procedures/Start` (steppers, X, Add item, Take new, Start through `stock_procedure_start`); the history row and the pencils still push placeholders until MS-124 and MS-125.
+- **MS-125 · Edit procedure templates (#96)**, build step 31, in PR review: [#171](https://github.com/grigorhello/Dentory/pull/171), branch `ms-125-edit-templates`, built on MS-123's template read, sharing its Add item. `procedure_template_save` and `procedure_template_archive` (migration `20261019223000_procedure_template_edit.sql`), the screen under `Features/Procedures/Edit`, and Add item shared under `Features/Procedures/AddItem`.
 - **MS-126 · Receive delivery: choose how (#97)**, build step 32, claimed 2026-10-19 by Grigor's cloud session (Notion card In progress).
 - **MS-128 · To buy list (#99)**, build step 34, in PR review: [#173](https://github.com/grigorhello/Dentory/pull/173), branch `ms-128-to-buy`: `to_buy_list`, `to_buy_add`, `to_buy_mark_ordered` and removed suggestions (migration `20261019233000_to_buy_list.sql`), the To buy tab under `Features/ToBuy` with its badge, and `SwipeActionRow` in the design system.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
@@ -49,14 +51,13 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 
 | Step | Ticket | Blocked by |
 |---|---|---|
-| 29 | MS-124 · Procedure from history: edit usage or cancel (#95) | MS-123 (in review) |
-| 31 | MS-125 · Edit procedure templates (#96) | MS-122 (merged) |
+| 29 | MS-124 · Procedure from history: edit usage or cancel (#95) | MS-123 (merged) |
 
-Then M1 continues MS-124 and MS-125 here; MS-126 (step 32, the first of M2) is with Grigor's other session, and M2 continues from step 33 (MS-127); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
+Then M1 continues MS-124 here; MS-126 (step 32, the first of M2) is with Grigor's other session, and M2 continues from step 33 (MS-127); M3 from step 43 (MS-137); M4 from step 54 (MS-151) to step 58 (MS-152, TestFlight and App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
-Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-120 is in Feature QA too. MS-122 and MS-113 are in Feature QA too. MS-117, MS-121 and MS-123 are in PR review; MS-119 is In progress (draft #164). MS-126 is In progress in a cloud session. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
+Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109, MS-103, MS-108, MS-110, MS-114, MS-155, MS-156, MS-111, MS-112, MS-115, MS-116 and MS-118 are in Feature QA for Grigor to try. MS-120 is in Feature QA too. MS-122, MS-113 and MS-123 are in Feature QA too. MS-117, MS-121 and MS-125 are in PR review; MS-119 is In progress (draft #164). MS-126 is In progress in a cloud session. MS-100 is Done. Everything else is To do, except the brand cards: MS-158 is in Feature QA and MS-159 to MS-162 are in Backlog (see "Brand assets" below). The board is "Dentory · Product board".
 
 ## Open items for Grigor
 
@@ -84,7 +85,7 @@ Grigor delivered the visual identity on 2026-10-19 (MS-100 D17): `design/brand/`
 
 - The demo clinic's inventory value is about $1,616 where frame f6 shows $12,420: the prototype has no unit costs and the seed uses realistic ones, pinned so f27 reads $82 + $104. Reaching the frame's figure with the frame's quantities would need implausible prices; Grigor decides whether the number matters for demos.
 - Sheets use the system scrim, not the PRD's `rgba(32,21,21,.4)`; SwiftUI does not expose the sheet scrim colour.
-- Headers are pinned (#172), but search fields, segments and status chips still scroll with the content where f16-2, f17-2, f18-2 to f18-5 and f09-2 pin them under the title. `rootScreen` needs a pinned slot under the header; it waits for MS-121 (#166) and MS-126, which edit those screens.
+- Headers are pinned (#172), but search fields, segments and status chips still scroll with the content where f16-2, f17-2, f18-2 to f18-5 and f09-2 pin them under the title. `rootScreen` and `pushedScreen` (f09-2 is a pushed screen) need a pinned slot under the header; it waits for MS-121 (#166) and MS-126, which edit those screens.
 - On a root screen the end of a long list can sit under the tab bar (Staff Inventory's last row): the bar's safe-area inset does not reach the scroll view inside the tab's `NavigationStack`. Admin Inventory hides it behind the + spacer. Next shell fix after #172.
 - The reviewer agent needs `gh` to act as `grigorhello` on the Mac; it stops and reports if another account is active.
 - The Remote Control session draws on Grigor's own usage limit and may pause with "I've hit my usage limit"; "try again" in the thread resumes it after the reset.

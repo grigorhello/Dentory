@@ -21,6 +21,7 @@ struct AppDependencies: Sendable {
     let productDetailRepository: ProductDetailRepository
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
+    let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
@@ -68,6 +69,7 @@ struct AppDependencies: Sendable {
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
+            procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
@@ -115,6 +117,7 @@ struct AppDependencies: Sendable {
             productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
+            procedureEditRepository: DemoProcedureEditRepository(),
             toBuyRepository: DemoToBuyRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
@@ -153,6 +156,12 @@ struct AppDependencies: Sendable {
             repository: procedureStartRepository, formatters: formatters(for: session), clinicID: session.clinicID,
             templateID: templateID
         )
+    }
+
+    /// Edit procedure for one template of the signed-in clinic, or New procedure when `templateID` is nil (MS-125).
+    @MainActor
+    func makeProcedureEditViewModel(templateID: UUID?, session: Session) -> ProcedureEditViewModel {
+        ProcedureEditViewModel(repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID)
     }
 
     /// To buy of the signed-in clinic (MS-128).

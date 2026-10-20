@@ -73,7 +73,8 @@ struct SupabaseRPCTransport: RPCTransport {
 
 extension AppError {
     /// Maps what the transport throws to the app's cases: `42501` is a permission or read-only refusal,
-    /// `22023` a validation message, `PGRST116` not found, URL errors the network.
+    /// `22023` a validation message (with the field a function names as its hint, e.g. `hint = 'name'`),
+    /// `PGRST116` not found, URL errors the network.
     init(_ error: Error) {
         if let appError = error as? AppError {
             self = appError
@@ -91,7 +92,7 @@ extension AppError {
         case "42501":
             self = postgrest.message.localizedCaseInsensitiveContains("read-only") ? .readOnly : .forbidden
         case "22023", "23514", "23505":
-            self = .validation(field: nil, message: postgrest.message)
+            self = .validation(field: postgrest.hint, message: postgrest.message)
         case "PGRST116", "42P01":
             self = .notFound
         default:
