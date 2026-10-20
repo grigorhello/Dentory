@@ -6,6 +6,7 @@ import SwiftUI
 struct ReloadOnReturnModifier: ViewModifier {
     @Environment(\.scenePhase) private var scenePhase
     @State private var foregroundReload: Task<Void, Never>?
+    @State private var foregroundReturn = ForegroundReturn()
     let loadsOnAppear: Bool
     let reload: () async -> Void
 
@@ -16,9 +17,9 @@ struct ReloadOnReturnModifier: ViewModifier {
                 await reload()
             }
             .refreshable { await reload() }
-            .onChange(of: scenePhase) { previous, phase in
-                // Only a return from the background; the launch transition is covered by `.task`.
-                guard previous == .background, phase == .active else { return }
+            .onChange(of: scenePhase) { _, phase in
+                // Only a return from the background, which passes through inactive; the launch is covered by `.task`.
+                guard foregroundReturn.phaseChanged(to: phase) else { return }
                 foregroundReload?.cancel()
                 foregroundReload = Task { await reload() }
             }
