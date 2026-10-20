@@ -28,6 +28,8 @@ final class SessionStore {
     /// When the server last vouched for the signed-in member: restore, sign in or a check (MS-138).
     private var lastChecked: Date?
     private let analytics: Analytics
+    /// The member analytics knows this device as, so that another member's session starts a new identity.
+    private var identifiedUserID: UUID?
 
     init(
         auth: AuthServicing, state: State = .restoring, now: @escaping () -> Date = Date.init,
@@ -41,11 +43,19 @@ final class SessionStore {
     }
 
     /// Analytics follows the member (MS-147): who is signed in, with their role and clinic, or nobody once signed out.
+    /// A link that signs another member in over this one (an invitation, a password reset) starts a new identity
+    /// first, so their events never go out under the previous member's id; a changed role keeps it.
     private func followInAnalytics() {
         switch state {
-        case .signedIn(let session): analytics.identify(session)
-        case .signedOut: analytics.reset()
-        case .restoring, .needsClinic: break
+        case .signedIn(let session):
+            if let identifiedUserID, identifiedUserID != session.userID { analytics.reset() }
+            identifiedUserID = session.userID
+            analytics.identify(session)
+        case .signedOut:
+            identifiedUserID = nil
+            analytics.reset()
+        case .restoring, .needsClinic:
+            break
         }
     }
 

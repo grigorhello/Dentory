@@ -53,9 +53,10 @@ struct AnalyticsEventTests {
             == ["reason": .text("data_correction"), "direction": .text("decrease")])
     }
 
-    /// Debug builds have no project token unless `Secrets.debug.xcconfig` sets one, so they send nothing.
+    /// A build without a project token sends nothing (the test bundle has none, whatever the developer's Debug
+    /// secrets say).
     @Test func withoutATokenPostHogStaysOffOnTheEUCloud() {
-        let analytics = PostHogAnalytics()
+        let analytics = PostHogAnalytics(bundle: Bundle(for: SpyAnalytics.self))
         #expect(analytics.token == nil)
         #expect(analytics.host == PostHogAnalytics.euHost)
     }

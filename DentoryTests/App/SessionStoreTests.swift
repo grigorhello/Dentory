@@ -27,6 +27,26 @@ struct SessionStoreTests {
         #expect(analytics.events.isEmpty, "Signing in and out is not an event here; Sign in sends its own")
     }
 
+    /// MS-147 review: another member signed in over this one (an invitation or a password reset link) starts a new
+    /// identity, so their events never count as the previous member's; the same member with a new role keeps theirs.
+    @Test func anotherMembersSessionStartsANewIdentity() async {
+        let auth = FakeAuthService(storedSession: .demo)
+        let analytics = SpyAnalytics()
+        let store = SessionStore(auth: auth, analytics: analytics)
+        await store.restore()
+        auth.storedSession = .demo(role: .staff)
+        await store.revalidate()
+        let joining = Session(
+            userID: UUID(uuidString: "00000000-0000-4000-8000-0000000000b2") ?? UUID(), email: "dana@smiledental.ca",
+            fullName: "Dana Lee", clinicID: Session.demo.clinicID, clinicName: "Smile Dental", role: .staff,
+            currency: "USD", timeZone: "America/New_York"
+        )
+        auth.signInResult = .success(joining)
+        #expect(await store.signIn(email: "dana@smiledental.ca", password: "hunter2hunter2"))
+        let sarah = Session.demo.userID
+        #expect(analytics.log == ["identify \(sarah)", "identify \(sarah)", "reset", "identify \(joining.userID)"])
+    }
+
     @Test func noStoredSessionMeansSignedOut() async {
         let store = SessionStore(auth: FakeAuthService(storedSession: nil))
         await store.restore()

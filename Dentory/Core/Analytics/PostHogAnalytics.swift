@@ -29,6 +29,8 @@ struct PostHogAnalytics: Analytics {
         config.captureApplicationLifecycleEvents = true
         config.captureScreenViews = false
         config.captureElementInteractions = false
+        config.captureAutocaptureElementText = false
+        config.rageClickConfig.enabled = false
         config.sessionReplay = false
         config.surveys = false
         config.capturePushNotificationSubscriptions = false
@@ -47,6 +49,12 @@ struct PostHogAnalytics: Analytics {
         let userID = session.userID.uuidString.lowercased()
         let clinicID = session.clinicID.uuidString.lowercased()
         let role = AnalyticsWord(session.role).rawValue
+        // PostHog keeps the first member a device was identified as: another member's session (a link that replaced
+        // it, even before a relaunch) starts over first, or their events would count as the earlier member's.
+        let current = PostHogSDK.shared.getDistinctId()
+        if current != userID, current != PostHogSDK.shared.getAnonymousId() {
+            PostHogSDK.shared.reset()
+        }
         PostHogSDK.shared.identify(userID, userProperties: ["role": role])
         PostHogSDK.shared.register(["role": role, "clinic_id": clinicID])
         PostHogSDK.shared.group(type: "clinic", key: clinicID)
