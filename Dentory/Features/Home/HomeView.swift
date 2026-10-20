@@ -45,7 +45,12 @@ struct HomeView: View {
             }
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: HomeRoute.self) { route in
-                HomeRoutePlaceholderView(route: route)
+                switch route {
+                case .expiring(let window):
+                    ExpiringView(window: window, session: session, dependencies: dependencies)
+                default:
+                    HomeRoutePlaceholderView(route: route)
+                }
             }
             .debugHooks(
                 isCatalogPresented: debugCatalogBinding, launchSection: debugLaunchSection, onAppear: debugOnAppear

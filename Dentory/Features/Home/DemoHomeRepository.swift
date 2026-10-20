@@ -3,9 +3,21 @@ import Foundation
 /// The figures of frame f6 for previews and UI tests.
 struct DemoHomeRepository: HomeRepository {
     var summary = HomeSummary.demo
+    /// When set, the Expiring soon tile and At risk follow its batches, so a disposal shows on Home (MS-132).
+    var expiring: DemoExpiringRepository?
 
     func summary(clinicID: UUID, userID: UUID) async throws -> HomeSummary {
-        summary
+        guard let expiring else { return summary }
+        let batches = expiring.currentBatches
+        return HomeSummary(
+            toBuyCount: summary.toBuyCount,
+            expiringBatchCount: batches.count,
+            missingExpiryProductCount: summary.missingExpiryProductCount,
+            inventoryValue: summary.inventoryValue,
+            valueAtRisk90: batches.reduce(Decimal(0)) { $0 + $1.value },
+            latestProcedure: summary.latestProcedure,
+            hasUnseenAlerts: summary.hasUnseenAlerts
+        )
     }
 }
 
