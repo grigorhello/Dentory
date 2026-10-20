@@ -52,7 +52,7 @@ nonisolated enum TextStyle: CaseIterable, Sendable {
     /// Letter spacing in points, from the `*-tracking` tokens.
     var tracking: CGFloat {
         switch self {
-        case .display48, .display32, .eyebrow14: 1
+        case .display32, .eyebrow14: 1
         case .title24: -0.6
         case .title20: -0.5
         case .button14: 0.15
