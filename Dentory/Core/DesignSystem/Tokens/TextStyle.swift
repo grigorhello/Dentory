@@ -3,6 +3,8 @@ import SwiftUI
 /// The type ladder (`tokens/typography.css`) at the sizes the mobile PRD uses: Outfit for display and eyebrows,
 /// Inter for everything else, the system monospaced face for codes. Every style scales with Dynamic Type.
 nonisolated enum TextStyle: CaseIterable, Sendable {
+    /// A large figure such as the Inventory value total (f10), Outfit 500 48 (`--type-display-lg`).
+    case display48
     /// Root screen title, Outfit 500 32.
     case display32
     /// Pushed screen title and sheet title, Inter 600 24.
@@ -30,6 +32,7 @@ nonisolated enum TextStyle: CaseIterable, Sendable {
 
     var font: Font {
         switch self {
+        case .display48: .custom(FontName.outfitMedium, size: 48, relativeTo: .largeTitle)
         case .display32: .custom(FontName.outfitMedium, size: 32, relativeTo: .largeTitle)
         case .title24: .custom(FontName.interSemiBold, size: 24, relativeTo: .title2)
         case .title20: .custom(FontName.interBold, size: 20, relativeTo: .title3)
@@ -49,7 +52,7 @@ nonisolated enum TextStyle: CaseIterable, Sendable {
     /// Letter spacing in points, from the `*-tracking` tokens.
     var tracking: CGFloat {
         switch self {
-        case .display32, .eyebrow14: 1
+        case .display48, .display32, .eyebrow14: 1
         case .title24: -0.6
         case .title20: -0.5
         case .button14: 0.15
@@ -75,5 +78,11 @@ extension View {
     /// Applies a type token: font and tracking together, so feature code never names a font or size.
     func textStyle(_ style: TextStyle) -> some View {
         font(style.font).tracking(style.tracking)
+    }
+
+    /// A figure on one line: at the largest Dynamic Type sizes it shrinks, down to half, rather than wrap or
+    /// truncate ("$12,420").
+    func figureStyle(_ style: TextStyle) -> some View {
+        textStyle(style).lineLimit(1).minimumScaleFactor(0.5)
     }
 }
