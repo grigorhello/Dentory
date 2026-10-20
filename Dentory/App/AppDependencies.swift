@@ -281,7 +281,10 @@ struct AppDependencies: Sendable {
     func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
         AccountViewModel(
             session: session, repository: accountRepository, cache: cache,
-            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push),
+            signingOut: DeviceSignOut(
+                sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push,
+                pendingLogo: pendingClinicLogo
+            ),
             analytics: analytics
         )
     }

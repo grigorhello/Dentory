@@ -19,8 +19,10 @@ final class ClinicSettingsViewModel {
     var timeZone: String?
     var expiryWarning: ExpiryWarning? = .thirtySixtyNinety
     var emailDigest = true
-    /// A logo picked here, uploaded on Save.
-    var logoData: Data?
+    /// A logo picked here, uploaded on Save. Once one failed, a newer pick replaces it in `pendingLogo` too.
+    var logoData: Data? {
+        didSet { if pendingLogo.logo(for: clinicID) != nil { pendingLogo.keep(logoData, for: clinicID) } }
+    }
     /// The logo the clinic has.
     private(set) var savedLogo: Data?
 

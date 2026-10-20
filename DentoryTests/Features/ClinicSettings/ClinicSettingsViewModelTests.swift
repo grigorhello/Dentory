@@ -108,7 +108,7 @@ struct ClinicSettingsViewModelTests {
         #expect(checks == 2, "Only once")
     }
 
-    /// A new name rebuilds the screens on the next return to the foreground: the logo whose upload failed is waiting for
+    /// A new name rebuilds the screens on the next return to the foreground: the logo whose upload failed waits for
     /// Save on the rebuilt screen, and goes once it is in or discarded (MS-139 known issue).
     @Test func aFailedLogoOutlivesARebuildOfTheScreen() async {
         let repository = FakeClinicSettingsRepository()
@@ -131,6 +131,8 @@ struct ClinicSettingsViewModelTests {
         await rebuilt.load()
         #expect(rebuilt.logoData == Data("png".utf8), "The picked logo is back")
         #expect(rebuilt.canSave, "Save offers it again")
+        rebuilt.logoData = Data("newer".utf8)
+        #expect(pending.logo(for: Session.demo.clinicID) == Data("newer".utf8), "The newer pick waits instead")
         repository.logoFailure = nil
         await rebuilt.save()
         #expect(pending.logo(for: Session.demo.clinicID) == nil, "Gone once it is in")
