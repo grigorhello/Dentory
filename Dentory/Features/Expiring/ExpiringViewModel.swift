@@ -36,18 +36,20 @@ final class ExpiringViewModel {
     private let repository: ExpiringRepository
     private let cache: ResponseCaching
     private let clinicID: UUID
+    private let analytics: Analytics
     /// Home's tiles and alerts open a window; without one, the clinic's own applies once the list arrives.
     private var windowIsChosen: Bool
 
     init(
         repository: ExpiringRepository, cache: ResponseCaching, formatters: ClinicFormatters, clinicID: UUID,
-        isAdmin: Bool, window: Int? = nil
+        isAdmin: Bool, window: Int? = nil, analytics: Analytics
     ) {
         self.repository = repository
         self.cache = cache
         self.formatters = formatters
         self.clinicID = clinicID
         self.isAdmin = isAdmin
+        self.analytics = analytics
         self.window = window.flatMap { Self.windows.contains($0) ? $0 : nil } ?? Self.windows.last ?? 90
         windowIsChosen = window != nil
         list = cache.load(ExpiringList.self, for: Self.cacheKey(clinicID))
@@ -102,6 +104,7 @@ final class ExpiringViewModel {
     /// Closes the sheet, takes the quantity off the batch at once, toasts "Disposed" with Undo and reloads.
     func disposed(_ result: DisposeBatchViewModel.Disposed) async {
         disposing = nil
+        analytics.track(.batchDisposed)
         if let list {
             let batches = list.batches
                 .map { $0.id == result.batch.id ? $0.disposing(result.quantity) : $0 }

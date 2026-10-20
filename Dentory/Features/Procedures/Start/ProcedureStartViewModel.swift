@@ -61,13 +61,20 @@ final class ProcedureStartViewModel {
     let formatters: ClinicFormatters
     private let clinicID: UUID
     private let templateID: UUID
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
+    /// When the template came in; Start reports the seconds since (MS-147).
+    private var loadedAt: Date?
 
-    init(repository: ProcedureStartRepository, formatters: ClinicFormatters, clinicID: UUID, templateID: UUID) {
+    init(
+        repository: ProcedureStartRepository, formatters: ClinicFormatters, clinicID: UUID, templateID: UUID,
+        analytics: Analytics
+    ) {
         self.repository = repository
         self.formatters = formatters
         self.clinicID = clinicID
         self.templateID = templateID
+        self.analytics = analytics
     }
 
     var isStarting: Bool { submitGuard.isBusy }
@@ -82,6 +89,7 @@ final class ProcedureStartViewModel {
             }
             bottles = detail.items.filter { $0.tracking == .multiUse }.map { Bottle(item: $0) }
             state = .loaded
+            loadedAt = loadedAt ?? formatters.clock.now
         } catch {
             state = .failed(AppError(error))
         }
@@ -190,6 +198,10 @@ final class ProcedureStartViewModel {
         await submitGuard.run {
             generalError = nil
             let count = itemCount
+            let event = AnalyticsEvent.procedureStarted(
+                items: count, bottlesOpened: bottles.count(where: \.takesNew), shortages: notAvailableCount,
+                seconds: secondsSinceLoad
+            )
             let request = ProcedureStartRequest(
                 clinicID: clinicID,
                 templateID: templateID,
@@ -201,6 +213,7 @@ final class ProcedureStartViewModel {
             do {
                 _ = try await repository.start(request)
                 started = Message(title: "\(name) started", detail: Self.itemsDeducted(count))
+                analytics.track(event)
             } catch {
                 generalError = AppError(error)
             }
@@ -209,6 +222,12 @@ final class ProcedureStartViewModel {
 
     func clearMessage() {
         message = nil
+    }
+
+    /// From the template's arrival to now, in whole seconds.
+    private var secondsSinceLoad: Int {
+        guard let loadedAt else { return 0 }
+        return max(Int(formatters.clock.now.timeIntervalSince(loadedAt).rounded()), 0)
     }
 
     func clearGeneralError() {

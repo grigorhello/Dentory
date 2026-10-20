@@ -12,6 +12,21 @@ struct SessionStoreTests {
         #expect(store.session?.clinicName == "Smile Dental")
     }
 
+    /// MS-147: analytics knows the member once signed in, follows a changed role, and forgets them on sign out.
+    @Test func analyticsFollowsTheMember() async {
+        let auth = FakeAuthService(storedSession: .demo)
+        let analytics = SpyAnalytics()
+        let store = SessionStore(auth: auth, analytics: analytics)
+        await store.restore()
+        #expect(analytics.identified == [.demo])
+        auth.storedSession = .demo(role: .staff)
+        await store.revalidate()
+        #expect(analytics.identified == [.demo, .demo(role: .staff)])
+        await store.signOut()
+        #expect(analytics.resetCount == 1)
+        #expect(analytics.events.isEmpty, "Signing in and out is not an event here; Sign in sends its own")
+    }
+
     @Test func noStoredSessionMeansSignedOut() async {
         let store = SessionStore(auth: FakeAuthService(storedSession: nil))
         await store.restore()

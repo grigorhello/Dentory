@@ -26,11 +26,15 @@ final class InviteTeammateViewModel {
 
     private let clinicID: UUID
     private let repository: TeamRepository
+    private let analytics: Analytics
     private let onSent: () async -> Void
 
-    init(clinicID: UUID, repository: TeamRepository, onSent: @escaping () async -> Void) {
+    init(
+        clinicID: UUID, repository: TeamRepository, analytics: Analytics, onSent: @escaping () async -> Void
+    ) {
         self.clinicID = clinicID
         self.repository = repository
+        self.analytics = analytics
         self.onSent = onSent
     }
 
@@ -56,6 +60,7 @@ final class InviteTeammateViewModel {
                 clinicID: clinicID, fullName: name.trimmingCharacters(in: .whitespacesAndNewlines), email: address,
                 role: role
             )
+            analytics.track(.teammateInvited(role: role))
             await onSent()
         } catch {
             let appError = AppError(error)

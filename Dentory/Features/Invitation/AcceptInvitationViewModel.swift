@@ -29,12 +29,14 @@ final class AcceptInvitationViewModel {
     private let token: String
     private let repository: InvitationRepository
     private let sessionStore: SessionStore
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
 
-    init(token: String, repository: InvitationRepository, sessionStore: SessionStore) {
+    init(token: String, repository: InvitationRepository, sessionStore: SessionStore, analytics: Analytics) {
         self.token = token
         self.repository = repository
         self.sessionStore = sessionStore
+        self.analytics = analytics
     }
 
     var isSubmitting: Bool { submitGuard.isBusy }
@@ -85,6 +87,7 @@ final class AcceptInvitationViewModel {
                 return
             }
             if await sessionStore.signIn(email: invitation.email, password: password) {
+                analytics.track(.invitationAccepted)
                 isFinished = true
             } else {
                 generalError = sessionStore.lastError ?? .unknown("Sign in failed")

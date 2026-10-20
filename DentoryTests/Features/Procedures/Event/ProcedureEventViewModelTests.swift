@@ -11,11 +11,12 @@ struct ProcedureEventViewModelTests {
     private let rootCanal = ProcedureEventDetail.demo[0]
 
     private func make(
-        _ repository: FakeProcedureEventRepository = FakeProcedureEventRepository(), startsEditing: Bool = false
+        _ repository: FakeProcedureEventRepository = FakeProcedureEventRepository(), startsEditing: Bool = false,
+        analytics: SpyAnalytics = SpyAnalytics()
     ) async -> ProcedureEventViewModel {
         let viewModel = ProcedureEventViewModel(
             repository: repository, formatters: formatters, clinicID: Session.demo.clinicID, eventID: rootCanal.id,
-            startsEditing: startsEditing
+            startsEditing: startsEditing, analytics: analytics
         )
         await viewModel.load()
         return viewModel
@@ -69,7 +70,8 @@ struct ProcedureEventViewModelTests {
     @Test func saveSendsTheUsageAndShowsTheRecordAsEdited() async throws {
         let repository = FakeProcedureEventRepository()
         repository.editResult = .success(.queued)
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         viewModel.startEditing()
         let septocaine = id(of: "Septocaine 4% 1:100,000")
         let gloves = id(of: "Nitrile gloves M")
@@ -89,6 +91,7 @@ struct ProcedureEventViewModelTests {
         #expect(viewModel.message == .init(title: "Usage updated", detail: nil))
         #expect(viewModel.mode == .done)
         #expect(viewModel.summary == "11 items deducted · Oct 1 · 3:14\u{202F}PM · Sarah", "Queued: shown as edited")
+        #expect(analytics.events == [.procedureUsageEdited(items: 3)], "Two quantities and a bottle (MS-147)")
     }
 
     @Test func anAppliedSaveReadsTheRecordAgain() async {
@@ -199,7 +202,8 @@ struct ProcedureEventViewModelTests {
 
     @Test func cancellingNeedsANoteAndGoesBackWithTheItemsReturned() async {
         let repository = FakeProcedureEventRepository()
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         #expect(viewModel.cancelTitle == "Cancel Root canal?")
         #expect(viewModel.cancelWarning == "10 items will be returned to inventory. Stock levels update immediately.")
         viewModel.askToCancel()
@@ -213,6 +217,8 @@ struct ProcedureEventViewModelTests {
         #expect(repository.cancelNotes == ["Logged by mistake"])
         #expect(viewModel.sheet == nil)
         #expect(viewModel.finished == .init(title: "Root canal cancelled", detail: "10 items returned"))
+        #expect(analytics.events == [.procedureCancelled])
+        #expect(analytics.events.first?.payload.isEmpty == true, "The note never leaves the app (MS-147)")
     }
 
     @Test func aRefusedCancelKeepsTheSheetAndSaysWhy() async {

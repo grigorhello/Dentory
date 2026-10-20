@@ -76,12 +76,13 @@ Sidebar, General, App Privacy.
 | Contact Info | Email Address | Yes | No | App Functionality |
 | User Content | Photos or Videos (invoice photos) | Yes | No | App Functionality |
 | User Content | Other User Content (products, batches, stock events) | Yes | No | App Functionality |
-| Identifiers | User ID | Yes | No | App Functionality |
+| Identifiers | User ID | Yes | No | App Functionality, Analytics |
 | Diagnostics | Crash Data | No | No | App Functionality |
 | Diagnostics | Performance Data | No | No | App Functionality |
 | Diagnostics | Other Diagnostic Data | No | No | App Functionality |
+| Usage Data | Product Interaction | Yes | No | Analytics |
 
-Not collected, so not ticked: Health and Fitness (no patient data), Location, Financial Info (card numbers go to Stripe's hosted page, never through the app or Dentory's servers), Purchases, Phone Number, Device ID, Usage Data. The diagnostics rows come from Sentry Cocoa, which runs only when `SENTRY_DSN` is set and sends no names, emails or screenshots (`SentryErrorReporter`). Later tickets add rows: MS-141 (billing invoices in the app) adds Purchases, Purchase History; MS-147 (product analytics) adds Usage Data, Product Interaction; MS-144 (push) stays as is unless a device token is stored with the user.
+Not collected, so not ticked: Health and Fitness (no patient data), Location (PostHog's location from the IP address is turned off), Financial Info (card numbers go to Stripe's hosted page, never through the app or Dentory's servers), Purchases, Phone Number, Device ID. The diagnostics rows come from Sentry Cocoa, which runs only when `SENTRY_DSN` is set and sends no names, emails or screenshots (`SentryErrorReporter`). Usage Data, Product Interaction comes from PostHog (MS-147), which runs only when `POSTHOG_PROJECT_TOKEN` is set: events named by the Appendix B ids with counts and closed words, linked to the user id and the clinic id, never names, emails or typed text (`docs/handoff/analytics.md`); tick it before the first build with a token goes to TestFlight testers outside the team or to the App Store. Later tickets add rows: MS-141 (billing invoices in the app) adds Purchases, Purchase History; MS-144 (push) stays as is unless a device token is stored with the user.
 
 4. Publish. The label can be edited and republished at any time.
 

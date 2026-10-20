@@ -109,7 +109,7 @@ struct AdjustInventoryViewModelTests {
             productID: ProductSummary.demo[0].id, actualQuantity: 52, reason: .damaged, note: nil
         )])
         #expect(viewModel.saved == .init(
-            actionID: UUID(uuidString: "00000000-0000-4000-8000-0000000000ac"), before: 54, after: 52
+            actionID: UUID(uuidString: "00000000-0000-4000-8000-0000000000ac"), before: 54, after: 52, reason: .damaged
         ))
         #expect(viewModel.generalError == nil)
     }
@@ -131,7 +131,9 @@ struct AdjustInventoryViewModelTests {
         viewModel.quantityText = "52"
         viewModel.reason = .missing
         await viewModel.save()
-        #expect(viewModel.saved == .init(actionID: nil, before: 54, after: 52), "Offline: nothing to undo yet")
+        #expect(
+            viewModel.saved == .init(actionID: nil, before: 54, after: 52, reason: .missing), "Offline: nothing to undo"
+        )
     }
 
     @Test func aRefusalStaysInTheSheetWithTheInput() async {

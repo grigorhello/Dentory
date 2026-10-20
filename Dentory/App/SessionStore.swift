@@ -13,7 +13,9 @@ final class SessionStore {
         case needsClinic(Account)
     }
 
-    private(set) var state: State = .restoring
+    private(set) var state: State = .restoring {
+        didSet { if state != oldValue { followInAnalytics() } }
+    }
     private(set) var lastError: AppError?
     /// Set when a stored session turned out to have no membership; Sign in shows the toast once.
     private(set) var accessWasRevoked = false
@@ -25,15 +27,26 @@ final class SessionStore {
     private let clearDevice: () async -> Void
     /// When the server last vouched for the signed-in member: restore, sign in or a check (MS-138).
     private var lastChecked: Date?
+    private let analytics: Analytics
 
     init(
         auth: AuthServicing, state: State = .restoring, now: @escaping () -> Date = Date.init,
-        clearDevice: @escaping () async -> Void = {}
+        clearDevice: @escaping () async -> Void = {}, analytics: Analytics = NoopAnalytics()
     ) {
         self.auth = auth
         self.state = state
         self.now = now
         self.clearDevice = clearDevice
+        self.analytics = analytics
+    }
+
+    /// Analytics follows the member (MS-147): who is signed in, with their role and clinic, or nobody once signed out.
+    private func followInAnalytics() {
+        switch state {
+        case .signedIn(let session): analytics.identify(session)
+        case .signedOut: analytics.reset()
+        case .restoring, .needsClinic: break
+        }
     }
 
     var session: Session? {
