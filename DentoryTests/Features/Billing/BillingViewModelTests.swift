@@ -80,8 +80,9 @@ struct BillingViewModelTests {
     @Test func aSubscriptionThatEndedAfterTheTrialSaysSo() async {
         let viewModel = await loaded(summary(trialEndsIn: -40, status: .canceled, card: ("visa", "4242")))
         #expect(viewModel.cardKind == .subscriptionEnded)
+        #expect(viewModel.eyebrow == "Plan")
         #expect(viewModel.headline.value == "Subscription ended")
-        #expect(viewModel.dateLine == nil)
+        #expect(viewModel.dateLine == "Restart it from your billing email.")
         #expect(viewModel.showsAfterTrialPrice == false)
     }
 

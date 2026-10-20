@@ -3,7 +3,8 @@
 // clinic's customer (created the first time), the $99 monthly price, the 50% lifetime coupon for a clinic with the
 // promotion, and the trial's end, so nothing is charged before the free months are over. A clinic that already has a
 // live subscription, even one the webhook has not reported yet, is refused: its card changes on the Customer Portal
-// (billing_portal), and a second Checkout would bill it twice.
+// (billing_portal), and a second Checkout would bill it twice. For the same reason a new link expires the clinic's
+// earlier ones that were not paid: only the newest can be.
 import { errorResponse, HttpError, json } from "../_shared/http.ts";
 import { billingRequest, customerFor } from "../_shared/billing.ts";
 import {
@@ -42,6 +43,14 @@ Deno.serve(async (req) => {
       });
       if (error) throw new Error(`billing_apply_subscription: ${error.message}`);
       throw new HttpError(409, "conflict", "This clinic already has a subscription. Send the billing_portal link.");
+    }
+    const open = await stripeRequest<{ data: { id: string }[] }>(config, "GET", "/v1/checkout/sessions", {
+      customer: customerID,
+      status: "open",
+      limit: 100,
+    });
+    for (const earlier of open.data) {
+      await stripeRequest(config, "POST", `/v1/checkout/sessions/${earlier.id}/expire`);
     }
     const session = await stripeRequest<{ url: string }>(config, "POST", "/v1/checkout/sessions", {
       mode: "subscription",

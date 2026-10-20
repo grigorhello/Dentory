@@ -14,9 +14,12 @@ extension BillingViewModel {
         return summary.subscriptionStatus == .canceled ? .subscriptionEnded : .trialEnded
     }
 
-    /// "Free trial" or "Plan"; the eyebrow uppercases it.
+    /// "Free trial" until a trial ends without a card, "Plan" once one was paid; the eyebrow uppercases it.
     var eyebrow: String {
-        cardKind == .plan ? "Plan" : "Free trial"
+        switch cardKind {
+        case .trial, .trialEnded: "Free trial"
+        case .plan, .subscriptionEnded: "Plan"
+        }
     }
 
     /// The large figure and the word after it: "3 months" "free", "12 days" "left", "Trial ended", "$49.50" "/ month".
@@ -47,7 +50,7 @@ extension BillingViewModel {
         case .trialEnded:
             return "Ended \(formatters.longDate(summary.trialEndsAt))"
         case .subscriptionEnded:
-            return nil
+            return "Restart it from your billing email."
         case .plan:
             switch summary.subscriptionStatus {
             case .pastDue: return "The last payment failed. Update the card from your billing email."

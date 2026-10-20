@@ -44,6 +44,21 @@ final class BillingUITests: XCTestCase {
         XCTAssertFalse(app.links.firstMatch.exists, "No link leads to a payment page")
     }
 
+    /// At the largest text size before the accessibility sizes, the price row stacks and stays on the screen.
+    @MainActor
+    func testThePriceRowStaysOnScreenAtLargeText() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXXL"]
+        app.launch()
+        openBilling(in: app)
+
+        let price = app.descendants(matching: .any)["billing.price"]
+        let screen = app.windows.firstMatch.frame
+        XCTAssertTrue(price.label.contains("$49.50 / month"), "The price reads \(price.label)")
+        XCTAssertGreaterThanOrEqual(price.frame.minX, screen.minX, "The price row starts off screen")
+        XCTAssertLessThanOrEqual(price.frame.maxX, screen.maxX, "The price row runs off screen")
+    }
+
     @MainActor
     private func openBilling(in app: XCUIApplication) {
         let account = app.buttons["home.header.account"]

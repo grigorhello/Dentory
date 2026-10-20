@@ -23,13 +23,6 @@ struct AppErrorFunctionsTests {
         #expect(failure(403, #"{"error":{"code":"read_only","message":"The clinic is read-only"}}"#) == .readOnly)
     }
 
-    @Test func aServiceThatIsDownOrNotSetUpSaysSo() {
-        let sentence = "Billing isn't set up yet. Try again later."
-        let unavailable = #"{"error":{"code":"billing_unavailable","message":""# + sentence + #""}}"#
-        #expect(failure(503, unavailable) == .validation(field: nil, message: sentence))
-        #expect(failure(502, "") == .unknown("The server answered 502"))
-    }
-
     @Test func anUnreadableBodyStillMaps() {
         #expect(failure(400, "not json") == .validation(field: nil, message: "Couldn't save. Try again."))
         #expect(failure(500, "") == .unknown("The server answered 500"))

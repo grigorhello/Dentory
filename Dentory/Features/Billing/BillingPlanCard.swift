@@ -3,7 +3,6 @@ import SwiftUI
 /// The dark card of f34: the free trial with its end, or the plan with its next payment, and the price after the trial
 /// with the lifetime promotion struck through beside it.
 struct BillingPlanCard: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let viewModel: BillingViewModel
 
     var body: some View {
@@ -11,13 +10,9 @@ struct BillingPlanCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
                     Eyebrow(viewModel.eyebrow, color: .ms.mute)
-                    HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
-                        Text(viewModel.headline.value)
-                            .textStyle(.display32)
-                            .foregroundStyle(Color.ms.textOnDark)
-                        if let suffix = viewModel.headline.suffix {
-                            Text(suffix).textStyle(.body14).foregroundStyle(Color.ms.mute)
-                        }
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) { headline }
+                        VStack(alignment: .leading, spacing: Spacing.xxs) { headline }
                     }
                     .padding(.top, Spacing.sm + Spacing.xxs)
                     if let line = viewModel.dateLine {
@@ -41,22 +36,43 @@ struct BillingPlanCard: View {
         }
     }
 
-    /// "After trial", then "$99" struck through, "$49.50 / month" and "50% off for life" with the promotion, in one row
-    /// whose label wraps as f34 draws it; at accessibility text sizes they stack under the label.
+    /// "3 months" and "free" on one line, or the word under the figure where they do not fit.
+    @ViewBuilder private var headline: some View {
+        Text(viewModel.headline.value)
+            .textStyle(.display32)
+            .foregroundStyle(Color.ms.textOnDark)
+        if let suffix = viewModel.headline.suffix {
+            Text(suffix).textStyle(.body14).foregroundStyle(Color.ms.mute)
+        }
+    }
+
+    /// "After trial", then "$99" struck through, "$49.50 / month" and "50% off for life" with the promotion: in one row
+    /// where it fits, with the label on two lines as f34 draws it on the iPhone 16, else stacked under the label: the
+    /// price beside its badge, the badge under the price, then each on its own line. No word is ever split.
     private var afterTrial: some View {
-        let stacked = dynamicTypeSize.isAccessibilitySize
-        let layout = stacked
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.xs))
-            : AnyLayout(HStackLayout(alignment: .center, spacing: Spacing.sm + Spacing.xxs))
-        return VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             Rectangle().fill(Color.ms.inkMid).frame(height: 1)
-            layout {
-                afterTrialLabel
-                    .frame(maxWidth: stacked ? nil : .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                HStack(alignment: .firstTextBaseline, spacing: Spacing.sm + Spacing.xxs) { price }
-                    .fixedSize(horizontal: !stacked, vertical: false)
-                promoBadge.fixedSize()
+            ViewThatFits(in: .horizontal) {
+                priceRow(label: "After trial")
+                priceRow(label: "After\ntrial")
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    afterTrialLabel("After trial")
+                    HStack(alignment: .center, spacing: Spacing.sm + Spacing.xxs) {
+                        priceLine
+                        promoBadge
+                    }
+                    .fixedSize()
+                }
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    afterTrialLabel("After trial")
+                    priceLine.fixedSize()
+                    promoBadge.fixedSize()
+                }
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    afterTrialLabel("After trial")
+                    price
+                    promoBadge
+                }
             }
             .padding(.top, Spacing.md)
             .accessibilityElement(children: .combine)
@@ -65,8 +81,27 @@ struct BillingPlanCard: View {
         .padding(.top, Spacing.lg - Spacing.xxs)
     }
 
-    private var afterTrialLabel: some View {
-        Text("After trial").textStyle(.body14).foregroundStyle(Color.ms.mute)
+    /// The label on the left, the price and the badge on the right, all at their natural width. The label's frame
+    /// takes the room left, rather than a spacer, which would add a gap to the width the row needs.
+    private func priceRow(label: String) -> some View {
+        HStack(alignment: .center, spacing: Spacing.sm + Spacing.xxs) {
+            afterTrialLabel(label)
+                .fixedSize()
+                .frame(maxWidth: .infinity, alignment: .leading)
+            priceLine.fixedSize()
+            promoBadge.fixedSize()
+        }
+    }
+
+    private func afterTrialLabel(_ text: String) -> some View {
+        Text(text)
+            .textStyle(.body14)
+            .foregroundStyle(Color.ms.mute)
+            .accessibilityLabel("After trial")
+    }
+
+    private var priceLine: some View {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.sm + Spacing.xxs) { price }
     }
 
     @ViewBuilder private var price: some View {
