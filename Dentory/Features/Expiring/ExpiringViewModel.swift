@@ -101,7 +101,8 @@ final class ExpiringViewModel {
         disposing = nil
     }
 
-    /// Closes the sheet, takes the quantity off the batch at once, toasts "Disposed" with Undo and reloads.
+    /// Closes the sheet, takes the quantity off the batch at once, toasts "Disposed" with Undo and reloads. The cached
+    /// list follows too, so a disposal queued offline does not come back on the next visit and get disposed twice.
     func disposed(_ result: DisposeBatchViewModel.Disposed) async {
         disposing = nil
         analytics.track(.batchDisposed)
@@ -109,7 +110,9 @@ final class ExpiringViewModel {
             let batches = list.batches
                 .map { $0.id == result.batch.id ? $0.disposing(result.quantity) : $0 }
                 .filter { $0.quantity > 0 }
-            self.list = ExpiringList(window: list.window, batches: batches)
+            let updated = ExpiringList(window: list.window, batches: batches)
+            self.list = updated
+            cache.store(updated, for: Self.cacheKey(clinicID))
         }
         message = Message(
             title: "Disposed", detail: disposedDetail(result), undoActionID: result.actionID
