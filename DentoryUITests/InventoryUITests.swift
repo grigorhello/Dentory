@@ -86,6 +86,24 @@ final class InventoryUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["inv.countStock"].isHittable, "Count stock scrolled away")
     }
 
+    /// The last row scrolls clear of the tab bar; Staff have no room left under it for the round +.
+    @MainActor
+    func testTheLastRowScrollsClearOfTheTabBar() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-staff", "-tab", "inventory"]
+        app.launch()
+
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'inv.row['"))
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5), "No rows")
+        for _ in 0..<5 {
+            app.swipeUp()
+        }
+        let lastRow = rows.element(boundBy: rows.count - 1)
+        XCTAssertLessThanOrEqual(
+            lastRow.frame.maxY, app.buttons["Inventory"].frame.minY, "The last row ends under the tab bar"
+        )
+    }
+
     @MainActor
     func testStaffHasNoNewProductButton() {
         let app = XCUIApplication()

@@ -4,7 +4,6 @@ import SwiftUI
 /// the product rows in one card; Admin gets the round + for New product.
 struct InventoryListView: View {
     @Environment(\.appDependencies) private var dependencies
-    @Environment(\.tabBarInset) private var tabBarInset
     @Environment(AppRouter.self) private var router
     @State private var viewModel: InventoryListViewModel
     let session: Session
@@ -24,7 +23,7 @@ struct InventoryListView: View {
             .overlay(alignment: .bottomTrailing) {
                 FloatingAddButton(label: "New product", action: newProduct)
                     .padding(.horizontal, Spacing.page)
-                    .padding(.bottom, Spacing.page + tabBarInset)
+                    .padding(.bottom, Spacing.page)
                     .accessibilityIdentifier("inv.newProduct")
                     .adminOnly()
             }
