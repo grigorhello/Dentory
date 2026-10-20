@@ -22,6 +22,7 @@ struct AppDependencies: Sendable {
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
     let procedureEditRepository: ProcedureEditRepository
+    let toBuyRepository: ToBuyRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -69,6 +70,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
+            toBuyRepository: SupabaseToBuyRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -116,6 +118,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
+            toBuyRepository: DemoToBuyRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -159,6 +162,15 @@ struct AppDependencies: Sendable {
     @MainActor
     func makeProcedureEditViewModel(templateID: UUID?, session: Session) -> ProcedureEditViewModel {
         ProcedureEditViewModel(repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID)
+    }
+
+    /// To buy of the signed-in clinic (MS-128).
+    @MainActor
+    func makeToBuyViewModel(session: Session) -> ToBuyViewModel {
+        ToBuyViewModel(
+            repository: toBuyRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, isAdmin: session.isAdmin
+        )
     }
 
     /// Product detail for one product of the signed-in clinic (MS-116).
