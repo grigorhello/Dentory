@@ -150,6 +150,21 @@ struct ExpiringViewModelTests {
         #expect(viewModel.state == .loaded)
     }
 
+    /// MS-132 review note: a disposal queued offline stays off the list on the next visit, so it is not disposed twice.
+    @Test func aDisposalQueuedOfflineStaysOffTheCachedList() async {
+        let cache = InMemoryResponseCache()
+        let repository = FakeExpiringRepository()
+        let viewModel = await make(repository, cache: cache)
+        repository.listResult = .failure(AppError.network)
+        await viewModel.disposed(.init(batch: septocaine, quantity: 34, actionID: nil))
+        let nextVisit = ExpiringViewModel(
+            repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
+            isAdmin: true, analytics: SpyAnalytics()
+        )
+        #expect(!nextVisit.batches.contains { $0.id == septocaine.id }, "The cached list has the disposal")
+        #expect(nextVisit.batches.count == 1)
+    }
+
     @Test func offlineTheLastListShowsFromTheCache() async {
         let cache = InMemoryResponseCache()
         _ = await make(cache: cache)
