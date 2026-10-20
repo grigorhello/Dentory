@@ -1,7 +1,7 @@
 import XCTest
 
-/// Account (f29 Admin, f30 Staff) from Home's account button: the user card, the rows each role sees, Team's
-/// placeholder, and Sign out, which asks first and ends on Sign in.
+/// Account (f29 Admin, f30 Staff) from Home's account button: the user card, the rows each role sees, Team, Export
+/// CSV's toast, and Sign out, which asks first and ends on Sign in.
 final class AccountUITests: XCTestCase {
     private let adminRows = ["more.settings", "more.billing", "more.export"]
 
@@ -46,6 +46,21 @@ final class AccountUITests: XCTestCase {
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         confirm.tap()
         XCTAssertTrue(app.buttons["signin.submit"].waitForExistence(timeout: 5), "Sign in did not show")
+    }
+
+    /// Export CSV (MS-143): the export starts and the toast says where the link goes.
+    @MainActor
+    func testAnAdminExportsTheClinicsData() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
+        app.launch()
+        openAccount(in: app)
+
+        app.buttons["more.export"].tap()
+        let toast = app.descendants(matching: .any)["toast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Export CSV")
+        XCTAssertTrue(toast.staticTexts["Export started"].exists)
+        XCTAssertTrue(toast.staticTexts["We'll email it to sarah@smiledental.ca."].exists)
     }
 
     @MainActor

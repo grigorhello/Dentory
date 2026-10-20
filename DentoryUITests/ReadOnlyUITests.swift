@@ -51,6 +51,22 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(trial.label.contains("Trial ended"))
     }
 
+    /// The clinic's data stays its own: Export CSV works in read-only mode (MS-143's decision).
+    @MainActor
+    func testExportStillWorksInReadOnlyMode() {
+        let app = launch([])
+        let account = app.buttons["home.header.account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 5))
+        account.tap()
+        let export = app.buttons["more.export"]
+        XCTAssertTrue(export.waitForExistence(timeout: 5), "Account did not open")
+        export.tap()
+        let toast = app.descendants(matching: .any)["toast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Export CSV")
+        XCTAssertTrue(toast.staticTexts["Export started"].exists)
+        XCTAssertFalse(app.staticTexts["readOnly.title"].exists, "No read-only sheet for an export")
+    }
+
     @MainActor
     func testStaffAreToldToAskTheirAdmin() {
         let app = launch(["-staff", "-tab", "toBuy"])
