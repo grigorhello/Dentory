@@ -127,14 +127,30 @@ export function periodEnd(subscription: StripeSubscription): string | null {
 export interface StripeInvoice {
   id: string;
   customer: unknown;
+  /** The address Stripe sent the invoice and its receipt to. */
+  customer_email?: string | null;
   number?: string | null;
   created: number;
   total?: number | null;
   amount_due?: number | null;
   currency: string;
   status?: string | null;
+  attempted?: boolean | null;
+  status_transitions?: { paid_at?: number | null } | null;
   hosted_invoice_url?: string | null;
   invoice_pdf?: string | null;
+}
+
+/** Stripe says the charge failed and the invoice is still open: Invoices says Failed until it is paid. Only the
+ * payment_failed event says so: an attempted open invoice may be a bank debit still processing (MS-141 review). */
+export function paymentFailed(invoice: StripeInvoice, eventType: string): boolean {
+  return eventType === "invoice.payment_failed" && invoice.status === "open";
+}
+
+/** When the invoice was paid, which is not when it was issued once Stripe had to retry or the card changed. */
+export function paidAt(invoice: StripeInvoice): string | null {
+  const seconds = invoice.status_transitions?.paid_at ?? null;
+  return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
 
 /** What billing_record_invoice keeps of an invoice. */

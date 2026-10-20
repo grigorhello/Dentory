@@ -4,9 +4,13 @@ import SwiftUI
 /// and the invoices and billing emails. The app links to no payment page; a card added from the emailed link shows
 /// here on the next return to the app or pull to refresh.
 struct BillingView: View {
+    @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: BillingViewModel
+    @State private var showsEmails = false
+    private let session: Session
 
     init(session: Session, dependencies: AppDependencies) {
+        self.session = session
         _viewModel = State(initialValue: dependencies.makeBillingViewModel(session: session))
     }
 
@@ -15,7 +19,20 @@ struct BillingView: View {
             .pushedScreen(title: "Billing", identifier: "billing")
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: BillingRoute.self) { route in
-                BillingRoutePlaceholderView(route: route)
+                switch route {
+                case .invoices:
+                    InvoicesView(
+                        session: session, trialEndsAt: viewModel.summary?.trialEndsAt, dependencies: dependencies
+                    )
+                }
+            }
+            .msSheet(isPresented: $showsEmails) {
+                BillingEmailsSheet(
+                    viewModel: dependencies.makeBillingEmailsViewModel(session: session) { await viewModel.load() }
+                ) { saved in
+                    showsEmails = false
+                    if saved { dependencies.toasts.show(BillingEmailsViewModel.savedMessage) }
+                }
             }
     }
 
@@ -37,7 +54,7 @@ struct BillingView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("billing.invoices")
-                NavigationLink(value: BillingRoute.emails) {
+                Button { showsEmails = true } label: {
                     BillingRow(title: "Billing emails", value: viewModel.billingEmailText, showsDivider: false)
                 }
                 .buttonStyle(.plain)

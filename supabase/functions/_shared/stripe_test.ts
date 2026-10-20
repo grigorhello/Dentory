@@ -5,6 +5,8 @@ import {
   formEncode,
   invoiceParams,
   liveSubscription,
+  paidAt,
+  paymentFailed,
   periodEnd,
   stripeID,
   verifyStripeSignature,
@@ -102,4 +104,18 @@ Deno.test("a live subscription stops a second Checkout; an ended one does not", 
   assertEquals(liveSubscription([ended, trialing])?.id, "sub_new");
   assertEquals(liveSubscription([ended, { id: "sub_x", customer: "cus", status: "incomplete_expired" }]), undefined);
   assertEquals(liveSubscription([]), undefined);
+});
+
+Deno.test("only Stripe's payment_failed event on an open invoice is a failed payment", () => {
+  const invoice = { id: "in_1", customer: "cus_1", created: 1_799_244_000, currency: "usd" };
+  assert(paymentFailed({ ...invoice, status: "open", attempted: true }, "invoice.payment_failed"));
+  assert(!paymentFailed({ ...invoice, status: "open", attempted: true }, "invoice.finalized"),
+    "A bank debit still processing is attempted and open, not failed");
+  assert(!paymentFailed({ ...invoice, status: "paid", attempted: true }, "invoice.payment_failed"), "Paid since");
+});
+
+Deno.test("the day an invoice was paid comes from its status transitions", () => {
+  const invoice = { id: "in_1", customer: "cus_1", created: 1_799_244_000, currency: "usd", status: "paid" };
+  assertEquals(paidAt({ ...invoice, status_transitions: { paid_at: 1_799_503_200 } }), "2027-01-09T14:00:00.000Z");
+  assertEquals(paidAt(invoice), null);
 });

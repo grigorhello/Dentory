@@ -171,15 +171,6 @@ struct AppDependencies: Sendable {
         )
     }
 
-    /// Billing of the signed-in clinic, for its admin (MS-140).
-    @MainActor
-    func makeBillingViewModel(session: Session) -> BillingViewModel {
-        BillingViewModel(
-            clinicID: session.clinicID, repository: billingRepository, cache: cache,
-            formatters: formatters(for: session)
-        )
-    }
-
     /// The Procedures tab of the signed-in clinic (MS-122).
     @MainActor
     func makeProceduresViewModel(session: Session) -> ProceduresViewModel {
