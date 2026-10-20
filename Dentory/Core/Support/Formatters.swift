@@ -76,6 +76,11 @@ nonisolated struct ClinicFormatters: Sendable {
         date(day.start(in: timeZone))
     }
 
+    /// "8:40 AM": an hour of today (f8).
+    func time(_ date: Date) -> String {
+        date.formatted(style.hour().minute())
+    }
+
     /// "Oct 1": a recent day without its year, as lists show it (f20).
     func monthDay(_ date: Date) -> String {
         date.formatted(style.month(.abbreviated).day())

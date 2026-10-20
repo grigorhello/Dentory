@@ -3,20 +3,22 @@ import Foundation
 /// The figures of frame f6 for previews and UI tests.
 struct DemoHomeRepository: HomeRepository {
     var summary = HomeSummary.demo
-    /// When set, the Expiring soon tile and At risk follow its batches, so a disposal shows on Home (MS-132).
-    var expiring: DemoExpiringRepository?
+    /// The values of the demo's expiring batches now, so a disposal on Expiring soon shows on Home's tile and At risk
+    /// (MS-132). A closure, so Home's demo knows nothing of the Expiring feature's types.
+    var expiring: (@MainActor @Sendable () -> [Decimal])?
+    /// Whether the demo's alerts are still unseen, so a visit to Activity clears the bell's dot (MS-133).
+    var alertsUnseen: (@MainActor @Sendable () -> Bool)?
 
-    func summary(clinicID: UUID, userID: UUID) async throws -> HomeSummary {
-        guard let expiring else { return summary }
-        let batches = expiring.currentBatches
+    func summary(clinicID: UUID) async throws -> HomeSummary {
+        let atRisk = expiring?()
         return HomeSummary(
             toBuyCount: summary.toBuyCount,
-            expiringBatchCount: batches.count,
+            expiringBatchCount: atRisk?.count ?? summary.expiringBatchCount,
             missingExpiryProductCount: summary.missingExpiryProductCount,
             inventoryValue: summary.inventoryValue,
-            valueAtRisk90: batches.reduce(Decimal(0)) { $0 + $1.value },
+            valueAtRisk90: atRisk.map { $0.reduce(0, +) } ?? summary.valueAtRisk90,
             latestProcedure: summary.latestProcedure,
-            hasUnseenAlerts: summary.hasUnseenAlerts
+            hasUnseenAlerts: summary.hasUnseenAlerts && (alertsUnseen?() ?? true)
         )
     }
 }

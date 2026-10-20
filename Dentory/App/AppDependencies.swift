@@ -24,6 +24,7 @@ struct AppDependencies: Sendable {
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
     let expiringRepository: ExpiringRepository
+    let activityRepository: ActivityRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -73,6 +74,7 @@ struct AppDependencies: Sendable {
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
+            activityRepository: SupabaseActivityRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -99,6 +101,7 @@ struct AppDependencies: Sendable {
         }
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         let expiring = DemoExpiringRepository()
+        let activity = DemoActivityRepository()
         return AppDependencies(
             rpc: rpc,
             auth: auth,
@@ -115,7 +118,10 @@ struct AppDependencies: Sendable {
                 toasts: toasts
             ),
             reporter: reporter,
-            homeRepository: DemoHomeRepository(expiring: expiring),
+            homeRepository: DemoHomeRepository(
+                expiring: { expiring.currentBatches.map(\.value) },
+                alertsUnseen: { activity.hasUnseenAlerts }
+            ),
             inventoryRepository: DemoInventoryRepository(),
             productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
             proceduresRepository: DemoProceduresRepository(),
@@ -123,6 +129,7 @@ struct AppDependencies: Sendable {
             procedureEditRepository: DemoProcedureEditRepository(),
             toBuyRepository: DemoToBuyRepository(),
             expiringRepository: expiring,
+            activityRepository: activity,
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -183,6 +190,15 @@ struct AppDependencies: Sendable {
         ExpiringViewModel(
             repository: expiringRepository, cache: cache, formatters: formatters(for: session),
             clinicID: session.clinicID, isAdmin: session.isAdmin, window: window
+        )
+    }
+
+    /// Activity of the signed-in clinic, opened from Home's bell (MS-133).
+    @MainActor
+    func makeActivityViewModel(session: Session) -> ActivityViewModel {
+        ActivityViewModel(
+            repository: activityRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID
         )
     }
 
