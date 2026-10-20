@@ -3,11 +3,8 @@ import Foundation
 /// What Adjust, then start shows (f13, Appendix B `procDetail`): the summary, each row's warning, the bottle lines,
 /// Add item's captions and the Start label. The state and the intents are in `ProcedureStartViewModel.swift`.
 extension ProcedureStartViewModel {
-    /// A row's warning: "0 will remain" in warning, "Not available · 0 in stock" in danger.
-    struct Warning: Equatable {
-        let text: String
-        let tone: StatusTone
-    }
+    /// A row's warning: "0 will remain" in warning, "Not available · 2 in stock" in danger.
+    typealias Warning = ProcedureLineNote
 
     /// Every supply of this procedure: the countable rows and the multi-use products.
     var supplyCount: Int { supplies.count + bottles.count }
@@ -100,6 +97,13 @@ extension ProcedureStartViewModel {
     /// The template's multi-use products, listed under "Opened a new one?"; one Add item brought in is listed with
     /// the supplies only.
     var templateBottles: [Bottle] { bottles.filter { !$0.isAdded } }
+
+    /// The rows under "Opened a new one?".
+    var bottleLines: [ProcedureBottleLine] {
+        templateBottles.map {
+            ProcedureBottleLine(id: $0.id, name: $0.item.name, line: line(for: $0), takesNew: $0.takesNew)
+        }
+    }
 
     /// "10 items deducted" under "{name} started".
     static func itemsDeducted(_ count: Int) -> String {
