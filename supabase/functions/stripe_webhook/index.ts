@@ -1,16 +1,19 @@
 // POST /functions/v1/stripe_webhook, called by Stripe (MS-140). verify_jwt is off for it: the Stripe-Signature header,
 // signed with STRIPE_WEBHOOK_SECRET, is the check. Subscription and invoice events are read back from Stripe as it
 // holds them now, so events arriving out of order or retried days later do no harm: subscriptions set the clinic's
-// status, next payment and card; invoices are kept (the $0 one that opens a trial is not), and once one is paid the
-// billing emails after the primary get Dentory's copy of the receipt (MS-141). Checkout completed links a new
-// subscription to the clinic it was opened for. Other events are acknowledged.
+// status, next payment and card; invoices are kept (the $0 one that opens a trial is not), one Stripe could not charge
+// is marked so Invoices says Failed, and once one is paid every billing email but the one Stripe sent its receipt to
+// gets Dentory's copy (MS-141). Checkout completed links a new subscription to the clinic it was opened for. Other
+// events are acknowledged.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, json } from "../_shared/http.ts";
 import { serviceClient } from "../_shared/supabase.ts";
-import { sendEmail } from "../_shared/email.ts";
+import { sendEmails } from "../_shared/email.ts";
 import { type ReceiptCopy, receiptCopyEmail } from "../_shared/receipt-email.ts";
 import {
   invoiceParams,
+  paidAt,
+  paymentFailed,
   periodEnd,
   type StripeConfig,
   stripeConfig,
@@ -79,7 +82,10 @@ async function handle(event: StripeEvent, config: StripeConfig, db: SupabaseClie
     case "invoice.marked_uncollectible": {
       const invoice = await stripeRequest<StripeInvoice>(config, "GET", `/v1/invoices/${String(object.id)}`);
       await rpc(db, "billing_record_invoice", invoiceParams(invoice));
-      if (invoice.status === "paid") await sendReceiptCopies(db, invoice.id);
+      if (paymentFailed(invoice, event.type)) {
+        await rpc(db, "billing_invoice_payment_failed", { p_stripe_invoice_id: invoice.id });
+      }
+      if (invoice.status === "paid") await sendReceiptCopies(db, invoice);
       return;
     }
   }
@@ -110,14 +116,23 @@ async function applyCard(config: StripeConfig, db: SupabaseClient, customerID: s
   });
 }
 
-/** Dentory's copy of the receipt, once per paid invoice, to every billing email after the primary. */
-async function sendReceiptCopies(db: SupabaseClient, invoiceID: string) {
-  const { data, error } = await db.rpc("billing_receipt_copy", { p_stripe_invoice_id: invoiceID });
+/** Dentory's copy of the receipt, once per paid invoice, to every billing email but the one Stripe sent its own to,
+ * in one Resend call. A failed send frees the copy and fails the event, so Stripe's retry sends it again. */
+async function sendReceiptCopies(db: SupabaseClient, invoice: StripeInvoice) {
+  const { data, error } = await db.rpc("billing_receipt_copy", {
+    p_stripe_invoice_id: invoice.id,
+    p_customer_email: invoice.customer_email ?? null,
+  });
   if (error) throw new Error(`billing_receipt_copy: ${error.message}`);
   for (const copy of (data ?? []) as ReceiptCopy[]) {
-    for (const to of copy.emails) {
-      await sendEmail(receiptCopyEmail(copy, to)).catch((failure) => console.error("receipt copy", failure));
+    const paid = { ...copy, paid_at: paidAt(invoice) };
+    try {
+      await sendEmails(copy.emails.map((to) => receiptCopyEmail(paid, to)));
+    } catch (failure) {
+      await rpc(db, "billing_receipt_finish", { p_stripe_invoice_id: invoice.id, p_sent: false });
+      throw failure;
     }
+    await rpc(db, "billing_receipt_finish", { p_stripe_invoice_id: invoice.id, p_sent: true });
   }
 }
 

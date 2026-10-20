@@ -29,9 +29,9 @@ struct BillingView: View {
             .msSheet(isPresented: $showsEmails) {
                 BillingEmailsSheet(
                     viewModel: dependencies.makeBillingEmailsViewModel(session: session) { await viewModel.load() }
-                ) {
+                ) { saved in
                     showsEmails = false
-                    dependencies.toasts.show(BillingEmailsViewModel.savedMessage)
+                    if saved { dependencies.toasts.show(BillingEmailsViewModel.savedMessage) }
                 }
             }
     }

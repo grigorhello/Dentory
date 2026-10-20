@@ -57,7 +57,7 @@ final class InvoicesViewModel {
 
     var rows: [Row] {
         (invoices ?? []).map { invoice in
-            let status = Self.status(invoice.status)
+            let status = Self.status(invoice)
             return Row(
                 id: invoice.id, date: formatters.date(invoice.issuedAt), number: invoice.number,
                 amount: Self.amount(cents: invoice.amountCents, currency: invoice.currency),
@@ -77,10 +77,12 @@ final class InvoicesViewModel {
             + "Each one appears here, and its receipt goes to your billing emails."
     }
 
-    /// Paid in success, Open in warning, Failed in danger (ticket MS-141); a voided invoice is Void.
-    nonisolated static func status(_ status: BillingInvoice.Status) -> (text: String, tone: StatusTone) {
-        switch status {
+    /// Paid in success, Open in warning, Failed in danger (ticket MS-141): an open invoice Stripe could not charge, while
+    /// it retries, or one it gave up on; a voided invoice is Void.
+    nonisolated static func status(_ invoice: BillingInvoice) -> (text: String, tone: StatusTone) {
+        switch invoice.status {
         case .paid: ("Paid", .success)
+        case .open where invoice.paymentFailed: ("Failed", .danger)
         case .draft, .open: ("Open", .warning)
         case .uncollectible: ("Failed", .danger)
         case .void: ("Void", .neutral)

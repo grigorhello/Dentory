@@ -33,11 +33,20 @@ struct InvoicesViewModelTests {
     }
 
     @Test func theStatusesReadAsTheTicketSays() {
-        #expect(InvoicesViewModel.status(.paid) == ("Paid", .success))
-        #expect(InvoicesViewModel.status(.open) == ("Open", .warning))
-        #expect(InvoicesViewModel.status(.draft) == ("Open", .warning))
-        #expect(InvoicesViewModel.status(.uncollectible) == ("Failed", .danger))
-        #expect(InvoicesViewModel.status(.void) == ("Void", .neutral))
+        func invoice(_ status: BillingInvoice.Status, failed: Bool = false) -> BillingInvoice {
+            BillingInvoice(
+                id: UUID(), number: nil, issuedAt: Session.demoNow, amountCents: 4950, currency: "usd", status: status,
+                paymentFailed: failed
+            )
+        }
+        #expect(InvoicesViewModel.status(invoice(.paid)) == ("Paid", .success))
+        #expect(InvoicesViewModel.status(invoice(.open)) == ("Open", .warning))
+        #expect(InvoicesViewModel.status(invoice(.draft)) == ("Open", .warning))
+        #expect(InvoicesViewModel.status(invoice(.open, failed: true)) == ("Failed", .danger),
+                "A charge that failed while Stripe retries")
+        #expect(InvoicesViewModel.status(invoice(.paid, failed: true)) == ("Paid", .success), "Paid in the end")
+        #expect(InvoicesViewModel.status(invoice(.uncollectible)) == ("Failed", .danger))
+        #expect(InvoicesViewModel.status(invoice(.void)) == ("Void", .neutral))
         #expect(InvoicesViewModel.amount(cents: 9900, currency: "usd") == "$99.00")
     }
 

@@ -21,7 +21,7 @@ struct SupabaseBillingRepository: BillingRepository {
     func invoices(clinicID: UUID) async throws -> [BillingInvoice] {
         do {
             return try await client.from("billing_invoices")
-                .select("id, number, issued_at, amount_cents, currency, status")
+                .select("id, number, issued_at, amount_cents, currency, status, payment_failed")
                 .eq("clinic_id", value: clinicID.uuidString.lowercased())
                 .order("issued_at", ascending: false)
                 .execute()

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Dentory
 
-/// The billing emails sheet (MS-141): the primary first and kept, Add with its checks, Remove, and Done.
+/// The billing emails sheet (MS-141): the first address kept, Add with its checks, Remove, and Done.
 @MainActor
 struct BillingEmailsViewModelTests {
     private func make(
@@ -67,7 +67,7 @@ struct BillingEmailsViewModelTests {
         viewModel.add()
         await viewModel.save()
         #expect(repository.saves == [["books@smiledental.ca"]])
-        #expect(viewModel.isSaved)
+        #expect(viewModel.outcome == .saved, "The toast follows a save")
         #expect(refreshed == 1, "Billing's row follows")
         #expect(BillingEmailsViewModel.savedMessage == "Billing emails updated")
     }
@@ -77,7 +77,31 @@ struct BillingEmailsViewModelTests {
         let viewModel = await make(repository)
         await viewModel.save()
         #expect(repository.saves.isEmpty)
-        #expect(viewModel.isSaved)
+        #expect(viewModel.outcome == .closed, "Closed without a toast")
+    }
+
+    /// MS-141 review: an address typed but not added with Add goes in with Done, and a wrong one keeps the sheet open.
+    @Test func doneAddsAnAddressStillInTheField() async {
+        let repository = FakeBillingRepository()
+        let viewModel = await make(repository)
+        viewModel.newEmail = " Books@SmileDental.ca "
+        await viewModel.save()
+        #expect(repository.saves == [["books@smiledental.ca"]])
+        #expect(viewModel.outcome == .saved)
+    }
+
+    @Test func doneStopsAtAWrongAddressInTheField() async {
+        let repository = FakeBillingRepository()
+        let viewModel = await make(repository)
+        viewModel.newEmail = "books@smile"
+        await viewModel.save()
+        #expect(viewModel.emailError == "Enter a valid email")
+        #expect(viewModel.outcome == nil, "The sheet stays open")
+        #expect(repository.saves.isEmpty)
+        viewModel.newEmail = "owner@smiledental.ca"
+        await viewModel.save()
+        #expect(viewModel.emailError == "This address is already on the list")
+        #expect(viewModel.outcome == nil)
     }
 
     @Test func aRefusalStaysInTheSheet() async {
@@ -88,7 +112,7 @@ struct BillingEmailsViewModelTests {
         repository.saveFailure = AppError.validation(field: "books@smiledental.ca", message: "Enter a valid email")
         await viewModel.save()
         #expect(viewModel.emailError == "books@smiledental.ca: Enter a valid email")
-        #expect(!viewModel.isSaved)
+        #expect(viewModel.outcome == nil)
         repository.saveFailure = AppError.network
         await viewModel.save()
         #expect(viewModel.generalError?.userMessage == "Couldn't save. Try again.")

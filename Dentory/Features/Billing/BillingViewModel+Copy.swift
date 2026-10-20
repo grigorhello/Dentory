@@ -136,8 +136,9 @@ extension BillingViewModel {
         return "\(count)"
     }
 
-    /// The first billing email (f34).
+    /// The address while there is one, then how many (PRD §6.9 "Billing emails (count)", the prototype's row).
     var billingEmailText: String {
-        summary?.billingEmail ?? ""
+        guard let summary else { return "" }
+        return summary.billingEmailCount > 1 ? "\(summary.billingEmailCount) addresses" : summary.billingEmail ?? ""
     }
 }

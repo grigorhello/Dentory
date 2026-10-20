@@ -1,5 +1,5 @@
-// Dentory's copy of a paid invoice's receipt (MS-141), for the billing emails after the primary: Stripe sends its own
-// receipt to the primary only, the one address its API keeps per customer. Laid out as the invitation email is.
+// Dentory's copy of a paid invoice's receipt (MS-141), for every billing email but the one Stripe sent its own receipt
+// to, the one address its API keeps per customer. Laid out as the invitation email is.
 import type { Email } from "./email.ts";
 
 export interface ReceiptCopy {
@@ -11,6 +11,8 @@ export interface ReceiptCopy {
   currency: string;
   hosted_url: string | null;
   time_zone: string;
+  /** When it was paid (Stripe's status_transitions.paid_at); the issue date stands in when Stripe has none. */
+  paid_at?: string | null;
 }
 
 /** "$49.50" for 4950 cents in usd. */
@@ -18,14 +20,14 @@ export function receiptAmount(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
 }
 
-/** "January 6, 2027", the invoice's day at the clinic. */
+/** "January 6, 2027", a day at the clinic. */
 export function receiptDay(issuedAt: string, timeZone: string): string {
   return new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeZone }).format(new Date(issuedAt));
 }
 
 export function receiptCopyEmail(copy: ReceiptCopy, to: string): Email {
   const amount = receiptAmount(copy.amount_cents, copy.currency);
-  const day = receiptDay(copy.issued_at, copy.time_zone);
+  const day = receiptDay(copy.paid_at ?? copy.issued_at, copy.time_zone);
   const invoice = copy.number ? `invoice ${copy.number}` : "the invoice";
   const subject = `Receipt for ${copy.clinic_name}'s Dentory subscription, ${day}`;
   const intro = `${copy.clinic_name} paid ${amount} for its Dentory subscription on ${day} (${invoice}). ` +

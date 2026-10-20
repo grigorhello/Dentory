@@ -2,9 +2,9 @@ import Foundation
 import Observation
 
 /// The billing emails sheet (PRD Appendix C `billingEmails`, MS-141): where invoices and receipts go. The first address
-/// is the primary, the Stripe customer's, and cannot be removed; others are added and removed here and saved with Done.
-/// Stripe emails the primary; the others get Dentory's copy of each receipt. It works in read-only mode too, since the
-/// link to add a card goes to these addresses.
+/// is the one the Stripe customer bills, labelled Admin, and cannot be removed; others are added and removed here and
+/// saved with Done. Stripe emails the first; the others get Dentory's copy of each receipt. It works in read-only mode
+/// too, since the link to add a card goes to these addresses.
 @MainActor
 @Observable
 final class BillingEmailsViewModel {
@@ -20,8 +20,9 @@ final class BillingEmailsViewModel {
     /// A refusal of the save that belongs to no field, shown in the sheet.
     private(set) var generalError: AppError?
     private(set) var isSaving = false
-    /// Set once saved: the screen closes the sheet and shows "Billing emails updated".
-    private(set) var isSaved = false
+    /// How Done ended: the screen closes the sheet, and shows "Billing emails updated" only after a save.
+    enum Outcome: Equatable { case closed, saved }
+    private(set) var outcome: Outcome?
 
     static let limit = 10
     static let savedMessage = "Billing emails updated"
@@ -76,11 +77,16 @@ final class BillingEmailsViewModel {
         extra.removeAll { $0 == email }
     }
 
-    /// Done: saves the list when it changed; the server's answer becomes the list.
+    /// Done: an address still in the field is added first (and Done stops at its error), then the list is saved when it
+    /// changed, the server's answer becoming the list; with nothing to save it only closes.
     func save() async {
         guard !isSaving else { return }
+        if !newEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            add()
+            guard emailError == nil else { return }
+        }
         guard hasChanges else {
-            isSaved = true
+            outcome = .closed
             return
         }
         isSaving = true
@@ -88,7 +94,7 @@ final class BillingEmailsViewModel {
         defer { isSaving = false }
         do {
             show(try await repository.saveBillingEmails(clinicID: clinicID, extra: extra))
-            isSaved = true
+            outcome = .saved
             await onSaved()
         } catch {
             let appError = AppError(error)

@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// "Billing emails" (PRD Appendix C `billingEmails`): the primary address first, without an X; the others with one;
-/// a field and Add; Done saves. Open from Billing's Billing emails row.
+/// "Billing emails" (PRD Appendix C `billingEmails`): the first address, labelled Admin, without an X; the others with
+/// one; "Add email" and Add; Done saves. Open from Billing's Billing emails row; `onDone` says whether Done saved.
 struct BillingEmailsSheet: View {
     @State private var viewModel: BillingEmailsViewModel
-    let onDone: () -> Void
+    let onDone: (_ saved: Bool) -> Void
 
-    init(viewModel: BillingEmailsViewModel, onDone: @escaping () -> Void) {
+    init(viewModel: BillingEmailsViewModel, onDone: @escaping (_ saved: Bool) -> Void) {
         _viewModel = State(initialValue: viewModel)
         self.onDone = onDone
     }
@@ -21,8 +21,8 @@ struct BillingEmailsSheet: View {
                 .accessibilityIdentifier("billingEmails.done")
         }
         .task { await viewModel.load() }
-        .onChange(of: viewModel.isSaved) { _, isSaved in
-            if isSaved { onDone() }
+        .onChange(of: viewModel.outcome) { _, outcome in
+            if let outcome { onDone(outcome == .saved) }
         }
     }
 
@@ -35,7 +35,7 @@ struct BillingEmailsSheet: View {
         case .loaded:
             ListCard {
                 if let primary = viewModel.primary {
-                    ListRow(primary, caption: "Primary", showsDivider: !viewModel.extra.isEmpty)
+                    ListRow(primary, caption: "Admin", showsDivider: !viewModel.extra.isEmpty)
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("billingEmails.primary")
                 }
@@ -46,16 +46,21 @@ struct BillingEmailsSheet: View {
                     }
                 }
             }
-            HStack(alignment: .top, spacing: Spacing.sm) {
-                MSTextField(
-                    nil, text: $viewModel.newEmail, identifier: "billingEmails.email", placeholder: "Add email",
-                    error: viewModel.emailError, keyboard: .emailAddress, contentType: .emailAddress
-                )
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .onSubmit(viewModel.add)
-                MSButton("Add", variant: .tertiary, isDisabled: !viewModel.canAdd, action: viewModel.add)
-                    .accessibilityIdentifier("billingEmails.add")
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                // The field reads its label to VoiceOver itself; the Add button stays level with the field.
+                Text("Add email").textStyle(.bodyStrong14).foregroundStyle(Color.ms.ink).accessibilityHidden(true)
+                HStack(alignment: .top, spacing: Spacing.sm) {
+                    MSTextField(
+                        nil, text: $viewModel.newEmail, identifier: "billingEmails.email",
+                        placeholder: "accounting@clinic.com", error: viewModel.emailError, keyboard: .emailAddress,
+                        contentType: .emailAddress, accessibilityText: "Add email"
+                    )
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .onSubmit(viewModel.add)
+                    MSButton("Add", variant: .tertiary, isDisabled: !viewModel.canAdd, action: viewModel.add)
+                        .accessibilityIdentifier("billingEmails.add")
+                }
             }
             if let error = viewModel.generalError {
                 Notice(error.userMessage, tone: .danger)

@@ -15,4 +15,24 @@ nonisolated struct BillingInvoice: Codable, Equatable, Identifiable, Sendable {
     /// Lowercase ISO 4217, as Stripe gives it: "usd".
     let currency: String
     let status: Status
+    /// Stripe tried to charge it and could not (`payment_failed`): it reads Failed while it stays open.
+    var paymentFailed = false
+}
+
+nonisolated extension BillingInvoice {
+    private enum CodingKeys: String, CodingKey {
+        case id, number, issuedAt, amountCents, currency, status, paymentFailed
+    }
+
+    /// A cached list from before `payment_failed` existed still reads, as not failed.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        number = try container.decodeIfPresent(String.self, forKey: .number)
+        issuedAt = try container.decode(Date.self, forKey: .issuedAt)
+        amountCents = try container.decode(Int.self, forKey: .amountCents)
+        currency = try container.decode(String.self, forKey: .currency)
+        status = try container.decode(Status.self, forKey: .status)
+        paymentFailed = try container.decodeIfPresent(Bool.self, forKey: .paymentFailed) ?? false
+    }
 }

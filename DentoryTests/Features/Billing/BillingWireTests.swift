@@ -42,14 +42,17 @@ struct BillingWireTests {
     @Test func anInvoiceRowDecodes() throws {
         let rows = #"""
         [{"id": "00000000-0000-4000-8000-000000000901", "number": "DEN-0001", "issued_at": "2027-01-06T14:00:00+00:00",
-          "amount_cents": 4950, "currency": "usd", "status": "paid"},
+          "amount_cents": 4950, "currency": "usd", "status": "paid", "payment_failed": false},
          {"id": "00000000-0000-4000-8000-000000000902", "number": null, "issued_at": "2027-02-06T14:00:00+00:00",
+          "amount_cents": 4950, "currency": "usd", "status": "open", "payment_failed": true},
+         {"id": "00000000-0000-4000-8000-000000000903", "number": null, "issued_at": "2027-03-06T14:00:00+00:00",
           "amount_cents": 4950, "currency": "usd", "status": "uncollectible"}]
         """#
         let invoices = try JSONDecoder.supabase.decode([BillingInvoice].self, from: Data(rows.utf8))
-        #expect(invoices.map(\.status) == [.paid, .uncollectible])
+        #expect(invoices.map(\.status) == [.paid, .open, .uncollectible])
+        #expect(invoices.map(\.paymentFailed) == [false, true, false], "A row without the field reads not failed")
         #expect(invoices.first?.issuedAt == BillingSummary.demoTrialEnd)
-        #expect(invoices.last?.number == nil)
+        #expect(invoices[1].number == nil)
     }
 
     @Test func theSaveSendsTheClinicAndTheOtherAddresses() throws {

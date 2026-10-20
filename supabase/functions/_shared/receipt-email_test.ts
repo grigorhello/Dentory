@@ -1,4 +1,4 @@
-// deno test supabase/functions (make functions-check): the receipt copy for the billing emails after the primary.
+// deno test supabase/functions (make functions-check): the receipt copy for the billing emails Stripe does not send to.
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 import { receiptAmount, receiptCopyEmail, receiptDay } from "./receipt-email.ts";
 
@@ -36,4 +36,10 @@ Deno.test("without a hosted invoice the copy has no link", () => {
   assertStringIncludes(email.text, "(the invoice)");
   assert(!email.text.includes("https://"));
   assert(!email.html.includes("href"));
+});
+
+Deno.test("the copy dates the payment, not the invoice, once Stripe says when it was paid", () => {
+  const email = receiptCopyEmail({ ...copy, paid_at: "2027-01-09T15:00:00+00:00" }, "books@smile.ca");
+  assertEquals(email.subject, "Receipt for Smile <Dental>'s Dentory subscription, January 9, 2027");
+  assertStringIncludes(email.text, "on January 9, 2027");
 });

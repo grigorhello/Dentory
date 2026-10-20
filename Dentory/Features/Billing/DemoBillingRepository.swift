@@ -44,7 +44,7 @@ final class DemoBillingRepository: BillingRepository, @unchecked Sendable {
 }
 
 extension BillingInvoice {
-    /// Three paid months after the trial, newest first, for screenshots.
+    /// Three months after the trial, newest first, for screenshots: the newest still open, the two before it paid.
     nonisolated static let demo: [BillingInvoice] = (0..<3).map { month in
         BillingInvoice(
             id: UUID(uuidString: "00000000-0000-4000-8000-00000000090\(month)") ?? UUID(),

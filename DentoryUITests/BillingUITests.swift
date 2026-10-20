@@ -103,7 +103,8 @@ final class BillingUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["billingEmails.title"].waitForExistence(timeout: 5), "No billing emails sheet")
         let primary = app.descendants(matching: .any)["billingEmails.primary"]
         XCTAssertTrue(primary.waitForExistence(timeout: 5))
-        XCTAssertTrue(primary.label.contains("owner@smiledental.ca"), "The primary reads \(primary.label)")
+        XCTAssertTrue(primary.label.contains("owner@smiledental.ca"), "The first address reads \(primary.label)")
+        XCTAssertTrue(primary.label.contains("Admin"), "Labelled Admin, as Appendix C says")
         XCTAssertFalse(app.buttons["billingEmails.remove[owner@smiledental.ca]"].exists, "The primary has no X")
         let field = app.textFields["billingEmails.email"]
         field.tap()
@@ -112,7 +113,7 @@ final class BillingUITests: XCTestCase {
         XCTAssertTrue(app.buttons["billingEmails.remove[books@smiledental.ca]"].waitForExistence(timeout: 5))
         app.buttons["billingEmails.done"].tap()
         XCTAssertTrue(app.staticTexts["Billing emails updated"].waitForExistence(timeout: 5), "No toast")
-        XCTAssertTrue(app.buttons["billing.emails"].label.contains("owner@smiledental.ca"), "The primary still leads")
+        XCTAssertTrue(app.buttons["billing.emails"].label.contains("2 addresses"), "The row counts them")
     }
 
     @MainActor
