@@ -1,16 +1,19 @@
 import SwiftUI
 
-/// Activity (f8), pushed from Home's bell: "Alerts · N" and History, the open alerts in one card with a dot, a
-/// sentence, when it opened and a chevron to what resolves it, and "Nothing needs attention." when all is well.
+/// Activity (f8, f9), pushed from Home's bell: "Alerts · N", the open alerts in one card with a dot, a sentence, when
+/// it opened and a chevron to what resolves it ("Nothing needs attention." when all is well); and History, every
+/// stock change by day.
 struct ActivityView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
     @State private var viewModel: ActivityViewModel
+    @State private var history: ActivityHistoryViewModel
     let session: Session
 
     init(session: Session, dependencies: AppDependencies) {
         self.session = session
         _viewModel = State(initialValue: dependencies.makeActivityViewModel(session: session))
+        _history = State(initialValue: dependencies.makeActivityHistoryViewModel(session: session, productID: nil))
     }
 
     var body: some View {
@@ -32,7 +35,7 @@ struct ActivityView: View {
         case .alerts:
             alerts
         case .history:
-            EmptyStateView(ActivityViewModel.historyText)
+            ActivityHistoryList(viewModel: history)
         }
     }
 

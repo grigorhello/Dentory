@@ -19,6 +19,16 @@ final class DemoActivityRepository: ActivityRepository, @unchecked Sendable {
     func markSeen(clinicID: UUID) async throws {
         lock.withLock { seen = true }
     }
+
+    /// The demo clinic's story (`supabase/seed-demo.sql`) up to the frames' October 2, a page at a time.
+    func history(
+        clinicID: UUID, filter: ActivityHistoryFilter, productID: UUID?, after: ActivityHistoryEntry?, limit: Int
+    ) async throws -> [ActivityHistoryEntry] {
+        try await Task.sleep(for: .milliseconds(150))
+        let entries = ActivityHistoryEntry.demo(productID: productID).filter { filter.includes($0.type) }
+        let start = after.flatMap { last in entries.firstIndex { $0.id == last.id } }.map { $0 + 1 } ?? 0
+        return Array(entries.dropFirst(start).prefix(max(limit, 1)))
+    }
 }
 
 extension ActivityAlert {

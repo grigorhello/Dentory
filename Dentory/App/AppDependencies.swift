@@ -193,6 +193,15 @@ struct AppDependencies: Sendable {
         )
     }
 
+    /// Activity's History of the signed-in clinic, or of one product from Product detail's Show all (MS-134).
+    @MainActor
+    func makeActivityHistoryViewModel(session: Session, productID: UUID?) -> ActivityHistoryViewModel {
+        ActivityHistoryViewModel(
+            repository: activityRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, productID: productID
+        )
+    }
+
     /// Activity of the signed-in clinic, opened from Home's bell (MS-133).
     @MainActor
     func makeActivityViewModel(session: Session) -> ActivityViewModel {
