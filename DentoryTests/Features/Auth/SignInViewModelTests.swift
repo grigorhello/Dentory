@@ -4,9 +4,11 @@ import Testing
 
 @MainActor
 struct SignInViewModelTests {
-    private func makeViewModel(auth: FakeAuthService) -> (SignInViewModel, SessionStore) {
+    private func makeViewModel(
+        auth: FakeAuthService, analytics: SpyAnalytics = SpyAnalytics()
+    ) -> (SignInViewModel, SessionStore) {
         let store = SessionStore(auth: auth, state: .signedOut)
-        return (SignInViewModel(sessionStore: store), store)
+        return (SignInViewModel(sessionStore: store, analytics: analytics), store)
     }
 
     @Test func submitIsDisabledUntilBothFieldsHaveText() {
@@ -29,6 +31,23 @@ struct SignInViewModelTests {
         #expect(store.state == .signedIn(.demo))
         #expect(auth.signIns.first?.email == "sarah@smiledental.ca")
         #expect(viewModel.emailError == nil && viewModel.passwordError == nil && viewModel.generalError == nil)
+    }
+
+    @Test func onlyASignInThatWorkedIsCounted() async {
+        let analytics = SpyAnalytics()
+        let (viewModel, _) = makeViewModel(auth: FakeAuthService(), analytics: analytics)
+        viewModel.email = "sarah@smiledental.ca"
+        viewModel.password = "smiledental"
+        await viewModel.signIn()
+        #expect(analytics.events == [.signedIn])
+        let refused = SpyAnalytics()
+        let (failing, _) = makeViewModel(
+            auth: FakeAuthService(signInResult: .failure(AppError.unknownEmail)), analytics: refused
+        )
+        failing.email = "nobody@smiledental.ca"
+        failing.password = "smiledental"
+        await failing.signIn()
+        #expect(refused.events.isEmpty)
     }
 
     @Test func anUnknownEmailShowsUnderTheEmailField() async {

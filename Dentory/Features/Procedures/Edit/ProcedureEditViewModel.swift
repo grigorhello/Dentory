@@ -54,13 +54,15 @@ final class ProcedureEditViewModel {
 
     private let repository: ProcedureEditRepository
     private let clinicID: UUID
+    private let analytics: Analytics
     private let saveGuard = SubmitGuard()
     private let deleteGuard = SubmitGuard()
 
-    init(repository: ProcedureEditRepository, clinicID: UUID, templateID: UUID?) {
+    init(repository: ProcedureEditRepository, clinicID: UUID, templateID: UUID?, analytics: Analytics) {
         self.repository = repository
         self.clinicID = clinicID
         self.templateID = templateID
+        self.analytics = analytics
         state = templateID == nil ? .loaded : .loading
     }
 
@@ -159,6 +161,7 @@ final class ProcedureEditViewModel {
             )
             do {
                 let saved = try await repository.save(request)
+                analytics.track(.templateSaved(items: lines.count, isNew: isNew))
                 outcome = Outcome(title: "Procedure saved", detail: Self.savedDetail(saved))
             } catch {
                 handle(AppError(error))
@@ -181,6 +184,7 @@ final class ProcedureEditViewModel {
             generalError = nil
             do {
                 try await repository.archive(templateID: templateID)
+                analytics.track(.templateDeleted)
                 outcome = Outcome(title: "Procedure deleted", detail: storedName)
             } catch {
                 handle(AppError(error))

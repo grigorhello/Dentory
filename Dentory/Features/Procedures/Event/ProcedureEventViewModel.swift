@@ -54,17 +54,19 @@ final class ProcedureEventViewModel {
     private let eventID: UUID
     /// Home's Edit usage opens the procedure straight in editing mode.
     private var startsEditing: Bool
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
 
     init(
         repository: ProcedureEventRepository, formatters: ClinicFormatters, clinicID: UUID, eventID: UUID,
-        startsEditing: Bool = false
+        startsEditing: Bool = false, analytics: Analytics
     ) {
         self.repository = repository
         self.formatters = formatters
         self.clinicID = clinicID
         self.eventID = eventID
         self.startsEditing = startsEditing
+        self.analytics = analytics
     }
 
     var isSubmitting: Bool { submitGuard.isBusy }
@@ -180,8 +182,10 @@ final class ProcedureEventViewModel {
         guard canSave, let detail else { return }
         await submitGuard.run {
             generalError = nil
+            let changes = draft.changeCount
             do {
                 let outcome = try await repository.editUsage(draft.edit(eventID: eventID))
+                analytics.track(.procedureUsageEdited(items: changes))
                 message = Message(title: "Usage updated", detail: nil)
                 self.detail = detail.with(items: draft.recordedItems)
                 mode = .done
@@ -217,6 +221,7 @@ final class ProcedureEventViewModel {
             let note = cancelNote.trimmingCharacters(in: .whitespacesAndNewlines)
             do {
                 _ = try await repository.cancel(eventID: eventID, note: note)
+                analytics.track(.procedureCancelled)
                 sheet = nil
                 finished = Message(title: "\(detail.name) cancelled", detail: Self.itemsReturned(detail.itemsDeducted))
             } catch {

@@ -126,7 +126,7 @@ struct RootView: View {
                 .accessibilityIdentifier("root.restoring")
         case .signedOut:
             NavigationStack(path: $signInPath) {
-                SignInView(sessionStore: sessionStore)
+                SignInView(sessionStore: sessionStore, analytics: dependencies.analytics)
                     .navigationDestination(for: OnboardingViewModel.Step.self) { _ in
                         OnboardingView(
                             viewModel: dependencies.makeOnboardingViewModel(sessionStore: sessionStore)

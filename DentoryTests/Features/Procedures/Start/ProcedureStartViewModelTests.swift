@@ -10,11 +10,13 @@ struct ProcedureStartViewModelTests {
     )
     private let rootCanal = ProcedureTemplateDetail.demo[0]
 
-    private func make(_ repository: FakeProcedureStartRepository = FakeProcedureStartRepository()) async
-        -> ProcedureStartViewModel {
+    private func make(
+        _ repository: FakeProcedureStartRepository = FakeProcedureStartRepository(),
+        formatters: ClinicFormatters? = nil, analytics: SpyAnalytics = SpyAnalytics()
+    ) async -> ProcedureStartViewModel {
         let viewModel = ProcedureStartViewModel(
-            repository: repository, formatters: formatters, clinicID: Session.demo.clinicID,
-            templateID: rootCanal.id
+            repository: repository, formatters: formatters ?? self.formatters, clinicID: Session.demo.clinicID,
+            templateID: rootCanal.id, analytics: analytics
         )
         await viewModel.load()
         return viewModel
@@ -170,7 +172,7 @@ struct ProcedureStartViewModelTests {
     @Test func untilTheTemplateIsInStartHasNoCount() {
         let viewModel = ProcedureStartViewModel(
             repository: FakeProcedureStartRepository(), formatters: formatters, clinicID: Session.demo.clinicID,
-            templateID: rootCanal.id
+            templateID: rootCanal.id, analytics: SpyAnalytics()
         )
         #expect(viewModel.startTitle == "Start procedure")
         #expect(viewModel.canStart == false)
@@ -195,11 +197,35 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.started == .init(title: "Root canal started", detail: "12 items deducted"))
     }
 
+    /// MS-147: `procDetail.start` with what Start deducted, the bottles it opened, the short lines and the seconds the
+    /// screen was open.
+    @Test func aStartedProcedureIsCountedWithItsFigures() async {
+        let clock = MovingClock(Session.demoNow)
+        let formatters = ClinicFormatters(
+            currency: "USD", timeZone: TimeZone(identifier: "America/New_York") ?? .current,
+            locale: Locale(identifier: "en_US"), clock: clock
+        )
+        let analytics = SpyAnalytics()
+        let viewModel = await make(formatters: formatters, analytics: analytics)
+        viewModel.toggleTakeNew(id(of: "Surface disinfectant"))
+        clock.now = Session.demoNow.addingTimeInterval(42)
+        await viewModel.start()
+        #expect(analytics.events == [
+            .procedureStarted(items: 11, bottlesOpened: 1, shortages: 1, seconds: 42)
+        ])
+        #expect(analytics.events.first?.payload == [
+            "item_count": .number(11), "bottles_opened": .number(1), "shortage_count": .number(1),
+            "duration_s": .number(42)
+        ])
+    }
+
     @Test func aRefusedStartStaysOnTheScreen() async {
         let repository = FakeProcedureStartRepository()
         repository.startResult = .failure(AppError.readOnly)
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         await viewModel.start()
+        #expect(analytics.events.isEmpty, "Only a procedure that started is counted")
         #expect(viewModel.started == nil)
         #expect(viewModel.generalError == .readOnly)
         viewModel.clearGeneralError()

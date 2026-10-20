@@ -7,10 +7,12 @@ struct ProcedureEditViewModelTests {
     private let rootCanal = ProcedureTemplateDetail.demo[0]
 
     private func make(
-        _ repository: FakeProcedureEditRepository = FakeProcedureEditRepository(), isNew: Bool = false
+        _ repository: FakeProcedureEditRepository = FakeProcedureEditRepository(), isNew: Bool = false,
+        analytics: SpyAnalytics = SpyAnalytics()
     ) async -> ProcedureEditViewModel {
         let viewModel = ProcedureEditViewModel(
-            repository: repository, clinicID: Session.demo.clinicID, templateID: isNew ? nil : rootCanal.id
+            repository: repository, clinicID: Session.demo.clinicID, templateID: isNew ? nil : rootCanal.id,
+            analytics: analytics
         )
         await viewModel.load()
         return viewModel
@@ -51,7 +53,8 @@ struct ProcedureEditViewModelTests {
 
     @Test func untilTheTemplateIsLoadedSaveIsOff() {
         let viewModel = ProcedureEditViewModel(
-            repository: FakeProcedureEditRepository(), clinicID: Session.demo.clinicID, templateID: rootCanal.id
+            repository: FakeProcedureEditRepository(), clinicID: Session.demo.clinicID, templateID: rootCanal.id,
+            analytics: SpyAnalytics()
         )
         #expect(viewModel.state == .loading)
         #expect(!viewModel.canSave)
@@ -138,7 +141,8 @@ struct ProcedureEditViewModelTests {
 
     @Test func saveSendsTheNameAndTheDefaultsInScreenOrder() async throws {
         let repository = FakeProcedureEditRepository()
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         viewModel.name = "  Root canal, molar "
         viewModel[quantityOf: id(of: "Septocaine 4% 1:100,000")] = 3
         viewModel.remove(id(of: "Rubber dam latex-free"))
@@ -151,6 +155,7 @@ struct ProcedureEditViewModelTests {
         #expect(request.lines.map(\.productID) == viewModel.items.map(\.id))
         #expect(request.lines.map(\.defaultQuantity) == [3, 1, 2, 1, 1, 1, 1, 0, 0, 0, 0, 1])
         #expect(viewModel.outcome == .init(title: "Procedure saved", detail: "Root canal, molar · 12 default supplies"))
+        #expect(analytics.events == [.templateSaved(items: 12, isNew: false)], "The count, never the name (MS-147)")
     }
 
     @Test func aNewProcedureWithoutANameIsSavedAsUntitled() async throws {
@@ -210,7 +215,8 @@ struct ProcedureEditViewModelTests {
 
     @Test func deleteArchivesTheTemplateAndSaysSo() async {
         let repository = FakeProcedureEditRepository()
-        let viewModel = await make(repository)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository, analytics: analytics)
         viewModel.name = "Typed but not saved"
         viewModel.askToDelete()
         #expect(viewModel.sheet == .delete)
@@ -220,6 +226,7 @@ struct ProcedureEditViewModelTests {
         #expect(repository.archived == [rootCanal.id])
         #expect(viewModel.outcome == .init(title: "Procedure deleted", detail: "Root canal"))
         #expect(viewModel.sheet == nil)
+        #expect(analytics.events == [.templateDeleted])
     }
 
     @Test func keepClosesTheDeleteSheet() async {
