@@ -26,10 +26,10 @@ struct AccountView: View {
                 switch route {
                 case .team:
                     TeamView(session: session, sessionStore: sessionStore, dependencies: dependencies)
+                case .settings:
+                    ClinicSettingsView(session: session, sessionStore: sessionStore, dependencies: dependencies)
                 case .billing:
                     BillingView(session: session, dependencies: dependencies)
-                case .settings:
-                    AccountRoutePlaceholderView(route: route)
                 }
             }
             .onChange(of: viewModel.message) { _, message in

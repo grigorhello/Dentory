@@ -17,3 +17,14 @@ enum DemoTrial: String {
         }
     }
 }
+
+extension DemoBillingRepository {
+    /// Billing as the launch arguments ask: `-billingNoCard YES` before a card is added, `-trial ended` or
+    /// `-trial ending` without one (screenshots, UI tests).
+    static func launched() -> DemoBillingRepository {
+        DemoBillingRepository(
+            hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard") && DemoTrial.launched == nil,
+            trialEndsAt: DemoTrial.launched?.trialEndsAt ?? BillingSummary.demoTrialEnd
+        )
+    }
+}

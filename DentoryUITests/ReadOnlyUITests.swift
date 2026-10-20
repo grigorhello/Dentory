@@ -65,6 +65,25 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "New product is not gated")
     }
 
+    /// Clinic settings' Save opens the sheet once Clinic settings (MS-139) is in.
+    @MainActor
+    func testClinicSettingsSaveOpensTheSheet() {
+        let app = launch([])
+        let account = app.buttons["home.header.account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 5))
+        account.tap()
+        let settings = app.buttons["more.settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 5), "Account did not open")
+        settings.tap()
+        if !app.staticTexts["settings.title"].waitForExistence(timeout: 2) { settings.tap() }
+        let digest = app.descendants(matching: .any)["settings.digest"]
+        XCTAssertTrue(digest.waitForExistence(timeout: 5), "Clinic settings did not load")
+        digest.tap()
+        app.buttons["settings.save"].tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "No read-only sheet")
+        XCTAssertFalse(app.staticTexts["Settings saved"].exists, "Nothing saved")
+    }
+
     /// The clinic's data stays its own: Export CSV works in read-only mode (MS-143's decision).
     @MainActor
     func testExportStillWorksInReadOnlyMode() {
