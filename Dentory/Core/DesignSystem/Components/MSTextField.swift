@@ -20,6 +20,9 @@ struct MSTextField: View {
     var isSecure = false
     var keyboard: UIKeyboardType = .default
     var contentType: UITextContentType?
+    /// What VoiceOver calls a field whose label is drawn outside it (Billing emails' "Add email"); else the label, else
+    /// the placeholder.
+    var accessibilityText: String?
 
     init(
         _ label: String?,
@@ -34,7 +37,8 @@ struct MSTextField: View {
         suffix: String? = nil,
         isSecure: Bool = false,
         keyboard: UIKeyboardType = .default,
-        contentType: UITextContentType? = nil
+        contentType: UITextContentType? = nil,
+        accessibilityText: String? = nil
     ) {
         self.label = label
         _text = text
@@ -49,6 +53,7 @@ struct MSTextField: View {
         self.isSecure = isSecure
         self.keyboard = keyboard
         self.contentType = contentType
+        self.accessibilityText = accessibilityText
     }
 
     var body: some View {
@@ -75,7 +80,7 @@ struct MSTextField: View {
             input
                 .textStyle(.body16)
                 .foregroundStyle(Color.ms.ink)
-                .accessibilityLabel(label ?? placeholder)
+                .accessibilityLabel(accessibilityText ?? label ?? placeholder)
                 .accessibilityIdentifier(identifier ?? "")
                 .focused($isFocused)
                 .keyboardType(keyboard)

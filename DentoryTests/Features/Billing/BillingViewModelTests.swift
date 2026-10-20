@@ -52,6 +52,13 @@ struct BillingViewModelTests {
         #expect(viewModel.billingEmailText == "owner@smiledental.ca")
     }
 
+    /// PRD §6.9 "Billing emails (count)": the address while there is one, then how many (MS-141 review).
+    @Test func theBillingEmailsRowCountsFromTwo() async {
+        let three = BillingSummary.demo(hasCard: true, emails: ["owner@smiledental.ca", "a@smile.ca", "b@smile.ca"])
+        #expect(await loaded(three).billingEmailText == "3 addresses")
+        #expect(await loaded(BillingSummary.demo(hasCard: true)).billingEmailText == "owner@smiledental.ca")
+    }
+
     @Test func theLastThirtyDaysCountDown() async {
         #expect(await loaded(summary(trialEndsIn: 12)).headline.value == "12 days")
         #expect(await loaded(summary(trialEndsIn: 12)).headline.suffix == "left")

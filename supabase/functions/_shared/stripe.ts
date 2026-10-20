@@ -127,14 +127,30 @@ export function periodEnd(subscription: StripeSubscription): string | null {
 export interface StripeInvoice {
   id: string;
   customer: unknown;
+  /** The address Stripe sent the invoice and its receipt to. */
+  customer_email?: string | null;
   number?: string | null;
   created: number;
   total?: number | null;
   amount_due?: number | null;
   currency: string;
   status?: string | null;
+  /** Stripe tried to charge it (an open invoice it tried is one whose charge failed). */
+  attempted?: boolean | null;
+  status_transitions?: { paid_at?: number | null } | null;
   hosted_invoice_url?: string | null;
   invoice_pdf?: string | null;
+}
+
+/** Still open after Stripe tried to charge it: the payment failed, and Invoices says Failed until it is paid. */
+export function paymentFailed(invoice: StripeInvoice, eventType: string): boolean {
+  return invoice.status === "open" && (invoice.attempted === true || eventType === "invoice.payment_failed");
+}
+
+/** When the invoice was paid, which is not when it was issued once Stripe had to retry or the card changed. */
+export function paidAt(invoice: StripeInvoice): string | null {
+  const seconds = invoice.status_transitions?.paid_at ?? null;
+  return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
 
 /** What billing_record_invoice keeps of an invoice. */
