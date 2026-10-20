@@ -114,8 +114,8 @@ select results_eq(
   $$values ('Smile Dental', array['books@smile.ca'], 'DEN-0001', 4950::bigint, 'usd', 'America/Toronto')$$,
   'a paid invoice''s copy goes to every address but the one Stripe sent its receipt to'
 );
-select is_empty($$select * from public.billing_receipt_copy('in_paid', 'sarah@dentory.test')$$,
-  'not twice while it is being sent');
+select throws_ok($$select * from public.billing_receipt_copy('in_paid', 'sarah@dentory.test')$$, '55P03',
+  'The receipt copy is being sent', 'not twice while it is being sent: that delivery fails, so Stripe tries again later');
 select public.billing_receipt_finish('in_paid', false);
 select is((select count(*)::integer from public.billing_receipt_copy('in_paid', 'sarah@dentory.test')), 1,
   'a failed send frees it for Stripe''s retry of the event');

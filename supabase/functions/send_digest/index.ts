@@ -1,6 +1,7 @@
 // POST /functions/v1/send_digest, called each hour by pg_cron (engine.digest_dispatch, MS-145) with the service role
 // key. Claims the weekly digests that are due (digest_claim), emails each to its clinic's active admins through Resend,
-// then records which went out (digest_finish). A digest that reached at least one admin counts as sent; one that
+// and records each as soon as it went out (digest_finish), so a run the runtime cuts short sends again at most the
+// digest it was in the middle of, not a whole batch. A digest that reached at least one admin counts as sent; one that
 // reached none stays claimed and is retried by a later hour of the same morning. Without RESEND_API_KEY (the local
 // stack) each email is written to the function log instead (PRD §8).
 //
@@ -12,7 +13,7 @@ import { sendEmail } from "../_shared/email.ts";
 import { type Digest, digestEmail, digestLink } from "../_shared/digest-email.ts";
 
 /** Digests claimed at a time, and how long one call keeps claiming before leaving the rest to the next hour. */
-const batchSize = 20;
+const batchSize = 5;
 const budgetMs = 90_000;
 /** Resend accepts 2 requests a second by default. */
 const pauseMs = 600;
@@ -39,18 +40,14 @@ Deno.serve(async (req) => {
       const { data, error } = await db.rpc("digest_claim", { p_limit: batchSize });
       if (error) throw new Error(`digest_claim: ${error.message}`);
       const digests = (data ?? []) as Digest[];
-      const sent: string[] = [];
-      const recipients: number[] = [];
       for (const digest of digests) {
         const reached = await send(digest);
         emails += reached;
         if (reached > 0 || digest.recipients.length === 0) {
-          sent.push(digest.id!);
-          recipients.push(reached);
+          const finish = await db.rpc("digest_finish", { p_sent: [digest.id], p_recipients: [reached] });
+          if (finish.error) throw new Error(`digest_finish: ${finish.error.message}`);
         }
       }
-      const finish = await db.rpc("digest_finish", { p_sent: sent, p_recipients: recipients });
-      if (finish.error) throw new Error(`digest_finish: ${finish.error.message}`);
       claimed += digests.length;
       if (digests.length < batchSize) break;
     }
