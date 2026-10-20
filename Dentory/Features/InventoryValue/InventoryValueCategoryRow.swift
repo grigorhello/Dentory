@@ -39,21 +39,20 @@ struct InventoryValueCategoryRow: View {
     }
 }
 
-/// The 4 pt bar under a category: the share in ink over the line color.
+/// The 4 pt bar under a category: the share in ink over the line color, the track's rounded ends clipping both.
 private struct ShareBar: View {
     let share: Double
 
     var body: some View {
-        Capsule()
+        Rectangle()
             .fill(Color.ms.line)
-            .frame(height: Spacing.xs)
             .overlay(alignment: .leading) {
-                GeometryReader { proxy in
-                    Capsule()
-                        .fill(Color.ms.ink)
-                        .frame(width: proxy.size.width * share)
-                }
+                Rectangle()
+                    .fill(Color.ms.ink)
+                    .scaleEffect(x: share, anchor: .leading)
             }
+            .frame(height: Spacing.xs)
+            .clipShape(Capsule())
     }
 }
 

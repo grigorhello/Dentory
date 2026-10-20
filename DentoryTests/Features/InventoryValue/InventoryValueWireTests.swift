@@ -8,7 +8,8 @@ struct InventoryValueWireTests {
     private let json = #"""
     {"total": 388.60, "at_risk_90": 61.20, "used_30": 55.60, "received_30": 36.00, "uncosted_count": 1,
      "categories": [
-       {"category_id": "00000000-0000-4000-8000-000000013522", "name": "Restorative", "value": 166.00, "product_count": 3},
+       {"category_id": "00000000-0000-4000-8000-000000013522", "name": "Restorative", "value": 166.00,
+        "product_count": 3},
        {"category_id": null, "name": null, "value": 78.40, "product_count": 1}],
      "top_products": [
        {"product_id": "00000000-0000-4000-8000-000000013531", "name": "Septocaine", "unit": "cartridges",
@@ -38,7 +39,8 @@ struct InventoryValueWireTests {
         let value = try JSONDecoder.supabase.decode(InventoryValue.self, from: Data(json.utf8))
         let cached = try JSONDecoder.supabase.decode(InventoryValue.self, from: JSONEncoder.supabase.encode(value))
         #expect(cached == value)
-        let demo = try JSONDecoder.supabase.decode(InventoryValue.self, from: JSONEncoder.supabase.encode(InventoryValue.demo))
+        let demoJSON = try JSONEncoder.supabase.encode(InventoryValue.demo)
+        let demo = try JSONDecoder.supabase.decode(InventoryValue.self, from: demoJSON)
         #expect(demo == .demo)
     }
 }

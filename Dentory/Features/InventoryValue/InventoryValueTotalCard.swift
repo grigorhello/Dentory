@@ -16,7 +16,8 @@ struct InventoryValueTotalCard: View {
                     .accessibilityIdentifier("value.total.amount")
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     ListDivider()
-                    HStack(alignment: .top, spacing: Spacing.md) {
+                    // 8 pt between columns, so "Received, 30 d" keeps one line on a 393 pt wide iPhone.
+                    HStack(alignment: .top, spacing: Spacing.sm) {
                         ForEach(stats) { stat in
                             StatColumn(stat: stat)
                         }
@@ -55,7 +56,9 @@ private struct StatColumn: View {
     InventoryValueTotalCard(
         total: "$12,420",
         stats: [
-            .init(id: "atRisk", label: "Expiring ≤ 90\u{00A0}d", spokenLabel: "Expiring", value: "$186", tone: .warning),
+            .init(
+                id: "atRisk", label: "Expiring ≤ 90\u{00A0}d", spokenLabel: "Expiring", value: "$186", tone: .warning
+            ),
             .init(id: "used", label: "Used, 30\u{00A0}d", spokenLabel: "Used", value: "$2,140", tone: nil),
             .init(id: "received", label: "Received, 30\u{00A0}d", spokenLabel: "Received", value: "$1,890", tone: nil)
         ]
