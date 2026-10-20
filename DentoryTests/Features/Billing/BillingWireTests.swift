@@ -37,4 +37,25 @@ struct BillingWireTests {
         let cached = try JSONDecoder.supabase.decode(BillingSummary.self, from: JSONEncoder.supabase.encode(summary))
         #expect(cached == summary)
     }
+
+    /// `billing_invoices` rows (MS-141) as PostgREST answers them.
+    @Test func anInvoiceRowDecodes() throws {
+        let rows = #"""
+        [{"id": "00000000-0000-4000-8000-000000000901", "number": "DEN-0001", "issued_at": "2027-01-06T14:00:00+00:00",
+          "amount_cents": 4950, "currency": "usd", "status": "paid"},
+         {"id": "00000000-0000-4000-8000-000000000902", "number": null, "issued_at": "2027-02-06T14:00:00+00:00",
+          "amount_cents": 4950, "currency": "usd", "status": "uncollectible"}]
+        """#
+        let invoices = try JSONDecoder.supabase.decode([BillingInvoice].self, from: Data(rows.utf8))
+        #expect(invoices.map(\.status) == [.paid, .uncollectible])
+        #expect(invoices.first?.issuedAt == BillingSummary.demoTrialEnd)
+        #expect(invoices.last?.number == nil)
+    }
+
+    @Test func theSaveSendsTheClinicAndTheOtherAddresses() throws {
+        let params = BillingEmailsParams(pClinicId: Session.demo.clinicID, pExtra: ["books@smiledental.ca"])
+        let json = try JSONSerialization.jsonObject(with: JSONEncoder.supabase.encode(params)) as? [String: Any]
+        #expect(json?["p_extra"] as? [String] == ["books@smiledental.ca"])
+        #expect((json?["p_clinic_id"] as? String)?.lowercased() == Session.demo.clinicID.uuidString.lowercased())
+    }
 }

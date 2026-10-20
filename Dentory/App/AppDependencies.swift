@@ -140,7 +140,10 @@ struct AppDependencies: Sendable {
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
             // `-billingNoCard YES` shows Billing before a card is added (screenshots, UI tests).
-            billingRepository: DemoBillingRepository(hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard")),
+            billingRepository: DemoBillingRepository(
+                hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard"),
+                withInvoices: UserDefaults.standard.bool(forKey: "billingInvoices")
+            ),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
             teamRepository: DemoTeamRepository(),
@@ -173,6 +176,23 @@ struct AppDependencies: Sendable {
             clinicID: session.clinicID, repository: billingRepository, cache: cache,
             formatters: formatters(for: session)
         )
+    }
+
+    /// Billing's invoices (f35, MS-141); `trialEndsAt` dates the empty state.
+    @MainActor
+    func makeInvoicesViewModel(session: Session, trialEndsAt: Date?) -> InvoicesViewModel {
+        InvoicesViewModel(
+            clinicID: session.clinicID, repository: billingRepository, cache: cache,
+            formatters: formatters(for: session), trialEndsAt: trialEndsAt
+        )
+    }
+
+    /// The billing emails sheet (MS-141); `onSaved` refreshes Billing's row.
+    @MainActor
+    func makeBillingEmailsViewModel(
+        session: Session, onSaved: @escaping () async -> Void
+    ) -> BillingEmailsViewModel {
+        BillingEmailsViewModel(clinicID: session.clinicID, repository: billingRepository, onSaved: onSaved)
     }
 
     /// The Procedures tab of the signed-in clinic (MS-122).

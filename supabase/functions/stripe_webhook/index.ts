@@ -1,11 +1,14 @@
 // POST /functions/v1/stripe_webhook, called by Stripe (MS-140). verify_jwt is off for it: the Stripe-Signature header,
 // signed with STRIPE_WEBHOOK_SECRET, is the check. Subscription and invoice events are read back from Stripe as it
 // holds them now, so events arriving out of order or retried days later do no harm: subscriptions set the clinic's
-// status, next payment and card; invoices are kept (the $0 one that opens a trial is not). Checkout completed links a
-// new subscription to the clinic it was opened for. Other events are acknowledged.
+// status, next payment and card; invoices are kept (the $0 one that opens a trial is not), and once one is paid the
+// billing emails after the primary get Dentory's copy of the receipt (MS-141). Checkout completed links a new
+// subscription to the clinic it was opened for. Other events are acknowledged.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, json } from "../_shared/http.ts";
 import { serviceClient } from "../_shared/supabase.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { type ReceiptCopy, receiptCopyEmail } from "../_shared/receipt-email.ts";
 import {
   invoiceParams,
   periodEnd,
@@ -76,6 +79,7 @@ async function handle(event: StripeEvent, config: StripeConfig, db: SupabaseClie
     case "invoice.marked_uncollectible": {
       const invoice = await stripeRequest<StripeInvoice>(config, "GET", `/v1/invoices/${String(object.id)}`);
       await rpc(db, "billing_record_invoice", invoiceParams(invoice));
+      if (invoice.status === "paid") await sendReceiptCopies(db, invoice.id);
       return;
     }
   }
@@ -104,6 +108,17 @@ async function applyCard(config: StripeConfig, db: SupabaseClient, customerID: s
     p_brand: method.card?.brand ?? method.type,
     p_last4: method.card?.last4 ?? null,
   });
+}
+
+/** Dentory's copy of the receipt, once per paid invoice, to every billing email after the primary. */
+async function sendReceiptCopies(db: SupabaseClient, invoiceID: string) {
+  const { data, error } = await db.rpc("billing_receipt_copy", { p_stripe_invoice_id: invoiceID });
+  if (error) throw new Error(`billing_receipt_copy: ${error.message}`);
+  for (const copy of (data ?? []) as ReceiptCopy[]) {
+    for (const to of copy.emails) {
+      await sendEmail(receiptCopyEmail(copy, to)).catch((failure) => console.error("receipt copy", failure));
+    }
+  }
 }
 
 async function rpc(db: SupabaseClient, name: string, params: Record<string, unknown>) {

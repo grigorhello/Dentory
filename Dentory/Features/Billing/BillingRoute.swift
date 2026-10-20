@@ -1,7 +1,6 @@
 import Foundation
 
-/// Where Billing leads; both screens arrive with MS-141.
+/// Where Billing leads: Invoices (f35, MS-141). Billing emails is a sheet.
 enum BillingRoute: Hashable {
     case invoices
-    case emails
 }
