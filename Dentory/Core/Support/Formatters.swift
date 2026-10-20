@@ -29,14 +29,39 @@ nonisolated struct ClinicFormatters: Sendable {
         amount.formatted(.currency(code: currency).precision(.fractionLength(2...4)).locale(locale))
     }
 
-    /// "54 cartridges", "1 box", "2.5 bags"
+    /// "54 cartridges", "1 box", "2.5 bags": one of a unit stored in the plural reads singular ("1 bottle", f27).
     func quantity(_ amount: Decimal, unit: String) -> String {
-        "\(number(amount)) \(unit)"
+        "\(number(amount)) \(amount == 1 ? Self.singular(of: unit) : unit)"
+    }
+
+    /// "bottle" for "bottles", "box" for "boxes", "battery" for "batteries"; a unit that is not an English plural
+    /// stays as it is.
+    nonisolated static func singular(of unit: String) -> String {
+        let lowercased = unit.lowercased()
+        if lowercased.hasSuffix("ies") { return String(unit.dropLast(3)) + "y" }
+        if ["xes", "ches", "shes", "sses"].contains(where: { lowercased.hasSuffix($0) }) {
+            return String(unit.dropLast(2))
+        }
+        if lowercased.hasSuffix("s") && !lowercased.hasSuffix("ss") { return String(unit.dropLast()) }
+        return unit
     }
 
     /// "54", "2.5": at most two decimals, no trailing zeros.
     func number(_ amount: Decimal) -> String {
         amount.formatted(.number.precision(.fractionLength(0...2)).locale(locale))
+    }
+
+    /// "1000", "2.5": a number a field opens on, with no thousands separator, so it reads back as typed.
+    func editableNumber(_ amount: Decimal) -> String {
+        amount.formatted(.number.grouping(.never).precision(.fractionLength(0...2)).locale(locale))
+    }
+
+    /// What a quantity field reads as a number, "1,000" and "1000" alike in the clinic's locale; nil for an empty
+    /// field or anything that is not a number.
+    func parseNumber(_ text: String) -> Decimal? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
+        return try? Decimal(trimmed, format: .number.locale(locale))
     }
 
     /// "Dec 1, 2026"
@@ -54,6 +79,11 @@ nonisolated struct ClinicFormatters: Sendable {
     /// "Dec 1, 2026" for a Postgres `date`.
     func date(_ day: CalendarDay) -> String {
         date(day.start(in: timeZone))
+    }
+
+    /// "8:40 AM": an hour of today (f8).
+    func time(_ date: Date) -> String {
+        date.formatted(style.hour().minute())
     }
 
     /// "Oct 1": a recent day without its year, as lists show it (f20).

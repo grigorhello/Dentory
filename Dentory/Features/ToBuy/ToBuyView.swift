@@ -5,7 +5,6 @@ import SwiftUI
 /// chosen and after any stock change, so the tab's badge keeps the count of lines still to buy.
 struct ToBuyView: View {
     @Environment(\.appDependencies) private var dependencies
-    @Environment(\.tabBarInset) private var tabBarInset
     @Environment(AppRouter.self) private var router
     @State private var viewModel: ToBuyViewModel
 
@@ -18,14 +17,14 @@ struct ToBuyView: View {
             .rootScreen(title: "To buy", identifier: "order.header")
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if viewModel.showsMarkOrdered {
-                    PinnedPrimaryBar {
+                    // The tab stays alive behind the others: toasts on them float above this bar only while it shows.
+                    PinnedPrimaryBar(reportsHeight: router.selectedTab == .toBuy) {
                         MSButton(
                             viewModel.markOrderedTitle, isFullWidth: true, isLoading: viewModel.isMarking,
                             isDisabled: viewModel.selectedItems.isEmpty, action: markOrdered
                         )
                         .accessibilityIdentifier("order.markOrdered")
                     }
-                    .padding(.bottom, tabBarInset)
                 }
             }
             .reloadOnReturn { await viewModel.load() }

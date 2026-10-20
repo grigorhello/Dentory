@@ -38,7 +38,7 @@ final class AdjustInventoryViewModel {
         unit = detail.unit
         isMultiUse = detail.tracking == .multiUse
         self.estimate = estimate
-        quantityText = formatters.number(estimate)
+        quantityText = formatters.editableNumber(estimate)
         self.repository = repository
         self.formatters = formatters
     }
@@ -59,9 +59,7 @@ final class AdjustInventoryViewModel {
 
     /// The typed quantity, or nil when it is not a number.
     var actualQuantity: Decimal? {
-        let text = quantityText.trimmingCharacters(in: .whitespaces)
-        guard !text.isEmpty, let value = Decimal(string: text, locale: formatters.locale) else { return nil }
-        return value
+        formatters.parseNumber(quantityText)
     }
 
     var quantityError: String? {
