@@ -25,6 +25,7 @@ struct AppDependencies: Sendable {
     let toBuyRepository: ToBuyRepository
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
+    let procedureEventRepository: ProcedureEventRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -75,6 +76,7 @@ struct AppDependencies: Sendable {
             toBuyRepository: SupabaseToBuyRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
+            procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -130,6 +132,7 @@ struct AppDependencies: Sendable {
             toBuyRepository: DemoToBuyRepository(),
             expiringRepository: expiring,
             activityRepository: activity,
+            procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -199,6 +202,15 @@ struct AppDependencies: Sendable {
         ActivityViewModel(
             repository: activityRepository, cache: cache, formatters: formatters(for: session),
             clinicID: session.clinicID
+        )
+    }
+
+    /// A past procedure of the signed-in clinic, in editing mode straight away from Home's Edit usage (MS-124).
+    @MainActor
+    func makeProcedureEventViewModel(eventID: UUID, startsEditing: Bool, session: Session) -> ProcedureEventViewModel {
+        ProcedureEventViewModel(
+            repository: procedureEventRepository, formatters: formatters(for: session), clinicID: session.clinicID,
+            eventID: eventID, startsEditing: startsEditing
         )
     }
 

@@ -1,7 +1,6 @@
 import Foundation
 
-/// Screens the Procedures tab pushes on its own stack. A past procedure is a placeholder pushed screen until its
-/// ticket (MS-124).
+/// Screens the Procedures tab pushes on its own stack.
 enum ProcedureRoute: Hashable {
     /// Adjust, then start (MS-123).
     case start(templateID: UUID)
