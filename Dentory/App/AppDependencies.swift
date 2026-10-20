@@ -29,6 +29,7 @@ struct AppDependencies: Sendable {
     let billingRepository: BillingRepository
     let inventoryValueRepository: InventoryValueRepository
     let accountRepository: AccountRepository
+    let teamRepository: TeamRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -85,6 +86,7 @@ struct AppDependencies: Sendable {
             billingRepository: SupabaseBillingRepository(client: client),
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             accountRepository: SupabaseAccountRepository(client: client),
+            teamRepository: SupabaseTeamRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client),
@@ -145,6 +147,7 @@ struct AppDependencies: Sendable {
             billingRepository: DemoBillingRepository(hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard")),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
+            teamRepository: DemoTeamRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -258,12 +261,38 @@ struct AppDependencies: Sendable {
     }
 
     /// Account of the signed-in member (MS-137); signing out clears this device's cache and queued writes.
+    /// The clinic's cached answers and the writes waiting for a connection, gone when the server signs the member out
+    /// on this device (MS-138), as Sign out clears them (MS-137).
+    @MainActor
+    func clearClinicData() {
+        cache.removeAll()
+        writes.queue.removeAll()
+    }
+
     @MainActor
     func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
         AccountViewModel(
             session: session, repository: accountRepository, cache: cache,
             signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push)
         )
+    }
+
+    /// The team of the signed-in clinic (MS-138). After the admin changes their own role or leaves, the session is
+    /// checked again so the app follows.
+    @MainActor
+    func makeTeamViewModel(session: Session, sessionStore: SessionStore?) -> TeamViewModel {
+        TeamViewModel(
+            session: session, repository: teamRepository, cache: cache, formatters: formatters(for: session),
+            sessionChanged: { await sessionStore?.revalidate() }
+        )
+    }
+
+    /// Invite a teammate (MS-138, Appendix C `invite`).
+    @MainActor
+    func makeInviteTeammateViewModel(
+        clinicID: UUID, onSent: @escaping () async -> Void
+    ) -> InviteTeammateViewModel {
+        InviteTeammateViewModel(clinicID: clinicID, repository: teamRepository, onSent: onSent)
     }
 
     /// Product detail for one product of the signed-in clinic (MS-116).

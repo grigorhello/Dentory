@@ -7,9 +7,11 @@ struct AccountView: View {
     @State private var viewModel: AccountViewModel
     @State private var showsHelp = false
     private let session: Session
+    private let sessionStore: SessionStore
 
     init(session: Session, sessionStore: SessionStore, dependencies: AppDependencies) {
         self.session = session
+        self.sessionStore = sessionStore
         _viewModel = State(
             initialValue: dependencies.makeAccountViewModel(session: session, sessionStore: sessionStore)
         )
@@ -21,9 +23,11 @@ struct AccountView: View {
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: AccountRoute.self) { route in
                 switch route {
+                case .team:
+                    TeamView(session: session, sessionStore: sessionStore, dependencies: dependencies)
                 case .billing:
                     BillingView(session: session, dependencies: dependencies)
-                case .team, .settings:
+                case .settings:
                     AccountRoutePlaceholderView(route: route)
                 }
             }
