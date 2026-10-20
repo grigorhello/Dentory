@@ -388,6 +388,10 @@ allow_dynamic_registration = false
 [functions.accept_invitation]
 verify_jwt = false
 
+# send_push is called by the database's cron job (MS-144); it checks the bearer is the service role key itself.
+[functions.send_push]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.
