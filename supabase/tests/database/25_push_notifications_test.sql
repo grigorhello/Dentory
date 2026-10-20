@@ -3,6 +3,9 @@
 begin;
 select plan(31);
 
+-- The demo seed's alerts queued pushes of their own when CI loads it; this test counts its own rows only.
+update public.push_outbox set skipped = 'stale' where sent_at is null and skipped is null;
+
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000014401', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
   ('00000000-0000-4000-8000-000000014402', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'michael@dentory.test'),
