@@ -101,7 +101,7 @@ struct AppDependencies: Sendable {
         // `-onboarding invite` resumes admin sign-up at step 3 (screenshots).
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         let expiring = DemoExpiringRepository()
-        let activity = DemoActivityRepository()
+        let activity = DemoActivityRepository(extraHistory: UserDefaults.standard.integer(forKey: "demoHistoryRows"))
         return AppDependencies(
             rpc: rpc,
             auth: auth,
@@ -193,6 +193,15 @@ struct AppDependencies: Sendable {
         ExpiringViewModel(
             repository: expiringRepository, cache: cache, formatters: formatters(for: session),
             clinicID: session.clinicID, isAdmin: session.isAdmin, window: window
+        )
+    }
+
+    /// Activity's History of the signed-in clinic, or of one product from Product detail's Show all (MS-134).
+    @MainActor
+    func makeActivityHistoryViewModel(session: Session, productID: UUID?) -> ActivityHistoryViewModel {
+        ActivityHistoryViewModel(
+            repository: activityRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, productID: productID
         )
     }
 
