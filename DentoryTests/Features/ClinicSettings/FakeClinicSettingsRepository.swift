@@ -1,7 +1,7 @@
 import Foundation
 @testable import Dentory
 
-/// Answers `stored`, records each save and logo, and throws `saveFailure` or `logoFailure` when set.
+/// Answers `stored`, records each save and logo, and throws `saveFailure`, `logoFailure` or `downloadFailure` when set.
 final class FakeClinicSettingsRepository: ClinicSettingsRepository, @unchecked Sendable {
     var stored = ClinicSettings(
         name: "Smile Dental", city: "Toronto", country: "CA", currency: "CAD", timeZone: "America/Toronto",
@@ -9,6 +9,7 @@ final class FakeClinicSettingsRepository: ClinicSettingsRepository, @unchecked S
     )
     var saveFailure: Error?
     var logoFailure: Error?
+    var downloadFailure: Error?
     private(set) var saves: [ClinicSettings] = []
     private(set) var logos: [Data] = []
 
@@ -28,6 +29,7 @@ final class FakeClinicSettingsRepository: ClinicSettingsRepository, @unchecked S
     }
 
     func logo(path: String) async throws -> Data {
-        Data("logo".utf8)
+        if let downloadFailure { throw downloadFailure }
+        return Data("logo".utf8)
     }
 }

@@ -34,8 +34,11 @@ begin
   if not coalesce(public.clinic_can_write(p_clinic_id), false) then
     raise exception 'The clinic is read-only until a payment method is added' using errcode = '42501';
   end if;
-  if length(v_name) < 1 or length(v_name) > 120 then
+  if length(v_name) < 1 then
     raise exception 'Enter the clinic name' using errcode = '22023', hint = 'name';
+  end if;
+  if length(v_name) > 120 then
+    raise exception 'Keep the clinic name to 120 characters' using errcode = '22023', hint = 'name';
   end if;
   if v_country !~ '^[A-Z]{2}$' then
     raise exception 'Choose a country' using errcode = '22023', hint = 'country';

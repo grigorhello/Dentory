@@ -138,7 +138,7 @@ struct AppDependencies: Sendable {
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
             toBuyRepository: DemoToBuyRepository(),
-            clinicSettingsRepository: DemoClinicSettingsRepository(),
+            clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
@@ -229,7 +229,7 @@ struct AppDependencies: Sendable {
     func makeClinicSettingsViewModel(session: Session, sessionStore: SessionStore?) -> ClinicSettingsViewModel {
         ClinicSettingsViewModel(
             clinicID: session.clinicID, repository: clinicSettingsRepository, locale: locale,
-            onSaved: { await sessionStore?.refresh() }
+            onSaved: { await sessionStore?.revalidate() }
         )
     }
 

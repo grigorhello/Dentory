@@ -26,7 +26,7 @@ final class ClinicSettingsViewModel {
 
     private(set) var state: LoadState = .loading
     private(set) var nameError: String?
-    /// A refusal that belongs to no field, shown above the fields.
+    /// A refusal that belongs to no field: a toast, the fields keeping what was typed (PRD §7).
     private(set) var generalError: AppError?
     private(set) var isSaving = false
     var isConfirmingDiscard = false
@@ -97,15 +97,23 @@ final class ClinicSettingsViewModel {
         logoData ?? savedLogo
     }
 
-    /// "Tap to replace." under a logo (PRD Appendix B `settings.logo`), "Tap to upload." without one.
+    /// "Tap to replace." under a logo (PRD Appendix B `settings.logo`), even one that did not download; "Tap to
+    /// upload." without one.
     var logoHint: String {
-        logoPreview == nil ? "Tap to upload." : "Tap to replace."
+        logoPreview == nil && saved?.logoPath == nil ? "Tap to upload." : "Tap to replace."
     }
+
+    /// The longest name the server keeps (`clinic_settings_save`).
+    static let nameLimit = 120
 
     func save() async {
         guard canSave, let edited else { return }
         guard !edited.name.isEmpty else {
             nameError = "Enter the clinic name"
+            return
+        }
+        guard edited.name.count <= Self.nameLimit else {
+            nameError = "Keep the clinic name to 120 characters"
             return
         }
         isSaving = true
@@ -155,6 +163,10 @@ final class ClinicSettingsViewModel {
 
     func clearMessage() {
         message = nil
+    }
+
+    func clearGeneralError() {
+        generalError = nil
     }
 
     private func show(_ settings: ClinicSettings) {

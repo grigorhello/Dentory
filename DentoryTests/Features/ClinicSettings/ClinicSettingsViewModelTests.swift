@@ -68,6 +68,30 @@ struct ClinicSettingsViewModelTests {
         await viewModel.save()
         #expect(viewModel.generalError?.userMessage == "Couldn't save. Try again.", "Not queued, so nothing is retried")
         #expect(viewModel.message == nil)
+        viewModel.clearGeneralError()
+        #expect(viewModel.generalError == nil, "Shown once as a toast")
+    }
+
+    @Test func aLogoThatDidNotDownloadIsStillOneToReplace() async {
+        let repository = FakeClinicSettingsRepository()
+        #expect(await make(repository).logoHint == "Tap to upload.", "No logo yet")
+        repository.stored.logoPath = "logos/smile.jpg"
+        repository.downloadFailure = AppError.network
+        let viewModel = await make(repository)
+        #expect(viewModel.logoPreview == nil)
+        #expect(viewModel.logoHint == "Tap to replace.")
+    }
+
+    @Test func aNameOfMoreThan120CharactersIsNotSent() async {
+        let repository = FakeClinicSettingsRepository()
+        let viewModel = await make(repository)
+        viewModel.name = String(repeating: "a", count: 121)
+        await viewModel.save()
+        #expect(viewModel.nameError == "Keep the clinic name to 120 characters")
+        #expect(repository.saves.isEmpty)
+        viewModel.name = String(repeating: "a", count: 120)
+        await viewModel.save()
+        #expect(repository.saves.count == 1)
     }
 
     @Test func aPickedLogoIsUploadedOnSaveAndKeptToRetry() async {

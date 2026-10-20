@@ -29,6 +29,11 @@ struct ClinicSettingsView: View {
                 dependencies.toasts.show(message)
                 viewModel.clearMessage()
             }
+            .onChange(of: viewModel.generalError) { _, error in
+                guard let error else { return }
+                dependencies.toasts.show(error.userMessage)
+                viewModel.clearGeneralError()
+            }
             .msSheet(isPresented: $viewModel.isConfirmingDiscard) {
                 DiscardChangesSheet(onDiscard: discard, onKeep: viewModel.keepEditing)
             }
@@ -50,9 +55,6 @@ struct ClinicSettingsView: View {
     }
 
     @ViewBuilder private var form: some View {
-        if let error = viewModel.generalError {
-            Notice(error.userMessage, tone: .danger)
-        }
         // The picker's label closure is Sendable in the iOS 26 SDK: it takes the values, not the view model.
         let logoPreview = viewModel.logoPreview
         let logoHint = viewModel.logoHint

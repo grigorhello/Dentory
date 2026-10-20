@@ -1,7 +1,7 @@
 -- MS-139 · Clinic settings: who may save, the sentence and field of each refusal, what is stored, and the expiry
 -- alerts following a new expiry warning or time zone at once.
 begin;
-select plan(18);
+select plan(19);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000017401', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -72,6 +72,8 @@ reset role;
 select pg_temp.act_as('00000000-0000-4000-8000-000000017401');
 select throws_ok($$select pg_temp.save('   ', '{90}')$$, '22023', 'Enter the clinic name', 'the name is required');
 select is(pg_temp.field_of($$select pg_temp.save('   ', '{90}')$$), 'name', 'under the name field');
+select throws_ok($$select pg_temp.save(repeat('a', 121), '{90}')$$, '22023', 'Keep the clinic name to 120 characters',
+  'a name is 120 characters at most');
 select throws_ok($$select pg_temp.save('Smile Dental', '{90}', p_country => 'Canada')$$, '22023', 'Choose a country',
   'the country is a two-letter code');
 select throws_ok($$select pg_temp.save('Smile Dental', '{90}', p_currency => 'dollars')$$, '22023', 'Choose a currency',

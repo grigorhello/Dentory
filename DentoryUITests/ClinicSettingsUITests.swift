@@ -30,6 +30,27 @@ final class ClinicSettingsUITests: XCTestCase {
         XCTAssertFalse(save.isEnabled, "Saved is the new starting point")
     }
 
+    /// A new name reaches the screens already open: Account's card reads it after Back (MS-139 review).
+    @MainActor
+    func testARenamedClinicShowsOnAccount() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
+        app.launch()
+        openSettings(in: app)
+
+        let name = app.textFields["settings.clinicName"]
+        name.tap()
+        name.typeText(" Group")
+        app.buttons["settings.save"].tap()
+        XCTAssertTrue(app.staticTexts["Settings saved"].waitForExistence(timeout: 5), "No toast")
+        let back = app.buttons["settings.back"]
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        back.tap()
+        let user = app.descendants(matching: .any)["more.user"]
+        XCTAssertTrue(user.waitForExistence(timeout: 5), "Back did not return to Account")
+        XCTAssertTrue(user.label.contains("Admin · Smile Dental Group"), "The card reads \(user.label)")
+    }
+
     @MainActor
     func testLeavingWithChangesAsksFirst() {
         let app = XCUIApplication()
