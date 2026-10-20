@@ -41,7 +41,12 @@ struct ProcedureStartView: View {
                 viewModel.clearGeneralError()
             }
             .msSheet(item: $viewModel.sheet) { _ in
-                AddProcedureItemSheet(picker: viewModel)
+                AddProcedureItemSheet(
+                    searchText: $viewModel.searchText, products: viewModel.addableProducts,
+                    emptyText: viewModel.addItemEmptyText, outOfStockProductID: viewModel.outOfStockProductID,
+                    caption: viewModel.addCaption(for:), captionTone: viewModel.addCaptionTone(for:),
+                    onAdd: viewModel.add, load: viewModel.loadProducts
+                )
             }
     }
 

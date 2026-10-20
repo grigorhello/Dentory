@@ -7,7 +7,7 @@ import Observation
 /// `ProcedureUsageDraft`; the lines are in `ProcedureEventViewModel+Lines.swift`.
 @MainActor
 @Observable
-final class ProcedureEventViewModel: ProcedureItemPicking {
+final class ProcedureEventViewModel {
     enum LoadState: Equatable { case loading, loaded, failed(AppError) }
 
     enum Mode: Equatable { case done, editing }

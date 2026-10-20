@@ -37,7 +37,12 @@ struct ProcedureEventView: View {
             .msSheet(item: $viewModel.sheet) { sheet in
                 switch sheet {
                 case .addItem:
-                    AddProcedureItemSheet(picker: viewModel)
+                    AddProcedureItemSheet(
+                        searchText: $viewModel.searchText, products: viewModel.addableProducts,
+                        emptyText: viewModel.addItemEmptyText, outOfStockProductID: viewModel.outOfStockProductID,
+                        caption: viewModel.addCaption(for:), captionTone: viewModel.addCaptionTone(for:),
+                        onAdd: viewModel.add, load: viewModel.loadProducts
+                    )
                 case .cancel:
                     CancelProcedureSheet(viewModel: viewModel)
                 }

@@ -7,7 +7,7 @@ import Observation
 /// summary, the row lines and the labels are in `ProcedureStartViewModel+Lines.swift`.
 @MainActor
 @Observable
-final class ProcedureStartViewModel: ProcedureItemPicking {
+final class ProcedureStartViewModel {
     enum LoadState: Equatable { case loading, loaded, failed(AppError) }
 
     /// A countable supply on the list and the quantity this procedure takes; an added product defaults to 1.

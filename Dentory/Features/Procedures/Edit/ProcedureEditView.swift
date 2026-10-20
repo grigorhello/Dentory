@@ -38,7 +38,11 @@ struct ProcedureEditView: View {
             .msSheet(item: $viewModel.sheet) { sheet in
                 switch sheet {
                 case .addItem:
-                    AddProcedureItemSheet(picker: viewModel)
+                    AddProcedureItemSheet(
+                        searchText: $viewModel.searchText, products: viewModel.addableProducts,
+                        emptyText: viewModel.addItemEmptyText, caption: viewModel.addCaption(for:),
+                        onAdd: viewModel.add, load: viewModel.loadProducts
+                    )
                 case .delete:
                     DeleteProcedureSheet(viewModel: viewModel)
                 }

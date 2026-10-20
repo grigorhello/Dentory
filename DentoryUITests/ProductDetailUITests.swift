@@ -35,10 +35,15 @@ final class ProductDetailUITests: XCTestCase {
         app.buttons["toast.undo"].tap()
         XCTAssertTrue(app.buttons["Add to buy"].waitForExistence(timeout: 3), "Undo did not take it off the list")
 
-        app.swipeUp()
         let delete = app.descendants(matching: .any)["product.delete"]
         XCTAssertTrue(delete.waitForExistence(timeout: 3), "Admin has no Delete product")
-        app.swipeDown()
+        for _ in 0..<3 where !delete.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(delete.isHittable, "Delete product is out of reach at the bottom")
+        // The header stays pinned (f20-2): Edit and Back are in reach at the bottom of a long screen.
+        XCTAssertTrue(app.buttons["product.edit"].isHittable, "Edit scrolled away")
+        XCTAssertTrue(app.buttons["product.back"].isHittable, "Back scrolled away")
         app.buttons["product.back"].tap()
         XCTAssertTrue(app.staticTexts["inv.header.title"].waitForExistence(timeout: 5))
     }
