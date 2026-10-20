@@ -9,19 +9,19 @@ struct TeamMemberRow: View {
     let role: MembershipRole
     var showsDivider = true
     /// The circle grows with Dynamic Type, so the initials stay inside it.
-    @ScaledMetric(relativeTo: .subheadline) private var avatarSize = ControlHeight.md
+    @ScaledMetric(relativeTo: .caption) private var avatarSize = ControlHeight.sm
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: Spacing.md) {
                 Text(initials)
-                    .textStyle(.bodyStrong14)
+                    .textStyle(.micro12)
                     .foregroundStyle(Color.ms.ink)
                     .lineLimit(1)
                     .frame(width: avatarSize, height: avatarSize)
                     .background(Color.ms.canvasSunken, in: Circle())
                     .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(title).textStyle(.body16).foregroundStyle(Color.ms.ink)
                     Text(subtitle).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
                 }

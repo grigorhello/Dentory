@@ -81,18 +81,23 @@ struct TeamView: View {
         }
     }
 
+    /// `team.member[userId].menu`: its choices go by `.role`, `.resend` and `.remove` under that id.
     @ViewBuilder private func menu(for member: TeamMember) -> some View {
+        let menu = "\(viewModel.identifier(for: member)).menu"
         Button(viewModel.changeRoleTitle(for: member)) {
             Task { await viewModel.changeRole(of: member) }
         }
+        .accessibilityIdentifier("\(menu).role")
         if member.isPending {
             Button("Resend invitation") {
                 Task { await viewModel.resend(member) }
             }
+            .accessibilityIdentifier("\(menu).resend")
         }
         Button(viewModel.removeTitle(for: member), role: .destructive) {
             viewModel.askToRemove(member)
         }
+        .accessibilityIdentifier("\(menu).remove")
         Button("Cancel", role: .cancel) {}
     }
 

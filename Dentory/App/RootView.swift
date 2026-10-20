@@ -15,6 +15,7 @@ struct RootView: View {
     /// Set while step 3 of admin sign-up is still due for the signed-in clinic.
     @State private var pendingInviteClinicID: UUID?
     @State private var didReadProgress = false
+    @State private var foregroundReturn = ForegroundReturn()
     /// Admin sign-up steps and Reset password, pushed on Sign in. `-onboarding account` (screenshots) starts
     /// with step 1 already pushed.
     @State private var signInPath: NavigationPath
@@ -90,9 +91,9 @@ struct RootView: View {
             didReadProgress = true
             pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
         }
-        .onChange(of: scenePhase) { previous, phase in
+        .onChange(of: scenePhase) { _, phase in
             // Back from the background: a role changed or a removal elsewhere takes effect here (MS-138).
-            guard previous == .background, phase == .active else { return }
+            guard foregroundReturn.phaseChanged(to: phase) else { return }
             Task { await sessionStore.revalidate() }
         }
         .onChange(of: sessionStore.state) { _, state in
@@ -147,6 +148,9 @@ struct RootView: View {
                 .environment(router)
                 .environment(sessionStore)
                 .environment(\.session, session)
+                .environment(\.membershipCheck, MembershipCheckAction { [sessionStore] in
+                    await sessionStore.revalidateIfDue()
+                })
                 // A changed role rebuilds the screens, so the controls follow it at once (MS-138).
                 .id(session.role)
         }

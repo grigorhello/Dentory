@@ -19,10 +19,14 @@ final class SessionStore {
     private(set) var accessWasRevoked = false
 
     private let auth: AuthServicing
+    private let now: () -> Date
+    /// When the server last vouched for the signed-in member: restore, sign in or a check (MS-138).
+    private var lastChecked: Date?
 
-    init(auth: AuthServicing, state: State = .restoring) {
+    init(auth: AuthServicing, state: State = .restoring, now: @escaping () -> Date = Date.init) {
         self.auth = auth
         self.state = state
+        self.now = now
     }
 
     var session: Session? {
@@ -31,6 +35,7 @@ final class SessionStore {
     }
 
     func restore() async {
+        lastChecked = now()
         do {
             switch try await auth.restore() {
             case .none: state = .signedOut
@@ -48,20 +53,36 @@ final class SessionStore {
     /// from the clinic is signed out, with the revoked-access toast on Sign in. Offline, the session stays as it is.
     func revalidate() async {
         guard case .signedIn(let current) = state else { return }
+        lastChecked = now()
+        let answer: Result<RestoredSession, Error>
         do {
-            switch try await auth.restore() {
-            case .signedIn(let session):
-                if session != current { state = .signedIn(session) }
-            case .none, .needsClinic:
-                state = .signedOut
-            }
+            answer = .success(try await auth.restore())
         } catch {
+            answer = .failure(error)
+        }
+        // Signed out, or changed by another check, while this one waited: its answer is stale.
+        guard state == .signedIn(current) else { return }
+        switch answer {
+        case .success(.signedIn(let session)):
+            if session != current { state = .signedIn(session) }
+        case .success(.none), .success(.needsClinic):
+            state = .signedOut
+        case .failure(let error):
             guard AppError(error) == .forbidden else { return }
             lastError = .forbidden
             accessWasRevoked = true
             state = .signedOut
         }
     }
+
+    /// The same check as a screen loads, at most once a minute, so a removed member is signed out on their next request
+    /// without a check for every one (MS-138).
+    func revalidateIfDue() async {
+        if let lastChecked, now().timeIntervalSince(lastChecked) < Self.checkInterval { return }
+        await revalidate()
+    }
+
+    static let checkInterval: TimeInterval = 60
 
     /// After admin sign-up step 1: the user exists, the clinic does not yet.
     func didSignUp(_ account: Account) {
@@ -82,6 +103,7 @@ final class SessionStore {
         lastError = nil
         do {
             state = .signedIn(try await auth.signIn(email: email, password: password))
+            lastChecked = now()
             return true
         } catch {
             lastError = AppError(error)

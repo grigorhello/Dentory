@@ -84,4 +84,41 @@ struct SessionStoreTests {
         #expect(store.state == .signedOut, "Removed from the clinic")
         #expect(store.accessWasRevoked, "Sign in says why")
     }
+
+    /// MS-138: screens check the member as they load, at most once a minute; a return to the foreground always does.
+    @Test func screensCheckTheMemberAtMostOnceAMinute() async {
+        let auth = FakeAuthService(storedSession: .demo)
+        var clock = Date(timeIntervalSince1970: 1_790_933_260)
+        let store = SessionStore(auth: auth, now: { clock })
+        await store.restore()
+        await store.revalidateIfDue()
+        #expect(auth.restoreCount == 1, "Restoring at launch was the check")
+
+        clock += SessionStore.checkInterval
+        await store.revalidateIfDue()
+        #expect(auth.restoreCount == 2)
+
+        clock += 30
+        await store.revalidateIfDue()
+        #expect(auth.restoreCount == 2, "Within the minute")
+        await store.revalidate()
+        #expect(auth.restoreCount == 3, "The return to the foreground checks anyway")
+
+        auth.restoreError = AppError.forbidden
+        clock += SessionStore.checkInterval
+        await store.revalidateIfDue()
+        #expect(store.state == .signedOut, "Removed: signed out as the next screen loads")
+    }
+
+    /// MS-138: a check that answers after the member signed out changes nothing.
+    @Test func aCheckAnsweringAfterSignOutIsIgnored() async {
+        let auth = FakeAuthService(storedSession: .demo(role: .staff))
+        auth.restoreDelay = .milliseconds(100)
+        let store = SessionStore(auth: auth, state: .signedIn(.demo))
+        let check = Task { await store.revalidate() }
+        while auth.restoreCount == 0 { await Task.yield() }
+        await store.signOut()
+        await check.value
+        #expect(store.state == .signedOut)
+    }
 }

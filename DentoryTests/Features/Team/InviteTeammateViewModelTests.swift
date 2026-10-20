@@ -40,12 +40,13 @@ struct InviteTeammateViewModelTests {
     @Test func anAddressOnTheTeamIsSaidUnderTheFieldAndOtherRefusalsAsAToast() async {
         var sent = 0
         let repository = FakeTeamRepository()
-        repository.failure = AppError.validation(field: "email", message: "michael@smiledental.ca is already on the team")
+        let refusal = "michael@smiledental.ca is already on the team"
+        repository.failure = AppError.validation(field: "email", message: refusal)
         let viewModel = make(repository, onSent: { sent += 1 })
         viewModel.email = "michael@smiledental.ca"
         viewModel.role = .admin
         await viewModel.send()
-        #expect(viewModel.emailError == "michael@smiledental.ca is already on the team")
+        #expect(viewModel.emailError == refusal)
         #expect(sent == 0)
         repository.failure = AppError.readOnly
         await viewModel.send()

@@ -88,7 +88,7 @@ final class TeamViewModel {
         menuMember = member
     }
 
-    /// "Make admin" or "Make Staff": the last admin stays an admin.
+    /// Change role to Admin, or to Staff: the last admin stays an admin.
     func changeRole(of member: TeamMember) async {
         let role: MembershipRole = member.role == .admin ? .staff : .admin
         if role == .staff, isLastAdmin(member) {

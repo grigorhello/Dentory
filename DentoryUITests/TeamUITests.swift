@@ -55,14 +55,16 @@ final class TeamUITests: XCTestCase {
         openTeam(in: app)
 
         app.buttons[michael].tap()
-        let toAdmin = app.buttons["Change role to Admin"]
+        let toAdmin = app.buttons["\(michael).menu.role"]
         XCTAssertTrue(toAdmin.waitForExistence(timeout: 5), "No menu")
+        XCTAssertEqual(toAdmin.label, "Change role to Admin")
         toAdmin.tap()
         let michaelAdmin = NSPredicate(format: "label CONTAINS %@", "Admin")
         wait(for: [expectation(for: michaelAdmin, evaluatedWith: app.buttons[michael])], timeout: 5)
 
         tapWhenReady(app.buttons[daniel])
-        tapWhenReady(app.buttons["Remove from clinic"])
+        XCTAssertEqual(app.buttons["\(daniel).menu.remove"].label, "Remove from clinic")
+        tapWhenReady(app.buttons["\(daniel).menu.remove"])
         let question = app.staticTexts["team.remove.title"]
         XCTAssertTrue(question.waitForExistence(timeout: 5), "No question before removing")
         XCTAssertEqual(question.label, "Remove Dr. Daniel Kim?")
@@ -95,7 +97,7 @@ final class TeamUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 5), "No rows for Staff")
         XCTAssertFalse(app.buttons["team.invite"].exists, "Staff see Invite")
         row.tap()
-        XCTAssertFalse(app.buttons["Remove from clinic"].waitForExistence(timeout: 2), "Staff opened a menu")
+        XCTAssertFalse(app.buttons["\(michael).menu.remove"].waitForExistence(timeout: 2), "Staff opened a menu")
     }
 
     /// Taps once the element is on screen and can take the tap: a sheet or a dialog still sliding in drops it.
