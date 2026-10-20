@@ -7,7 +7,7 @@ import Observation
 /// ones keep what they recorded. The copy is in `ProcedureEditViewModel+Copy.swift`.
 @MainActor
 @Observable
-final class ProcedureEditViewModel: ProcedureItemPicking {
+final class ProcedureEditViewModel {
     enum LoadState: Equatable { case loading, loaded, failed(AppError) }
 
     /// A supply on the template. A countable one carries its default quantity, at least 1; a multi-use one keeps 0 and
