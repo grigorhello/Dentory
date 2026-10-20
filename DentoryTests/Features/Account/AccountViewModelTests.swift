@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import Dentory
 
-/// Account (f29, f30): the user card, the team's size and its cache, the role's rows, and Sign out.
+/// Account (f29, f30): the user card, the team's size and its cache, the role's rows, Export CSV, and Sign out.
 @MainActor
 struct AccountViewModelTests {
     private func make(
@@ -89,5 +89,43 @@ struct AccountViewModelTests {
 
     @Test func helpOpensTheHelpCentre() {
         #expect(AccountViewModel.helpCentre?.absoluteString == "https://dentory.ca/help")
+    }
+
+    @Test func anExportSaysWhereTheLinkGoes() async {
+        let repository = FakeAccountRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.startExport()
+        #expect(repository.exportCalls == [Session.demo.clinicID])
+        #expect(viewModel.message == .init(title: "Export started", detail: "We'll email it to sarah@dentory.test."))
+        #expect(viewModel.isExporting == false)
+        viewModel.clearMessage()
+        #expect(viewModel.message == nil)
+        let noAddress = make(repository: FakeAccountRepository(exportResult: .success("")))
+        await noAddress.startExport()
+        #expect(noAddress.message?.detail == "We'll email it to sarah@smiledental.ca.", "The session's address")
+    }
+
+    @Test func aRefusedExportSaysWhy() async {
+        let limit = AppError.validation(
+            field: nil, message: "An export started less than 10 minutes ago. It is on its way to your email."
+        )
+        let limited = make(repository: FakeAccountRepository(exportResult: .failure(limit)))
+        await limited.startExport()
+        #expect(limited.message == .init(title: "An export started less than 10 minutes ago. "
+            + "It is on its way to your email."))
+        let offline = make(repository: FakeAccountRepository(exportResult: .failure(AppError.network)))
+        await offline.startExport()
+        #expect(offline.message?.title == "Couldn't start the export. Try again.")
+        #expect(offline.message?.detail == nil)
+        #expect(AccountViewModel.exportRefusal(.forbidden) == "You don't have permission to do this.")
+        #expect(AccountViewModel.exportRefusal(.unknown("500")) == "Couldn't start the export. Try again.")
+    }
+
+    @Test func staffCannotStartAnExport() async {
+        let repository = FakeAccountRepository()
+        let viewModel = make(session: .demo(role: .staff), repository: repository)
+        await viewModel.startExport()
+        #expect(repository.exportCalls.isEmpty, "The row is hidden from Staff; the view model refuses too")
+        #expect(viewModel.message == nil)
     }
 }
