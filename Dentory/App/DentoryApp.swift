@@ -17,8 +17,9 @@ struct DentoryApp: App {
         // `-offline` with it makes the network monitor report no connection; `-signedOut` starts on Sign in;
         // `-staff` signs in as the Staff member; `-onboarding account|clinic|invite` opens admin sign-up there;
         // `-invite <token>` opens the Join screen of an invitation; `-resetPassword <tokenHash>` opens Set a new
-        // password; `-tab inventory` and `-inventoryFilter Low` open a tab and a chip (RootView); `-pushExplainer`
-        // offers notifications after sign-in, which the other runs skip.
+        // password; `-tab inventory` and `-inventoryFilter Low` open a tab and a chip (RootView); `-demoHistoryRows 120`
+        // adds older rows to Activity's History, for paging; `-pushExplainer` offers notifications after sign-in,
+        // which the other runs skip.
         let arguments = ProcessInfo.processInfo.arguments
         let onboarding = UserDefaults.standard.string(forKey: "onboarding")
         startsOnSignUp = onboarding == "account"
