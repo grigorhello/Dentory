@@ -18,10 +18,12 @@ final class SignInViewModel {
     private(set) var generalError: AppError?
 
     private let sessionStore: SessionStore
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
 
-    init(sessionStore: SessionStore) {
+    init(sessionStore: SessionStore, analytics: Analytics) {
         self.sessionStore = sessionStore
+        self.analytics = analytics
     }
 
     var isSubmitting: Bool { submitGuard.isBusy }
@@ -36,7 +38,10 @@ final class SignInViewModel {
         await submitGuard.run {
             generalError = nil
             let email = self.email.trimmingCharacters(in: .whitespacesAndNewlines)
-            if await sessionStore.signIn(email: email, password: password) { return }
+            if await sessionStore.signIn(email: email, password: password) {
+                analytics.track(.signedIn)
+                return
+            }
             switch sessionStore.lastError {
             case .validation(let field, let message) where field == "email":
                 emailError = message

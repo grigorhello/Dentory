@@ -10,11 +10,12 @@ struct OnboardingViewModelTests {
         progress: InMemoryOnboardingProgress = InMemoryOnboardingProgress(),
         step: OnboardingViewModel.Step = .account,
         account: Account? = nil,
-        clinicID: UUID? = nil
+        clinicID: UUID? = nil,
+        analytics: SpyAnalytics = SpyAnalytics()
     ) -> (OnboardingViewModel, SessionStore) {
         let store = SessionStore(auth: auth, state: .signedOut)
         let viewModel = OnboardingViewModel(
-            auth: auth, repository: repository, sessionStore: store, progress: progress,
+            auth: auth, repository: repository, sessionStore: store, progress: progress, analytics: analytics,
             locale: Locale(identifier: "en_CA"), timeZone: TimeZone(identifier: "America/Toronto") ?? .current,
             startingAt: step, account: account, clinicID: clinicID
         )
@@ -89,8 +90,10 @@ struct OnboardingViewModelTests {
         let repository = FakeOnboardingRepository()
         let progress = InMemoryOnboardingProgress()
         let account = Account(userID: UUID(), email: "sarah@smiledental.ca", fullName: "Sarah")
+        let analytics = SpyAnalytics()
         let (viewModel, store) = make(
-            auth: auth, repository: repository, progress: progress, step: .clinic, account: account
+            auth: auth, repository: repository, progress: progress, step: .clinic, account: account,
+            analytics: analytics
         )
         #expect(viewModel.email == "sarah@smiledental.ca")
         viewModel.clinicName = "Smile Dental"
@@ -105,14 +108,17 @@ struct OnboardingViewModelTests {
         #expect(progress.pendingInviteClinicID() == Session.demo.clinicID, "Step 3 is remembered for a relaunch")
         #expect(store.state == .signedIn(.demo))
         #expect(viewModel.step == .invite)
+        #expect(analytics.events == [.clinicCreated], "MS-147: once the clinic exists, never its name")
     }
 
     @Test func step3SendsOnlyFilledRowsAndFlagsBadOnes() async {
         let repository = FakeOnboardingRepository()
         repository.inviteResult = .success(2)
         let progress = InMemoryOnboardingProgress(pending: Session.demo.clinicID)
+        let analytics = SpyAnalytics()
         let (viewModel, _) = make(
-            repository: repository, progress: progress, step: .invite, clinicID: Session.demo.clinicID
+            repository: repository, progress: progress, step: .invite, clinicID: Session.demo.clinicID,
+            analytics: analytics
         )
         viewModel.invites[0].email = "priya@smiledental.ca"
         viewModel.invites[1].email = "not an email"
@@ -132,15 +138,20 @@ struct OnboardingViewModelTests {
         #expect(viewModel.isFinished)
         #expect(viewModel.completionMessage == "Invitations sent · They get a link by email.")
         #expect(progress.pendingInviteClinicID() == nil)
+        #expect(analytics.events == [.onboardingFinished(invitations: 2)], "Only the send that went out")
+        #expect(analytics.events.first?.name.rawValue == "onboard.sendInvites")
     }
 
     @Test func skipClearsThePendingStepWithoutInviting() async {
         let repository = FakeOnboardingRepository()
         let progress = InMemoryOnboardingProgress(pending: Session.demo.clinicID)
+        let analytics = SpyAnalytics()
         let (viewModel, _) = make(
-            repository: repository, progress: progress, step: .invite, clinicID: Session.demo.clinicID
+            repository: repository, progress: progress, step: .invite, clinicID: Session.demo.clinicID,
+            analytics: analytics
         )
         viewModel.skipInvites()
+        #expect(analytics.events.map(\.name) == [.skipInvites])
         #expect(viewModel.isFinished)
         #expect(viewModel.completionMessage == nil)
         #expect(repository.invites.isEmpty)

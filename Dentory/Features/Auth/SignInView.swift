@@ -10,9 +10,9 @@ struct SignInView: View {
 
     private enum Field { case email, password }
 
-    init(sessionStore: SessionStore) {
+    init(sessionStore: SessionStore, analytics: Analytics) {
         self.sessionStore = sessionStore
-        _viewModel = State(initialValue: SignInViewModel(sessionStore: sessionStore))
+        _viewModel = State(initialValue: SignInViewModel(sessionStore: sessionStore, analytics: analytics))
     }
 
     var body: some View {
@@ -136,5 +136,8 @@ struct SignInView: View {
 }
 
 #Preview("Sign in") {
-    SignInView(sessionStore: SessionStore(auth: PreviewAuthService(session: nil), state: .signedOut))
+    SignInView(
+        sessionStore: SessionStore(auth: PreviewAuthService(session: nil), state: .signedOut),
+        analytics: NoopAnalytics()
+    )
 }

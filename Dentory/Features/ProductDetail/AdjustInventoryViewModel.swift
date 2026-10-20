@@ -12,6 +12,7 @@ final class AdjustInventoryViewModel {
         let actionID: UUID?
         let before: Decimal
         let after: Decimal
+        let reason: AdjustmentReason
     }
 
     var quantityText: String
@@ -88,7 +89,7 @@ final class AdjustInventoryViewModel {
                     note: trimmedNote.isEmpty ? nil : trimmedNote
                 )
                 let actionID: UUID? = if case .applied(let id) = outcome { id } else { nil }
-                saved = Saved(actionID: actionID, before: estimate, after: actualQuantity)
+                saved = Saved(actionID: actionID, before: estimate, after: actualQuantity, reason: reason)
             } catch {
                 generalError = AppError(error)
             }

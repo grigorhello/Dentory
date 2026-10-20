@@ -41,14 +41,16 @@ final class ClinicSettingsViewModel {
     private(set) var checksSessionOnLeave = false
     private let clinicID: UUID
     private let repository: ClinicSettingsRepository
+    private let analytics: Analytics
     private let onSaved: () async -> Void
 
     init(
-        clinicID: UUID, repository: ClinicSettingsRepository, locale: Locale = .current,
+        clinicID: UUID, repository: ClinicSettingsRepository, analytics: Analytics, locale: Locale = .current,
         onSaved: @escaping () async -> Void = {}
     ) {
         self.clinicID = clinicID
         self.repository = repository
+        self.analytics = analytics
         self.onSaved = onSaved
         countries = Country.all(locale: locale)
         timeZones = TimeZone.knownTimeZoneIdentifiers.sorted()
@@ -129,6 +131,9 @@ final class ClinicSettingsViewModel {
             return
         }
         saved = edited
+        analytics.track(.settingsSaved(
+            digest: edited.emailDigest, expiryWarningDays: edited.expiryThresholds.min() ?? 0
+        ))
         if let logoData {
             do {
                 try await repository.uploadLogo(clinicID: clinicID, imageData: logoData)
