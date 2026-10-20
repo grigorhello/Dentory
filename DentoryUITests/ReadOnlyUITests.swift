@@ -84,6 +84,38 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Settings saved"].exists, "Nothing saved")
     }
 
+    /// Taking someone off the team stays open in read-only mode, since removing access must not wait for billing; a new
+    /// role still opens the read-only sheet (MS-142 follow-up).
+    @MainActor
+    func testAnAdminStillRemovesATeammateButCannotChangeARole() {
+        let daniel = "team.member[00000000-0000-4000-8000-0000000000a2]"
+        let app = launch([])
+        let account = app.buttons["home.header.account"]
+        XCTAssertTrue(account.waitForExistence(timeout: 5))
+        account.tap()
+        let team = app.buttons["more.team"]
+        XCTAssertTrue(team.waitForExistence(timeout: 5), "Account did not open")
+        team.tap()
+        if !app.staticTexts["team.title"].waitForExistence(timeout: 2) { team.tap() }
+        let row = app.buttons[daniel]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "The team did not load")
+        row.tap()
+        let role = app.buttons["\(daniel).menu.role"]
+        XCTAssertTrue(role.waitForExistence(timeout: 5), "No menu")
+        role.tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "Change role is not gated")
+        app.buttons["readOnly.ok"].tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5))
+        row.tap()
+        let remove = app.buttons["\(daniel).menu.remove"]
+        XCTAssertTrue(remove.waitForExistence(timeout: 5), "No menu")
+        remove.tap()
+        let confirm = app.buttons["team.remove.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "No question before removing")
+        confirm.tap()
+        XCTAssertTrue(row.waitForNonExistence(timeout: 5), "Remove did not work in read-only mode")
+    }
+
     /// The clinic's data stays its own: Export CSV works in read-only mode (MS-143's decision).
     @MainActor
     func testExportStillWorksInReadOnlyMode() {

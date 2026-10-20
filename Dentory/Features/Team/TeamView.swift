@@ -70,7 +70,7 @@ struct TeamView: View {
         )
         if viewModel.isAdmin {
             Button {
-                writeAccess.perform { viewModel.openMenu(for: member) }
+                viewModel.openMenu(for: member)
             } label: {
                 row
             }
@@ -82,16 +82,18 @@ struct TeamView: View {
         }
     }
 
-    /// `team.member[userId].menu`: its choices go by `.role`, `.resend` and `.remove` under that id.
+    /// `team.member[userId].menu`: its choices go by `.role`, `.resend` and `.remove` under that id. A read-only clinic
+    /// keeps Remove, since taking away access must not wait for billing; a new role and a resent invitation wait for a
+    /// payment method (the read-only sheet).
     @ViewBuilder private func menu(for member: TeamMember) -> some View {
         let menu = "\(viewModel.identifier(for: member)).menu"
         Button(viewModel.changeRoleTitle(for: member)) {
-            Task { await viewModel.changeRole(of: member) }
+            writeAccess.perform { Task { await viewModel.changeRole(of: member) } }
         }
         .accessibilityIdentifier("\(menu).role")
         if member.isPending {
             Button("Resend invitation") {
-                Task { await viewModel.resend(member) }
+                writeAccess.perform { Task { await viewModel.resend(member) } }
             }
             .accessibilityIdentifier("\(menu).resend")
         }

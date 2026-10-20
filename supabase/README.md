@@ -38,7 +38,7 @@ Deploy with `supabase functions deploy invite_member`, `supabase functions deplo
 
 ### Weekly digest (MS-145)
 
-The hourly job calls `send_digest` with the URL and key it finds in Vault, the same `project_url` and `service_role_key` secrets `send_push` uses (build state, item 9); without them the digests are queued and dropped after 6 hours, and nothing is sent. To see a clinic's digest now, in the inbox of each of its admins:
+The hourly job calls `send_digest` with the URL and key it finds in Vault, the same `project_url` and `service_role_key` secrets `send_push` uses (build state, item 9); without them the digests stay queued and nothing is sent, and once the function first runs, every digest queued more than 6 hours earlier is dropped rather than sent late. To see a clinic's digest now, in the inbox of each of its admins:
 
 ```bash
 curl -X POST "https://<project-ref>.supabase.co/functions/v1/send_digest" \
