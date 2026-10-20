@@ -142,7 +142,7 @@ struct AppDependencies: Sendable {
             // `-billingNoCard YES` shows Billing before a card is added, `-trial ended` once the trial is over without
             // one (screenshots, UI tests).
             billingRepository: DemoBillingRepository(
-                hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard") && DemoTrial.launched != .ended,
+                hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard") && DemoTrial.launched == nil,
                 trialEndsAt: DemoTrial.launched?.trialEndsAt ?? BillingSummary.demoTrialEnd
             ),
             inventoryValueRepository: DemoInventoryValueRepository(),

@@ -21,10 +21,15 @@ nonisolated struct HomeNotice: Equatable, Sendable {
             text = switch (session.isAdmin, session.subscriptionStatus) {
             case (true, .trialing):
                 "Your free trial has ended. Add a card from the link in your billing email to keep updating stock."
+            case (true, .readOnly):
+                // Stripe stopped retrying (unpaid or paused): the subscription lives on, Billing says the same.
+                "Payments stopped. Update the card from the link in your billing email to keep updating stock."
             case (true, _):
                 "Your subscription has ended. Restart it from the link in your billing email to keep updating stock."
             case (false, .trialing):
                 "Your clinic's trial has ended. Ask your admin to add a payment method."
+            case (false, .readOnly):
+                "Your clinic is in read-only mode. Ask your admin to update the payment method."
             case (false, _):
                 "Your clinic is in read-only mode. Ask your admin to add a payment method."
             }

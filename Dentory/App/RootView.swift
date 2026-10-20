@@ -171,7 +171,12 @@ struct RootView: View {
         case .delivery:
             router.popToRoot(on: .home)
             router.selectedTab = .home
-            router.push(HomeRoute.receive, on: .home)
+            // Receiving is a write: in read-only mode the sheet says why instead (MS-142).
+            if let session = sessionStore.session, !session.canWrite(at: dependencies.clock.now) {
+                router.isReadOnlySheetPresented = true
+            } else {
+                router.push(HomeRoute.receive, on: .home)
+            }
         }
     }
 

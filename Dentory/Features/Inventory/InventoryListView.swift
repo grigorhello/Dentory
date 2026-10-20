@@ -5,6 +5,7 @@ import SwiftUI
 struct InventoryListView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: InventoryListViewModel
     let session: Session
 
@@ -58,7 +59,9 @@ struct InventoryListView: View {
         case .noMatches:
             EmptyStateView("No products match.")
         case .noProducts:
-            InventoryEmptyClinic(isAdmin: session.isAdmin) { router.push(InventoryRoute.receive, on: .inventory) }
+            InventoryEmptyClinic(isAdmin: session.isAdmin) {
+                writeAccess.perform { router.push(InventoryRoute.receive, on: .inventory) }
+            }
         case nil where viewModel.products.isEmpty:
             if case .failed(let error) = viewModel.state {
                 Notice(error.userMessage, tone: .danger)
@@ -79,14 +82,14 @@ struct InventoryListView: View {
         }
     }
 
-    /// Count mode arrives with MS-121.
+    /// Count mode arrives with MS-121; in read-only mode the sheet says why instead (MS-142).
     private func countStock() {
-        dependencies.toasts.show("Count stock arrives with a later update.")
+        writeAccess.perform { dependencies.toasts.show("Count stock arrives with a later update.") }
     }
 
-    /// The New product sheet arrives with MS-117.
+    /// The New product sheet arrives with MS-117; in read-only mode the sheet says why instead (MS-142).
     private func newProduct() {
-        dependencies.toasts.show("New product arrives with a later update.")
+        writeAccess.perform { dependencies.toasts.show("New product arrives with a later update.") }
     }
 }
 

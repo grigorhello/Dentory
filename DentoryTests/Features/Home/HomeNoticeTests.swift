@@ -39,6 +39,18 @@ struct HomeNoticeTests {
         #expect(ended?.text == "Your clinic is in read-only mode. Ask your admin to add a payment method.")
     }
 
+    /// Stripe stopped retrying a failed card (unpaid or paused): the plan is not over, the card needs updating, as
+    /// Billing says (MS-142 review).
+    @Test func stoppedPaymentsAskForTheCardToBeUpdated() {
+        let notice = notice(session(status: .readOnly, trialEndsIn: -60))
+        #expect(notice?.kind == .readOnly)
+        #expect(notice?.text
+            == "Payments stopped. Update the card from the link in your billing email to keep updating stock.")
+        #expect(notice?.showsBilling == true)
+        #expect(self.notice(session(role: .staff, status: .readOnly, trialEndsIn: -60))?.text
+            == "Your clinic is in read-only mode. Ask your admin to update the payment method.")
+    }
+
     @Test func anEndedSubscriptionIsNotCalledATrial() {
         let notice = notice(session(status: .canceled, trialEndsIn: -60))
         #expect(notice?.kind == .readOnly)

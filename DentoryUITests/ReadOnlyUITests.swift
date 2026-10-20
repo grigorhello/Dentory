@@ -51,6 +51,20 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(trial.label.contains("Trial ended"))
     }
 
+    /// The entry points of screens still to come are gated too: Count stock opens the sheet (MS-142 review).
+    @MainActor
+    func testCountStockOpensTheSheet() {
+        let app = launch(["-tab", "inventory"])
+        let count = app.buttons["inv.countStock"]
+        XCTAssertTrue(count.waitForExistence(timeout: 5), "Inventory did not load")
+        count.tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "No read-only sheet")
+        app.buttons["readOnly.ok"].tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5))
+        app.buttons["inv.newProduct"].tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "New product is not gated")
+    }
+
     /// The clinic's data stays its own: Export CSV works in read-only mode (MS-143's decision).
     @MainActor
     func testExportStillWorksInReadOnlyMode() {

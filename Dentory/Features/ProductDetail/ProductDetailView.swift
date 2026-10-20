@@ -153,16 +153,25 @@ struct ProductDetailView: View {
     private func finishBottle(_ id: UUID) { writeAccess.perform { Task { await viewModel.finishBottle(id) } } }
     private func openNewBottle() { writeAccess.perform { Task { await viewModel.openNewBottle() } } }
 
-    // Placeholders until the tickets that bring these screens (MS-117, MS-119, MS-134).
-    private func edit() { dependencies.toasts.show("Edit product arrives with a later update.") }
-    private func editBatch(_ id: UUID) { dependencies.toasts.show("Edit batch arrives with a later update.") }
-    private func addExpiry() { dependencies.toasts.show("Add expiry arrives with a later update.") }
+    // Placeholders until the tickets that bring these screens (MS-117, MS-119, MS-134); each opens the read-only
+    // sheet instead in read-only mode (MS-142).
+    private func edit() {
+        writeAccess.perform { dependencies.toasts.show("Edit product arrives with a later update.") }
+    }
+    private func editBatch(_ id: UUID) {
+        writeAccess.perform { dependencies.toasts.show("Edit batch arrives with a later update.") }
+    }
+    private func addExpiry() {
+        writeAccess.perform { dependencies.toasts.show("Add expiry arrives with a later update.") }
+    }
     /// The product's whole history (MS-134).
     private func showAllHistory() {
         guard let detail = viewModel.detail else { return }
         router.push(ProductDetailRoute.history(productID: detail.id, name: detail.name))
     }
-    private func deleteProduct() { dependencies.toasts.show("Delete product arrives with a later update.") }
+    private func deleteProduct() {
+        writeAccess.perform { dependencies.toasts.show("Delete product arrives with a later update.") }
+    }
 }
 
 #Preview("Product detail · Admin") {
