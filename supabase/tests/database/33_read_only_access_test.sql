@@ -1,7 +1,7 @@
 -- MS-142 follow-up: in a read-only clinic an admin still removes a teammate or revokes an invitation, but cannot change
 -- a role or put up a logo; a clinic that may write keeps doing all of it.
 begin;
-select plan(8);
+select plan(9);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000022401', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -45,6 +45,13 @@ select throws_ok($$select public.team_remove('00000000-0000-4000-8000-0000000224
 select throws_ok(
   $$insert into storage.objects (bucket_id, name) values ('logos', '00000000-0000-4000-8000-000000022411/logo.png')$$,
   '42501', null, 'no new logo while read-only');
+reset role;
+insert into storage.objects (bucket_id, name) values ('logos', '00000000-0000-4000-8000-000000022411/old.png');
+select pg_temp.act_as('00000000-0000-4000-8000-000000022401');
+select throws_ok(
+  $$update storage.objects set name = '00000000-0000-4000-8000-000000022411/new.png'
+    where bucket_id = 'logos' and name = '00000000-0000-4000-8000-000000022411/old.png'$$,
+  '42501', null, 'nor a replaced one');
 reset role;
 select is(
   (select array_agg(status::text order by email) from public.memberships

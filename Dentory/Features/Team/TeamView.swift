@@ -104,8 +104,8 @@ struct TeamView: View {
         Button("Cancel", role: .cancel) {}
     }
 
-    /// "Invite" in the header for an admin (f31); nothing for Staff (f32). Invite and a person's choices open the
-    /// read-only sheet instead in read-only mode (MS-142).
+    /// "Invite" in the header for an admin (f31); nothing for Staff (f32). In read-only mode (MS-142) Invite, Change
+    /// role and Resend open the read-only sheet instead, while Remove and Revoke stay open (decisions log, 14:30).
     private var inviteAction: PushedHeader.HeaderAction? {
         guard viewModel.isAdmin else { return nil }
         return PushedHeader.HeaderAction(

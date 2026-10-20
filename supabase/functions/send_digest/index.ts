@@ -1,8 +1,8 @@
 // POST /functions/v1/send_digest, called each hour by pg_cron (engine.digest_dispatch, MS-145) with the service role
 // key. Claims the weekly digests that are due (digest_claim), emails each to its clinic's active admins through Resend,
-// and records each as soon as it went out (digest_finish), so a run the runtime cuts short never sends one twice. A
-// digest that reached at least one admin counts as sent; one that reached none stays claimed and is retried by a later
-// hour of the same morning. Without RESEND_API_KEY (the local
+// and records each as soon as it went out (digest_finish), so a run the runtime cuts short sends again at most the
+// digest it was in the middle of, not a whole batch. A digest that reached at least one admin counts as sent; one that
+// reached none stays claimed and is retried by a later hour of the same morning. Without RESEND_API_KEY (the local
 // stack) each email is written to the function log instead (PRD §8).
 //
 // With `{ "clinic_id": "…" }` it sends that clinic's digest as it reads now to the clinic's admins, whatever the day
