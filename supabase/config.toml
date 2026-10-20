@@ -392,6 +392,10 @@ verify_jwt = false
 [functions.send_push]
 verify_jwt = false
 
+# send_digest too, each hour (MS-145), with the same check.
+[functions.send_digest]
+verify_jwt = false
+
 # Stripe calls it with no Supabase token; it checks the Stripe-Signature header instead (MS-140).
 [functions.stripe_webhook]
 verify_jwt = false

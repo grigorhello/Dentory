@@ -14,6 +14,7 @@ Commands are in the root `Makefile` (`make db-start db-reset db-test seed-demo`;
 | `billing_checkout` | Grigor at onboarding and the billing emails, with the service role key (MS-100 D18: the app opens no payment page) | `POST { clinic_id }` answers `{ url }`: Stripe Checkout in subscription mode for the clinic's Stripe customer (created here the first time, with the clinic's name and first billing email), the $99 monthly price, the 50% lifetime coupon for a clinic with `promo_lifetime_50`, and `trial_end` at the clinic's trial end when it is more than 48 hours away, so nothing is charged during the free months (MS-140). A clinic with a live subscription is refused (409), even one the webhook has not reported yet, which is linked then; it gets the portal link instead. A new link expires the clinic's earlier unpaid ones, so only the newest can be paid, and any link expires after 24 hours. |
 | `billing_portal` | Grigor and the billing emails, with the service role key | `POST { clinic_id }` answers `{ url }`: the Stripe Customer Portal of the clinic's customer, where the card changes (MS-140). Refused (409) before a subscription exists. |
 | `stripe_webhook` | Stripe (`verify_jwt = false`) | Checks the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET`, then reads the subscription or invoice back from Stripe, so late or out-of-order events do no harm: subscription events set the clinic's status, next payment and card (`billing_apply_subscription`, `billing_apply_card`); `customer.updated` changes the card; invoice events keep the invoices (`billing_record_invoice`; the $0 one that opens a trial is not kept, and a paid one never goes back to open); `checkout.session.completed` links a new subscription to its clinic. A card on file keeps the clinic writable through and after its trial (Stripe's `trialing` and `active` are `active`). |
+| `send_digest` | the database's hourly job (`engine.digest_dispatch`, `verify_jwt = false`, the service role key checked), and Grigor to try the email | `POST {}`: claims the weekly digests that are due (`digest_claim`: Monday 7 am to noon at each clinic with Email digest on, not a read-only clinic, the switch read again), emails each to the clinic's active admins (`_shared/digest-email.ts`) and records which went out (`digest_finish`); one that reached nobody is retried by the next hour, and one queued more than 6 hours ago is dropped (MS-145). `POST { clinic_id }` sends that clinic's digest as it reads now to its admins, whatever the day and the switch, and records nothing: how to see the email in Gmail or Apple Mail on a hosted project. |
 | `export_csv` | the app, as a signed-in admin (Account, Export CSV) | `POST { clinic_id }`: starts an export job (`export_job_start`: admins only, one per clinic every 10 minutes, a read-only clinic included) and answers `{ email }` at once; then, in the background, reads the clinic's rows in one snapshot (`export_data`), writes `products.csv`, `batches.csv` and `transactions.csv` (UTF-8 with a byte order mark, CRLF, dates at the clinic's time), zips them into the private `exports` bucket as `{clinic_id}/{job_id}.zip`, emails the admin a signed download link valid 7 days and closes the job (`export_job_finish`). Each export removes the clinic's zips whose links have expired (MS-143). |
 
 Every function answers refusals as `{ "error": { "code", "message", "field"? } }` with the HTTP status the app maps in `Core/Data/AppError+Functions.swift` (`supabase/functions/_shared/http.ts`).
@@ -24,16 +25,28 @@ The local runtime injects `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERV
 
 | Secret | Used by | Value |
 |---|---|---|
-| `RESEND_API_KEY` | `invite_member`, `export_csv` | A Resend API key for the `dentory.ca` sending domain (Resend, API keys). Without it the function sends nothing and writes the email, link included, to its log; that is how the local stack runs. |
-| `EMAIL_FROM` | `invite_member`, `export_csv` | Optional. Defaults to `Dentory <invites@dentory.ca>`; the domain must be verified in Resend (SPF and DKIM records at the registrar). |
-| `APP_LINK_BASE` | `invite_member` | Optional. Defaults to `https://app.dentory.ca`, the universal-link host (`applinks/README.md`). |
+| `RESEND_API_KEY` | `invite_member`, `export_csv`, `send_digest` | A Resend API key for the `dentory.ca` sending domain (Resend, API keys). Without it the function sends nothing and writes the email, link included, to its log; that is how the local stack runs. |
+| `EMAIL_FROM` | `invite_member`, `export_csv`, `send_digest` | Optional. Defaults to `Dentory <invites@dentory.ca>`; the domain must be verified in Resend (SPF and DKIM records at the registrar). |
+| `APP_LINK_BASE` | `invite_member`, `send_digest` | Optional. Defaults to `https://app.dentory.ca`, the universal-link host (`applinks/README.md`). |
 | `STRIPE_SECRET_KEY` | the billing functions | The Stripe secret key: `sk_test_…` on staging, `sk_live_…` on prod. Without it `billing_checkout` and `billing_portal` answer 503 "Billing isn't set up yet. Try again later.", as on the local stack. |
 | `STRIPE_PRICE_ID` | `billing_checkout` | The `price_…` of the product "Dentory clinic": $99 USD, recurring monthly. |
 | `STRIPE_PROMO_COUPON_ID` | `billing_checkout` | The coupon for the lifetime promotion: 50% off, duration forever. Needed once a clinic has `promo_lifetime_50`. |
 | `STRIPE_WEBHOOK_SECRET` | `stripe_webhook` | The `whsec_…` signing secret of the webhook endpoint below. |
 | `BILLING_RETURN_URL` | the billing functions | Optional. Defaults to `https://app.dentory.ca/billing/done`, the page Checkout and the Customer Portal return to (`applinks/billing/done`). |
 
-Deploy with `supabase functions deploy invite_member`, `supabase functions deploy export_csv` and `supabase functions deploy accept_invitation --no-verify-jwt` (the setting also lives in `config.toml`).
+Deploy with `supabase functions deploy invite_member`, `supabase functions deploy export_csv`, `supabase functions deploy accept_invitation --no-verify-jwt` and `supabase functions deploy send_digest --no-verify-jwt` (the setting also lives in `config.toml`).
+
+### Weekly digest (MS-145)
+
+The hourly job calls `send_digest` with the URL and key it finds in Vault, the same `project_url` and `service_role_key` secrets `send_push` uses (build state, item 9); without them the digests are queued and dropped after 6 hours, and nothing is sent. To see a clinic's digest now, in the inbox of each of its admins:
+
+```bash
+curl -X POST "https://<project-ref>.supabase.co/functions/v1/send_digest" \
+  -H "Authorization: Bearer $SERVICE_ROLE_KEY" -H "Content-Type: application/json" \
+  -d '{"clinic_id": "<clinic id>"}'
+```
+
+Locally, `supabase functions serve` and the same call on `http://127.0.0.1:54321` write the email to the function's log instead. `select public.digest_preview('<clinic id>');` in the SQL editor shows what the email will say.
 
 ### Stripe (MS-140, once per project, by hand)
 
