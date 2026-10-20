@@ -27,7 +27,9 @@ final class InventoryUITests: XCTestCase {
         app.textFields["inv.search"].firstMatch.tap()
         app.typeText("rubber")
         XCTAssertTrue(app.staticTexts["Rubber dam latex-free"].waitForExistence(timeout: 3))
-        XCTAssertFalse(app.staticTexts["Endo file kit #15-40"].exists, "Search did not narrow the Low chip")
+        // Inventory's own row: the To buy tab, kept alive behind it, lists Endo file kit too.
+        let endoRow = app.descendants(matching: .any)["inv.row[00000000-0000-4000-8000-0000000000d2]"]
+        XCTAssertTrue(endoRow.waitForNonExistence(timeout: 3), "Search did not narrow the Low chip")
 
         app.typeText(" dam x")
         XCTAssertTrue(app.staticTexts["No products match."].waitForExistence(timeout: 3), "No empty state")

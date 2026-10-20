@@ -27,8 +27,10 @@ struct ProceduresView: View {
                 switch route {
                 case .start(let templateID):
                     ProcedureStartView(templateID: templateID, session: session, dependencies: dependencies)
-                case .event, .editTemplate:
-                    ProcedureRoutePlaceholderView(route: route)
+                case .editTemplate(let templateID):
+                    ProcedureEditView(templateID: templateID, session: session, dependencies: dependencies)
+                case .event:
+                    ProcedureRoutePlaceholderView()
                 }
             }
     }

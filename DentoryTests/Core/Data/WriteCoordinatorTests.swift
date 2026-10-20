@@ -39,6 +39,7 @@ struct WriteCoordinatorTests {
         #expect(outcome == .applied(actionID: UUID(uuidString: "00000000-0000-4000-8000-000000000009")))
         #expect(rpc.calls.count == 1)
         #expect(coordinator.queue.isEmpty)
+        #expect(coordinator.appliedWrites == 1, "Screens that follow stock learn the server changed it")
     }
 
     @Test func offlineWritesAreQueuedOnceAndReplayedOnceWithTheSameKey() async throws {
@@ -55,6 +56,7 @@ struct WriteCoordinatorTests {
         #expect(rpc.calls.isEmpty)
         #expect(coordinator.queue.count == 1)
         #expect(coordinator.queue.writes.first?.idempotencyKey == key)
+        #expect(coordinator.appliedWrites == 0, "A queued write has not changed stock yet")
 
         await coordinator.replay()
         #expect(rpc.calls.isEmpty, "No replay while offline")
@@ -67,6 +69,7 @@ struct WriteCoordinatorTests {
         #expect(rpc.calls.first?.idempotencyKey == key)
         #expect(rpc.calls.first?.params["p_reason"] == "Damaged")
         #expect(coordinator.queue.isEmpty)
+        #expect(coordinator.appliedWrites == 1, "The replay counts once it is applied")
     }
 
     @Test func aNetworkErrorWhileOnlineQueuesTheWrite() async throws {

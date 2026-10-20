@@ -186,6 +186,8 @@ struct AppTabsView: View {
             InventoryListView(session: session, dependencies: dependencies)
         } else if tab == .procedures, let session {
             ProceduresView(session: session, dependencies: dependencies)
+        } else if tab == .toBuy, let session {
+            ToBuyView(session: session, dependencies: dependencies)
         } else {
             TabPlaceholderView(tab: tab)
         }
