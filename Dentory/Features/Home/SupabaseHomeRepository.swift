@@ -99,4 +99,3 @@ nonisolated struct HomeCountRow: Decodable {
 nonisolated struct HomeMemberRow: Decodable {
     let fullName: String
 }
-
