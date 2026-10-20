@@ -3,6 +3,7 @@ import SwiftUI
 /// The dark card of f34: the free trial with its end, or the plan with its next payment, and the price after the trial
 /// with the lifetime promotion struck through beside it.
 struct BillingPlanCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let viewModel: BillingViewModel
 
     var body: some View {
@@ -40,25 +41,22 @@ struct BillingPlanCard: View {
         }
     }
 
-    /// "After trial", then "$99" struck through, "$49.50 / month" and "50% off for life" with the promotion. With large
-    /// text they stack under the label.
+    /// "After trial", then "$99" struck through, "$49.50 / month" and "50% off for life" with the promotion, in one row
+    /// whose label wraps as f34 draws it; at accessibility text sizes they stack under the label.
     private var afterTrial: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let stacked = dynamicTypeSize.isAccessibilitySize
+        let layout = stacked
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.xs))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: Spacing.sm + Spacing.xxs))
+        return VStack(alignment: .leading, spacing: 0) {
             Rectangle().fill(Color.ms.inkMid).frame(height: 1)
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .center, spacing: Spacing.sm + Spacing.xxs) {
-                    afterTrialLabel
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                    HStack(alignment: .firstTextBaseline, spacing: Spacing.sm + Spacing.xxs) { price }
-                        .fixedSize()
-                    promoBadge.fixedSize()
-                }
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    afterTrialLabel
-                    HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) { price }
-                    promoBadge
-                }
+            layout {
+                afterTrialLabel
+                    .frame(maxWidth: stacked ? nil : .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .firstTextBaseline, spacing: Spacing.sm + Spacing.xxs) { price }
+                    .fixedSize(horizontal: !stacked, vertical: false)
+                promoBadge.fixedSize()
             }
             .padding(.top, Spacing.md)
             .accessibilityElement(children: .combine)

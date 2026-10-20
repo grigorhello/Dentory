@@ -122,12 +122,8 @@ struct AppDependencies: Sendable {
             toasts: toasts,
             cache: InMemoryResponseCache(),
             writes: WriteCoordinator(
-                rpc: rpc,
-                queue: PendingWriteQueue(store: InMemoryPendingWriteStore()),
-                networkMonitor: networkMonitor,
-                clock: clock,
-                reporter: reporter,
-                toasts: toasts
+                rpc: rpc, queue: PendingWriteQueue(store: InMemoryPendingWriteStore()), networkMonitor: networkMonitor,
+                clock: clock, reporter: reporter, toasts: toasts
             ),
             reporter: reporter,
             homeRepository: DemoHomeRepository(
