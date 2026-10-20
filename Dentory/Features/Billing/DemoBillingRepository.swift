@@ -15,8 +15,8 @@ final class DemoBillingRepository: BillingRepository, @unchecked Sendable {
     }
 
     func summary(clinicID: UUID) async throws -> BillingSummary {
-        let emails = lock.withLock { emails }
-        return BillingSummary.demo(hasCard: hasCard, invoiceCount: demoInvoices.count, emails: emails)
+        let current = lock.withLock { self.emails }
+        return BillingSummary.demo(hasCard: hasCard, invoiceCount: demoInvoices.count, emails: current)
     }
 
     func invoices(clinicID: UUID) async throws -> [BillingInvoice] {
