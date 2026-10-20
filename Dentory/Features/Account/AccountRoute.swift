@@ -1,6 +1,6 @@
 import Foundation
 
-/// Where Account leads on the Home stack; each screen arrives with its own ticket.
+/// Where Account leads on the Home stack.
 enum AccountRoute: Hashable {
     /// MS-138.
     case team
