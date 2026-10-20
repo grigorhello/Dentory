@@ -168,9 +168,13 @@ final class TeamViewModel {
 }
 
 private extension AppError {
-    /// The server's sentence for a refused change, else the general one.
+    /// The server's sentence for a refused change, else the general one. Team changes are not queued, so no connection
+    /// reads as a failed save (PRD §7), not as a change to be retried.
     var teamMessage: String {
-        if case .validation(_, let message) = self { return message }
-        return userMessage
+        switch self {
+        case .validation(_, let message): message
+        case .network: AppError.unknown("No connection").userMessage
+        default: userMessage
+        }
     }
 }

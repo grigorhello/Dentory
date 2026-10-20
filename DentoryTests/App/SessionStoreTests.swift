@@ -85,6 +85,40 @@ struct SessionStoreTests {
         #expect(store.accessWasRevoked, "Sign in says why")
     }
 
+    /// MS-138: signed out by the server (removed from the clinic, here or at launch), the device keeps nothing of the
+    /// clinic: no cached answer and no write waiting for a connection, as Sign out (MS-137).
+    @Test func aRemovedMemberLeavesNothingOfTheClinicOnTheDevice() async {
+        let cache = InMemoryResponseCache()
+        let writes = PendingWriteQueue(store: InMemoryPendingWriteStore())
+        let key = CacheKey(method: "TeamRepository.members", clinicID: Session.demo.clinicID)
+        func fill() {
+            cache.store(["michael@smiledental.ca"], for: key)
+            _ = writes.enqueue(function: "stock_adjust", params: [:], key: UUID(), at: Session.demoNow)
+        }
+        let auth = FakeAuthService(storedSession: .demo)
+        let clear = {
+            cache.removeAll()
+            writes.removeAll()
+        }
+        let store = SessionStore(auth: auth, state: .signedIn(.demo), clearDevice: clear)
+        fill()
+        auth.restoreError = AppError.network
+        await store.revalidate()
+        #expect(writes.count == 1, "Offline, nothing is cleared")
+
+        auth.restoreError = AppError.forbidden
+        await store.revalidate()
+        #expect(store.state == .signedOut)
+        #expect(cache.load([String].self, for: key) == nil)
+        #expect(writes.count == 0)
+
+        fill()
+        let atLaunch = SessionStore(auth: auth, clearDevice: clear)
+        await atLaunch.restore()
+        #expect(atLaunch.accessWasRevoked)
+        #expect(cache.load([String].self, for: key) == nil && writes.count == 0, "Removed while the app was closed")
+    }
+
     /// MS-138: screens check the member as they load, at most once a minute; a return to the foreground always does.
     @Test func screensCheckTheMemberAtMostOnceAMinute() async {
         let auth = FakeAuthService(storedSession: .demo)

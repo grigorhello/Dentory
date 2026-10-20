@@ -2,18 +2,26 @@ import Foundation
 import Observation
 
 /// "Invite a teammate" (Appendix C `invite`): an optional name, the email, Staff or Admin (Staff by default), and Send
-/// invitation through `invite_member`. An address already on the team, or a malformed one, is said under the field.
+/// invitation through `invite_member`. An address already on the team, or a malformed one, is said under the field;
+/// any other refusal above Send invitation, with what was typed kept (PRD §7).
 @MainActor
 @Observable
 final class InviteTeammateViewModel {
-    var name = ""
-    var email = "" {
-        didSet { emailError = nil }
+    var name = "" {
+        didSet { generalError = nil }
     }
-    var role: MembershipRole = .staff
+    var email = "" {
+        didSet {
+            emailError = nil
+            generalError = nil
+        }
+    }
+    var role: MembershipRole = .staff {
+        didSet { generalError = nil }
+    }
     private(set) var emailError: String?
     private(set) var isSending = false
-    /// A refusal that is not about the address, shown as a toast.
+    /// A refusal that is not about the address, shown in the sheet: a toast would sit behind it.
     private(set) var generalError: AppError?
 
     private let clinicID: UUID
@@ -41,6 +49,7 @@ final class InviteTeammateViewModel {
             return
         }
         isSending = true
+        generalError = nil
         defer { isSending = false }
         do {
             try await repository.invite(
@@ -50,16 +59,16 @@ final class InviteTeammateViewModel {
             await onSent()
         } catch {
             let appError = AppError(error)
-            if case .validation(let field, let message) = appError, field == "email" || field == nil {
+            switch appError {
+            case .validation(let field, let message) where field == "email" || field == nil:
                 emailError = message
-            } else {
+            case .network:
+                // Invitations are not queued, so no connection reads as a failed send, not as one to be retried.
+                generalError = .unknown("No connection")
+            default:
                 generalError = appError
             }
         }
-    }
-
-    func clearGeneralError() {
-        generalError = nil
     }
 
     private var trimmedEmail: String {

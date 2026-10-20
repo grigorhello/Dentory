@@ -126,7 +126,7 @@ struct TeamViewModelTests {
         #expect(viewModel.message?.title == "This person is no longer on the team.")
         repository.failure = AppError.network
         await viewModel.remove(michael)
-        #expect(viewModel.message?.title == AppError.network.userMessage)
+        #expect(viewModel.message?.title == "Couldn't save. Try again.", "Not queued, so nothing is retried")
     }
 
     @Test func changingYourselfChecksTheSessionAgain() async {

@@ -248,6 +248,14 @@ struct AppDependencies: Sendable {
     }
 
     /// Account of the signed-in member (MS-137); signing out clears this device's cache and queued writes.
+    /// The clinic's cached answers and the writes waiting for a connection, gone when the server signs the member out
+    /// on this device (MS-138), as Sign out clears them (MS-137).
+    @MainActor
+    func clearClinicData() {
+        cache.removeAll()
+        writes.queue.removeAll()
+    }
+
     @MainActor
     func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
         AccountViewModel(

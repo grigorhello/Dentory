@@ -20,13 +20,20 @@ final class SessionStore {
 
     private let auth: AuthServicing
     private let now: () -> Date
+    /// Clears what the clinic left on the device (cached answers, writes waiting for a connection) when the server
+    /// signs the member out here, as Sign out does (MS-137), so the next person neither sees nor sends them (MS-138).
+    private let clearDevice: () async -> Void
     /// When the server last vouched for the signed-in member: restore, sign in or a check (MS-138).
     private var lastChecked: Date?
 
-    init(auth: AuthServicing, state: State = .restoring, now: @escaping () -> Date = Date.init) {
+    init(
+        auth: AuthServicing, state: State = .restoring, now: @escaping () -> Date = Date.init,
+        clearDevice: @escaping () async -> Void = {}
+    ) {
         self.auth = auth
         self.state = state
         self.now = now
+        self.clearDevice = clearDevice
     }
 
     var session: Session? {
@@ -45,6 +52,7 @@ final class SessionStore {
         } catch {
             lastError = AppError(error)
             accessWasRevoked = lastError == .forbidden
+            if accessWasRevoked { await clearDevice() }
             state = .signedOut
         }
     }
@@ -66,11 +74,13 @@ final class SessionStore {
         case .success(.signedIn(let session)):
             if session != current { state = .signedIn(session) }
         case .success(.none), .success(.needsClinic):
+            await clearDevice()
             state = .signedOut
         case .failure(let error):
             guard AppError(error) == .forbidden else { return }
             lastError = .forbidden
             accessWasRevoked = true
+            await clearDevice()
             state = .signedOut
         }
     }

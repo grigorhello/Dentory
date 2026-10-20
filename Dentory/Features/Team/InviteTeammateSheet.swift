@@ -3,7 +3,6 @@ import SwiftUI
 /// "Invite a teammate" (Appendix C `invite`, the prototype's sheet): Name, Email, Role and Send invitation. The sheet
 /// owns its view model, so what is typed survives the screen behind it drawing again.
 struct InviteTeammateSheet: View {
-    @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: InviteTeammateViewModel
 
     init(viewModel: InviteTeammateViewModel) {
@@ -29,6 +28,10 @@ struct InviteTeammateSheet: View {
                     SegmentedControl(selection: $viewModel.role, options: viewModel.roleOptions)
                         .accessibilityIdentifier("invite.role")
                 }
+                if let error = viewModel.generalError {
+                    Notice(error.userMessage, tone: .danger)
+                        .accessibilityIdentifier("invite.error")
+                }
             }
         } primary: {
             MSButton(
@@ -36,11 +39,6 @@ struct InviteTeammateSheet: View {
                 action: send
             )
             .accessibilityIdentifier("invite.send")
-        }
-        .onChange(of: viewModel.generalError) { _, error in
-            guard let error else { return }
-            dependencies.toasts.show(error.userMessage)
-            viewModel.clearGeneralError()
         }
     }
 

@@ -37,7 +37,7 @@ struct InviteTeammateViewModelTests {
         #expect(viewModel.emailError == nil, "Typing clears it")
     }
 
-    @Test func anAddressOnTheTeamIsSaidUnderTheFieldAndOtherRefusalsAsAToast() async {
+    @Test func anAddressOnTheTeamIsSaidUnderTheFieldAndOtherRefusalsInTheSheet() async {
         var sent = 0
         let repository = FakeTeamRepository()
         let refusal = "michael@smiledental.ca is already on the team"
@@ -51,5 +51,12 @@ struct InviteTeammateViewModelTests {
         repository.failure = AppError.readOnly
         await viewModel.send()
         #expect(viewModel.generalError == .readOnly)
+        #expect(viewModel.email == "michael@smiledental.ca", "What was typed stays")
+        viewModel.name = "Michael"
+        #expect(viewModel.generalError == nil, "Editing clears it")
+
+        repository.failure = AppError.network
+        await viewModel.send()
+        #expect(viewModel.generalError?.userMessage == "Couldn't save. Try again.", "Not queued, so nothing is retried")
     }
 }

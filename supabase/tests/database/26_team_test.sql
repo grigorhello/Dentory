@@ -1,7 +1,7 @@
 -- MS-138 · Team: the list for every member in f31's order, the admin's role changes and removals, the last admin kept,
 -- a removed member reading nothing, a read-only clinic, another clinic left alone.
 begin;
-select plan(24);
+select plan(27);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000015401', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -130,6 +130,19 @@ select throws_ok(
   '42501', 'The clinic is read-only until a payment method is added', 'a read-only clinic changes no role'
 );
 reset role;
+
+-- An admin may also leave the clinic while another admin remains.
+update public.clinics set subscription_status = 'trialing' where id = '00000000-0000-4000-8000-000000015411';
+select pg_temp.act_as('00000000-0000-4000-8000-000000015403');
+select lives_ok($$select public.team_set_role('00000000-0000-4000-8000-000000015423', 'admin')$$,
+  'Sarah is an admin again');
+reset role;
+select pg_temp.act_as('00000000-0000-4000-8000-000000015401');
+select lives_ok($$select public.team_remove('00000000-0000-4000-8000-000000015423')$$,
+  'an admin leaves while another remains');
+reset role;
+select is((select status::text from public.memberships where id = '00000000-0000-4000-8000-000000015423'), 'revoked',
+  'and her row is revoked');
 
 select * from finish();
 rollback;
