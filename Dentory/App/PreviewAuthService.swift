@@ -73,3 +73,18 @@ final class PreviewAuthService: AuthServicing, @unchecked Sendable {
         self.recovering = nil
     }
 }
+
+extension PreviewAuthService {
+    /// The demo admin or Staff member signed in, or no one; `-onboarding clinic` resumes admin sign-up at step 2 with
+    /// a new account (screenshots).
+    static func demo(signedIn: Bool, role: MembershipRole, onboarding: String?) -> PreviewAuthService {
+        let auth = PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil)
+        if onboarding == "clinic" {
+            auth.session = nil
+            auth.account = Account(
+                userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell"
+            )
+        }
+        return auth
+    }
+}
