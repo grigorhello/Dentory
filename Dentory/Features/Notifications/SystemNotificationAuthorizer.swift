@@ -12,7 +12,7 @@ struct SystemNotificationAuthorizer: NotificationAuthorizing {
     }
 
     func requestPermission() async -> Bool {
-        (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])) ?? false
     }
 
     func registerForRemoteNotifications() {

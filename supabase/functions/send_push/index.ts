@@ -5,7 +5,14 @@
 // local stack) each push is logged instead of sent (PRD §8).
 import { errorResponse, HttpError, json } from "../_shared/http.ts";
 import { serviceClient } from "../_shared/supabase.ts";
-import { apnsConfig, type ApnsConfig, type PushMessage, sendToDevice } from "../_shared/apns.ts";
+import {
+  apnsConfig,
+  type ApnsConfig,
+  providerToken,
+  type ProviderTokenStore,
+  type PushMessage,
+  sendToDevice,
+} from "../_shared/apns.ts";
 
 interface DuePush extends PushMessage {
   outbox_id: string;
@@ -22,6 +29,7 @@ Deno.serve(async (req) => {
     if (error) throw new Error(`push_claim: ${error.message}`);
     const due = (data ?? []) as DuePush[];
     const config = await apnsConfig();
+    const bearer = config && due.length > 0 ? await providerToken(config, tokenStore(db)) : "";
 
     const sent: string[] = [];
     const dead: string[] = [];
@@ -34,7 +42,7 @@ Deno.serve(async (req) => {
         sent.push(push.outbox_id);
         continue;
       }
-      const results = await send(config, push, tokens);
+      const results = await send(config, bearer, push, tokens);
       delivered += results.filter((result) => result === "sent").length;
       tokens.forEach((token, index) => {
         if (results[index] === "dead") dead.push(token);
@@ -65,12 +73,28 @@ function sameText(a: string, b: string): boolean {
   return difference === 0;
 }
 
-async function send(config: ApnsConfig, push: DuePush, tokens: string[]) {
+/** The provider token every instance of this function shares, kept in the database. */
+function tokenStore(db: ReturnType<typeof serviceClient>): ProviderTokenStore {
+  return {
+    async load(keyID) {
+      const { data, error } = await db.rpc("push_provider_token", { p_key_id: keyID });
+      if (error) throw new Error(`push_provider_token: ${error.message}`);
+      return (data as string | null) ?? null;
+    },
+    async save(keyID, token) {
+      const { data, error } = await db.rpc("push_provider_token_save", { p_key_id: keyID, p_token: token });
+      if (error) throw new Error(`push_provider_token_save: ${error.message}`);
+      return (data as string | null) ?? token;
+    },
+  };
+}
+
+async function send(config: ApnsConfig, bearer: string, push: DuePush, tokens: string[]) {
   const message: PushMessage = { title: push.title, body: push.body, link: push.link };
   const results = [];
   for (const token of tokens) {
     try {
-      results.push(await sendToDevice(config, token, message));
+      results.push(await sendToDevice(config, bearer, token, message));
     } catch (error) {
       console.error(error);
       results.push("retry" as const);

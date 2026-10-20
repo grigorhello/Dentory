@@ -4,7 +4,9 @@
 --
 -- Opening an alert queues its push (push_outbox). Quiet bundling: one push per product per day, so a product that runs
 -- out again within the day waits until the next day, and goes out only if it is still out of stock then; an expiring
--- batch pushes once. Each minute pg_cron asks the send_push Edge Function to send what is due; it claims the rows
+-- batch pushes once. Quiet hours: nothing goes out between 9 pm and 7 am in the clinic's time zone; a push due then
+-- waits for 7 am, so the nightly status job's expiring alerts reach phones in the morning. Each minute pg_cron asks the
+-- send_push Edge Function to send what is due; it claims the rows
 -- (push_claim), sends them through APNs and records the result (push_finish). The function's URL and key come from
 -- Vault (`project_url`, `service_role_key`), set by hand on each hosted project; without them nothing is called.
 
@@ -19,7 +21,7 @@ create table public.push_outbox (
   product_id uuid,
   batch_id uuid,
   invoice_id uuid,
-  -- The earliest moment it may go out: a day after the product's previous push.
+  -- The earliest moment it may go out: a day after the product's previous push, and within the clinic's waking hours.
   not_before timestamptz not null default now(),
   -- Set while send_push works on the row; a claim older than 10 minutes is retried.
   claimed_at timestamptz,
@@ -32,6 +34,24 @@ create index push_outbox_product_idx on public.push_outbox (product_id, not_befo
 -- Only the functions below touch it: no policy, so members read and write nothing.
 alter table public.push_outbox enable row level security;
 revoke all on public.push_outbox from anon, authenticated;
+
+-- The first moment from p_at within the clinic's waking hours, 7 am to 9 pm in its time zone: a push due in the night
+-- waits for 7 am.
+create function engine.push_waking_time(p_at timestamptz, p_time_zone text)
+returns timestamptz
+language sql
+stable
+set search_path = ''
+as $$
+  select case
+    when l.local_at::time < time '07:00' then (l.local_at::date + time '07:00') at time zone z.tz
+    when l.local_at::time >= time '21:00' then (l.local_at::date + 1 + time '07:00') at time zone z.tz
+    else p_at
+  end
+  from (select coalesce(nullif(p_time_zone, ''), 'UTC') as tz) z
+  cross join lateral (select p_at at time zone z.tz as local_at) l;
+$$;
+revoke execute on function engine.push_waking_time(timestamptz, text) from public, anon, authenticated;
 
 -- Queues the push of an alert that just opened, when its kind is one PRD §8 mirrors.
 create function engine.queue_push()
@@ -56,14 +76,21 @@ begin
     return null;
   end if;
 
+  -- A day after the product's last push that went out or still will: one whose alert closed before it was sent never
+  -- reaches a phone, so it holds nothing back.
   if new.product_id is not null then
     select greatest(now(), max(o.not_before) + interval '1 day') into v_not_before
     from public.push_outbox o
-    where o.product_id = new.product_id and o.skipped is null;
+    join public.alerts a on a.id = o.alert_id
+    where o.product_id = new.product_id and o.skipped is null
+      and (o.sent_at is not null or a.resolved_at is null);
   end if;
 
   insert into public.push_outbox (clinic_id, alert_id, kind, product_id, batch_id, invoice_id, not_before)
-  values (new.clinic_id, new.id, new.kind, new.product_id, new.batch_id, new.invoice_id, coalesce(v_not_before, now()));
+  select new.clinic_id, new.id, new.kind, new.product_id, new.batch_id, new.invoice_id,
+         engine.push_waking_time(coalesce(v_not_before, now()), c.time_zone)
+  from public.clinics c
+  where c.id = new.clinic_id;
   return null;
 end;
 $$;
@@ -199,6 +226,53 @@ as $$
 $$;
 revoke execute on function public.push_token_remove(text) from public, anon;
 grant execute on function public.push_token_remove(text) to authenticated, service_role;
+
+-- The APNs provider token send_push signs, shared by its instances: APNs refuses a token renewed more often than every
+-- 20 minutes, and each cold instance would otherwise sign its own. Only send_push reads and writes it.
+create table public.push_provider_tokens (
+  key_id text primary key,
+  token text not null,
+  issued_at timestamptz not null default now()
+);
+alter table public.push_provider_tokens enable row level security;
+revoke all on public.push_provider_tokens from anon, authenticated;
+
+-- The shared token for this key while it is younger than 50 minutes; null when send_push should sign a new one.
+create function public.push_provider_token(p_key_id text)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select t.token from public.push_provider_tokens t
+  where t.key_id = p_key_id and t.issued_at > now() - interval '50 minutes';
+$$;
+revoke execute on function public.push_provider_token(text) from public, anon, authenticated;
+grant execute on function public.push_provider_token(text) to service_role;
+
+-- Keeps a newly signed token, unless another instance kept a fresh one first; answers the token to use.
+create function public.push_provider_token_save(p_key_id text, p_token text)
+returns text
+language sql
+security definer
+set search_path = ''
+as $$
+  with saved as (
+    insert into public.push_provider_tokens as t (key_id, token, issued_at)
+    values (p_key_id, p_token, now())
+    on conflict (key_id) do update set token = excluded.token, issued_at = excluded.issued_at
+      where t.issued_at <= now() - interval '50 minutes'
+    returning t.token
+  )
+  select coalesce(
+    (select s.token from saved s),
+    (select t.token from public.push_provider_tokens t where t.key_id = p_key_id),
+    p_token
+  );
+$$;
+revoke execute on function public.push_provider_token_save(text, text) from public, anon, authenticated;
+grant execute on function public.push_provider_token_save(text, text) to service_role;
 
 -- Each minute: when something is due and the project has the function's URL and key in Vault, ask send_push to send.
 create function engine.push_dispatch()

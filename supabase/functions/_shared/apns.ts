@@ -20,6 +20,14 @@ export interface PushMessage {
   link: string;
 }
 
+/** Where the function's instances share their provider token: `push_provider_token` and `push_provider_token_save`. */
+export interface ProviderTokenStore {
+  /** The shared token while it is younger than 50 minutes, else null. */
+  load(keyID: string): Promise<string | null>;
+  /** Keeps a newly signed token unless another instance kept one first; answers the token to use. */
+  save(keyID: string, token: string): Promise<string>;
+}
+
 export async function apnsConfig(): Promise<ApnsConfig | null> {
   const pem = Deno.env.get("APNS_KEY");
   const keyID = Deno.env.get("APNS_KEY_ID");
@@ -42,11 +50,16 @@ export function payload(message: PushMessage): Record<string, unknown> {
   };
 }
 
-export async function sendToDevice(config: ApnsConfig, token: string, message: PushMessage): Promise<DeviceResult> {
+export async function sendToDevice(
+  config: ApnsConfig,
+  bearer: string,
+  token: string,
+  message: PushMessage,
+): Promise<DeviceResult> {
   const response = await fetch(`https://${config.host}/3/device/${token}`, {
     method: "POST",
     headers: {
-      "authorization": `bearer ${await providerToken(config)}`,
+      "authorization": `bearer ${bearer}`,
       "apns-topic": config.topic,
       "apns-push-type": "alert",
       "apns-priority": "10",
@@ -63,12 +76,21 @@ export async function sendToDevice(config: ApnsConfig, token: string, message: P
   return "retry";
 }
 
-// APNs accepts a provider token for up to an hour and refuses one renewed more often than every 20 minutes.
+// APNs accepts a provider token for up to an hour and refuses one renewed more often than every 20 minutes, which
+// counts every instance of this function: they share one token through the database, each also keeping it in memory,
+// and a new one is signed only when the shared one is 50 minutes old.
 let cached: { token: string; issuedAt: number; keyID: string } | null = null;
 
-async function providerToken(config: ApnsConfig): Promise<string> {
+export async function providerToken(config: ApnsConfig, store: ProviderTokenStore): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   if (cached && cached.keyID === config.keyID && now - cached.issuedAt < 50 * 60) return cached.token;
+  const token = (await store.load(config.keyID)) ??
+    (await store.save(config.keyID, await signProviderToken(config, now)));
+  cached = { token, issuedAt: issuedAt(token) ?? now, keyID: config.keyID };
+  return token;
+}
+
+async function signProviderToken(config: ApnsConfig, now: number): Promise<string> {
   const header = base64url(JSON.stringify({ alg: "ES256", kid: config.keyID }));
   const claims = base64url(JSON.stringify({ iss: config.teamID, iat: now }));
   const signature = await crypto.subtle.sign(
@@ -76,9 +98,18 @@ async function providerToken(config: ApnsConfig): Promise<string> {
     config.key,
     new TextEncoder().encode(`${header}.${claims}`),
   );
-  const token = `${header}.${claims}.${base64url(new Uint8Array(signature))}`;
-  cached = { token, issuedAt: now, keyID: config.keyID };
-  return token;
+  return `${header}.${claims}.${base64url(new Uint8Array(signature))}`;
+}
+
+/** The `iat` of a provider token, so one kept by another instance expires on time here too. */
+function issuedAt(token: string): number | null {
+  try {
+    const claims = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const iat = JSON.parse(atob(claims.padEnd(Math.ceil(claims.length / 4) * 4, "="))).iat;
+    return typeof iat === "number" ? iat : null;
+  } catch {
+    return null;
+  }
 }
 
 /** The .p8 file's PKCS #8 key; the secret may keep its header lines and line breaks or not. */

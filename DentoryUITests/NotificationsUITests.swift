@@ -8,7 +8,7 @@ final class NotificationsUITests: XCTestCase {
 
     /// `-pushExplainer` starts the device as one that never offered notifications; "Not now" closes it.
     @MainActor
-    func testTheExplainerOffersNotificationsOnce() {
+    func testTheExplainerOffersNotificationsAndNotNowClosesIt() {
         let app = XCUIApplication()
         app.launchArguments = ["-uiTesting", "-pushExplainer"]
         app.launch()

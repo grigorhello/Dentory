@@ -1,4 +1,7 @@
-/// Whether this device already offered notifications (MS-144): the explainer shows once, whatever the answer.
+import Foundation
+
+/// When this device last offered notifications (MS-144). "Not now", or a sheet swiped away, brings the explainer back
+/// 30 days later while iOS has not asked yet; an answer to iOS's own prompt ends it.
 protocol PushExplainerStoring: AnyObject, Sendable {
-    var hasOffered: Bool { get set }
+    var lastOffered: Date? { get set }
 }

@@ -2,7 +2,8 @@ import Foundation
 import Observation
 
 /// Push notifications on this device (PRD §8, MS-144). After sign-in, a device iOS has not asked yet gets the
-/// explainer once; "Turn on" shows the iOS prompt. Once allowed, each launch asks APNs for the device token and the
+/// explainer; "Turn on" shows the iOS prompt, and "Not now" brings the explainer back 30 days later, since iOS shows no
+/// Notifications setting for an app that never asked. Once allowed, each launch asks APNs for the device token and the
 /// server keeps it for the signed-in member, until they sign out here. A tapped notification's link waits in
 /// `pendingLink` for the root view to open.
 @MainActor
@@ -16,16 +17,31 @@ final class PushNotifications {
     private let authorizer: NotificationAuthorizing
     private let repository: PushTokenRepository
     private let store: PushExplainerStoring
-    private var isSignedIn = false
-    /// The token APNs gave this launch, and the one the server holds for the signed-in member.
+    private let now: () -> Date
+    /// The member signed in on this device; nil once they sign out.
+    private var memberID: UUID?
+    /// The token APNs gave this launch.
     private var deviceToken: String?
-    private var registeredToken: String?
+    /// What the server holds: this device's token, for that member.
+    private var registered: Registration?
 
-    init(authorizer: NotificationAuthorizing, repository: PushTokenRepository, store: PushExplainerStoring) {
+    private struct Registration: Equatable {
+        let token: String
+        let memberID: UUID
+    }
+
+    init(
+        authorizer: NotificationAuthorizing, repository: PushTokenRepository, store: PushExplainerStoring,
+        now: @escaping () -> Date = Date.init
+    ) {
         self.authorizer = authorizer
         self.repository = repository
         self.store = store
+        self.now = now
     }
+
+    /// How long "Not now" holds the explainer back.
+    static let reofferInterval: TimeInterval = 30 * 24 * 60 * 60
 
     /// Admins also hear about deliveries ready to review; Staff do not get those (PRD §8).
     var explainerText: String {
@@ -34,15 +50,15 @@ final class PushNotifications {
             : "Get alerts for out-of-stock items and expiring stock."
     }
 
-    /// The tabs just appeared for `session`: offer notifications once, or refresh the token when they are allowed.
+    /// The tabs just appeared for `session`: offer notifications, or refresh the token when they are allowed.
     func signedIn(as session: Session) async {
-        isSignedIn = true
+        memberID = session.userID
         role = session.role
         switch await authorizer.permission() {
         case .notDetermined:
-            guard !store.hasOffered else { return }
-            // Offered counts at once, so a sheet swiped away is not offered again.
-            store.hasOffered = true
+            if let offered = store.lastOffered, now().timeIntervalSince(offered) < Self.reofferInterval { return }
+            // Offered counts at once, so a sheet swiped away waits like Not now.
+            store.lastOffered = now()
             isExplainerPresented = true
         case .allowed:
             authorizer.registerForRemoteNotifications()
@@ -73,25 +89,29 @@ final class PushNotifications {
         pendingLink = link
     }
 
-    /// Before the session ends on this device: its pushes stop reaching this device. Offline, the server keeps the
-    /// token until the next member who signs in here registers it as theirs.
+    /// Before the session ends on this device: its pushes stop reaching this device. The token goes even when this
+    /// launch could not register it, since the server may hold it from an earlier launch; only the member's own row is
+    /// removed. Offline, the server keeps it until the next member who signs in here registers it as theirs.
     func signOut() async {
-        isSignedIn = false
+        memberID = nil
+        registered = nil
         isExplainerPresented = false
         pendingLink = nil
-        guard let token = registeredToken else { return }
-        registeredToken = nil
-        try? await repository.remove(token: token)
+        guard let deviceToken else { return }
+        try? await repository.remove(token: deviceToken)
     }
 
-    /// Hands the token to the server once per member and token; a failure is retried at the next launch.
+    /// Hands the token to the server once per member and token, so a device that changes hands without Sign out
+    /// (joining from an invitation, a password reset) becomes the new member's. A failure is retried at the next launch.
     private func upload() async {
-        guard isSignedIn, let deviceToken, deviceToken != registeredToken else { return }
+        guard let memberID, let deviceToken else { return }
+        let registration = Registration(token: deviceToken, memberID: memberID)
+        guard registration != registered else { return }
         do {
             try await repository.register(token: deviceToken)
-            registeredToken = deviceToken
+            registered = registration
         } catch {
-            registeredToken = nil
+            registered = nil
         }
     }
 }

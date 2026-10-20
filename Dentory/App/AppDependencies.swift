@@ -146,7 +146,7 @@ struct AppDependencies: Sendable {
             invitationRepository: DemoInvitationRepository(auth: auth),
             push: PushNotifications(
                 authorizer: SystemNotificationAuthorizer(), repository: DemoPushTokenRepository(),
-                store: InMemoryPushExplainerStore(hasOffered: !offersPush)
+                store: InMemoryPushExplainerStore(lastOffered: offersPush ? nil : Date())
             ),
             locale: Locale(identifier: "en_US")
         )

@@ -13,10 +13,8 @@ struct NotificationLinkTests {
     @Test func productAndDeliveryLinksOpen() {
         let product = NotificationLink.product(UUID(uuidString: id) ?? UUID())
         #expect(link("dentory://product/\(id)") == product)
-        #expect(link("https://app.dentory.ca/product/\(id)") == product)
         #expect(link("DENTORY://Product/\(id.uppercased())") == product)
         #expect(link("dentory://delivery") == .delivery)
-        #expect(link("https://app.dentory.ca/delivery") == .delivery)
     }
 
     @Test func otherLinksAreNotNotifications() {
@@ -25,5 +23,6 @@ struct NotificationLinkTests {
         #expect(link("dentory://product") == nil)
         #expect(link("https://example.com/product/\(id)") == nil)
         #expect(link("https://app.dentory.ca/reset-password?token_hash=x") == nil)
+        #expect(link("https://app.dentory.ca/product/\(id)") == nil, "The universal link domain claims no push paths")
     }
 }
