@@ -4,8 +4,6 @@ import Foundation
 /// opened. The state and the intents are in `ActivityViewModel.swift`.
 extension ActivityViewModel {
     static let emptyText = "Nothing needs attention."
-    static let historyText = "History arrives with a later update."
-
     /// "Alerts · 3", "History".
     var segmentOptions: [SegmentOption<Segment>] {
         [SegmentOption(.alerts, label: "Alerts", count: alerts.count), SegmentOption(.history, label: "History")]

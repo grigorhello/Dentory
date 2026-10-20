@@ -25,4 +25,18 @@ struct SupabaseActivityRepository: ActivityRepository {
             throw AppError(error)
         }
     }
+
+    func history(
+        clinicID: UUID, filter: ActivityHistoryFilter, productID: UUID?, after: ActivityHistoryEntry?, limit: Int
+    ) async throws -> [ActivityHistoryEntry] {
+        do {
+            let params = ActivityHistoryParams(
+                pClinicId: clinicID, pFilter: filter.parameter, pProductId: productID, pAfterId: after?.id,
+                pLimit: limit
+            )
+            return try await client.rpc("activity_history", params: params).execute().value
+        } catch {
+            throw AppError(error)
+        }
+    }
 }

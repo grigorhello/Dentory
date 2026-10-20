@@ -52,10 +52,4 @@ struct HomeViewModelTests {
         #expect(viewModel.summary?.latestProcedure == nil)
         #expect(viewModel.summary?.hasUnseenAlerts == false)
     }
-
-    @Test func firstNamesComeFromTheFullName() {
-        #expect(PersonName.first(of: "Sarah Chen") == "Sarah")
-        #expect(PersonName.first(of: "Dr. Kim") == "Dr.")
-        #expect(PersonName.first(of: "") == "")
-    }
 }

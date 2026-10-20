@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Product detail (f20 Admin, f21 Staff): context header, name and status, the quantity card, Adjust and
 /// Add to buy, the expiry card, the bottles card for multi-use products, the history, and Delete product
-/// for Admin. Edit, batches, history and Delete open their own tickets' screens later.
+/// for Admin. Show all opens the product's history (MS-134); Edit, batches and Delete open their own tickets'
+/// screens later.
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -25,6 +26,14 @@ struct ProductDetailView: View {
                 style: .context
             )
             .reloadOnReturn { await viewModel.load() }
+            .navigationDestination(for: ProductDetailRoute.self) { route in
+                switch route {
+                case .history(let productID, let name):
+                    ActivityHistoryView(
+                        productID: productID, productName: name, session: session, dependencies: dependencies
+                    )
+                }
+            }
             .onChange(of: viewModel.generalError) { _, error in
                 guard let error else { return }
                 dependencies.toasts.show(error.userMessage)
@@ -145,7 +154,11 @@ struct ProductDetailView: View {
     private func edit() { dependencies.toasts.show("Edit product arrives with a later update.") }
     private func editBatch(_ id: UUID) { dependencies.toasts.show("Edit batch arrives with a later update.") }
     private func addExpiry() { dependencies.toasts.show("Add expiry arrives with a later update.") }
-    private func showAllHistory() { dependencies.toasts.show("History arrives with a later update.") }
+    /// The product's whole history (MS-134).
+    private func showAllHistory() {
+        guard let detail = viewModel.detail else { return }
+        router.push(ProductDetailRoute.history(productID: detail.id, name: detail.name))
+    }
     private func deleteProduct() { dependencies.toasts.show("Delete product arrives with a later update.") }
 }
 
