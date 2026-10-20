@@ -24,6 +24,11 @@ nonisolated struct ClinicFormatters: Sendable {
         amount.formatted(.currency(code: currency).precision(.fractionLength(0)).locale(locale))
     }
 
+    /// "$1.80", "$0.0425": a unit cost with its cents, and up to the four decimals a last unit cost keeps.
+    func unitCost(_ amount: Decimal) -> String {
+        amount.formatted(.currency(code: currency).precision(.fractionLength(2...4)).locale(locale))
+    }
+
     /// "54 cartridges", "1 box", "2.5 bags": one of a unit stored in the plural reads singular ("1 bottle", f27).
     func quantity(_ amount: Decimal, unit: String) -> String {
         "\(number(amount)) \(amount == 1 ? Self.singular(of: unit) : unit)"

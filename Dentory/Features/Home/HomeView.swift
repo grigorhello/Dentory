@@ -55,6 +55,8 @@ struct HomeView: View {
                     ProcedureEventView(
                         eventID: eventID, startsEditing: true, session: session, dependencies: dependencies
                     )
+                case .inventoryValue:
+                    InventoryValueView(session: session, dependencies: dependencies)
                 case .account:
                     if let sessionStore {
                         AccountView(session: session, sessionStore: sessionStore, dependencies: dependencies)

@@ -26,6 +26,7 @@ struct AppDependencies: Sendable {
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
     let procedureEventRepository: ProcedureEventRepository
+    let inventoryValueRepository: InventoryValueRepository
     let accountRepository: AccountRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
@@ -78,6 +79,7 @@ struct AppDependencies: Sendable {
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
+            inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             accountRepository: SupabaseAccountRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
@@ -135,6 +137,7 @@ struct AppDependencies: Sendable {
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
+            inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
@@ -214,6 +217,15 @@ struct AppDependencies: Sendable {
         ProcedureEventViewModel(
             repository: procedureEventRepository, formatters: formatters(for: session), clinicID: session.clinicID,
             eventID: eventID, startsEditing: startsEditing
+        )
+    }
+
+    /// Inventory value of the signed-in clinic (MS-135).
+    @MainActor
+    func makeInventoryValueViewModel(session: Session) -> InventoryValueViewModel {
+        InventoryValueViewModel(
+            repository: inventoryValueRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID
         )
     }
 
