@@ -1,8 +1,8 @@
--- MS-133 · activity_alerts and alerts_mark_seen: the open alerts one row per subject, newest first, with what each
--- sentence needs; a delivery for admins only; clinic-isolated; the seen marker; and an alert that clears once its
--- condition is gone.
+-- MS-133 · activity_alerts, alerts_mark_seen and alerts_unseen: the open alerts one row per subject, newest first,
+-- with what each sentence needs; a delivery for admins only; clinic-isolated; the seen marker and the bell dot it
+-- drives, over the same alerts the list shows; and an alert that clears once its condition is gone.
 begin;
-select plan(18);
+select plan(24);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000a31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -65,6 +65,7 @@ $$;
 
 select ok(not has_function_privilege('anon', 'public.activity_alerts(uuid)', 'execute'), 'anon cannot read alerts');
 select ok(not has_function_privilege('anon', 'public.alerts_mark_seen(uuid)', 'execute'), 'nor mark them seen');
+select ok(not has_function_privilege('anon', 'public.alerts_unseen(uuid)', 'execute'), 'nor ask about the dot');
 
 select pg_temp.act_as('00000000-0000-4000-8000-000000000a31');
 select is(pg_temp.kinds(), array[
@@ -92,15 +93,33 @@ reset role;
 select pg_temp.act_as('00000000-0000-4000-8000-000000000a32');
 select is(array_length(pg_temp.kinds(), 1), 6, 'Staff see the same alerts');
 select is(pg_temp.row_of('00000000-0000-4000-8000-000000000a91'), null, 'but not the delivery waiting for review');
+select ok(public.alerts_unseen('00000000-0000-4000-8000-000000000a41'), 'a member who never opened Alerts has a dot');
 select ok((select public.alerts_mark_seen('00000000-0000-4000-8000-000000000a41')) between now() - interval '1 second' and now() + interval '1 second',
   'opening Alerts marks them seen now');
+select ok(not public.alerts_unseen('00000000-0000-4000-8000-000000000a41'), 'and the dot is gone');
 select lives_ok($$ select public.alerts_mark_seen('00000000-0000-4000-8000-000000000a41') $$, 'and again');
 reset role;
 select is((select count(*) from public.alert_reads where user_id = '00000000-0000-4000-8000-000000000a32')::integer, 1,
   'one marker per member');
 
+-- Both members last opened Alerts half an hour ago. Since then only the delivery opened, and an alert of the archived
+-- Old gauze: neither is on Staff's list, so neither lights Staff's bell.
+insert into public.alert_reads (clinic_id, user_id, last_seen_at) values
+  ('00000000-0000-4000-8000-000000000a41', '00000000-0000-4000-8000-000000000a31', now() - interval '30 minutes'),
+  ('00000000-0000-4000-8000-000000000a41', '00000000-0000-4000-8000-000000000a32', now() - interval '30 minutes')
+on conflict (clinic_id, user_id) do update set last_seen_at = excluded.last_seen_at;
+update public.alerts set opened_at = now() - interval '1 minute' where id = '00000000-0000-4000-8000-000000000a9a';
+select pg_temp.act_as('00000000-0000-4000-8000-000000000a32');
+select ok(not public.alerts_unseen('00000000-0000-4000-8000-000000000a41'),
+  'Staff get no dot from a delivery waiting for review or an archived product''s alert');
+reset role;
+select pg_temp.act_as('00000000-0000-4000-8000-000000000a31');
+select ok(public.alerts_unseen('00000000-0000-4000-8000-000000000a41'), 'the admin gets one from the delivery');
+reset role;
+
 select pg_temp.act_as('00000000-0000-4000-8000-000000000a33');
 select is(pg_temp.alerts(), '[]'::jsonb, 'another clinic sees none of them');
+select ok(not public.alerts_unseen('00000000-0000-4000-8000-000000000a41'), 'and gets no dot from them');
 select throws_ok($$ select public.alerts_mark_seen('00000000-0000-4000-8000-000000000a41') $$, '42501', null::text,
   'nor marks them seen');
 reset role;

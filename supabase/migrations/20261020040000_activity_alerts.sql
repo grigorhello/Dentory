@@ -1,6 +1,6 @@
 -- MS-133 · Activity: alerts and the bell (PRD §6.8, §5 Alerts; Appendix B `activity`; f8). The engine opens and
--- resolves alerts (MS-106, MS-107); this reads the open ones, one row per subject, and keeps each member's "seen"
--- marker behind Home's bell dot. Nothing here writes stock.
+-- resolves alerts (MS-106, MS-107); this reads the open ones, one row per subject, keeps each member's "seen"
+-- marker and answers Home's bell dot from the same list. Nothing here writes stock.
 
 -- The open alerts of a clinic, newest first, one row per subject: an expiring batch has one open alert per
 -- threshold it crossed (MS-100 D8) and is listed once, by the latest. Each row carries what its sentence needs: the
@@ -62,3 +62,25 @@ as $$
 $$;
 revoke execute on function public.alerts_mark_seen(uuid) from public, anon;
 grant execute on function public.alerts_mark_seen(uuid) to authenticated, service_role;
+
+-- Home's bell dot (Appendix B `home.header.bell`, MS-114): whether the member's Alerts list holds an alert that opened
+-- after their seen marker, or any alert when they never opened Alerts. It reads `activity_alerts`, so the dot counts
+-- exactly what the list shows: a delivery waiting for review only for admins, no archived product's alerts.
+create function public.alerts_unseen(p_clinic_id uuid)
+returns boolean
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from jsonb_array_elements(public.activity_alerts(p_clinic_id)) a
+    where (a ->> 'opened_at')::timestamptz > coalesce(
+      (select r.last_seen_at from public.alert_reads r where r.clinic_id = p_clinic_id and r.user_id = auth.uid()),
+      '-infinity'::timestamptz
+    )
+  );
+$$;
+revoke execute on function public.alerts_unseen(uuid) from public, anon;
+grant execute on function public.alerts_unseen(uuid) to authenticated, service_role;

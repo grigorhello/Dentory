@@ -19,8 +19,7 @@ struct HomeView: View {
         _viewModel = State(initialValue: HomeViewModel(
             repository: dependencies.homeRepository,
             cache: dependencies.cache,
-            clinicID: session.clinicID,
-            userID: session.userID
+            clinicID: session.clinicID
         ))
     }
 

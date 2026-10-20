@@ -6,7 +6,7 @@ struct DemoHomeRepository: HomeRepository {
     /// When set, the bell's dot follows it: Activity's demo alerts clear it once seen (MS-133).
     var activity: DemoActivityRepository?
 
-    func summary(clinicID: UUID, userID: UUID) async throws -> HomeSummary {
+    func summary(clinicID: UUID) async throws -> HomeSummary {
         guard let activity else { return summary }
         return HomeSummary(
             toBuyCount: summary.toBuyCount,
