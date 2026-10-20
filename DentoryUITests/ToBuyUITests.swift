@@ -36,7 +36,8 @@ final class ToBuyUITests: XCTestCase {
         let markOrdered = app.buttons["order.markOrdered"]
         XCTAssertEqual(markOrdered.label, "Mark 3 as ordered")
         XCTAssertLessThanOrEqual(
-            markOrdered.frame.maxY, app.buttons["tab.toBuy"].frame.minY, "Mark as ordered sits under the tab bar"
+            markOrdered.frame.maxY, app.descendants(matching: .any)["tabBar"].frame.minY,
+            "Mark as ordered sits under the tab bar"
         )
         XCTAssertEqual(app.staticTexts["\(endo).value"].label, "4")
 

@@ -101,9 +101,25 @@ final class InventoryUITests: XCTestCase {
             app.swipeUp()
         }
         let lastRow = rows.element(boundBy: rows.count - 1)
-        XCTAssertLessThanOrEqual(
-            lastRow.frame.maxY, app.buttons["Inventory"].frame.minY, "The last row ends under the tab bar"
-        )
+        let tabBar = app.descendants(matching: .any)["tabBar"]
+        XCTAssertLessThanOrEqual(lastRow.frame.maxY, tabBar.frame.minY, "The last row ends under the tab bar")
+    }
+
+    @MainActor
+    func testAToastSitsJustAboveTheTabBar() {
+        // To buy's Mark as ordered bar stays alive behind the other tabs; it must not lift their toasts.
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-tab", "inventory"]
+        app.launch()
+
+        let countStock = app.buttons["inv.countStock"]
+        XCTAssertTrue(countStock.waitForExistence(timeout: 5), "No Count stock")
+        countStock.tap()
+        let toast = app.descendants(matching: .any)["toast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast")
+        let gap = app.descendants(matching: .any)["tabBar"].frame.minY - toast.frame.maxY
+        XCTAssertGreaterThanOrEqual(gap, 0, "The toast covers the tab bar")
+        XCTAssertLessThan(gap, 24, "The toast floats \(gap) pt above the tab bar")
     }
 
     @MainActor

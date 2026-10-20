@@ -17,7 +17,8 @@ struct ToBuyView: View {
             .rootScreen(title: "To buy", identifier: "order.header")
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if viewModel.showsMarkOrdered {
-                    PinnedPrimaryBar {
+                    // The tab stays alive behind the others: toasts on them float above this bar only while it shows.
+                    PinnedPrimaryBar(reportsHeight: router.selectedTab == .toBuy) {
                         MSButton(
                             viewModel.markOrderedTitle, isFullWidth: true, isLoading: viewModel.isMarking,
                             isDisabled: viewModel.selectedItems.isEmpty, action: markOrdered
