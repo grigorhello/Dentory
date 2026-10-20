@@ -93,6 +93,7 @@ final class ActivityUITests: XCTestCase {
         XCTAssertTrue(procedure.label.contains("\u{2212}2"), "The row reads \(procedure.label)")
     }
 
+    @MainActor
     private func row(_ number: Int, in app: XCUIApplication) -> XCUIElement {
         let id = String(format: "00000000-0000-4000-8000-%012x", number)
         return app.descendants(matching: .any)["activity.row[\(id)]"]
