@@ -20,7 +20,9 @@ struct DeviceSignOutTests {
         )
         await push.signedIn(as: .demo)
         await push.didRegister(deviceToken: Data(repeating: 0xab, count: 32))
-        let signOut = DeviceSignOut(sessionStore: store, cache: cache, writes: queue, push: push)
+        let logo = PendingClinicLogo()
+        logo.keep(Data("png".utf8), for: Session.demo.clinicID)
+        let signOut = DeviceSignOut(sessionStore: store, cache: cache, writes: queue, push: push, pendingLogo: logo)
         #expect(signOut.unsyncedChangeCount == 1)
 
         await signOut.signOut()
@@ -29,7 +31,16 @@ struct DeviceSignOutTests {
         #expect(queue.isEmpty, "Writes made offline are not sent under the next account")
         #expect(signOut.unsyncedChangeCount == 0)
         #expect(tokens.removed == [String(repeating: "ab", count: 32)], "This device gets no more of their pushes")
+        #expect(logo.logo(for: Session.demo.clinicID) == nil, "A logo waiting for its retry is forgotten (MS-139)")
         #expect(store.state == .signedOut)
+    }
+
+    /// The server signing the member out here clears the same: a pending Clinic settings logo goes too.
+    @Test func aRemovedMembersDeviceForgetsAPendingLogo() {
+        let dependencies = AppDependencies.preview()
+        dependencies.pendingClinicLogo.keep(Data("png".utf8), for: Session.demo.clinicID)
+        dependencies.clearClinicData()
+        #expect(dependencies.pendingClinicLogo.logo(for: Session.demo.clinicID) == nil)
     }
 
     @Test func theRouterStartsTheNextPersonOnHome() {

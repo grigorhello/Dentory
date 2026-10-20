@@ -38,6 +38,8 @@ struct AppDependencies: Sendable {
     let push: PushNotifications
     /// Product analytics, PostHog when the build has a project token (MS-147); previews and tests send nothing.
     var analytics: Analytics = NoopAnalytics()
+    /// Clinic settings' logo waiting for its retry, across a rebuild of the screens (MS-139).
+    let pendingClinicLogo = PendingClinicLogo()
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
     var locale: Locale = .current
 
@@ -225,7 +227,7 @@ struct AppDependencies: Sendable {
     func makeClinicSettingsViewModel(session: Session, sessionStore: SessionStore?) -> ClinicSettingsViewModel {
         ClinicSettingsViewModel(
             clinicID: session.clinicID, repository: clinicSettingsRepository, analytics: analytics, locale: locale,
-            onSaved: { await sessionStore?.revalidate() }
+            pendingLogo: pendingClinicLogo, onSaved: { await sessionStore?.revalidate() }
         )
     }
 
@@ -266,19 +268,23 @@ struct AppDependencies: Sendable {
     }
 
     /// Account of the signed-in member (MS-137); signing out clears this device's cache and queued writes.
-    /// The clinic's cached answers and the writes waiting for a connection, gone when the server signs the member out
-    /// on this device (MS-138), as Sign out clears them (MS-137).
+    /// The clinic's cached answers, the writes waiting for a connection and a logo waiting for its retry, gone when the
+    /// server signs the member out on this device (MS-138), as Sign out clears them (MS-137).
     @MainActor
     func clearClinicData() {
         cache.removeAll()
         writes.queue.removeAll()
+        pendingClinicLogo.removeAll()
     }
 
     @MainActor
     func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
         AccountViewModel(
             session: session, repository: accountRepository, cache: cache,
-            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push),
+            signingOut: DeviceSignOut(
+                sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push,
+                pendingLogo: pendingClinicLogo
+            ),
             analytics: analytics
         )
     }

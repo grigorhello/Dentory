@@ -19,8 +19,10 @@ final class ClinicSettingsViewModel {
     var timeZone: String?
     var expiryWarning: ExpiryWarning? = .thirtySixtyNinety
     var emailDigest = true
-    /// A logo picked here, uploaded on Save.
-    var logoData: Data?
+    /// A logo picked here, uploaded on Save. Once one failed, a newer pick replaces it in `pendingLogo` too.
+    var logoData: Data? {
+        didSet { if pendingLogo.logo(for: clinicID) != nil { pendingLogo.keep(logoData, for: clinicID) } }
+    }
     /// The logo the clinic has.
     private(set) var savedLogo: Data?
 
@@ -42,15 +44,17 @@ final class ClinicSettingsViewModel {
     private let clinicID: UUID
     private let repository: ClinicSettingsRepository
     private let analytics: Analytics
+    private let pendingLogo: PendingClinicLogo
     private let onSaved: () async -> Void
 
     init(
         clinicID: UUID, repository: ClinicSettingsRepository, analytics: Analytics, locale: Locale = .current,
-        onSaved: @escaping () async -> Void = {}
+        pendingLogo: PendingClinicLogo = PendingClinicLogo(), onSaved: @escaping () async -> Void = {}
     ) {
         self.clinicID = clinicID
         self.repository = repository
         self.analytics = analytics
+        self.pendingLogo = pendingLogo
         self.onSaved = onSaved
         countries = Country.all(locale: locale)
         timeZones = TimeZone.knownTimeZoneIdentifiers.sorted()
@@ -68,6 +72,8 @@ final class ClinicSettingsViewModel {
         do {
             let settings = try await repository.settings(clinicID: clinicID)
             show(settings)
+            // A logo whose upload failed before the screens were rebuilt is still waiting for Save.
+            logoData = pendingLogo.logo(for: clinicID)
             state = .loaded
             if let path = settings.logoPath {
                 savedLogo = try? await repository.logo(path: path)
@@ -139,8 +145,10 @@ final class ClinicSettingsViewModel {
                 try await repository.uploadLogo(clinicID: clinicID, imageData: logoData)
                 savedLogo = logoData
                 self.logoData = nil
+                pendingLogo.keep(nil, for: clinicID)
             } catch {
                 // The settings are saved; the logo stays picked so Save can try it again.
+                pendingLogo.keep(logoData, for: clinicID)
                 generalError = .validation(
                     field: "logo", message: "The settings are saved, the logo is not. Tap Save to try again."
                 )
@@ -170,6 +178,7 @@ final class ClinicSettingsViewModel {
     func discard() {
         if let saved { show(saved) }
         logoData = nil
+        pendingLogo.keep(nil, for: clinicID)
         isConfirmingDiscard = false
     }
 

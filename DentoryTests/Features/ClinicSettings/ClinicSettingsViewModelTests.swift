@@ -108,6 +108,42 @@ struct ClinicSettingsViewModelTests {
         #expect(checks == 2, "Only once")
     }
 
+    /// A new name rebuilds the screens on the next return to the foreground: the logo whose upload failed waits for
+    /// Save on the rebuilt screen, and goes once it is in or discarded (MS-139 known issue).
+    @Test func aFailedLogoOutlivesARebuildOfTheScreen() async {
+        let repository = FakeClinicSettingsRepository()
+        let pending = PendingClinicLogo()
+        let first = ClinicSettingsViewModel(
+            clinicID: Session.demo.clinicID, repository: repository, analytics: NoopAnalytics(),
+            locale: Locale(identifier: "en_US"), pendingLogo: pending
+        )
+        await first.load()
+        first.name = "Smile Dental Downtown"
+        first.logoData = Data("png".utf8)
+        repository.logoFailure = AppError.network
+        await first.save()
+        #expect(pending.logo(for: Session.demo.clinicID) == Data("png".utf8))
+
+        let rebuilt = ClinicSettingsViewModel(
+            clinicID: Session.demo.clinicID, repository: repository, analytics: NoopAnalytics(),
+            locale: Locale(identifier: "en_US"), pendingLogo: pending
+        )
+        await rebuilt.load()
+        #expect(rebuilt.logoData == Data("png".utf8), "The picked logo is back")
+        #expect(rebuilt.canSave, "Save offers it again")
+        rebuilt.logoData = Data("newer".utf8)
+        #expect(pending.logo(for: Session.demo.clinicID) == Data("newer".utf8), "The newer pick waits instead")
+        repository.logoFailure = nil
+        await rebuilt.save()
+        #expect(pending.logo(for: Session.demo.clinicID) == nil, "Gone once it is in")
+
+        first.logoData = Data("jpg".utf8)
+        repository.logoFailure = AppError.network
+        await first.save()
+        first.discard()
+        #expect(pending.logo(for: Session.demo.clinicID) == nil, "Or discarded")
+    }
+
     @Test func aLogoThatDidNotDownloadIsStillOneToReplace() async {
         let repository = FakeClinicSettingsRepository()
         #expect(await make(repository).logoHint == "Tap to upload.", "No logo yet")
