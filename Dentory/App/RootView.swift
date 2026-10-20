@@ -84,6 +84,9 @@ struct RootView: View {
                 signInPath = NavigationPath()
                 invitationToken = nil
                 resetTokenHash = tokenHash
+            } else if let link = NotificationLink(url: url) {
+                // A notification's link opens on the tabs, after sign-in when the app is signed out.
+                dependencies.push.open(link)
             }
         }
         .onAppear {
@@ -151,8 +154,24 @@ struct RootView: View {
                 .environment(\.membershipCheck, MembershipCheckAction { [sessionStore] in
                     await sessionStore.revalidateIfDue()
                 })
+                .pushNotifications(dependencies.push, session: session, open: open)
                 // A changed role rebuilds the screens, so the controls follow it at once (MS-138).
                 .id(session.role)
+        }
+    }
+
+    /// What a tapped notification opens, as its alert's row in Activity does (MS-133, MS-144): the product on the
+    /// Inventory tab, or Receive delivery on Home.
+    private func open(_ link: NotificationLink) {
+        switch link {
+        case .product(let productID):
+            router.popToRoot(on: .inventory)
+            router.selectedTab = .inventory
+            router.push(InventoryRoute.product(productID), on: .inventory)
+        case .delivery:
+            router.popToRoot(on: .home)
+            router.selectedTab = .home
+            router.push(HomeRoute.receive, on: .home)
         }
     }
 

@@ -32,6 +32,8 @@ struct AppDependencies: Sendable {
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
+    /// Push notifications on this device (MS-144).
+    let push: PushNotifications
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
     var locale: Locale = .current
 
@@ -85,14 +87,20 @@ struct AppDependencies: Sendable {
             teamRepository: SupabaseTeamRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
-            invitationRepository: SupabaseInvitationRepository(client: client)
+            invitationRepository: SupabaseInvitationRepository(client: client),
+            push: PushNotifications(
+                authorizer: SystemNotificationAuthorizer(), repository: SupabasePushTokenRepository(client: client),
+                store: UserDefaultsPushExplainerStore()
+            )
         )
     }
 
     /// No network: a demo clinic, a signed-in admin and a fixed moment, for previews and UI tests.
+    /// `offersPush` starts the device as one that never offered notifications, so the explainer shows (MS-144).
     @MainActor
     static func preview(
-        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin, onboarding: String? = nil
+        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin, onboarding: String? = nil,
+        offersPush: Bool = false
     ) -> AppDependencies {
         let rpc = PreviewRPCClient()
         let clock = FixedClock(Session.demoNow)
@@ -139,6 +147,10 @@ struct AppDependencies: Sendable {
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
+            push: PushNotifications(
+                authorizer: SystemNotificationAuthorizer(), repository: DemoPushTokenRepository(),
+                store: InMemoryPushExplainerStore(lastOffered: offersPush ? nil : Date())
+            ),
             locale: Locale(identifier: "en_US")
         )
     }
@@ -240,7 +252,7 @@ struct AppDependencies: Sendable {
     func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
         AccountViewModel(
             session: session, repository: accountRepository, cache: cache,
-            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue)
+            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push)
         )
     }
 
