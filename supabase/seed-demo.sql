@@ -93,6 +93,13 @@ alter table public.transactions disable trigger transactions_append_only;
 insert into public.clinics (id, name, city, country, currency, time_zone)
 values (pg_temp.clinic(), 'Smile Dental', 'Toronto', 'CA', 'CAD', 'America/Toronto');
 
+-- Billing (f34): three months free from the story's start, the lifetime promotion, a card added during the trial and
+-- the owner's address for invoices. No Stripe customer: Change opens Checkout once the hosted project has Stripe keys.
+update public.clinics
+set trial_ends_at = now() + interval '96 days', promo_lifetime_50 = true, billing_emails = array['owner@smiledental.ca']
+where id = pg_temp.clinic();
+insert into public.clinic_billing (clinic_id, card_brand, card_last4) values (pg_temp.clinic(), 'visa', '4242');
+
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at,

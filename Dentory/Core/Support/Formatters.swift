@@ -101,6 +101,19 @@ nonisolated struct ClinicFormatters: Sendable {
         return calendar.dateComponents([.day], from: from, to: today).day ?? 0
     }
 
+    /// "January 6, 2027": a day spelled out, as Billing's trial end (f34).
+    func longDate(_ date: Date) -> String {
+        date.formatted(style.month(.wide).day().year())
+    }
+
+    /// Whole days from today to `date`'s day in the clinic's time zone: 0 on the day itself, negative once it passed.
+    func daysUntil(_ date: Date) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let today = calendar.startOfDay(for: clock.now)
+        return calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: date)).day ?? 0
+    }
+
     /// "Thursday, October 2" for the Home eyebrow (f6).
     func weekday(_ date: Date) -> String {
         date.formatted(style.weekday(.wide).month(.wide).day())

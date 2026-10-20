@@ -14,7 +14,8 @@ nonisolated struct EdgeFunctionErrorBody: Decodable, Sendable {
 
 extension AppError {
     /// Maps a failed `functions.invoke`: 401 and 403 are refusals (read-only when the function says so),
-    /// 404 and 410 mean the thing is gone, 400 and 409 carry a sentence for the user and the field it names.
+    /// 404 and 410 mean the thing is gone, 400 and 409 carry a sentence for the user and the field it names, and so do
+    /// 502 and 503 when a service behind the function is down or not set up ("Billing isn't set up yet.").
     init(functionError error: Error) {
         guard case FunctionsError.httpError(let status, let data) = error else {
             self = AppError(error)
@@ -28,6 +29,12 @@ extension AppError {
             self = .notFound
         case 400, 409, 422:
             self = .validation(field: detail?.field, message: detail?.message ?? "Couldn't save. Try again.")
+        case 502, 503:
+            if let detail {
+                self = .validation(field: nil, message: detail.message)
+            } else {
+                self = .unknown("The server answered \(status)")
+            }
         default:
             self = .unknown(detail?.message ?? "The server answered \(status)")
         }
