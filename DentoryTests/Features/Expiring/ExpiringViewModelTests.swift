@@ -93,6 +93,18 @@ struct ExpiringViewModelTests {
         #expect(viewModel.summary == "2 products · $198 at risk within 90 days.")
     }
 
+    /// A segment picked before the list arrives, or while it cannot, stays picked once the list comes.
+    @Test func aSegmentPickedBeforeTheListArrivesStays() async {
+        let repository = FakeExpiringRepository()
+        repository.listResult = .failure(AppError.network)
+        let viewModel = await make(repository)
+        viewModel.window = 60
+        repository.listResult = .success(ExpiringList(window: 90, batches: ExpiringBatch.demo))
+        await viewModel.load()
+        #expect(viewModel.window == 60, "The clinic's own window does not override the choice")
+        #expect(viewModel.batches.map(\.name) == ["Bonding agent"])
+    }
+
     @Test func staffSeeTheListButCannotDispose() async {
         let viewModel = await make(isAdmin: false)
         #expect(viewModel.batches.count == 2)

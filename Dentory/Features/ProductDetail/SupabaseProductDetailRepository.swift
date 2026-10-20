@@ -139,11 +139,6 @@ nonisolated struct StockAdjustParams: Encodable, Sendable {
     }
 }
 
-/// The parameters of `undo_action`.
-nonisolated struct UndoActionParams: Encodable, Sendable {
-    let pActionId: UUID
-}
-
 /// The object `product_detail` returns. Its keys avoid a digit-led component: the snake_case decoder
 /// would read `used_30d` as `used30D` and fail.
 nonisolated struct ProductDetailPayload: Decodable, Sendable {

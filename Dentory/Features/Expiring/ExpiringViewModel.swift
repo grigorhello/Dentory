@@ -22,8 +22,10 @@ final class ExpiringViewModel {
 
     private(set) var state: LoadState = .loading
     private(set) var list: ExpiringList?
-    /// The segment on screen, in days.
-    var window: Int
+    /// The segment on screen, in days. A tap on a segment is a choice the clinic's own window no longer overrides.
+    var window: Int {
+        didSet { windowIsChosen = true }
+    }
     /// The batch the Mark disposed sheet is open for.
     var disposing: ExpiringBatch?
     private(set) var message: Message?

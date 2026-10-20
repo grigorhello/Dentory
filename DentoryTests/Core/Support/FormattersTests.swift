@@ -23,6 +23,23 @@ struct FormattersTests {
         #expect(formatters.quantity(1, unit: "pouches") == "1 pouch")
         #expect(formatters.quantity(0, unit: "kits") == "0 kits")
         #expect(formatters.quantity(1, unit: "ml") == "1 ml", "Not a plural: as it is")
+        #expect(formatters.quantity(1, unit: "batteries") == "1 battery")
+    }
+
+    /// A field opens on a number it reads back whole, and reads what people type with or without separators.
+    @Test func editableNumbersReadBackAsTyped() {
+        #expect(formatters.editableNumber(1000) == "1000", "No thousands separator to stop the parse")
+        #expect(formatters.editableNumber(2.5) == "2.5")
+        #expect(formatters.parseNumber("1000") == 1000)
+        #expect(formatters.parseNumber("1,000") == 1000)
+        #expect(formatters.parseNumber(" 2.5 ") == 2.5)
+        #expect(formatters.parseNumber("-1") == -1)
+        #expect(formatters.parseNumber("abc") == nil)
+        #expect(formatters.parseNumber("") == nil)
+        let french = ClinicFormatters(
+            currency: "CAD", timeZone: formatters.timeZone, locale: Locale(identifier: "fr_CA"), clock: formatters.clock
+        )
+        #expect(french.parseNumber(french.editableNumber(1234.5)) == 1234.5, "Round trip with a decimal comma")
     }
 
     @Test func datesInTheClinicTimeZone() {

@@ -21,6 +21,23 @@ struct DisposeBatchViewModelTests {
         #expect(viewModel.canDispose)
     }
 
+    /// A batch of 1,000 opens on "1000", which reads back whole; typed separators read too.
+    @Test func aThousandIsDisposedWhole() async throws {
+        let gloves = ExpiringBatch(
+            id: UUID(), productID: UUID(), name: "Nitrile gloves M", unit: "gloves", tracking: .countable,
+            quantity: 1000, lot: "G7", expiryMonth: CalendarDay(year: 2026, month: 12, day: 1), value: 90
+        )
+        let repository = FakeExpiringRepository()
+        let viewModel = DisposeBatchViewModel(batch: gloves, repository: repository, formatters: formatters)
+        #expect(viewModel.quantityText == "1000")
+        #expect(viewModel.quantity == 1000)
+        await viewModel.dispose()
+        #expect(repository.disposals.first?.quantity == 1000)
+        viewModel.quantityText = "1,000"
+        #expect(viewModel.quantity == 1000)
+        #expect(viewModel.quantityError == nil)
+    }
+
     @Test func aBatchWithoutALotNamesTheProductOnly() {
         let batch = ExpiringBatch(
             id: UUID(), productID: UUID(), name: "Gauze", unit: "packs", tracking: .countable, quantity: 2, lot: nil,

@@ -1,7 +1,7 @@
 -- MS-132 · expiring_batches: the batches expiring within a window, expired first, with their value, clinic-isolated;
 -- disposing a whole batch takes it off the list and off Home's figures, and Undo brings it back.
 begin;
-select plan(18);
+select plan(19);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000f31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -98,6 +98,7 @@ select results_eq(
   $$ values (3, 97::numeric(14, 2)) $$, 'and Home''s tile and value at risk drop with it');
 select lives_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = '00000000-0000-4000-8000-0000000002f2'), '00000000-0000-4000-8000-0000000002f3') $$,
   'Undo restores it');
+select is(pg_temp.lots(), array['E2', 'BA7', '—', 'B441'], 'and the batch is back on Expiring soon');
 reset role;
 
 select * from finish();

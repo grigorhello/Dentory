@@ -28,7 +28,7 @@ final class DisposeBatchViewModel {
         self.batch = batch
         self.repository = repository
         self.formatters = formatters
-        quantityText = formatters.number(batch.quantity)
+        quantityText = formatters.editableNumber(batch.quantity)
     }
 
     var isSubmitting: Bool { submitGuard.isBusy }
@@ -41,9 +41,7 @@ final class DisposeBatchViewModel {
 
     /// The typed quantity, or nil when it is not a number.
     var quantity: Decimal? {
-        let text = quantityText.trimmingCharacters(in: .whitespaces)
-        guard !text.isEmpty, let value = Decimal(string: text, locale: formatters.locale) else { return nil }
-        return value
+        formatters.parseNumber(quantityText)
     }
 
     /// Under the field: more than the batch holds, or nothing to dispose.
