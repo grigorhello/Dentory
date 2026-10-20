@@ -6,8 +6,12 @@ struct AccountView: View {
     @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: AccountViewModel
     @State private var showsHelp = false
+    private let session: Session
+    private let sessionStore: SessionStore
 
     init(session: Session, sessionStore: SessionStore, dependencies: AppDependencies) {
+        self.session = session
+        self.sessionStore = sessionStore
         _viewModel = State(
             initialValue: dependencies.makeAccountViewModel(session: session, sessionStore: sessionStore)
         )
@@ -18,7 +22,12 @@ struct AccountView: View {
             .pushedScreen(title: "Account", identifier: "more")
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: AccountRoute.self) { route in
-                AccountRoutePlaceholderView(route: route)
+                switch route {
+                case .settings:
+                    ClinicSettingsView(session: session, sessionStore: sessionStore, dependencies: dependencies)
+                case .team, .billing:
+                    AccountRoutePlaceholderView(route: route)
+                }
             }
             .msSheet(isPresented: $viewModel.isConfirmingSignOut) {
                 SignOutSheet(viewModel: viewModel)

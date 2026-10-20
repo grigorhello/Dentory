@@ -23,6 +23,7 @@ struct AppDependencies: Sendable {
     let procedureStartRepository: ProcedureStartRepository
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
+    let clinicSettingsRepository: ClinicSettingsRepository
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
     let procedureEventRepository: ProcedureEventRepository
@@ -78,6 +79,7 @@ struct AppDependencies: Sendable {
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
+            clinicSettingsRepository: SupabaseClinicSettingsRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
@@ -136,6 +138,7 @@ struct AppDependencies: Sendable {
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
             toBuyRepository: DemoToBuyRepository(),
+            clinicSettingsRepository: DemoClinicSettingsRepository(),
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
@@ -205,6 +208,16 @@ struct AppDependencies: Sendable {
         ExpiringViewModel(
             repository: expiringRepository, cache: cache, formatters: formatters(for: session),
             clinicID: session.clinicID, isAdmin: session.isAdmin, window: window
+        )
+    }
+
+    /// Clinic settings of the signed-in clinic, for its admin (MS-139). A save refreshes the session, so the clinic's
+    /// name, currency and time zone follow everywhere.
+    @MainActor
+    func makeClinicSettingsViewModel(session: Session, sessionStore: SessionStore?) -> ClinicSettingsViewModel {
+        ClinicSettingsViewModel(
+            clinicID: session.clinicID, repository: clinicSettingsRepository, locale: locale,
+            onSaved: { await sessionStore?.refresh() }
         )
     }
 

@@ -55,6 +55,8 @@ struct PushedHeader: View {
     var identifier: String
     var action: HeaderAction?
     var style: PushedHeaderStyle = .title
+    /// Runs on Back in place of leaving, for a screen that asks before discarding changes (Clinic settings).
+    var onBack: (() -> Void)?
 
     struct HeaderAction {
         let title: String
@@ -69,7 +71,7 @@ struct PushedHeader: View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
                 Button {
-                    dismiss()
+                    if let onBack { onBack() } else { dismiss() }
                 } label: {
                     IconView(.chevronLeft, size: 24)
                         .foregroundStyle(Color.ms.ink)
@@ -142,10 +144,13 @@ struct PushedScreenModifier: ViewModifier {
     let identifier: String
     var action: PushedHeader.HeaderAction?
     var style: PushedHeaderStyle = .title
+    var onBack: (() -> Void)?
 
     func body(content: Content) -> some View {
         ScreenScaffold {
-            PushedHeader(title: title, subtitle: subtitle, identifier: identifier, action: action, style: style)
+            PushedHeader(
+                title: title, subtitle: subtitle, identifier: identifier, action: action, style: style, onBack: onBack
+            )
         } content: {
             content
         }
@@ -210,15 +215,17 @@ extension View {
 
     /// Lays the view out as a pushed screen. Add `.pinnedPrimaryBar` for its primary action.
     /// `style: .context` reads the title as a secondary line when the content carries the real title (f20).
+    /// `onBack` replaces leaving on Back, for a screen that asks before discarding changes.
     func pushedScreen(
         title: String,
         subtitle: String? = nil,
         identifier: String,
         action: PushedHeader.HeaderAction? = nil,
-        style: PushedHeaderStyle = .title
+        style: PushedHeaderStyle = .title,
+        onBack: (() -> Void)? = nil
     ) -> some View {
         modifier(PushedScreenModifier(
-            title: title, subtitle: subtitle, identifier: identifier, action: action, style: style
+            title: title, subtitle: subtitle, identifier: identifier, action: action, style: style, onBack: onBack
         ))
     }
 }
