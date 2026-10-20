@@ -1,8 +1,9 @@
-// What billing_checkout and billing_portal share (MS-140): the request { clinic_id } from a signed-in admin, the
-// Stripe configuration, and the clinic's billing account (billing_account refuses anyone but an active admin).
+// What billing_checkout and billing_portal share (MS-140, MS-100 D18): the request { clinic_id } with the service role
+// key (Grigor at onboarding, the billing emails; the app never calls them), the Stripe configuration, and the clinic's
+// billing account.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { HttpError, isUUID, readJSON, text } from "./http.ts";
-import { caller, rpcError, serviceClient } from "./supabase.ts";
+import { requireServiceRole, rpcError, serviceClient } from "./supabase.ts";
 import { type StripeConfig, stripeConfig, stripeRequest } from "./stripe.ts";
 
 export interface BillingAccount {
@@ -22,15 +23,13 @@ export interface BillingRequest {
 }
 
 export async function billingRequest(req: Request): Promise<BillingRequest> {
+  requireServiceRole(req);
   const body = await readJSON(req);
   const clinicID = text(body, "clinic_id");
   if (!isUUID(clinicID)) throw new HttpError(400, "validation", "A clinic is required.");
-  const admin = await caller(req);
   const config = stripeConfig();
   const db = serviceClient();
-  const { data, error } = await db
-    .rpc("billing_account", { p_clinic_id: clinicID, p_user_id: admin.id })
-    .single<BillingAccount>();
+  const { data, error } = await db.rpc("billing_account", { p_clinic_id: clinicID }).single<BillingAccount>();
   if (error) throw rpcError(error);
   return { clinicID, config, db, account: data };
 }

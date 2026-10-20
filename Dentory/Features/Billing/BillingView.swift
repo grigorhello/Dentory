@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Billing (f34), pushed from Account for an admin: the trial or plan card, the payment method, and the invoices and
-/// billing emails. Add or Change opens Stripe in the in-app browser; Billing follows the webhook once it closes.
+/// Billing (f34, MS-100 D18), pushed from Account for an admin: the trial or plan card, the payment method's status,
+/// and the invoices and billing emails. The app links to no payment page; a card added from the emailed link shows
+/// here on the next return to the app or pull to refresh.
 struct BillingView: View {
-    @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: BillingViewModel
 
     init(session: Session, dependencies: AppDependencies) {
@@ -16,17 +16,6 @@ struct BillingView: View {
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: BillingRoute.self) { route in
                 BillingRoutePlaceholderView(route: route)
-            }
-            .fullScreenCover(item: $viewModel.paymentPage) { page in
-                SafariView(url: page.url) {
-                    Task { await viewModel.paymentPageClosed() }
-                }
-                .ignoresSafeArea()
-            }
-            .onChange(of: viewModel.message) { _, message in
-                guard let message else { return }
-                dependencies.toasts.show(message)
-                viewModel.clearMessage()
             }
     }
 
@@ -57,45 +46,25 @@ struct BillingView: View {
         }
     }
 
-    /// "Payment method", the card and Add or Change (f34). With large text the card and the button move under the
-    /// title.
+    /// "Payment method" and its status, the card or "Not set" (f34, MS-100 D18), and without a card where the link to
+    /// add one goes.
     private var paymentMethod: some View {
-        ListCard {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Spacing.sm) {
-                    paymentTitle.frame(maxWidth: .infinity, alignment: .leading)
-                    cardAndAction
-                }
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    paymentTitle
-                    HStack(spacing: Spacing.sm) {
-                        cardAndAction
-                    }
-                }
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            ListCard {
+                BillingRow(
+                    title: "Payment method", value: viewModel.paymentMethodText, navigates: false, showsDivider: false
+                )
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("billing.paymentMethod")
             }
-            .padding(.vertical, Spacing.md)
-            .frame(minHeight: ControlHeight.hitTarget)
+            if let note = viewModel.paymentMethodNote {
+                Text(note)
+                    .textStyle(.body14)
+                    .foregroundStyle(Color.ms.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("billing.paymentMethod.note")
+            }
         }
-    }
-
-    private var paymentTitle: some View {
-        Text("Payment method").textStyle(.body16).foregroundStyle(Color.ms.ink)
-    }
-
-    /// The card and the button keep their whole width.
-    @ViewBuilder private var cardAndAction: some View {
-        if let card = viewModel.cardText {
-            Text(card)
-                .textStyle(.body14)
-                .foregroundStyle(Color.ms.textSecondary)
-                .fixedSize()
-                .accessibilityIdentifier("billing.card")
-        }
-        MSButton(viewModel.paymentActionTitle, variant: .text, size: .small, isLoading: viewModel.isOpeningPayment) {
-            Task { await viewModel.managePayment() }
-        }
-        .fixedSize()
-        .accessibilityIdentifier("billing.paymentMethod")
     }
 }
 

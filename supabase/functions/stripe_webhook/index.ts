@@ -1,7 +1,8 @@
 // POST /functions/v1/stripe_webhook, called by Stripe (MS-140). verify_jwt is off for it: the Stripe-Signature header,
-// signed with STRIPE_WEBHOOK_SECRET, is the check. Subscription events set the clinic's status, next payment and card
-// from the subscription as Stripe holds it now, so events arriving out of order do no harm; invoice events keep the
-// invoices; Checkout completed links a new subscription to the clinic it was opened for. Other events are acknowledged.
+// signed with STRIPE_WEBHOOK_SECRET, is the check. Subscription and invoice events are read back from Stripe as it
+// holds them now, so events arriving out of order or retried days later do no harm: subscriptions set the clinic's
+// status, next payment and card; invoices are kept (the $0 one that opens a trial is not). Checkout completed links a
+// new subscription to the clinic it was opened for. Other events are acknowledged.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, json } from "../_shared/http.ts";
 import { serviceClient } from "../_shared/supabase.ts";
@@ -72,9 +73,11 @@ async function handle(event: StripeEvent, config: StripeConfig, db: SupabaseClie
     case "invoice.paid":
     case "invoice.payment_failed":
     case "invoice.voided":
-    case "invoice.marked_uncollectible":
-      await rpc(db, "billing_record_invoice", invoiceParams(object as unknown as StripeInvoice));
+    case "invoice.marked_uncollectible": {
+      const invoice = await stripeRequest<StripeInvoice>(config, "GET", `/v1/invoices/${String(object.id)}`);
+      await rpc(db, "billing_record_invoice", invoiceParams(invoice));
       return;
+    }
   }
 }
 

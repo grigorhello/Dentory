@@ -1,7 +1,7 @@
 -- MS-140 · Billing: the admin's summary (f34), the account billing_checkout and billing_portal work from, and what the
 -- Stripe webhook writes: the customer, the subscription's status and next payment, the card, the invoices.
 begin;
-select plan(30);
+select plan(34);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000016401', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -23,8 +23,12 @@ end;
 $$;
 
 select ok(not has_function_privilege('anon', 'public.billing_summary(uuid)', 'execute'), 'anon cannot read billing');
-select ok(not has_function_privilege('authenticated', 'public.billing_account(uuid, uuid)', 'execute'),
+select ok(not has_function_privilege('authenticated', 'public.billing_account(uuid)', 'execute'),
   'members cannot read the Stripe account');
+select ok(not has_function_privilege('authenticated', 'public.billing_set_customer(uuid, text)', 'execute'),
+  'members cannot set the Stripe customer');
+select ok(not has_function_privilege('authenticated', 'public.billing_record_invoice(text, text, text, timestamptz, bigint, text, text, text, text)', 'execute'),
+  'members cannot write an invoice');
 select ok(not has_function_privilege('authenticated', 'public.billing_apply_subscription(text, text, text, timestamptz, uuid)', 'execute'),
   'members cannot write a subscription');
 select ok(not has_function_privilege('authenticated', 'public.billing_apply_card(text, text, text)', 'execute'),
@@ -62,17 +66,19 @@ select throws_ok($$select * from public.billing_summary('00000000-0000-4000-8000
   '42501', 'Only an admin can see billing', 'another clinic''s admin does not either');
 reset role;
 
--- What billing_checkout and billing_portal start from.
+-- What billing_checkout and billing_portal start from (the service role: Grigor, the emails).
 select throws_ok(
-  $$select * from public.billing_account('00000000-0000-4000-8000-000000016411', '00000000-0000-4000-8000-000000016402')$$,
-  '42501', 'Only an admin can manage billing', 'Staff cannot open Checkout'
+  $$select * from public.billing_account('00000000-0000-4000-8000-0000000164ff')$$,
+  '22023', 'No clinic with this id', 'an unknown clinic has no account'
 );
 select results_eq(
   $$select clinic_name, stripe_customer_id, stripe_subscription_id, promo_lifetime_50, billing_email
-    from public.billing_account('00000000-0000-4000-8000-000000016411', '00000000-0000-4000-8000-000000016401')$$,
+    from public.billing_account('00000000-0000-4000-8000-000000016411')$$,
   $$values ('Smile Dental', null::text, null::text, true, 'owner@dentory.test')$$,
-  'the admin''s account has no Stripe customer yet'
+  'the clinic has no Stripe customer yet, and bills its own billing email'
 );
+select is((select billing_email from public.billing_account('00000000-0000-4000-8000-000000016412')), 'solo@dentory.test',
+  'or its first admin''s address while it has none');
 select is(public.billing_set_customer('00000000-0000-4000-8000-000000016411', 'cus_smile'), 'cus_smile',
   'the new customer is kept');
 select is(public.billing_set_customer('00000000-0000-4000-8000-000000016411', 'cus_twice'), 'cus_smile',
@@ -129,15 +135,21 @@ select is(public.billing_apply_subscription('cus_solo', 'sub_solo', 'active', no
 select is((select stripe_customer_id from public.clinics where id = '00000000-0000-4000-8000-000000016412'), 'cus_solo',
   'and its customer is kept');
 
--- Invoices.
+-- Invoices: the trial's $0 one is no charge; a paid one stays paid whatever arrives late.
+select public.billing_record_invoice('cus_smile', 'in_0', 'DENT-0000', '2026-10-06 12:00:00+00', 0, 'USD', 'paid',
+  'https://invoice.stripe.com/i/0', 'https://pay.stripe.com/invoice/0/pdf');
+select is((select count(*)::integer from public.billing_invoices where stripe_invoice_id = 'in_0'), 0,
+  'the $0 invoice that opens a trial is not kept');
 select public.billing_record_invoice('cus_smile', 'in_1', 'DENT-0001', '2027-01-06 12:00:00+00', 4950, 'USD', 'open',
   'https://invoice.stripe.com/i/1', 'https://pay.stripe.com/invoice/1/pdf');
 select public.billing_record_invoice('cus_smile', 'in_1', 'DENT-0001', '2027-01-06 12:00:00+00', 4950, 'USD', 'paid',
   'https://invoice.stripe.com/i/1', 'https://pay.stripe.com/invoice/1/pdf');
+select public.billing_record_invoice('cus_smile', 'in_1', 'DENT-0001', '2027-01-06 12:00:00+00', 4950, 'USD', 'open',
+  'https://invoice.stripe.com/i/1', 'https://pay.stripe.com/invoice/1/pdf');
 select results_eq(
   $$select number, amount_cents, currency, status from public.billing_invoices where clinic_id = '00000000-0000-4000-8000-000000016411'$$,
   $$values ('DENT-0001', 4950::bigint, 'usd', 'paid')$$,
-  'an invoice is kept once and brought up to date'
+  'an invoice is kept once, brought up to date, and not moved back to open by a late event'
 );
 select pg_temp.act_as('00000000-0000-4000-8000-000000016401');
 select is((select invoice_count from public.billing_summary('00000000-0000-4000-8000-000000016411')), 1,

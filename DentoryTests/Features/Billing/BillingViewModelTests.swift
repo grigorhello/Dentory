@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import Dentory
 
-/// Billing (f34, MS-140): the trial and plan card, the promotion's price, the card with Add or Change, the rows, the
-/// Stripe page for each case and the wait for the webhook once it closes.
+/// Billing (f34, MS-140, MS-100 D18): the trial and plan card, the promotion's price, the payment method's status and
+/// where its link goes, the rows, and a card added from the email showing on the next load.
 @MainActor
 struct BillingViewModelTests {
     private let formatters = ClinicFormatters(
@@ -24,19 +24,15 @@ struct BillingViewModelTests {
         )
     }
 
-    private func make(_ repository: FakeBillingRepository, cache: ResponseCaching = InMemoryResponseCache()) -> (
-        BillingViewModel, PauseLog
-    ) {
-        let log = PauseLog()
-        let viewModel = BillingViewModel(
-            clinicID: Session.demo.clinicID, repository: repository, cache: cache, formatters: formatters,
-            pause: { await log.record($0) }
+    private func make(_ repository: FakeBillingRepository, cache: ResponseCaching = InMemoryResponseCache())
+        -> BillingViewModel {
+        BillingViewModel(
+            clinicID: Session.demo.clinicID, repository: repository, cache: cache, formatters: formatters
         )
-        return (viewModel, log)
     }
 
     private func loaded(_ answer: BillingSummary) async -> BillingViewModel {
-        let (viewModel, _) = make(FakeBillingRepository([answer]))
+        let viewModel = make(FakeBillingRepository(answer))
         await viewModel.load()
         return viewModel
     }
@@ -50,8 +46,8 @@ struct BillingViewModelTests {
         #expect(viewModel.showsAfterTrialPrice)
         #expect(viewModel.regularPriceText == "$99")
         #expect(viewModel.monthlyPriceText == "$49.50 / month")
-        #expect(viewModel.cardText == "Visa ·· 4242")
-        #expect(viewModel.paymentActionTitle == "Change")
+        #expect(viewModel.paymentMethodText == "Visa ·· 4242")
+        #expect(viewModel.paymentMethodNote == nil)
         #expect(viewModel.invoicesText == "None yet")
         #expect(viewModel.billingEmailText == "owner@smiledental.ca")
     }
@@ -70,15 +66,23 @@ struct BillingViewModelTests {
         #expect(viewModel.monthlyPriceText == "$99 / month")
     }
 
-    @Test func aTrialThatEndedWithoutACardSaysSoAndOffersAdd() async {
+    @Test func aTrialThatEndedWithoutACardSaysSoAndWhereTheLinkGoes() async {
         let viewModel = await loaded(summary(trialEndsIn: -3))
         #expect(viewModel.cardKind == .trialEnded)
         #expect(viewModel.eyebrow == "Free trial")
         #expect(viewModel.headline.value == "Trial ended")
         #expect(viewModel.headline.suffix == nil)
         #expect(viewModel.dateLine == "Ended September 29, 2026")
-        #expect(viewModel.cardText == nil)
-        #expect(viewModel.paymentActionTitle == "Add")
+        #expect(viewModel.paymentMethodText == "Not set")
+        #expect(viewModel.paymentMethodNote == "The link to add a card is emailed to owner@smiledental.ca.")
+    }
+
+    @Test func aSubscriptionThatEndedAfterTheTrialSaysSo() async {
+        let viewModel = await loaded(summary(trialEndsIn: -40, status: .canceled, card: ("visa", "4242")))
+        #expect(viewModel.cardKind == .subscriptionEnded)
+        #expect(viewModel.headline.value == "Subscription ended")
+        #expect(viewModel.dateLine == nil)
+        #expect(viewModel.showsAfterTrialPrice == false)
     }
 
     @Test func afterTheTrialThePlanShowsItsPriceAndNextPayment() async {
@@ -96,7 +100,7 @@ struct BillingViewModelTests {
         #expect(viewModel.cardText == "Mastercard ·· 5454")
         #expect(viewModel.invoicesText == "3")
         let failed = await loaded(summary(trialEndsIn: -10, status: .pastDue, subscribed: true, card: ("visa", "4242")))
-        #expect(failed.dateLine == "The last payment failed. Change the card.")
+        #expect(failed.dateLine == "The last payment failed. Update the card from your billing email.")
     }
 
     @Test func cardBrandsReadAsPeopleWriteThem() {
@@ -107,87 +111,28 @@ struct BillingViewModelTests {
         #expect(BillingViewModel.usd(49.5) == "$49.50")
     }
 
-    @Test func addOpensCheckoutAndChangeTheCustomerPortal() async {
-        let repository = FakeBillingRepository([summary()])
-        let (viewModel, _) = make(repository)
-        await viewModel.load()
-        await viewModel.managePayment()
-        #expect(repository.pageRequests == [false], "Checkout without a subscription")
-        #expect(viewModel.paymentPage?.url.absoluteString == "https://checkout.stripe.com/c/pay/cs_test_1")
-
-        let subscribed = FakeBillingRepository([summary(status: .active, subscribed: true, card: ("visa", "4242"))])
-        let (portal, _) = make(subscribed)
-        await portal.load()
-        await portal.managePayment()
-        #expect(subscribed.pageRequests == [true], "The Customer Portal with one")
-    }
-
-    @Test func afterThePageClosesBillingWaitsForTheWebhook() async {
-        let before = summary()
-        let after = summary(status: .active, subscribed: true, card: ("visa", "4242"))
-        let repository = FakeBillingRepository([before, before, before, after])
-        let (viewModel, log) = make(repository)
-        await viewModel.load()
-        await viewModel.managePayment()
-        await viewModel.paymentPageClosed()
-        #expect(viewModel.paymentPage == nil)
-        #expect(viewModel.cardText == "Visa ·· 4242", "The webhook's card shows without a restart")
-        #expect(repository.loads == 4, "It stops once the card is there")
-        #expect(await log.pauses == [.seconds(2), .seconds(3)])
-    }
-
-    @Test func aCancelledPageEndsTheChecksQuietly() async {
-        let repository = FakeBillingRepository([summary()])
-        let (viewModel, log) = make(repository)
-        await viewModel.load()
-        await viewModel.paymentPageClosed()
-        #expect(repository.loads == 1 + BillingViewModel.webhookChecks.count)
-        #expect(await log.pauses.count == BillingViewModel.webhookChecks.count - 1)
-        #expect(viewModel.message == nil)
-    }
-
-    @Test func theDemoClinicAddsItsCardWithoutAPage() async {
-        let repository = FakeBillingRepository([summary(), summary(card: ("visa", "4242"))])
-        repository.page = .success(nil)
-        let (viewModel, _) = make(repository)
-        await viewModel.load()
-        await viewModel.managePayment()
-        #expect(viewModel.paymentPage == nil)
-        #expect(viewModel.cardText == "Visa ·· 4242")
-    }
-
-    @Test func aRefusedPageIsSaid() async {
-        let repository = FakeBillingRepository([summary()])
-        let sentence = "Billing isn't set up yet. Try again later."
-        repository.page = .failure(AppError.validation(field: nil, message: sentence))
-        let (viewModel, _) = make(repository)
-        await viewModel.load()
-        await viewModel.managePayment()
-        #expect(viewModel.message == "Billing isn't set up yet. Try again later.")
-        #expect(viewModel.isOpeningPayment == false)
-    }
-
     @Test func theCachedSummaryShowsOfflineAndAFailureWithoutOneSaysWhy() async {
         let cache = InMemoryResponseCache()
-        let (first, _) = make(FakeBillingRepository([summary()]), cache: cache)
+        let first = make(FakeBillingRepository(summary()), cache: cache)
         await first.load()
-        let offline = FakeBillingRepository([summary()])
+        let offline = FakeBillingRepository(summary())
         offline.failure = AppError.network
-        let (second, _) = make(offline, cache: cache)
+        let second = make(offline, cache: cache)
         #expect(second.summary != nil, "From the cache before loading")
         await second.load()
         #expect(second.state == .loaded)
-        let (empty, _) = make(offline)
+        let empty = make(offline)
         await empty.load()
         #expect(empty.state == .failed(.network))
     }
-}
 
-/// The pauses Billing took between checks.
-actor PauseLog {
-    private(set) var pauses: [Duration] = []
-
-    func record(_ pause: Duration) {
-        pauses.append(pause)
+    @Test func aCardAddedFromTheEmailShowsOnTheNextLoad() async {
+        let repository = FakeBillingRepository(summary())
+        let viewModel = make(repository)
+        await viewModel.load()
+        #expect(viewModel.paymentMethodText == "Not set")
+        repository.summary = summary(status: .active, subscribed: true, card: ("visa", "4242"))
+        await viewModel.load()
+        #expect(viewModel.paymentMethodText == "Visa ·· 4242", "Without a restart")
     }
 }

@@ -5,7 +5,7 @@ import Foundation
 nonisolated struct BillingSummary: Codable, Equatable, Sendable {
     let trialEndsAt: Date
     let subscriptionStatus: SubscriptionStatus
-    /// A Stripe subscription exists: the card changes on the Customer Portal, not through Checkout.
+    /// A Stripe subscription exists, its card added through Checkout.
     let hasSubscription: Bool
     /// The lifetime 50% promotion, set by Dentory and never in the app.
     let promoLifetime50: Bool
@@ -17,11 +17,6 @@ nonisolated struct BillingSummary: Codable, Equatable, Sendable {
     /// The first billing email: the clinic's own list, or the first admin's address while it is empty.
     let billingEmail: String?
     let billingEmailCount: Int
-
-    /// What Stripe changes when the admin adds or changes a card; Billing waits for it after the payment page closes.
-    var paymentState: [String?] {
-        [cardBrand, cardLast4, hasSubscription ? "subscribed" : nil, subscriptionStatus.rawValue]
-    }
 }
 
 /// `clinics.subscription_status`: what `clinic_can_write` reads (MS-105).

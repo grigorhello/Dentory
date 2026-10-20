@@ -3,7 +3,7 @@
 // STRIPE_PROMO_COUPON_ID (50% off forever, for clinics with promo_lifetime_50) and STRIPE_WEBHOOK_SECRET (the
 // signing secret of the stripe_webhook endpoint). Without the secret key the billing functions refuse with
 // "billing_unavailable", as the local stack has none.
-import { HttpError } from "./http.ts";
+import { HttpError, sameText } from "./http.ts";
 
 export interface StripeConfig {
   secretKey: string;
@@ -85,12 +85,6 @@ export async function verifyStripeSignature(
   return signatures.some((signature) => sameText(signature, expected));
 }
 
-export function sameText(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let difference = 0;
-  for (let index = 0; index < a.length; index++) difference |= a.charCodeAt(index) ^ b.charCodeAt(index);
-  return difference === 0;
-}
 
 /** The Unix second the trial ends for Checkout, or nothing when it is less than the 48 hours Stripe requires away. */
 export function checkoutTrialEnd(trialEndsAt: string, now = Date.now()): number | undefined {
@@ -116,6 +110,12 @@ export interface StripeSubscription {
   items?: { data?: { current_period_end?: number | null }[] };
   default_payment_method?: unknown;
   metadata?: Record<string, string>;
+}
+
+/** A subscription that still bills or will: Checkout must not open a second one beside it. */
+export function liveSubscription(subscriptions: StripeSubscription[]): StripeSubscription | undefined {
+  const live = ["trialing", "active", "past_due", "unpaid", "incomplete", "paused"];
+  return subscriptions.find((subscription) => live.includes(subscription.status));
 }
 
 /** The next payment: on the subscription in older API versions, on its item since 2025-03-31. */

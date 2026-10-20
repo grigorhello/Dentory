@@ -4,6 +4,7 @@ import {
   checkoutTrialEnd,
   formEncode,
   invoiceParams,
+  liveSubscription,
   periodEnd,
   stripeID,
   verifyStripeSignature,
@@ -93,4 +94,12 @@ Deno.test("Stripe ids come as text or expanded objects; form keys keep their bra
     formEncode({ "line_items[0][price]": "price_1", "line_items[0][quantity]": 1, skipped: undefined }),
     "line_items%5B0%5D%5Bprice%5D=price_1&line_items%5B0%5D%5Bquantity%5D=1",
   );
+});
+
+Deno.test("a live subscription stops a second Checkout; an ended one does not", () => {
+  const ended = { id: "sub_old", customer: "cus", status: "canceled" };
+  const trialing = { id: "sub_new", customer: "cus", status: "trialing" };
+  assertEquals(liveSubscription([ended, trialing])?.id, "sub_new");
+  assertEquals(liveSubscription([ended, { id: "sub_x", customer: "cus", status: "incomplete_expired" }]), undefined);
+  assertEquals(liveSubscription([]), undefined);
 });

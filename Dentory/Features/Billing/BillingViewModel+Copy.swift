@@ -1,15 +1,17 @@
 import Foundation
 
-/// Billing's words (f34, ticket MS-140): the trial or plan card, the USD price list, the card and the rows.
+/// Billing's words (f34, ticket MS-140, MS-100 D18): the trial or plan card, the USD price list, the payment method's
+/// status and the rows. Nothing here sends the admin to a payment page; the links come by email.
 extension BillingViewModel {
-    /// The dark card: the trial while it runs (a card on file or not), then the plan, or the trial ended without one.
+    /// The dark card: the trial while it runs (a card on file or not), then the plan, or what ended without one.
     enum CardKind: Equatable {
-        case trial, trialEnded, plan
+        case trial, trialEnded, subscriptionEnded, plan
     }
 
     var cardKind: CardKind {
         guard let summary, summary.trialEndsAt <= formatters.clock.now else { return .trial }
-        return summary.hasSubscription ? .plan : .trialEnded
+        if summary.hasSubscription { return .plan }
+        return summary.subscriptionStatus == .canceled ? .subscriptionEnded : .trialEnded
     }
 
     /// "Free trial" or "Plan"; the eyebrow uppercases it.
@@ -28,12 +30,15 @@ extension BillingViewModel {
             return (days == 1 ? "1 day" : "\(days) days", "left")
         case .trialEnded:
             return ("Trial ended", nil)
+        case .subscriptionEnded:
+            return ("Subscription ended", nil)
         case .plan:
             return (monthlyPrice, "/ month")
         }
     }
 
-    /// "Ends January 6, 2027", "Ended January 6, 2027", "Next payment February 6, 2027", or what went wrong.
+    /// "Ends January 6, 2027", "Ended January 6, 2027", "Next payment February 6, 2027", or what went wrong and where
+    /// to fix it: the link in the billing email (MS-100 D18).
     var dateLine: String? {
         guard let summary else { return nil }
         switch cardKind {
@@ -41,10 +46,12 @@ extension BillingViewModel {
             return "Ends \(formatters.longDate(summary.trialEndsAt))"
         case .trialEnded:
             return "Ended \(formatters.longDate(summary.trialEndsAt))"
+        case .subscriptionEnded:
+            return nil
         case .plan:
             switch summary.subscriptionStatus {
-            case .pastDue: return "The last payment failed. Change the card."
-            case .readOnly, .canceled: return "Payments stopped. Change the card to keep making changes."
+            case .pastDue: return "The last payment failed. Update the card from your billing email."
+            case .readOnly, .canceled: return "Payments stopped. Update the card from your billing email."
             case .trialing, .active: return summary.currentPeriodEnd.map { "Next payment \(formatters.longDate($0))" }
             }
         }
@@ -52,7 +59,7 @@ extension BillingViewModel {
 
     /// The "After trial" price row shows while there is a trial to end or one ended without a card.
     var showsAfterTrialPrice: Bool {
-        cardKind != .plan
+        cardKind == .trial || cardKind == .trialEnded
     }
 
     var isPromo: Bool {
@@ -94,9 +101,15 @@ extension BillingViewModel {
         return "\(Self.brandName(brand)) ·· \(last4)"
     }
 
-    /// "Change" for a card on file or a subscription, "Add" before either.
-    var paymentActionTitle: String {
-        cardText == nil && summary?.hasSubscription != true ? "Add" : "Change"
+    /// The payment method's status (MS-100 D18): the card, or "Not set".
+    var paymentMethodText: String {
+        cardText ?? "Not set"
+    }
+
+    /// Without a card, where the link to add one goes (MS-100 D18): "The link to add a card is emailed to …".
+    var paymentMethodNote: String? {
+        guard cardText == nil, let email = summary?.billingEmail else { return nil }
+        return "The link to add a card is emailed to \(email)."
     }
 
     /// Stripe's brand ids as people write them.

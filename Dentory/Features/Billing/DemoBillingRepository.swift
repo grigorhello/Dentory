@@ -1,22 +1,16 @@
 import Foundation
 
 /// The demo clinic's billing as f34 draws it: three months free ending January 6, 2027, the lifetime promotion, a Visa
-/// card and the owner's address. `-billingNoCard` starts it without a card; adding one takes no page.
-final class DemoBillingRepository: BillingRepository, @unchecked Sendable {
-    private var current: BillingSummary
-    private let lock = NSLock()
+/// card and the owner's address. `-billingNoCard YES` starts it without a card.
+struct DemoBillingRepository: BillingRepository {
+    let hasCard: Bool
 
     init(hasCard: Bool = true) {
-        current = BillingSummary.demo(hasCard: hasCard)
+        self.hasCard = hasCard
     }
 
     func summary(clinicID: UUID) async throws -> BillingSummary {
-        lock.withLock { current }
-    }
-
-    func paymentPage(clinicID: UUID, hasSubscription: Bool) async throws -> URL? {
-        lock.withLock { current = BillingSummary.demo(hasCard: true) }
-        return nil
+        BillingSummary.demo(hasCard: hasCard)
     }
 }
 

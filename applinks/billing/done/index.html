@@ -17,18 +17,19 @@
   <main>
     <div class="eyebrow">Billing</div>
     <h1 id="title">Payment method saved</h1>
-    <p id="detail">Tap Done to go back to Dentory. Billing shows the card in a few seconds.</p>
+    <p id="detail">You can close this page. Dentory's Billing shows the card within a minute.</p>
   </main>
   <script>
     (function () {
-      // Stripe Checkout and the Customer Portal send the admin here (MS-140): ?checkout=done|canceled or ?portal=done.
+      // Stripe Checkout and the Customer Portal, opened from the billing email or Grigor's link (MS-140, MS-100 D18),
+      // send the admin here: ?checkout=done|canceled or ?portal=done.
       var query = new URLSearchParams(location.search);
       if (query.get("checkout") === "canceled") {
         document.getElementById("title").textContent = "Nothing was changed";
-        document.getElementById("detail").textContent = "Tap Done to go back to Dentory.";
+        document.getElementById("detail").textContent = "You can close this page.";
       } else if (query.get("portal") === "done") {
         document.getElementById("title").textContent = "Billing updated";
-        document.getElementById("detail").textContent = "Tap Done to go back to Dentory. Changes show in a few seconds.";
+        document.getElementById("detail").textContent = "You can close this page. Dentory's Billing shows the change within a minute.";
       }
     })();
   </script>

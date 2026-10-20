@@ -1,9 +1,7 @@
 import Foundation
 
-/// Billing for the admin (MS-140): the summary, and the Stripe pages that add or change the card.
+/// Billing for the admin (MS-140): what Stripe and the trial say about the clinic. The app opens no Stripe page
+/// (MS-100 D18); the links to add or change the card reach the clinic by email and from Grigor at onboarding.
 protocol BillingRepository: Sendable {
     func summary(clinicID: UUID) async throws -> BillingSummary
-    /// Stripe Checkout for a clinic without a subscription, or the Customer Portal for one with it. Nil when there is
-    /// no page to open: the demo clinic changes its card at once.
-    func paymentPage(clinicID: UUID, hasSubscription: Bool) async throws -> URL?
 }

@@ -1,9 +1,10 @@
--- MS-140 · Billing (PRD §6.9 and §9 Billing, f34, MS-100 D11). Three months free from clinic creation
+-- MS-140 · Billing (PRD §6.9 and §9 Billing, f34, MS-100 D11 and D18). Three months free from clinic creation
 -- (clinics.trial_ends_at), then $99 per clinic per month, or $49.50 for a clinic Dentory grants the lifetime 50%
--- promotion (clinics.promo_lifetime_50, set by hand, never by the app). Stripe holds the subscription: the admin adds
--- a card on Stripe Checkout and changes it on the Customer Portal, both opened through the billing_checkout and
--- billing_portal Edge Functions, and stripe_webhook writes back what Stripe reports through the service-role functions
--- below. clinic_can_write (MS-105) reads the status they keep.
+-- promotion (clinics.promo_lifetime_50, set by hand, never by the app). Stripe holds the subscription. The app shows
+-- the state and opens no payment page (D18): the Stripe Checkout link that adds the card and the Customer Portal link
+-- that changes it come from the billing_checkout and billing_portal Edge Functions, which only the service role calls
+-- (Grigor at onboarding, the emails), and stripe_webhook writes back what Stripe reports through the service-role
+-- functions below. clinic_can_write (MS-105) reads the status they keep.
 
 -- What Stripe reports beyond the status: the card on file and the next payment. Admins read it.
 create table public.clinic_billing (
@@ -86,9 +87,9 @@ $$;
 revoke execute on function public.billing_summary(uuid) from public, anon;
 grant execute on function public.billing_summary(uuid) to authenticated, service_role;
 
--- billing_checkout and billing_portal, for the admin p_user_id: the clinic, its Stripe customer and subscription (null
--- the first time), the trial, the promotion and the address Stripe bills. Anyone else is refused.
-create function public.billing_account(p_clinic_id uuid, p_user_id uuid)
+-- billing_checkout and billing_portal: the clinic, its Stripe customer and subscription (null the first time), the
+-- trial, the promotion and the address Stripe bills (the clinic's first billing email, else its first admin's).
+create function public.billing_account(p_clinic_id uuid)
 returns table (
   clinic_name text,
   stripe_customer_id text,
@@ -103,21 +104,23 @@ security definer
 set search_path = ''
 as $$
 begin
-  if p_user_id is null or not exists (
-    select 1 from public.memberships m
-    where m.clinic_id = p_clinic_id and m.user_id = p_user_id and m.role = 'admin' and m.status = 'active'
-  ) then
-    perform engine.fail('42501', 'Only an admin can manage billing');
+  if not exists (select 1 from public.clinics c where c.id = p_clinic_id) then
+    perform engine.fail('22023', 'No clinic with this id');
   end if;
   return query
   select c.name, c.stripe_customer_id, c.stripe_subscription_id, c.trial_ends_at, c.promo_lifetime_50,
-         coalesce(c.billing_emails[1], (select u.email::text from auth.users u where u.id = p_user_id))
+         coalesce(c.billing_emails[1], (
+           select m.email from public.memberships m
+           where m.clinic_id = c.id and m.role = 'admin' and m.status = 'active'
+           order by m.invited_at, m.id
+           limit 1
+         ))
   from public.clinics c
   where c.id = p_clinic_id;
 end;
 $$;
-revoke execute on function public.billing_account(uuid, uuid) from public, anon, authenticated;
-grant execute on function public.billing_account(uuid, uuid) to service_role;
+revoke execute on function public.billing_account(uuid) from public, anon, authenticated;
+grant execute on function public.billing_account(uuid) to service_role;
 
 -- Keeps the Stripe customer billing_checkout just created; when another request kept one first, answers that one.
 create function public.billing_set_customer(p_clinic_id uuid, p_customer_id text)
@@ -221,7 +224,9 @@ $$;
 revoke execute on function public.billing_apply_card(text, text, text) from public, anon, authenticated;
 grant execute on function public.billing_apply_card(text, text, text) to service_role;
 
--- One of the customer's invoices as Stripe reports it (webhook): created or brought up to date.
+-- One of the customer's invoices as Stripe reports it (webhook): created or brought up to date. A $0 invoice (the one
+-- that opens a trial) is no charge and is not kept, so Billing reads "None yet" until the first payment; a paid, void
+-- or uncollectible invoice never goes back to draft or open, whatever order Stripe's events arrive in.
 create function public.billing_record_invoice(
   p_customer_id text,
   p_stripe_invoice_id text,
@@ -242,8 +247,8 @@ declare
   v_clinic_id uuid;
 begin
   select c.id into v_clinic_id from public.clinics c where c.stripe_customer_id = p_customer_id;
-  if v_clinic_id is null then
-    return null;
+  if v_clinic_id is null or coalesce(p_amount_cents, 0) = 0 then
+    return v_clinic_id;
   end if;
   insert into public.billing_invoices
     (clinic_id, stripe_invoice_id, number, issued_at, amount_cents, currency, status, hosted_url, pdf_url)
@@ -252,7 +257,12 @@ begin
      p_pdf_url)
   on conflict (stripe_invoice_id) do update
     set number = excluded.number, amount_cents = excluded.amount_cents, currency = excluded.currency,
-        status = excluded.status, hosted_url = excluded.hosted_url, pdf_url = excluded.pdf_url, updated_at = now();
+        status = case
+          when billing_invoices.status in ('paid', 'void', 'uncollectible') and excluded.status in ('draft', 'open')
+            then billing_invoices.status
+          else excluded.status
+        end,
+        hosted_url = excluded.hosted_url, pdf_url = excluded.pdf_url, updated_at = now();
   return v_clinic_id;
 end;
 $$;
