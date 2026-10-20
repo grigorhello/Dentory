@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Account (f29 Admin, f30 Staff), pushed from Home's account button: the user card, Team and the admin's Clinic
-/// settings, Billing and Export CSV, then Help in the in-app browser and Sign out after its confirmation.
+/// settings, Billing and Export CSV (a toast says where the export goes), then Help in the in-app browser and Sign out
+/// after its confirmation.
 struct AccountView: View {
     @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: AccountViewModel
@@ -30,6 +31,11 @@ struct AccountView: View {
                 case .settings:
                     AccountRoutePlaceholderView(route: route)
                 }
+            }
+            .onChange(of: viewModel.message) { _, message in
+                guard let message else { return }
+                dependencies.toasts.show(message.title, detail: message.detail)
+                viewModel.clearMessage()
             }
             .msSheet(isPresented: $viewModel.isConfirmingSignOut) {
                 SignOutSheet(viewModel: viewModel)
@@ -80,16 +86,13 @@ struct AccountView: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("more.billing")
-        Button(action: exportCSV) {
+        Button {
+            Task { await viewModel.startExport() }
+        } label: {
             AccountRow(icon: .download, title: "Export CSV", showsDivider: false)
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("more.export")
-    }
-
-    /// The export arrives with MS-143.
-    private func exportCSV() {
-        dependencies.toasts.show("Export CSV arrives with a later update.")
     }
 }
 
