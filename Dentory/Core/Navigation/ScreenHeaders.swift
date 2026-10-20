@@ -62,6 +62,8 @@ struct PushedHeader: View {
         let title: String
         let identifier: String
         var variant: MSButtonVariant = .text
+        /// A leading icon, as Team's "Invite" (f31).
+        var icon: Icon?
         var isLoading = false
         var isDisabled = false
         let perform: () -> Void
@@ -97,8 +99,8 @@ struct PushedHeader: View {
                 Spacer(minLength: Spacing.sm)
                 if let action {
                     MSButton(
-                        action.title, variant: action.variant, size: .small, isLoading: action.isLoading,
-                        isDisabled: action.isDisabled, action: action.perform
+                        action.title, icon: action.icon, variant: action.variant, size: .small,
+                        isLoading: action.isLoading, isDisabled: action.isDisabled, action: action.perform
                     )
                     .accessibilityIdentifier(action.identifier)
                 }

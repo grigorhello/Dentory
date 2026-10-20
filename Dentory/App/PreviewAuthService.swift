@@ -37,6 +37,8 @@ final class PreviewAuthService: AuthServicing, @unchecked Sendable {
         }
         guard Self.demoEmails.contains(email.lowercased()) else { throw AppError.unknownEmail }
         guard password == Self.demoPassword else { throw AppError.wrongPassword }
+        // Kept, as Supabase keeps it, so the member checks on later screens find the demo admin signed in (MS-138).
+        session = .demo
         return .demo
     }
 

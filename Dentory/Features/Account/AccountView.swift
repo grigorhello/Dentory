@@ -23,9 +23,11 @@ struct AccountView: View {
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: AccountRoute.self) { route in
                 switch route {
+                case .team:
+                    TeamView(session: session, sessionStore: sessionStore, dependencies: dependencies)
                 case .settings:
                     ClinicSettingsView(session: session, sessionStore: sessionStore, dependencies: dependencies)
-                case .team, .billing:
+                case .billing:
                     AccountRoutePlaceholderView(route: route)
                 }
             }
