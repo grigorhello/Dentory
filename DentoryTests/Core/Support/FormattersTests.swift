@@ -18,6 +18,11 @@ struct FormattersTests {
     @Test func quantitiesWithTheirUnit() {
         #expect(formatters.quantity(54, unit: "cartridges") == "54 cartridges")
         #expect(formatters.quantity(2.5, unit: "bags") == "2.5 bags")
+        #expect(formatters.quantity(1, unit: "bottles") == "1 bottle", "One of a plural unit reads singular (f27)")
+        #expect(formatters.quantity(1, unit: "boxes") == "1 box")
+        #expect(formatters.quantity(1, unit: "pouches") == "1 pouch")
+        #expect(formatters.quantity(0, unit: "kits") == "0 kits")
+        #expect(formatters.quantity(1, unit: "ml") == "1 ml", "Not a plural: as it is")
     }
 
     @Test func datesInTheClinicTimeZone() {

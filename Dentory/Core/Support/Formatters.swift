@@ -24,9 +24,19 @@ nonisolated struct ClinicFormatters: Sendable {
         amount.formatted(.currency(code: currency).precision(.fractionLength(0)).locale(locale))
     }
 
-    /// "54 cartridges", "1 box", "2.5 bags"
+    /// "54 cartridges", "1 box", "2.5 bags": one of a unit stored in the plural reads singular ("1 bottle", f27).
     func quantity(_ amount: Decimal, unit: String) -> String {
-        "\(number(amount)) \(unit)"
+        "\(number(amount)) \(amount == 1 ? Self.singular(of: unit) : unit)"
+    }
+
+    /// "bottle" for "bottles", "box" for "boxes"; a unit that is not an English plural stays as it is.
+    nonisolated static func singular(of unit: String) -> String {
+        let lowercased = unit.lowercased()
+        if ["xes", "ches", "shes", "sses"].contains(where: { lowercased.hasSuffix($0) }) {
+            return String(unit.dropLast(2))
+        }
+        if lowercased.hasSuffix("s") && !lowercased.hasSuffix("ss") { return String(unit.dropLast()) }
+        return unit
     }
 
     /// "54", "2.5": at most two decimals, no trailing zeros.

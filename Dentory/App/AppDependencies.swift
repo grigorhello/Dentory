@@ -21,6 +21,7 @@ struct AppDependencies: Sendable {
     let productDetailRepository: ProductDetailRepository
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
+    let expiringRepository: ExpiringRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -67,6 +68,7 @@ struct AppDependencies: Sendable {
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
+            expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -92,6 +94,7 @@ struct AppDependencies: Sendable {
             )
         }
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
+        let expiring = DemoExpiringRepository()
         return AppDependencies(
             rpc: rpc,
             auth: auth,
@@ -108,11 +111,12 @@ struct AppDependencies: Sendable {
                 toasts: toasts
             ),
             reporter: reporter,
-            homeRepository: DemoHomeRepository(),
+            homeRepository: DemoHomeRepository(expiring: expiring),
             inventoryRepository: DemoInventoryRepository(),
             productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
+            expiringRepository: expiring,
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -149,6 +153,15 @@ struct AppDependencies: Sendable {
         ProcedureStartViewModel(
             repository: procedureStartRepository, formatters: formatters(for: session), clinicID: session.clinicID,
             templateID: templateID
+        )
+    }
+
+    /// Expiring soon of the signed-in clinic (MS-132) on `window` days, or the clinic's own window.
+    @MainActor
+    func makeExpiringViewModel(window: Int?, session: Session) -> ExpiringViewModel {
+        ExpiringViewModel(
+            repository: expiringRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, isAdmin: session.isAdmin, window: window
         )
     }
 
