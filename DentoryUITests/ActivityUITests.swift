@@ -93,6 +93,46 @@ final class ActivityUITests: XCTestCase {
         XCTAssertTrue(procedure.label.contains("\u{2212}2"), "The row reads \(procedure.label)")
     }
 
+    /// More than a page (MS-134 review): the oldest rows appear only once scrolled to, and a second visit, which starts
+    /// from the cached first page, still pages.
+    @MainActor
+    func testHistoryPagesAsItScrolls() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-demoHistoryRows", "120"]
+        app.launch()
+        let newest = row(0xe1, in: app)
+        let oldest = row(0x9000 + 119, in: app)
+
+        openHistory(in: app)
+        XCTAssertTrue(newest.waitForExistence(timeout: 5), "No first page")
+        XCTAssertFalse(oldest.exists, "The last page loaded before any scrolling")
+        scroll(app, until: oldest)
+        XCTAssertTrue(oldest.exists, "Scrolling did not reach the last page")
+
+        app.buttons["activity.back"].tap()
+        openHistory(in: app)
+        XCTAssertTrue(newest.waitForExistence(timeout: 5), "No first page on the second visit")
+        XCTAssertFalse(oldest.exists, "The second visit loaded every page at once")
+        scroll(app, until: oldest)
+        XCTAssertTrue(oldest.exists, "The second visit did not page")
+    }
+
+    @MainActor
+    private func openHistory(in app: XCUIApplication) {
+        let bell = app.buttons["home.header.bell"]
+        XCTAssertTrue(bell.waitForExistence(timeout: 5), "No bell")
+        bell.tap()
+        XCTAssertTrue(app.buttons["History"].waitForExistence(timeout: 5), "Activity did not open")
+        app.buttons["History"].tap()
+    }
+
+    @MainActor
+    private func scroll(_ app: XCUIApplication, until element: XCUIElement) {
+        for _ in 0..<40 where !element.exists {
+            app.swipeUp()
+        }
+    }
+
     @MainActor
     private func row(_ number: Int, in app: XCUIApplication) -> XCUIElement {
         let id = String(format: "00000000-0000-4000-8000-%012x", number)

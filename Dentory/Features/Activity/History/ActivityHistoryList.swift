@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// History (f9): the chips, then the entries in one card per day under its eyebrow. A chip reloads the list; the next
-/// page loads when the last row shows. Its own stack keeps f9's gaps whether it sits under Activity's segments or
-/// fills a product's History alone.
+/// History (f9): the chips, then the entries in one card per day under its eyebrow. A chip reloads the list. Days and
+/// rows are built as they scroll in, and the next page loads when the row after the last one, shown while more may
+/// follow, scrolls in. Its own stack keeps f9's gaps whether it sits under Activity's segments or fills a product's
+/// History alone.
 struct ActivityHistoryList: View {
     @Bindable var viewModel: ActivityHistoryViewModel
 
@@ -32,19 +33,36 @@ struct ActivityHistoryList: View {
         } else if viewModel.isEmpty {
             EmptyStateView(viewModel.emptyText)
         } else {
-            ForEach(viewModel.days) { day in
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    Eyebrow(day.title)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityIdentifier("activity.day")
-                    ListCard {
-                        ForEach(day.entries) { entry in
-                            row(entry, isLastOfDay: entry.id == day.entries.last?.id)
+            LazyVStack(alignment: .leading, spacing: Spacing.lg) {
+                ForEach(viewModel.days) { day in
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        Eyebrow(day.title)
+                            .accessibilityAddTraits(.isHeader)
+                            .accessibilityIdentifier("activity.day")
+                        ListCard {
+                            LazyVStack(spacing: 0) {
+                                ForEach(day.entries) { entry in
+                                    row(entry, isLastOfDay: entry.id == day.entries.last?.id)
+                                }
+                            }
                         }
                     }
                 }
+                if viewModel.hasMore {
+                    nextPage
+                }
             }
         }
+    }
+
+    /// Asks for the next page as it scrolls in, again after each page while more may follow, and again on its next
+    /// appearance after a failure.
+    private var nextPage: some View {
+        ProgressView()
+            .tint(Color.ms.primary)
+            .frame(maxWidth: .infinity, minHeight: ControlHeight.hitTarget)
+            .accessibilityIdentifier("activity.history.more")
+            .task(id: viewModel.entries.count) { await viewModel.loadMore() }
     }
 
     private func row(_ entry: ActivityHistoryEntry, isLastOfDay: Bool) -> some View {
@@ -53,9 +71,5 @@ struct ActivityHistoryList: View {
             delta: viewModel.deltaText(for: entry), tone: viewModel.deltaTone(for: entry), showsDivider: !isLastOfDay
         )
         .accessibilityIdentifier("activity.row[\(entry.id.uuidString.lowercased())]")
-        .task {
-            guard entry.id == viewModel.entries.last?.id else { return }
-            await viewModel.loadMore()
-        }
     }
 }

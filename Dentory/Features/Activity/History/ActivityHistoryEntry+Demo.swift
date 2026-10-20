@@ -11,6 +11,17 @@ extension ActivityHistoryEntry {
         return clinic.filter { $0.productID == productID }
     }
 
+    /// `count` older receipts of Nitrile gloves, one every 6 hours before the Alginate delivery, so the demo has more
+    /// than a page to scroll through (`-demoHistoryRows 120`, UI tests).
+    nonisolated static func demoBackfill(_ count: Int) -> [ActivityHistoryEntry] {
+        (0..<max(count, 0)).map { index in
+            entry(
+                0x9000 + index, at: 1_790_437_200 - Double(index + 1) * 21_600, .receiving, "Nitrile gloves M",
+                product: 0xd2, delta: 1, label: "Receive manually", by: "Sarah Mitchell"
+            )
+        }
+    }
+
     private nonisolated static let septocaineCount = entry(
         0xf1, at: 1_790_886_120, .count, "Septocaine 4% 1:100,000", product: 0xd1, delta: -2, before: 43,
         label: "Physical count", by: "Michael Reyes"

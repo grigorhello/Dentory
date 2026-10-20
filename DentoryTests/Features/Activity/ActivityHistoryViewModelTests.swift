@@ -83,7 +83,8 @@ struct ActivityHistoryViewModelTests {
         #expect(viewModel.deltaText(for: counted) == "43 → 41")
         #expect(viewModel.deltaTone(for: counted) == nil, "A count is ink")
         let opened = entry(.adjustment, delta: 0)
-        #expect(viewModel.deltaText(for: opened) == nil, "A bottle opened changes no quantity")
+        #expect(viewModel.deltaText(for: opened) == "0", "A bottle opened reads as Product detail's card has it")
+        #expect(viewModel.deltaTone(for: opened) == nil)
         #expect(viewModel.deltaText(for: entry(.receiving, delta: Decimal(25) / 10)) == "+2.5")
     }
 

@@ -19,7 +19,7 @@ struct ActivityView: View {
     var body: some View {
         content
             .pushedScreen(title: "Activity", identifier: "activity")
-            .reloadOnReturn { await viewModel.load() }
+            .reloadOnReturn { await reload() }
             .navigationDestination(for: ActivityRoute.self) { route in
                 switch route {
                 case .product(let productID):
@@ -62,6 +62,14 @@ struct ActivityView: View {
                     .accessibilityIdentifier("activity.alert[\(alert.id.uuidString.lowercased())]")
                 }
             }
+        }
+    }
+
+    /// The alerts, which the segment's count reads, and History too while it shows; History loads on appear itself.
+    private func reload() async {
+        await viewModel.load()
+        if viewModel.segment == .history {
+            await history.load()
         }
     }
 

@@ -5,6 +5,12 @@ import Foundation
 final class DemoActivityRepository: ActivityRepository, @unchecked Sendable {
     private var seen = false
     private let lock = NSLock()
+    /// Older rows under the clinic's history, for paging (`-demoHistoryRows`).
+    private let backfill: [ActivityHistoryEntry]
+
+    init(extraHistory: Int = 0) {
+        backfill = ActivityHistoryEntry.demoBackfill(extraHistory)
+    }
 
     /// Whether an alert opened after the last look, as Home's demo bell reads it.
     var hasUnseenAlerts: Bool {
@@ -25,7 +31,8 @@ final class DemoActivityRepository: ActivityRepository, @unchecked Sendable {
         clinicID: UUID, filter: ActivityHistoryFilter, productID: UUID?, after: ActivityHistoryEntry?, limit: Int
     ) async throws -> [ActivityHistoryEntry] {
         try await Task.sleep(for: .milliseconds(150))
-        let entries = ActivityHistoryEntry.demo(productID: productID).filter { filter.includes($0.type) }
+        let ledger = ActivityHistoryEntry.demo(productID: productID) + (productID == nil ? backfill : [])
+        let entries = ledger.filter { filter.includes($0.type) }
         let start = after.flatMap { last in entries.firstIndex { $0.id == last.id } }.map { $0 + 1 } ?? 0
         return Array(entries.dropFirst(start).prefix(max(limit, 1)))
     }

@@ -16,6 +16,7 @@ struct ActivityHistoryView: View {
     var body: some View {
         ActivityHistoryList(viewModel: viewModel)
             .pushedScreen(title: "History", subtitle: productName, identifier: "activity")
+            .reloadOnReturn(loadsOnAppear: false) { await viewModel.load() }
     }
 }
 

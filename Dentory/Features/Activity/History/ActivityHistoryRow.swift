@@ -1,12 +1,12 @@
 import SwiftUI
 
 /// One row of History (f9): what changed and why, who and when, and the change on the right: "+4" in success, "−6"
-/// in danger, "43 → 41" in ink, nothing for a change of 0. Read-only.
+/// in danger, "43 → 41" and "0" in ink. Read-only.
 struct ActivityHistoryRow: View {
     let subject: String
     let reason: String
     let who: String
-    let delta: String?
+    let delta: String
     let tone: StatusTone?
     var showsDivider = true
 
@@ -19,12 +19,10 @@ struct ActivityHistoryRow: View {
                     Text(who).textStyle(.caption12).foregroundStyle(Color.ms.textSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                if let delta {
-                    Text(delta)
-                        .textStyle(.bodyStrong16)
-                        .foregroundStyle(tone?.foreground ?? Color.ms.ink)
-                        .monospacedDigit()
-                }
+                Text(delta)
+                    .textStyle(.bodyStrong16)
+                    .foregroundStyle(tone?.foreground ?? Color.ms.ink)
+                    .monospacedDigit()
             }
             .padding(.vertical, Spacing.md + Spacing.xxs)
             .frame(minHeight: ControlHeight.hitTarget)

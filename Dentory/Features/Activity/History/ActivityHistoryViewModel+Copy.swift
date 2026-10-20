@@ -50,14 +50,15 @@ extension ActivityHistoryViewModel {
         return name.isEmpty ? time : "\(name) · \(time)"
     }
 
-    /// "+4", "−6", "43 → 41" for a count; nil for a change of 0, such as a bottle opened.
-    func deltaText(for entry: ActivityHistoryEntry) -> String? {
+    /// "+4", "−6", "43 → 41" for a count, and a plain "0" for a row that moved nothing, such as a bottle opened, as
+    /// Product detail's history card reads it.
+    func deltaText(for entry: ActivityHistoryEntry) -> String {
         if entry.type == .count, let before = entry.qtyBefore, let after = entry.qtyAfter {
             return "\(formatters.number(before)) → \(formatters.number(after))"
         }
         if entry.delta > 0 { return "+\(formatters.number(entry.delta))" }
         if entry.delta < 0 { return "\u{2212}\(formatters.number(-entry.delta))" }
-        return nil
+        return formatters.number(0)
     }
 
     /// Success for stock in, danger for stock out, ink for a count (f9).

@@ -105,7 +105,7 @@ struct AppDependencies: Sendable {
         }
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         let expiring = DemoExpiringRepository()
-        let activity = DemoActivityRepository()
+        let activity = DemoActivityRepository(extraHistory: UserDefaults.standard.integer(forKey: "demoHistoryRows"))
         return AppDependencies(
             rpc: rpc,
             auth: auth,
