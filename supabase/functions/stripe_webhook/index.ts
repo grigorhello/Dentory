@@ -1,10 +1,10 @@
 // POST /functions/v1/stripe_webhook, called by Stripe (MS-140). verify_jwt is off for it: the Stripe-Signature header,
 // signed with STRIPE_WEBHOOK_SECRET, is the check. Subscription and invoice events are read back from Stripe as it
 // holds them now, so events arriving out of order or retried days later do no harm: subscriptions set the clinic's
-// status, next payment and card; invoices are kept (the $0 one that opens a trial is not), one Stripe could not charge
-// is marked so Invoices says Failed, and once one is paid every billing email but the one Stripe sent its receipt to
-// gets Dentory's copy (MS-141). Checkout completed links a new subscription to the clinic it was opened for. Other
-// events are acknowledged.
+// status, next payment and card; invoices are kept (the $0 one that opens a trial is not); one whose charge failed
+// (invoice.payment_failed) is marked so Invoices says Failed; and once one is paid every billing email but the one
+// Stripe sent its receipt to gets Dentory's copy (MS-141). Checkout completed links a new subscription to the clinic
+// it was opened for. Other events are acknowledged.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, json } from "../_shared/http.ts";
 import { serviceClient } from "../_shared/supabase.ts";
@@ -123,7 +123,11 @@ async function sendReceiptCopies(db: SupabaseClient, invoice: StripeInvoice) {
     p_stripe_invoice_id: invoice.id,
     p_customer_email: invoice.customer_email ?? null,
   });
-  if (error) throw new Error(`billing_receipt_copy: ${error.message}`);
+  if (error) {
+    // Another delivery of this event is sending the copy: fail this one, so Stripe tries it again after that one.
+    if (error.code === "55P03") throw new HttpError(409, "in_progress", "The receipt copy is being sent.");
+    throw new Error(`billing_receipt_copy: ${error.message}`);
+  }
   for (const copy of (data ?? []) as ReceiptCopy[]) {
     const paid = { ...copy, paid_at: paidAt(invoice) };
     try {

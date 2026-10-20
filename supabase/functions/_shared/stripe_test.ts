@@ -106,11 +106,11 @@ Deno.test("a live subscription stops a second Checkout; an ended one does not", 
   assertEquals(liveSubscription([]), undefined);
 });
 
-Deno.test("an open invoice Stripe tried to charge is a failed payment; a paid one never is", () => {
+Deno.test("only Stripe's payment_failed event on an open invoice is a failed payment", () => {
   const invoice = { id: "in_1", customer: "cus_1", created: 1_799_244_000, currency: "usd" };
-  assert(paymentFailed({ ...invoice, status: "open", attempted: true }, "invoice.finalized"));
-  assert(paymentFailed({ ...invoice, status: "open", attempted: false }, "invoice.payment_failed"));
-  assert(!paymentFailed({ ...invoice, status: "open", attempted: false }, "invoice.finalized"), "Not tried yet");
+  assert(paymentFailed({ ...invoice, status: "open", attempted: true }, "invoice.payment_failed"));
+  assert(!paymentFailed({ ...invoice, status: "open", attempted: true }, "invoice.finalized"),
+    "A bank debit still processing is attempted and open, not failed");
   assert(!paymentFailed({ ...invoice, status: "paid", attempted: true }, "invoice.payment_failed"), "Paid since");
 });
 
