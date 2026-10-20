@@ -46,7 +46,8 @@ nonisolated enum PushedHeaderStyle: Sendable {
     case context
 }
 
-/// Pushed screen header (f13): 44 pt back chevron, 24 pt title, optional subtitle and right text action.
+/// Pushed screen header (f13): 44 pt back chevron, 24 pt title, optional subtitle and a right action: a text
+/// button ("Edit", f20) or a small primary one ("Save", f15).
 struct PushedHeader: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
@@ -58,6 +59,9 @@ struct PushedHeader: View {
     struct HeaderAction {
         let title: String
         let identifier: String
+        var variant: MSButtonVariant = .text
+        var isLoading = false
+        var isDisabled = false
         let perform: () -> Void
     }
 
@@ -90,9 +94,11 @@ struct PushedHeader: View {
                 }
                 Spacer(minLength: Spacing.sm)
                 if let action {
-                    Button(action.title, action: action.perform)
-                        .buttonStyle(.ms(.text, size: .small))
-                        .accessibilityIdentifier(action.identifier)
+                    MSButton(
+                        action.title, variant: action.variant, size: .small, isLoading: action.isLoading,
+                        isDisabled: action.isDisabled, action: action.perform
+                    )
+                    .accessibilityIdentifier(action.identifier)
                 }
             }
             .padding(.leading, -Spacing.sm)
