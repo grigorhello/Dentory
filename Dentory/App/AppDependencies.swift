@@ -21,6 +21,7 @@ struct AppDependencies: Sendable {
     let productDetailRepository: ProductDetailRepository
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
+    let activityRepository: ActivityRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -67,6 +68,7 @@ struct AppDependencies: Sendable {
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
+            activityRepository: SupabaseActivityRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -92,6 +94,7 @@ struct AppDependencies: Sendable {
             )
         }
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
+        let activity = DemoActivityRepository()
         return AppDependencies(
             rpc: rpc,
             auth: auth,
@@ -108,11 +111,12 @@ struct AppDependencies: Sendable {
                 toasts: toasts
             ),
             reporter: reporter,
-            homeRepository: DemoHomeRepository(),
+            homeRepository: DemoHomeRepository(activity: activity),
             inventoryRepository: DemoInventoryRepository(),
             productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
+            activityRepository: activity,
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -149,6 +153,15 @@ struct AppDependencies: Sendable {
         ProcedureStartViewModel(
             repository: procedureStartRepository, formatters: formatters(for: session), clinicID: session.clinicID,
             templateID: templateID
+        )
+    }
+
+    /// Activity of the signed-in clinic, opened from Home's bell (MS-133).
+    @MainActor
+    func makeActivityViewModel(session: Session) -> ActivityViewModel {
+        ActivityViewModel(
+            repository: activityRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID
         )
     }
 

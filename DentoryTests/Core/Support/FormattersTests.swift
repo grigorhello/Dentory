@@ -25,6 +25,7 @@ struct FormattersTests {
         #expect(formatters.date(december1) == "Dec 1, 2026")
         // The frames say Thursday; October 2, 2026 is a Friday.
         #expect(formatters.weekday(Session.demoNow) == "Friday, October 2")
+        #expect(formatters.time(Date(timeIntervalSince1970: 1_790_944_800)) == "8:40\u{202F}AM", "In New York")
         #expect(formatters.date(CalendarDay(year: 2026, month: 12, day: 1)) == "Dec 1, 2026")
         #expect(formatters.month(CalendarDay(year: 2026, month: 12, day: 1)) == "December 2026")
     }

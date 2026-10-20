@@ -3,9 +3,20 @@ import Foundation
 /// The figures of frame f6 for previews and UI tests.
 struct DemoHomeRepository: HomeRepository {
     var summary = HomeSummary.demo
+    /// When set, the bell's dot follows it: Activity's demo alerts clear it once seen (MS-133).
+    var activity: DemoActivityRepository?
 
     func summary(clinicID: UUID, userID: UUID) async throws -> HomeSummary {
-        summary
+        guard let activity else { return summary }
+        return HomeSummary(
+            toBuyCount: summary.toBuyCount,
+            expiringBatchCount: summary.expiringBatchCount,
+            missingExpiryProductCount: summary.missingExpiryProductCount,
+            inventoryValue: summary.inventoryValue,
+            valueAtRisk90: summary.valueAtRisk90,
+            latestProcedure: summary.latestProcedure,
+            hasUnseenAlerts: summary.hasUnseenAlerts && activity.hasUnseenAlerts
+        )
     }
 }
 
