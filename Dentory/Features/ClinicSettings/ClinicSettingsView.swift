@@ -53,8 +53,11 @@ struct ClinicSettingsView: View {
         if let error = viewModel.generalError {
             Notice(error.userMessage, tone: .danger)
         }
+        // The picker's label closure is Sendable in the iOS 26 SDK: it takes the values, not the view model.
+        let logoPreview = viewModel.logoPreview
+        let logoHint = viewModel.logoHint
         PhotosPicker(selection: $logoItem, matching: .images) {
-            LogoPickerLabel(logoData: viewModel.logoPreview, hint: viewModel.logoHint)
+            LogoPickerLabel(logoData: logoPreview, hint: logoHint)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Clinic logo")
