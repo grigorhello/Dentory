@@ -44,6 +44,25 @@ final class SessionStore {
         }
     }
 
+    /// Checks the signed-in member against the server again (MS-138): a changed role shows at once, and someone removed
+    /// from the clinic is signed out, with the revoked-access toast on Sign in. Offline, the session stays as it is.
+    func revalidate() async {
+        guard case .signedIn(let current) = state else { return }
+        do {
+            switch try await auth.restore() {
+            case .signedIn(let session):
+                if session != current { state = .signedIn(session) }
+            case .none, .needsClinic:
+                state = .signedOut
+            }
+        } catch {
+            guard AppError(error) == .forbidden else { return }
+            lastError = .forbidden
+            accessWasRevoked = true
+            state = .signedOut
+        }
+    }
+
     /// After admin sign-up step 1: the user exists, the clinic does not yet.
     func didSignUp(_ account: Account) {
         state = .needsClinic(account)

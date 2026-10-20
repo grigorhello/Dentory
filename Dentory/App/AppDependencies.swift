@@ -28,6 +28,7 @@ struct AppDependencies: Sendable {
     let procedureEventRepository: ProcedureEventRepository
     let inventoryValueRepository: InventoryValueRepository
     let accountRepository: AccountRepository
+    let teamRepository: TeamRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -81,6 +82,7 @@ struct AppDependencies: Sendable {
             procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             accountRepository: SupabaseAccountRepository(client: client),
+            teamRepository: SupabaseTeamRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client)
@@ -133,6 +135,7 @@ struct AppDependencies: Sendable {
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
+            teamRepository: DemoTeamRepository(),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
@@ -230,6 +233,24 @@ struct AppDependencies: Sendable {
             session: session, repository: accountRepository, cache: cache,
             signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue)
         )
+    }
+
+    /// The team of the signed-in clinic (MS-138). After the admin changes their own role or leaves, the session is
+    /// checked again so the app follows.
+    @MainActor
+    func makeTeamViewModel(session: Session, sessionStore: SessionStore?) -> TeamViewModel {
+        TeamViewModel(
+            session: session, repository: teamRepository, cache: cache, formatters: formatters(for: session),
+            sessionChanged: { await sessionStore?.revalidate() }
+        )
+    }
+
+    /// Invite a teammate (MS-138, Appendix C `invite`).
+    @MainActor
+    func makeInviteTeammateViewModel(
+        clinicID: UUID, onSent: @escaping () async -> Void
+    ) -> InviteTeammateViewModel {
+        InviteTeammateViewModel(clinicID: clinicID, repository: teamRepository, onSent: onSent)
     }
 
     /// Product detail for one product of the signed-in clinic (MS-116).

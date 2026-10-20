@@ -66,4 +66,22 @@ struct SessionStoreTests {
         #expect(store.state == .signedOut)
         #expect(store.lastError == .forbidden)
     }
+
+    /// MS-138: back in the foreground, or after an admin changed their own role, the server's answer wins.
+    @Test func revalidatingFollowsARoleChangeAndARemoval() async {
+        let auth = FakeAuthService(storedSession: .demo)
+        let store = SessionStore(auth: auth, state: .signedIn(.demo))
+        auth.storedSession = .demo(role: .staff)
+        await store.revalidate()
+        #expect(store.state == .signedIn(.demo(role: .staff)), "The new role shows at once")
+
+        auth.restoreError = AppError.network
+        await store.revalidate()
+        #expect(store.state == .signedIn(.demo(role: .staff)), "Offline, the session stays")
+
+        auth.restoreError = AppError.forbidden
+        await store.revalidate()
+        #expect(store.state == .signedOut, "Removed from the clinic")
+        #expect(store.accessWasRevoked, "Sign in says why")
+    }
 }

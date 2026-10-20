@@ -4,6 +4,7 @@ import SwiftUI
 /// `NavigationStack` and path from `AppRouter`.
 struct RootView: View {
     @Environment(\.appDependencies) private var dependencies
+    @Environment(\.scenePhase) private var scenePhase
     let sessionStore: SessionStore
     /// `-tab inventory` and `-inventoryFilter Low` open the app there (screenshots, UI tests).
     @State private var router = AppRouter(
@@ -89,6 +90,11 @@ struct RootView: View {
             didReadProgress = true
             pendingInviteClinicID = dependencies.onboardingProgress.pendingInviteClinicID()
         }
+        .onChange(of: scenePhase) { previous, phase in
+            // Back from the background: a role changed or a removal elsewhere takes effect here (MS-138).
+            guard previous == .background, phase == .active else { return }
+            Task { await sessionStore.revalidate() }
+        }
         .onChange(of: sessionStore.state) { _, state in
             switch state {
             case .signedIn:
@@ -141,6 +147,8 @@ struct RootView: View {
                 .environment(router)
                 .environment(sessionStore)
                 .environment(\.session, session)
+                // A changed role rebuilds the screens, so the controls follow it at once (MS-138).
+                .id(session.role)
         }
     }
 
