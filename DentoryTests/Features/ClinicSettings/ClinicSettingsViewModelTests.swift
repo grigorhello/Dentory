@@ -72,6 +72,37 @@ struct ClinicSettingsViewModelTests {
         #expect(viewModel.generalError == nil, "Shown once as a toast")
     }
 
+    /// A logo that fails in the same save as a new name keeps waiting for its retry: the session check, which would
+    /// rebuild the screen and drop it, waits for the logo or for the admin to leave (MS-139 review).
+    @Test func aFailedLogoHoldsTheSessionCheckUntilItIsInOrTheAdminLeaves() async {
+        let repository = FakeClinicSettingsRepository()
+        var checks = 0
+        let viewModel = await make(repository, onSaved: { checks += 1 })
+        viewModel.name = "Smile Dental Group"
+        viewModel.logoData = Data("png".utf8)
+        repository.logoFailure = AppError.network
+        await viewModel.save()
+        #expect(repository.saves.last?.name == "Smile Dental Group", "The settings are saved")
+        #expect(checks == 0, "Not yet: the rebuild would lose the logo")
+        #expect(viewModel.logoData != nil)
+        #expect(viewModel.canSave, "Save offers the logo again")
+        repository.logoFailure = nil
+        await viewModel.save()
+        #expect(checks == 1, "Once the logo is in")
+        #expect(viewModel.checksSessionOnLeave == false)
+
+        let leaving = await make(repository, onSaved: { checks += 1 })
+        leaving.name = "Smile Dental Downtown"
+        leaving.logoData = Data("png".utf8)
+        repository.logoFailure = AppError.network
+        await leaving.save()
+        leaving.discard()
+        await leaving.leave()
+        #expect(checks == 2, "Or when the admin leaves without it")
+        await leaving.leave()
+        #expect(checks == 2, "Only once")
+    }
+
     @Test func aLogoThatDidNotDownloadIsStillOneToReplace() async {
         let repository = FakeClinicSettingsRepository()
         #expect(await make(repository).logoHint == "Tap to upload.", "No logo yet")

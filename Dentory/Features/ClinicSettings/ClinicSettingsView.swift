@@ -118,11 +118,16 @@ struct ClinicSettingsView: View {
     }
 
     private func back() {
-        if viewModel.shouldLeave() { dismiss() }
+        if viewModel.shouldLeave() { leave() }
     }
 
     private func discard() {
         viewModel.discard()
+        leave()
+    }
+
+    private func leave() {
+        Task { await viewModel.leave() }
         dismiss()
     }
 }

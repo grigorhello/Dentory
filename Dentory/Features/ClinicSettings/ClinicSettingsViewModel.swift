@@ -36,6 +36,9 @@ final class ClinicSettingsViewModel {
     let countries: [Country]
     let timeZones: [String]
     private var saved: ClinicSettings?
+    /// Set when a save went through but its logo did not: the session check waits for the logo or for the admin to
+    /// leave, since a new name, currency or time zone rebuilds the screens and would drop the picked logo.
+    private(set) var checksSessionOnLeave = false
     private let clinicID: UUID
     private let repository: ClinicSettingsRepository
     private let onSaved: () async -> Void
@@ -136,11 +139,19 @@ final class ClinicSettingsViewModel {
                 generalError = .validation(
                     field: "logo", message: "The settings are saved, the logo is not. Tap Save to try again."
                 )
-                await onSaved()
+                checksSessionOnLeave = true
                 return
             }
         }
         message = "Settings saved"
+        checksSessionOnLeave = false
+        await onSaved()
+    }
+
+    /// Back or Discard: the session check a failed logo held back runs now, so the rest of the app follows.
+    func leave() async {
+        guard checksSessionOnLeave else { return }
+        checksSessionOnLeave = false
         await onSaved()
     }
 

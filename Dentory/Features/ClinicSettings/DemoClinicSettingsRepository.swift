@@ -24,11 +24,18 @@ final class DemoClinicSettingsRepository: ClinicSettingsRepository, @unchecked S
         guard !settings.name.trimmingCharacters(in: .whitespaces).isEmpty else {
             throw AppError.validation(field: "name", message: "Enter the clinic name")
         }
-        lock.withLock { current = settings }
+        let previous = lock.withLock {
+            defer { current = settings }
+            return current
+        }
+        // Only what changed reaches the session: the demo session's currency and time zone (USD, New York) are not
+        // f33's (CAD, Toronto), and saving the expiry warning must not switch them.
         if let auth, let session = auth.session {
             auth.session = Session(
                 userID: session.userID, email: session.email, fullName: session.fullName, clinicID: session.clinicID,
-                clinicName: settings.name, role: session.role, currency: settings.currency, timeZone: settings.timeZone
+                clinicName: settings.name != previous.name ? settings.name : session.clinicName, role: session.role,
+                currency: settings.currency != previous.currency ? settings.currency : session.currency,
+                timeZone: settings.timeZone != previous.timeZone ? settings.timeZone : session.timeZone
             )
         }
     }
