@@ -5,7 +5,8 @@
         "appIDs": ["TEAMID.ca.dentory.app"],
         "components": [
           { "/": "/invite", "?": { "token": "?*" }, "comment": "Invitation links open the Join screen (MS-112)" },
-          { "/": "/reset-password", "?": { "token_hash": "?*" }, "comment": "Password reset links open Set a new password (MS-113)" }
+          { "/": "/reset-password", "?": { "token_hash": "?*" }, "comment": "Password reset links open Set a new password (MS-113)" },
+          { "/": "/open", "comment": "The weekly digest's Open Dentory opens the app (MS-145)" }
         ]
       }
     ]

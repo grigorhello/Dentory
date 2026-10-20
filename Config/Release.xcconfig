@@ -7,5 +7,8 @@ SUPABASE_URL =
 PASSWORD_RESET_URL = https:/$()/app.dentory.ca/reset-password
 SUPABASE_ANON_KEY =
 SENTRY_DSN =
+POSTHOG_PROJECT_TOKEN =
+// The EU cloud unless Secrets.xcconfig names another host (MS-147).
+POSTHOG_HOST =
 
 #include? "Secrets.xcconfig"

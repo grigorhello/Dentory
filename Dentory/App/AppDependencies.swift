@@ -36,6 +36,8 @@ struct AppDependencies: Sendable {
     let invitationRepository: InvitationRepository
     /// Push notifications on this device (MS-144).
     let push: PushNotifications
+    /// Product analytics, PostHog when the build has a project token (MS-147); previews and tests send nothing.
+    var analytics: Analytics = NoopAnalytics()
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
     var locale: Locale = .current
 
@@ -95,7 +97,8 @@ struct AppDependencies: Sendable {
             push: PushNotifications(
                 authorizer: SystemNotificationAuthorizer(), repository: SupabasePushTokenRepository(client: client),
                 store: UserDefaultsPushExplainerStore()
-            )
+            ),
+            analytics: PostHogAnalytics()
         )
     }
 
@@ -185,14 +188,17 @@ struct AppDependencies: Sendable {
     func makeProcedureStartViewModel(templateID: UUID, session: Session) -> ProcedureStartViewModel {
         ProcedureStartViewModel(
             repository: procedureStartRepository, formatters: formatters(for: session), clinicID: session.clinicID,
-            templateID: templateID
+            templateID: templateID, analytics: analytics
         )
     }
 
     /// Edit procedure for one template of the signed-in clinic, or New procedure when `templateID` is nil (MS-125).
     @MainActor
     func makeProcedureEditViewModel(templateID: UUID?, session: Session) -> ProcedureEditViewModel {
-        ProcedureEditViewModel(repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID)
+        ProcedureEditViewModel(
+            repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID,
+            analytics: analytics
+        )
     }
 
     /// To buy of the signed-in clinic (MS-128).
@@ -200,7 +206,7 @@ struct AppDependencies: Sendable {
     func makeToBuyViewModel(session: Session) -> ToBuyViewModel {
         ToBuyViewModel(
             repository: toBuyRepository, cache: cache, formatters: formatters(for: session),
-            clinicID: session.clinicID, isAdmin: session.isAdmin
+            clinicID: session.clinicID, isAdmin: session.isAdmin, analytics: analytics
         )
     }
 
@@ -209,7 +215,7 @@ struct AppDependencies: Sendable {
     func makeExpiringViewModel(window: Int?, session: Session) -> ExpiringViewModel {
         ExpiringViewModel(
             repository: expiringRepository, cache: cache, formatters: formatters(for: session),
-            clinicID: session.clinicID, isAdmin: session.isAdmin, window: window
+            clinicID: session.clinicID, isAdmin: session.isAdmin, window: window, analytics: analytics
         )
     }
 
@@ -218,7 +224,7 @@ struct AppDependencies: Sendable {
     @MainActor
     func makeClinicSettingsViewModel(session: Session, sessionStore: SessionStore?) -> ClinicSettingsViewModel {
         ClinicSettingsViewModel(
-            clinicID: session.clinicID, repository: clinicSettingsRepository, locale: locale,
+            clinicID: session.clinicID, repository: clinicSettingsRepository, analytics: analytics, locale: locale,
             onSaved: { await sessionStore?.revalidate() }
         )
     }
@@ -246,7 +252,7 @@ struct AppDependencies: Sendable {
     func makeProcedureEventViewModel(eventID: UUID, startsEditing: Bool, session: Session) -> ProcedureEventViewModel {
         ProcedureEventViewModel(
             repository: procedureEventRepository, formatters: formatters(for: session), clinicID: session.clinicID,
-            eventID: eventID, startsEditing: startsEditing
+            eventID: eventID, startsEditing: startsEditing, analytics: analytics
         )
     }
 
@@ -272,7 +278,8 @@ struct AppDependencies: Sendable {
     func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
         AccountViewModel(
             session: session, repository: accountRepository, cache: cache,
-            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push)
+            signingOut: DeviceSignOut(sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push),
+            analytics: analytics
         )
     }
 
@@ -291,7 +298,7 @@ struct AppDependencies: Sendable {
     func makeInviteTeammateViewModel(
         clinicID: UUID, onSent: @escaping () async -> Void
     ) -> InviteTeammateViewModel {
-        InviteTeammateViewModel(clinicID: clinicID, repository: teamRepository, onSent: onSent)
+        InviteTeammateViewModel(clinicID: clinicID, repository: teamRepository, analytics: analytics, onSent: onSent)
     }
 
     /// Product detail for one product of the signed-in clinic (MS-116).
@@ -303,7 +310,8 @@ struct AppDependencies: Sendable {
             formatters: formatters(for: session),
             clinicID: session.clinicID,
             userID: session.userID,
-            productID: productID
+            productID: productID,
+            analytics: analytics
         )
     }
 
@@ -317,7 +325,7 @@ struct AppDependencies: Sendable {
     ) -> OnboardingViewModel {
         OnboardingViewModel(
             auth: auth, repository: onboardingRepository, sessionStore: sessionStore, progress: onboardingProgress,
-            locale: locale, startingAt: step, account: account, clinicID: clinicID
+            analytics: analytics, locale: locale, startingAt: step, account: account, clinicID: clinicID
         )
     }
 
@@ -336,7 +344,9 @@ struct AppDependencies: Sendable {
     /// The Join screen's view model for the token of an invitation link (MS-112).
     @MainActor
     func makeAcceptInvitationViewModel(token: String, sessionStore: SessionStore) -> AcceptInvitationViewModel {
-        AcceptInvitationViewModel(token: token, repository: invitationRepository, sessionStore: sessionStore)
+        AcceptInvitationViewModel(
+            token: token, repository: invitationRepository, sessionStore: sessionStore, analytics: analytics
+        )
     }
 }
 

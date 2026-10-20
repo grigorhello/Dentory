@@ -9,9 +9,12 @@ struct AccountViewModelTests {
         session: Session = .demo,
         repository: FakeAccountRepository = FakeAccountRepository(),
         cache: ResponseCaching = InMemoryResponseCache(),
-        signingOut: FakeSigningOut = FakeSigningOut()
+        signingOut: FakeSigningOut = FakeSigningOut(),
+        analytics: SpyAnalytics = SpyAnalytics()
     ) -> AccountViewModel {
-        AccountViewModel(session: session, repository: repository, cache: cache, signingOut: signingOut)
+        AccountViewModel(
+            session: session, repository: repository, cache: cache, signingOut: signingOut, analytics: analytics
+        )
     }
 
     @Test func theCardReadsWhoIsSignedIn() {
@@ -93,8 +96,10 @@ struct AccountViewModelTests {
 
     @Test func anExportSaysWhereTheLinkGoes() async {
         let repository = FakeAccountRepository()
-        let viewModel = make(repository: repository)
+        let analytics = SpyAnalytics()
+        let viewModel = make(repository: repository, analytics: analytics)
         await viewModel.startExport()
+        #expect(analytics.events == [.exportStarted], "MS-147")
         #expect(repository.exportCalls == [Session.demo.clinicID])
         #expect(viewModel.message == .init(title: "Export started", detail: "We'll email it to sarah@dentory.test."))
         #expect(viewModel.isExporting == false)
