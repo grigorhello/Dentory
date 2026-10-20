@@ -53,7 +53,7 @@ final class DemoToBuyRepository: ToBuyRepository, @unchecked Sendable {
 
     func remove(itemID: UUID) async throws {
         try await Task.sleep(for: .milliseconds(100))
-        lock.withLock { lines.removeAll { $0.id == itemID } }
+        lock.withLock { lines.removeAll { $0.id == itemID && $0.status == .toBuy } }
     }
 
     func markOrdered(clinicID: UUID, itemIDs: [UUID]) async throws -> Int {

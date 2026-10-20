@@ -27,6 +27,8 @@ struct ToBuyRows: View {
                 }
             }
         }
+        // A row swiped open keeps the card's rounded corners (PRD §7 Lists, 12 pt).
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
     }
 
     private func identifier(for item: ToBuyItem) -> String {

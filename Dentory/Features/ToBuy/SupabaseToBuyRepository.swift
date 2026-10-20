@@ -2,8 +2,8 @@ import Foundation
 import Supabase
 
 /// The list and Add item through the MS-128 functions; quantities and removals straight to `to_buy_items` under
-/// the MS-105 policies, which let every member change a line still to buy. A quantity saved just after the line
-/// was marked ordered changes nothing.
+/// the MS-105 policies, which let every member change a line still to buy. Both touch only a line still to buy, so a
+/// stale list cannot change or delete a line another device has since marked ordered or a delivery received.
 struct SupabaseToBuyRepository: ToBuyRepository {
     let client: SupabaseClient
 
@@ -50,7 +50,10 @@ struct SupabaseToBuyRepository: ToBuyRepository {
 
     func remove(itemID: UUID) async throws {
         do {
-            try await client.from("to_buy_items").delete().eq("id", value: itemID.uuidString).execute()
+            try await client.from("to_buy_items").delete()
+                .eq("id", value: itemID.uuidString)
+                .eq("status", value: "to_buy")
+                .execute()
         } catch {
             throw AppError(error)
         }
