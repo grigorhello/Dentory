@@ -53,6 +53,8 @@ struct HomeView: View {
                     ProcedureEventView(
                         eventID: eventID, startsEditing: true, session: session, dependencies: dependencies
                     )
+                case .inventoryValue:
+                    InventoryValueView(session: session, dependencies: dependencies)
                 default:
                     HomeRoutePlaceholderView(route: route)
                 }

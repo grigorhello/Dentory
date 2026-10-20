@@ -52,6 +52,7 @@ struct CatalogTypeSection: View {
 
     private func sample(for style: TextStyle) -> String {
         switch style {
+        case .display48: "$12,420"
         case .display32: "Smile Dental"
         case .title24: "Review invoice"
         case .title20: "Septocaine 4% 1:100,000"
