@@ -80,7 +80,9 @@ extension PreviewAuthService {
     /// The demo admin or Staff member signed in, or no one; `-onboarding clinic` resumes admin sign-up at step 2 with
     /// a new account (screenshots).
     static func demo(signedIn: Bool, role: MembershipRole, onboarding: String?) -> PreviewAuthService {
-        let auth = PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil)
+        var session = Session.demo(role: role)
+        session.trialEndsAt = DemoTrial.launched?.trialEndsAt
+        let auth = PreviewAuthService(session: signedIn ? session : nil)
         if onboarding == "clinic" {
             auth.session = nil
             auth.account = Account(

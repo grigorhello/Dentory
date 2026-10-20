@@ -5,6 +5,7 @@ import SwiftUI
 struct ExpiringView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ExpiringViewModel
     let session: Session
 
@@ -67,7 +68,7 @@ struct ExpiringView: View {
                     daysTone: viewModel.daysTone(for: batch), valueText: viewModel.valueText(for: batch),
                     showsDispose: viewModel.isAdmin,
                     onView: { router.push(ExpiringRoute.product(batch.productID)) },
-                    onDispose: { viewModel.askToDispose(batch) }
+                    onDispose: { writeAccess.perform { viewModel.askToDispose(batch) } }
                 )
             }
         }

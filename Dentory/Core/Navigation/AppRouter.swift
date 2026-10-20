@@ -13,6 +13,8 @@ final class AppRouter {
     var inventoryFilter: InventoryFilter?
     /// A category name set by Inventory value (MS-135) before selecting the Inventory tab; applied once, like the filter.
     var inventoryCategory: String?
+    /// The read-only sheet (MS-142), opened by a write entry point while the clinic may not change anything.
+    var isReadOnlySheetPresented = false
     private var paths: [AppTab: NavigationPath] = [:]
 
     init(selectedTab: AppTab = .home, inventoryFilter: InventoryFilter? = nil) {
@@ -57,6 +59,7 @@ final class AppRouter {
         paths = [:]
         inventoryFilter = nil
         inventoryCategory = nil
+        isReadOnlySheetPresented = false
         toBuyCount = 0
     }
 

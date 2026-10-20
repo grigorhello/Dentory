@@ -6,6 +6,7 @@ import SwiftUI
 struct ActivityView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ActivityViewModel
     @State private var history: ActivityHistoryViewModel
     let session: Session
@@ -76,7 +77,7 @@ struct ActivityView: View {
     private func open(_ alert: ActivityAlert) {
         switch viewModel.destination(for: alert) {
         case .product(let productID): router.push(ActivityRoute.product(productID))
-        case .delivery: router.push(HomeRoute.receive)
+        case .delivery: writeAccess.perform { router.push(HomeRoute.receive) }
         case nil: break
         }
     }

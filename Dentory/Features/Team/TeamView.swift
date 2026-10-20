@@ -5,6 +5,7 @@ import SwiftUI
 /// confirmation. Staff read the list only.
 struct TeamView: View {
     @Environment(\.appDependencies) private var dependencies
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: TeamViewModel
 
     init(session: Session, sessionStore: SessionStore?, dependencies: AppDependencies) {
@@ -69,7 +70,7 @@ struct TeamView: View {
         )
         if viewModel.isAdmin {
             Button {
-                viewModel.openMenu(for: member)
+                writeAccess.perform { viewModel.openMenu(for: member) }
             } label: {
                 row
             }
@@ -101,12 +102,13 @@ struct TeamView: View {
         Button("Cancel", role: .cancel) {}
     }
 
-    /// "Invite" in the header for an admin (f31); nothing for Staff (f32).
+    /// "Invite" in the header for an admin (f31); nothing for Staff (f32). Invite and a person's choices open the
+    /// read-only sheet instead in read-only mode (MS-142).
     private var inviteAction: PushedHeader.HeaderAction? {
         guard viewModel.isAdmin else { return nil }
         return PushedHeader.HeaderAction(
             title: "Invite", identifier: "team.invite", variant: .primary, icon: .userPlus,
-            perform: viewModel.askToInvite
+            perform: { [writeAccess, viewModel] in writeAccess.perform(viewModel.askToInvite) }
         )
     }
 }

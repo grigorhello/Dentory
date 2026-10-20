@@ -18,12 +18,3 @@ nonisolated struct BillingSummary: Codable, Equatable, Sendable {
     let billingEmail: String?
     let billingEmailCount: Int
 }
-
-/// `clinics.subscription_status`: what `clinic_can_write` reads (MS-105).
-nonisolated enum SubscriptionStatus: String, Codable, Sendable {
-    case trialing
-    case active
-    case pastDue = "past_due"
-    case canceled
-    case readOnly = "read_only"
-}

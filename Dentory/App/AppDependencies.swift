@@ -145,8 +145,7 @@ struct AppDependencies: Sendable {
             expiringRepository: expiring,
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
-            // `-billingNoCard YES` shows Billing before a card is added (screenshots, UI tests).
-            billingRepository: DemoBillingRepository(hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard")),
+            billingRepository: DemoBillingRepository.launched(),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
             teamRepository: DemoTeamRepository(),

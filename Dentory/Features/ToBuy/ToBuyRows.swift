@@ -4,6 +4,7 @@ import SwiftUI
 /// as plain rows ("4 ordered Oct 1 · Patterson", "Received Sep 26 · Patterson"), which have no action: deliveries
 /// are received from the invoice.
 struct ToBuyRows: View {
+    @Environment(\.writeAccess) private var writeAccess
     @Bindable var viewModel: ToBuyViewModel
 
     var body: some View {
@@ -16,7 +17,7 @@ struct ToBuyRows: View {
                         showsDivider: item.id != viewModel.rows.last?.id,
                         isSelected: $viewModel[isSelected: item.id], quantity: $viewModel[quantityOf: item.id]
                     ) {
-                        Task { await viewModel.remove(item.id) }
+                        writeAccess.perform { Task { await viewModel.remove(item.id) } }
                     }
                 case .ordered, .received:
                     ListRow(
