@@ -45,6 +45,8 @@ struct HomeView: View {
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: HomeRoute.self) { route in
                 switch route {
+                case .expiring(let window):
+                    ExpiringView(window: window, session: session, dependencies: dependencies)
                 case .alerts:
                     ActivityView(session: session, dependencies: dependencies)
                 default:
