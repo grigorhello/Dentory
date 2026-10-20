@@ -48,12 +48,15 @@ struct SupabaseRowDecodingTests {
         let json = #"""
         {"role":"admin","full_name":"Sarah Mitchell",
          "clinic":{"id":"d0000000-0000-4000-8000-000000000001","name":"Smile Dental","currency":"CAD",
-                   "time_zone":"America/Toronto"}}
+                   "time_zone":"America/Toronto","subscription_status":"read_only",
+                   "trial_ends_at":"2027-01-06T14:00:00+00:00"}}
         """#
         let row = try decoder.decode(MembershipRow.self, from: Data(json.utf8))
         #expect(row.fullName == "Sarah Mitchell")
         #expect(row.clinic.timeZone == "America/Toronto")
         #expect(row.role == .admin)
+        #expect(row.clinic.subscriptionStatus == .readOnly, "MS-142: the session knows the clinic is read-only")
+        #expect(row.clinic.trialEndsAt == Date(timeIntervalSince1970: 1_799_244_000))
     }
 
     /// The answer `product_detail` gave for the seeded Surface disinfectant (`make seed-demo`), with the count

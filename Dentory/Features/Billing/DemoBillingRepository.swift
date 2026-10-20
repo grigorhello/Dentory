@@ -1,30 +1,26 @@
 import Foundation
 
 /// The demo clinic's billing as f34 and f35 draw it: three months free ending January 6, 2027, the lifetime promotion,
-/// a Visa card, no invoices yet and the owner's address, kept in memory as the billing emails change.
-/// `-billingNoCard YES` starts it without a card; `-billingInvoices YES` with three months of invoices.
+/// a Visa card, no invoices yet and the owner's address, kept in memory as the billing emails change. The trial may end
+/// on another day (MS-142); `launched()` (App/DemoTrial.swift) reads the launch arguments.
 final class DemoBillingRepository: BillingRepository, @unchecked Sendable {
     let hasCard: Bool
+    let trialEndsAt: Date
     private let demoInvoices: [BillingInvoice]
     private var emails = ["owner@smiledental.ca"]
     private let lock = NSLock()
 
-    init(hasCard: Bool = true, withInvoices: Bool = false) {
+    init(hasCard: Bool = true, trialEndsAt: Date = BillingSummary.demoTrialEnd, withInvoices: Bool = false) {
         self.hasCard = hasCard
+        self.trialEndsAt = trialEndsAt
         demoInvoices = withInvoices ? BillingInvoice.demo : []
-    }
-
-    /// Billing as the launch arguments ask (screenshots, UI tests).
-    static func launched() -> DemoBillingRepository {
-        DemoBillingRepository(
-            hasCard: !UserDefaults.standard.bool(forKey: "billingNoCard"),
-            withInvoices: UserDefaults.standard.bool(forKey: "billingInvoices")
-        )
     }
 
     func summary(clinicID: UUID) async throws -> BillingSummary {
         let current = lock.withLock { self.emails }
-        return BillingSummary.demo(hasCard: hasCard, invoiceCount: demoInvoices.count, emails: current)
+        return BillingSummary.demo(
+            hasCard: hasCard, trialEndsAt: trialEndsAt, invoiceCount: demoInvoices.count, emails: current
+        )
     }
 
     func invoices(clinicID: UUID) async throws -> [BillingInvoice] {
@@ -62,10 +58,11 @@ extension BillingSummary {
     nonisolated static let demoTrialEnd = Date(timeIntervalSince1970: 1_799_244_000)
 
     nonisolated static func demo(
-        hasCard: Bool, invoiceCount: Int = 0, emails: [String] = ["owner@smiledental.ca"]
+        hasCard: Bool, trialEndsAt: Date = demoTrialEnd, invoiceCount: Int = 0,
+        emails: [String] = ["owner@smiledental.ca"]
     ) -> BillingSummary {
         BillingSummary(
-            trialEndsAt: demoTrialEnd,
+            trialEndsAt: trialEndsAt,
             subscriptionStatus: hasCard ? .active : .trialing,
             hasSubscription: hasCard,
             promoLifetime50: true,

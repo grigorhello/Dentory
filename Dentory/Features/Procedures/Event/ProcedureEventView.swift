@@ -6,6 +6,7 @@ import SwiftUI
 struct ProcedureEventView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ProcedureEventViewModel
 
     init(eventID: UUID, startsEditing: Bool = false, session: Session, dependencies: AppDependencies) {
@@ -105,12 +106,13 @@ struct ProcedureEventView: View {
                         MSButton("Discard", variant: .text, isFullWidth: true, action: viewModel.discard)
                             .accessibilityIdentifier("procDetail.discard")
                     } else {
-                        MSButton(
-                            "Edit usage", icon: .pencil, variant: .tertiary, isFullWidth: true,
-                            action: viewModel.startEditing
-                        )
+                        MSButton("Edit usage", icon: .pencil, variant: .tertiary, isFullWidth: true) {
+                            writeAccess.perform(viewModel.startEditing)
+                        }
                         .accessibilityIdentifier("procDetail.editUsage")
-                        Button(action: viewModel.askToCancel) {
+                        Button {
+                            writeAccess.perform(viewModel.askToCancel)
+                        } label: {
                             Text("Cancel procedure").foregroundStyle(Color.ms.danger)
                         }
                         .buttonStyle(.ms(.text, fullWidth: true))
@@ -121,8 +123,11 @@ struct ProcedureEventView: View {
         }
     }
 
+    /// Edit usage, Cancel procedure and Save open the read-only sheet instead in read-only mode (MS-142).
     private func save() {
-        Task { await viewModel.save() }
+        writeAccess.perform {
+            Task { await viewModel.save() }
+        }
     }
 }
 

@@ -6,6 +6,7 @@ import SwiftUI
 struct ProcedureStartView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ProcedureStartViewModel
 
     init(templateID: UUID, session: Session, dependencies: AppDependencies) {
@@ -76,8 +77,11 @@ struct ProcedureStartView: View {
         }
     }
 
+    /// In read-only mode the sheet says why instead (MS-142).
     private func start() {
-        Task { await viewModel.start() }
+        writeAccess.perform {
+            Task { await viewModel.start() }
+        }
     }
 }
 

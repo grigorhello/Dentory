@@ -7,6 +7,7 @@ import SwiftUI
 struct ClinicSettingsView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ClinicSettingsViewModel
     @State private var logoItem: PhotosPickerItem?
 
@@ -112,8 +113,9 @@ struct ClinicSettingsView: View {
         PushedHeader.HeaderAction(
             title: "Save", identifier: "settings.save", variant: .text, isLoading: viewModel.isSaving,
             isDisabled: !viewModel.canSave
-        ) {
-            Task { await viewModel.save() }
+        ) { [writeAccess, viewModel] in
+            // In read-only mode the sheet says why instead (MS-142).
+            writeAccess.perform { Task { await viewModel.save() } }
         }
     }
 
