@@ -33,6 +33,7 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `expiring.card.dispose` | A batch was disposed | |
 | `team.invite` | A teammate was invited | `role` (admin, staff) |
 | `more.export` | A CSV export was started | |
+| `settings.save` | Clinic settings were saved | `digest` (the weekly email stays on), `expiry_warning_days` (the first warning: 30, 60 or 90) |
 
 Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: `inv.count.review` when a count is applied (MS-121: `item_count` corrections, `duration_s`), the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm), `manual.receive`, and product creation (MS-117). The tickets carry a comment saying so.
 

@@ -155,8 +155,9 @@ struct RootView: View {
                     await sessionStore.revalidateIfDue()
                 })
                 .pushNotifications(dependencies.push, session: session, open: open)
-                // A changed role rebuilds the screens, so the controls follow it at once (MS-138).
-                .id(session.role)
+                // A changed role rebuilds the screens, so the controls follow it at once (MS-138), and so do a new
+                // clinic name, currency or time zone saved in Clinic settings (MS-139). The router keeps the paths.
+                .id([session.role.rawValue, session.clinicName, session.currency, session.timeZone])
         }
     }
 

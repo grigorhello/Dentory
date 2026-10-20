@@ -11,7 +11,8 @@ struct AnalyticsEventTests {
         .invitationAccepted, .procedureStarted(items: 11, bottlesOpened: 1, shortages: 1, seconds: 42),
         .procedureUsageEdited(items: 3), .procedureCancelled, .templateSaved(items: 12, isNew: true), .templateDeleted,
         .stockAdjusted(reason: .other, increase: true), .addedToBuy, .bottleOpened, .bottleFinished,
-        .markedOrdered(items: 2), .toBuyAdded, .batchDisposed, .teammateInvited(role: .admin), .exportStarted
+        .markedOrdered(items: 2), .toBuyAdded, .batchDisposed, .teammateInvited(role: .admin), .exportStarted,
+        .settingsSaved(digest: true, expiryWarningDays: 30)
     ]
 
     @Test func everyEventIsAnAppendixBElementId() {

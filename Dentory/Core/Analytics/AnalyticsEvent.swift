@@ -64,6 +64,11 @@ nonisolated struct AnalyticsEvent: Equatable, Sendable {
     static func teammateInvited(role: MembershipRole) -> Self {
         Self(name: .teamInvite, properties: [.role: .word(AnalyticsWord(role))])
     }
+
+    /// Clinic settings saved: whether the weekly digest stays on, and the first expiry warning (30, 60 or 90 days).
+    static func settingsSaved(digest: Bool, expiryWarningDays: Int) -> Self {
+        Self(name: .settingsSave, properties: [.digest: .flag(digest), .expiryWarningDays: .count(expiryWarningDays)])
+    }
 }
 
 /// The events, by their Appendix B element id; a parameter in brackets (`[batchId]`) is left out.
@@ -87,6 +92,7 @@ nonisolated enum AnalyticsEventName: String, CaseIterable, Sendable {
     case batchDispose = "expiring.card.dispose"
     case teamInvite = "team.invite"
     case export = "more.export"
+    case settingsSave = "settings.save"
 }
 
 /// Every property key an event may carry.
@@ -96,6 +102,8 @@ nonisolated enum AnalyticsProperty: String, CaseIterable, Sendable {
     case shortageCount = "shortage_count"
     case durationSeconds = "duration_s"
     case isNew = "is_new"
+    case digest
+    case expiryWarningDays = "expiry_warning_days"
     case direction
     case reason
     case role
