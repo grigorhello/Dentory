@@ -78,7 +78,7 @@ extension ProcedureStartViewModel {
 
     /// "40 needles in stock" under a product in Add item; "1 unopened · 2 open" for a multi-use one, and "Out of stock"
     /// once + found nothing unopened.
-    func addCaption(for product: ProductSummary) -> String {
+    func addCaption(for product: ProductSummary) -> String? {
         if product.id == outOfStockProductID { return "Out of stock" }
         return switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
