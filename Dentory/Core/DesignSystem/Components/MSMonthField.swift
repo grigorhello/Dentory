@@ -66,14 +66,12 @@ struct MSMonthField: View {
                 .padding(.horizontal, Spacing.md)
                 .frame(height: ControlHeight.md)
                 .background(
-                    isEnabled ? Color.ms.surfacePage : Color.ms.surfaceCard,
-                    in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
+                    isEnabled ? Color.ms.surfacePage : Color.ms.surfaceCard, in: .rect(cornerRadius: Radius.sm)
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
-                        .strokeBorder(borderColor, lineWidth: 1)
-                )
-                .contentShape(Rectangle())
+                .overlay {
+                    RoundedRectangle(cornerRadius: Radius.sm).strokeBorder(borderColor, lineWidth: 1)
+                }
+                .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(label)
