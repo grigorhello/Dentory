@@ -63,6 +63,29 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5))
         app.buttons["inv.newProduct"].tap()
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "New product is not gated")
+        XCTAssertFalse(app.staticTexts["newProduct.title"].exists, "The New product sheet opened")
+    }
+
+    /// Product detail's Edit and Delete product open the read-only sheet instead of theirs (MS-117).
+    @MainActor
+    func testProductEditAndDeleteOpenTheSheet() {
+        let app = launch(["-tab", "inventory"])
+        let row = app.descendants(matching: .any)["inv.row[00000000-0000-4000-8000-0000000000d1]"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "The Septocaine row is missing")
+        row.tap()
+        let edit = app.buttons["product.edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5), "Product detail did not open")
+        edit.tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "Edit is not gated")
+        XCTAssertFalse(app.staticTexts["newProduct.title"].exists, "The Edit sheet opened")
+        app.buttons["readOnly.ok"].tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5))
+        app.swipeUp()
+        let delete = app.descendants(matching: .any)["product.delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3), "No Delete product")
+        delete.tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "Delete product is not gated")
+        XCTAssertFalse(app.staticTexts["deleteProduct.title"].exists, "The Delete sheet opened")
     }
 
     /// Clinic settings' Save opens the sheet once Clinic settings (MS-139) is in.

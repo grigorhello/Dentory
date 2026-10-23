@@ -105,7 +105,8 @@ select is((select not_before from public.push_outbox where alert_id = '00000000-
   ((now() at time zone pg_temp.zone_at(23))::date + 1 + time '07:00') at time zone pg_temp.zone_at(23),
   'running out at 11 pm in the clinic pushes at 7 am');
 
--- Old cement ran out two days ago and its push never went out; an archived product's push is dropped.
+-- Old cement ran out two days ago and its push never went out; an archived product's push is dropped (archiving
+-- resolves the product's open alerts, MS-117, so the push is skipped as resolved).
 select pg_temp.open_alert('00000000-0000-4000-8000-000000014459', 'out_of_stock', '00000000-0000-4000-8000-000000014424');
 update public.push_outbox set not_before = now() - interval '2 days' where alert_id = '00000000-0000-4000-8000-000000014459';
 select pg_temp.open_alert('00000000-0000-4000-8000-00000001445a', 'out_of_stock', '00000000-0000-4000-8000-000000014423');
@@ -126,7 +127,7 @@ select is((select skipped from public.push_outbox where alert_id = '00000000-000
   'a push whose alert closed first is skipped');
 select is((select skipped from public.push_outbox where alert_id = '00000000-0000-4000-8000-000000014459'), 'stale',
   'a push undelivered for a day is dropped');
-select is((select skipped from public.push_outbox where alert_id = '00000000-0000-4000-8000-00000001445a'), 'archived',
+select is((select skipped from public.push_outbox where alert_id = '00000000-0000-4000-8000-00000001445a'), 'resolved',
   'an archived product is not pushed');
 select results_eq(
   $$select body, link, tokens from claimed

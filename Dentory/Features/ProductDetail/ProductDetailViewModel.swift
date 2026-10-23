@@ -11,8 +11,10 @@ import Observation
 final class ProductDetailViewModel {
     enum LoadState: Equatable { case loading, loaded, failed(AppError) }
 
-    /// The sheets this screen presents (PRD Appendix B `product`).
-    enum Sheet: Identifiable {
+    /// The sheets this screen presents (Appendix C `newProduct` in edit mode, `deleteProduct`, `adjust`).
+    enum Sheet: Identifiable, Equatable {
+        case edit
+        case delete
         case adjust
         var id: Self { self }
     }
@@ -45,6 +47,8 @@ final class ProductDetailViewModel {
     /// The last applied adjustment, undoable until Undo runs or the next adjustment replaces it.
     private(set) var undoableAdjustmentID: UUID?
     var sheet: Sheet?
+    /// Set once "Delete product" went through: the view leaves the screen with its toast.
+    private(set) var isDeleted = false
     /// A refusal that belongs to no field; the view shows it as a toast.
     private(set) var generalError: AppError?
 
@@ -189,6 +193,51 @@ final class ProductDetailViewModel {
         addedToBuy = nil
     }
 
+    // MARK: - Edit and Delete product (MS-117)
+
+    func edit() {
+        guard detail != nil else { return }
+        sheet = .edit
+    }
+
+    /// "Save changes" closed the Edit sheet: the screen shows the saved fields.
+    func productSaved() async {
+        sheet = nil
+        await load()
+    }
+
+    func askToDelete() {
+        sheet = .delete
+    }
+
+    func keepProduct() {
+        sheet = nil
+    }
+
+    var deleteTitle: String { "Delete \(detail?.name ?? "")?" }
+
+    /// "54 cartridges still in stock. The product and its history are archived, not erased. …"
+    var deleteMessage: String {
+        let archived = "The product and its history are archived, not erased. "
+            + "It disappears from Inventory, To buy and procedures."
+        guard let detail, detail.quantity > 0 else { return archived }
+        return "\(formatters.quantity(detail.quantity, unit: detail.unit)) still in stock. " + archived
+    }
+
+    func deleteProduct() async {
+        guard let detail else { return }
+        await submitGuard.run {
+            generalError = nil
+            do {
+                try await repository.archiveProduct(id: detail.id)
+                sheet = nil
+                isDeleted = true
+            } catch {
+                generalError = AppError(error)
+            }
+        }
+    }
+
     // MARK: - Adjust
 
     /// The sheet's view model for the loaded product; nil while nothing is loaded.
@@ -288,7 +337,7 @@ private extension ProductDetail {
             minimum: minimum, target: target, tracking: tracking, location: location, status: status,
             quantity: quantity, unopened: unopened, openCount: openCount, missingExpiryQuantity: missingExpiryQuantity,
             usedInLast30Days: usedInLast30Days, lastCountedAt: lastCountedAt, toBuyItemID: itemID,
-            batches: batches, openBottles: openBottles, history: history
+            batches: batches, openBottles: openBottles, history: history, categoryID: categoryID, supplier: supplier
         )
     }
 }

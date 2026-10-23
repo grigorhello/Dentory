@@ -5,6 +5,8 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
     var detailResult: Result<ProductDetail, Error>
     var addResult: Result<UUID, Error> = .success(UUID(uuidString: "00000000-0000-4000-8000-0000000000e9") ?? UUID())
     var removeResult: Result<Void, Error> = .success(())
+    var archiveResult: Result<Void, Error> = .success(())
+    private(set) var archived: [UUID] = []
     var adjustResult: Result<WriteOutcome, Error> =
         .success(.applied(actionID: UUID(uuidString: "00000000-0000-4000-8000-0000000000ac") ?? UUID()))
     var undoResult: Result<Void, Error> = .success(())
@@ -49,6 +51,11 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
     func removeFromToBuy(itemID: UUID) async throws {
         removals.append(itemID)
         try removeResult.get()
+    }
+
+    func archiveProduct(id: UUID) async throws {
+        archived.append(id)
+        try archiveResult.get()
     }
 
     func adjust(

@@ -7,6 +7,7 @@ struct InventoryListView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: InventoryListViewModel
+    @State private var isNewProductPresented = false
     let session: Session
 
     init(session: Session, dependencies: AppDependencies) {
@@ -46,6 +47,13 @@ struct InventoryListView: View {
                 guard let category else { return }
                 viewModel.apply(category: category)
                 router.inventoryCategory = nil
+            }
+            .msSheet(isPresented: $isNewProductPresented) {
+                ProductFormSheet(mode: .create, session: session, dependencies: dependencies) { _ in
+                    isNewProductPresented = false
+                    dependencies.toasts.show("Product created")
+                    Task { await viewModel.load() }
+                }
             }
     }
 
@@ -87,9 +95,9 @@ struct InventoryListView: View {
         writeAccess.perform { dependencies.toasts.show("Count stock arrives with a later update.") }
     }
 
-    /// The New product sheet arrives with MS-117; in read-only mode the sheet says why instead (MS-142).
+    /// The New product sheet (MS-117); in read-only mode the read-only sheet says why instead (MS-142).
     private func newProduct() {
-        writeAccess.perform { dependencies.toasts.show("New product arrives with a later update.") }
+        writeAccess.perform { isNewProductPresented = true }
     }
 }
 

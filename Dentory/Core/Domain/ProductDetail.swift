@@ -32,6 +32,9 @@ nonisolated struct ProductDetail: Codable, Equatable, Sendable {
     let openBottles: [OpenBottle]
     /// Newest first, at most 20.
     let history: [StockTransaction]
+    /// What the Edit product sheet starts from besides the fields above (MS-117).
+    var categoryID: UUID?
+    var supplier: String?
 
     /// The same product with `delta` added to its quantity and unopened count (an increase lands on the
     /// undated quantity, MS-100 D9) and the given history. Status is left to the server's next answer.
@@ -58,7 +61,8 @@ nonisolated struct ProductDetail: Codable, Equatable, Sendable {
             quantity: quantity ?? self.quantity, unopened: unopened ?? self.unopened,
             openCount: openBottles?.count ?? openCount, missingExpiryQuantity: missingExpiryQuantity,
             usedInLast30Days: usedInLast30Days, lastCountedAt: lastCountedAt, toBuyItemID: toBuyItemID,
-            batches: batches, openBottles: openBottles ?? self.openBottles, history: history ?? self.history
+            batches: batches, openBottles: openBottles ?? self.openBottles, history: history ?? self.history,
+            categoryID: categoryID, supplier: supplier
         )
     }
 }

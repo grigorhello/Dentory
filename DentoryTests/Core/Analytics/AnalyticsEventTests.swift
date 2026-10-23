@@ -12,7 +12,7 @@ struct AnalyticsEventTests {
         .procedureUsageEdited(items: 3), .procedureCancelled, .templateSaved(items: 12, isNew: true), .templateDeleted,
         .stockAdjusted(reason: .other, increase: true), .addedToBuy, .bottleOpened, .bottleFinished,
         .markedOrdered(items: 2), .toBuyAdded, .batchDisposed, .teammateInvited(role: .admin), .exportStarted,
-        .settingsSaved(digest: true, expiryWarningDays: 30)
+        .settingsSaved(digest: true, expiryWarningDays: 30), .productCreated
     ]
 
     @Test func everyEventIsAnAppendixBElementId() {

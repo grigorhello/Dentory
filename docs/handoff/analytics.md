@@ -25,6 +25,7 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `procDetail.cancel` | A procedure was cancelled | |
 | `procEdit.save` | A procedure's defaults were saved | `item_count` supplies, `is_new` |
 | `procEdit.delete` | A procedure template was deleted | |
+| `inv.newProduct` | A product was created on the New product sheet | |
 | `product.adjust` | Stock was adjusted from Product detail | `reason` (physical_count, expired, damaged, waste, missing, returned, data_correction, other), `direction` (increase, decrease) |
 | `product.addToBuy` | A product was added to To buy (Report low stock for Staff) | |
 | `product.openNewBottle` | A bottle, syringe or kit was opened | |
@@ -36,7 +37,7 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `more.export` | A CSV export was started | |
 | `settings.save` | Clinic settings were saved | `digest` (the weekly email stays on), `expiry_warning_days` (the first warning: 30, 60 or 90) |
 
-Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: `inv.count.review` when a count is applied (MS-121: `item_count` corrections, `duration_s`), the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm), `manual.receive`, and product creation (MS-117). The tickets carry a comment saying so.
+Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: `inv.count.review` when a count is applied (MS-121: `item_count` corrections, `duration_s`), the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm), and `manual.receive`. The tickets carry a comment saying so.
 
 ## The pilot dashboard
 

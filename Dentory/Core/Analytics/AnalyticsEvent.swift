@@ -22,6 +22,8 @@ nonisolated struct AnalyticsEvent: Equatable, Sendable {
     static let bottleFinished = Self(name: .bottleFinish, properties: [:])
     static let batchDisposed = Self(name: .batchDispose, properties: [:])
     static let exportStarted = Self(name: .export, properties: [:])
+    /// A product created on Inventory's New product sheet (MS-117); never its name.
+    static let productCreated = Self(name: .productCreate, properties: [:])
 
     /// Sign-up's last step: the invitations sent, 0 when skipped.
     static func onboardingFinished(invitations: Int) -> Self {
@@ -93,6 +95,7 @@ nonisolated enum AnalyticsEventName: String, CaseIterable, Sendable {
     case teamInvite = "team.invite"
     case export = "more.export"
     case settingsSave = "settings.save"
+    case productCreate = "inv.newProduct"
 }
 
 /// Every property key an event may carry.

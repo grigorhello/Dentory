@@ -2,11 +2,12 @@ import SwiftUI
 
 /// Product detail (f20 Admin, f21 Staff): context header, name and status, the quantity card, Adjust and
 /// Add to buy, the expiry card, the bottles card for multi-use products, the history, and Delete product
-/// for Admin. Show all opens the product's history (MS-134); Edit, batches and Delete open their own tickets'
-/// screens later.
+/// for Admin. Edit and Delete product open their sheets (MS-117), Show all the product's history (MS-134); batches
+/// open their own ticket's screen later.
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ProductDetailViewModel
     let session: Session
@@ -47,6 +48,11 @@ struct ProductDetailView: View {
                 }
                 viewModel.clearAddedToBuy()
             }
+            .onChange(of: viewModel.isDeleted) { _, isDeleted in
+                guard isDeleted else { return }
+                dependencies.toasts.show("Product deleted")
+                dismiss()
+            }
             .onChange(of: viewModel.bottleToast) { _, toast in
                 guard let toast else { return }
                 dependencies.toasts.show(toast.title, detail: toast.detail)
@@ -64,6 +70,20 @@ struct ProductDetailView: View {
             }
             .msSheet(item: $viewModel.sheet) { sheet in
                 switch sheet {
+                case .edit:
+                    if let detail = viewModel.detail {
+                        ProductFormSheet(mode: .edit(detail), session: session, dependencies: dependencies) { _ in
+                            dependencies.toasts.show("Changes saved")
+                            Task { await viewModel.productSaved() }
+                        }
+                    }
+                case .delete:
+                    DeleteProductSheet(
+                        title: viewModel.deleteTitle, message: viewModel.deleteMessage,
+                        isDeleting: viewModel.isSubmitting,
+                        onDelete: { Task { await viewModel.deleteProduct() } },
+                        onKeep: viewModel.keepProduct
+                    )
                 case .adjust:
                     if let adjustViewModel = viewModel.makeAdjustInventoryViewModel() {
                         AdjustInventorySheet(viewModel: adjustViewModel) { saved in
@@ -153,11 +173,12 @@ struct ProductDetailView: View {
     private func finishBottle(_ id: UUID) { writeAccess.perform { Task { await viewModel.finishBottle(id) } } }
     private func openNewBottle() { writeAccess.perform { Task { await viewModel.openNewBottle() } } }
 
-    // Placeholders until the tickets that bring these screens (MS-117, MS-119, MS-134); each opens the read-only
-    // sheet instead in read-only mode (MS-142).
-    private func edit() {
-        writeAccess.perform { dependencies.toasts.show("Edit product arrives with a later update.") }
-    }
+    /// Edit and Delete product (MS-117) open the read-only sheet instead in read-only mode (MS-142).
+    private func edit() { writeAccess.perform(viewModel.edit) }
+    private func deleteProduct() { writeAccess.perform(viewModel.askToDelete) }
+
+    // Placeholders until the ticket that brings these screens (MS-119); each opens the read-only sheet instead in
+    // read-only mode (MS-142).
     private func editBatch(_ id: UUID) {
         writeAccess.perform { dependencies.toasts.show("Edit batch arrives with a later update.") }
     }
@@ -168,9 +189,6 @@ struct ProductDetailView: View {
     private func showAllHistory() {
         guard let detail = viewModel.detail else { return }
         router.push(ProductDetailRoute.history(productID: detail.id, name: detail.name))
-    }
-    private func deleteProduct() {
-        writeAccess.perform { dependencies.toasts.show("Delete product arrives with a later update.") }
     }
 }
 

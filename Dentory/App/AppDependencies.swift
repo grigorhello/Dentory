@@ -31,6 +31,7 @@ struct AppDependencies: Sendable {
     let inventoryValueRepository: InventoryValueRepository
     let accountRepository: AccountRepository
     let teamRepository: TeamRepository
+    let productFormRepository: ProductFormRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
@@ -93,6 +94,7 @@ struct AppDependencies: Sendable {
             inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
             accountRepository: SupabaseAccountRepository(client: client),
             teamRepository: SupabaseTeamRepository(client: client),
+            productFormRepository: SupabaseProductFormRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
             invitationRepository: SupabaseInvitationRepository(client: client),
@@ -121,6 +123,8 @@ struct AppDependencies: Sendable {
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
         let expiring = DemoExpiringRepository()
         let activity = DemoActivityRepository(extraHistory: UserDefaults.standard.integer(forKey: "demoHistoryRows"))
+        let products = DemoProductStore()
+        let byName = Session.demo(role: role).fullName
         return AppDependencies(
             rpc: rpc,
             auth: auth,
@@ -134,11 +138,10 @@ struct AppDependencies: Sendable {
             ),
             reporter: reporter,
             homeRepository: DemoHomeRepository(
-                expiring: { expiring.currentBatches.map(\.value) },
-                alertsUnseen: { activity.hasUnseenAlerts }
+                expiring: { expiring.currentBatches.map(\.value) }, alertsUnseen: { activity.hasUnseenAlerts }
             ),
-            inventoryRepository: DemoInventoryRepository(),
-            productDetailRepository: DemoProductDetailRepository(byName: Session.demo(role: role).fullName),
+            inventoryRepository: DemoInventoryRepository(store: products),
+            productDetailRepository: DemoProductDetailRepository(store: products, byName: byName),
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
@@ -146,11 +149,12 @@ struct AppDependencies: Sendable {
             clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
             expiringRepository: expiring,
             activityRepository: activity,
-            procedureEventRepository: DemoProcedureEventRepository(byName: Session.demo(role: role).fullName),
+            procedureEventRepository: DemoProcedureEventRepository(byName: byName),
             billingRepository: DemoBillingRepository.launched(),
             inventoryValueRepository: DemoInventoryValueRepository(),
             accountRepository: DemoAccountRepository(),
             teamRepository: DemoTeamRepository(),
+            productFormRepository: DemoProductFormRepository(store: products),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),

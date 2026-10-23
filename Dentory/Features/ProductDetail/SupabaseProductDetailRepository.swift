@@ -49,7 +49,9 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
                     quantityBefore: $0.qtyBefore, quantityAfter: $0.qtyAfter,
                     reason: $0.reason, referenceLabel: $0.refLabel, at: $0.at, byName: $0.byName
                 )
-            }
+            },
+            categoryID: product.categoryId,
+            supplier: product.supplier
         )
     }
 
@@ -83,6 +85,14 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
                 .eq("id", value: itemID.uuidString)
                 .eq("status", value: "to_buy")
                 .execute()
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    func archiveProduct(id: UUID) async throws {
+        do {
+            try await client.rpc("product_archive", params: ["p_product_id": id.uuidString.lowercased()]).execute()
         } catch {
             throw AppError(error)
         }
@@ -158,6 +168,7 @@ nonisolated struct ProductDetailPayload: Decodable, Sendable {
 nonisolated struct ProductDetailProductRow: Decodable, Sendable {
     let id: UUID
     let name: String
+    let categoryId: UUID?
     let categoryName: String?
     let unit: String
     let packUnit: String?
@@ -165,6 +176,7 @@ nonisolated struct ProductDetailProductRow: Decodable, Sendable {
     let minimum: Decimal
     let target: Decimal
     let tracking: TrackingMode
+    let supplier: String?
     let location: String?
     let status: ProductStatus
     let quantity: Decimal
