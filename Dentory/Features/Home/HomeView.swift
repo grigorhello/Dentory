@@ -4,6 +4,9 @@ import SwiftUI
 struct HomeView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
+    /// Account's Sign out ends it (MS-137); the root puts it in the tabs' environment.
+    @Environment(SessionStore.self) private var sessionStore: SessionStore?
     @State private var viewModel: HomeViewModel
     let session: Session
     #if DEBUG
@@ -19,8 +22,7 @@ struct HomeView: View {
         _viewModel = State(initialValue: HomeViewModel(
             repository: dependencies.homeRepository,
             cache: dependencies.cache,
-            clinicID: session.clinicID,
-            userID: session.userID
+            clinicID: session.clinicID
         ))
     }
 
@@ -45,7 +47,26 @@ struct HomeView: View {
             }
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: HomeRoute.self) { route in
-                HomeRoutePlaceholderView(route: route)
+                switch route {
+                case .expiring(let window):
+                    ExpiringView(window: window, session: session, dependencies: dependencies)
+                case .alerts:
+                    ActivityView(session: session, dependencies: dependencies)
+                case .editUsage(let eventID):
+                    ProcedureEventView(
+                        eventID: eventID, startsEditing: true, session: session, dependencies: dependencies
+                    )
+                case .inventoryValue:
+                    InventoryValueView(session: session, dependencies: dependencies)
+                case .account:
+                    if let sessionStore {
+                        AccountView(session: session, sessionStore: sessionStore, dependencies: dependencies)
+                    }
+                case .billing:
+                    BillingView(session: session, dependencies: dependencies)
+                case .receive:
+                    ReceiveView(session: session, dependencies: dependencies)
+                }
             }
             .debugHooks(
                 isCatalogPresented: debugCatalogBinding, launchSection: debugLaunchSection, onAppear: debugOnAppear
@@ -53,7 +74,17 @@ struct HomeView: View {
     }
 
     @ViewBuilder private var content: some View {
-        // Trial-ended banner slot (MS-142 fills it).
+        if let notice = HomeNotice(session: session, now: dependencies.clock.now, formatters: formatters) {
+            Notice(
+                notice.text, tone: notice.kind == .readOnly ? .warning : .info,
+                action: notice.showsBilling
+                    ? NoticeAction(title: "Billing", identifier: "home.notice.billing") {
+                        router.push(HomeRoute.billing, on: .home)
+                    }
+                    : nil,
+                identifier: "home.notice"
+            )
+        }
         if let summary = viewModel.summary {
             Eyebrow("Needs attention")
             attentionTiles(summary)
@@ -61,7 +92,7 @@ struct HomeView: View {
                 latest: summary.latestProcedure,
                 startedAtText: summary.latestProcedure.map { formatters.dateTime($0.startedAt) } ?? "",
                 onStart: { router.select(.procedures) },
-                onEditUsage: { router.push(HomeRoute.editUsage(eventID: $0), on: .home) }
+                onEditUsage: { id in writeAccess.perform { router.push(HomeRoute.editUsage(eventID: id), on: .home) } }
             )
             valueTiles(summary)
             receiveRow
@@ -120,7 +151,7 @@ struct HomeView: View {
 
     private var receiveRow: some View {
         Button {
-            router.push(HomeRoute.receive, on: .home)
+            writeAccess.perform { router.push(HomeRoute.receive, on: .home) }
         } label: {
             HStack(spacing: Spacing.lg) {
                 IconView(.truck, size: 24)
@@ -180,40 +211,6 @@ struct HomeView: View {
     private var debugLaunchSection: String? { nil }
     private func debugOnAppear() {}
     #endif
-}
-
-/// A pushed screen that names the ticket bringing the real one.
-struct HomeRoutePlaceholderView: View {
-    let route: HomeRoute
-
-    var body: some View {
-        Text("\(title) arrives with its own ticket.")
-            .textStyle(.body14)
-            .foregroundStyle(Color.ms.textSecondary)
-            .pushedScreen(title: title, identifier: identifier)
-    }
-
-    private var title: String {
-        switch route {
-        case .alerts: "Alerts"
-        case .account: "Account"
-        case .expiring(let window): window.map { "Expiring soon · \($0) days" } ?? "Expiring soon"
-        case .inventoryValue: "Inventory value"
-        case .receive: "Receive delivery"
-        case .editUsage: "Edit usage"
-        }
-    }
-
-    private var identifier: String {
-        switch route {
-        case .alerts: "activity"
-        case .account: "more"
-        case .expiring: "expiring"
-        case .inventoryValue: "value"
-        case .receive: "receive"
-        case .editUsage: "procDetail"
-        }
-    }
 }
 
 private extension View {

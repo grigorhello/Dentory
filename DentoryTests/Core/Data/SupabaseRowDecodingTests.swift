@@ -37,28 +37,26 @@ struct SupabaseRowDecodingTests {
         #expect(rows.first?.startedAt == Date(timeIntervalSince1970: 1_790_882_040))
     }
 
-    @Test func memberAlertAndReadRows() throws {
+    @Test func memberRowAndTheDotAnswer() throws {
         let member = try decoder.decode([HomeMemberRow].self, from: Data(#"[{"full_name":"Sarah Mitchell"}]"#.utf8))
         #expect(member.first?.fullName == "Sarah Mitchell")
-        let alert = try decoder.decode(
-            [HomeAlertRow].self, from: Data(#"[{"opened_at":"2026-10-02T12:56:00.123456+00:00"}]"#.utf8)
-        )
-        #expect(alert.first != nil)
-        let readJSON = #"[{"last_seen_at":"2026-10-02T07:00:00Z"}]"#
-        let read = try decoder.decode([HomeReadRow].self, from: Data(readJSON.utf8))
-        #expect(read.first?.lastSeenAt == Date(timeIntervalSince1970: 1_790_924_400))
+        // `alerts_unseen` answers a bare JSON boolean.
+        #expect(try decoder.decode(Bool.self, from: Data("true".utf8)))
     }
 
     @Test func membershipRowForSignIn() throws {
         let json = #"""
         {"role":"admin","full_name":"Sarah Mitchell",
          "clinic":{"id":"d0000000-0000-4000-8000-000000000001","name":"Smile Dental","currency":"CAD",
-                   "time_zone":"America/Toronto"}}
+                   "time_zone":"America/Toronto","subscription_status":"read_only",
+                   "trial_ends_at":"2027-01-06T14:00:00+00:00"}}
         """#
         let row = try decoder.decode(MembershipRow.self, from: Data(json.utf8))
         #expect(row.fullName == "Sarah Mitchell")
         #expect(row.clinic.timeZone == "America/Toronto")
         #expect(row.role == .admin)
+        #expect(row.clinic.subscriptionStatus == .readOnly, "MS-142: the session knows the clinic is read-only")
+        #expect(row.clinic.trialEndsAt == Date(timeIntervalSince1970: 1_799_244_000))
     }
 
     @Test func categoryRowsAndTheFindOrCreateAnswer() throws {

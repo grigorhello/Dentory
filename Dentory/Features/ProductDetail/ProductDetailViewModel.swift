@@ -61,6 +61,7 @@ final class ProductDetailViewModel {
     private let clinicID: UUID
     private let userID: UUID
     private let productID: UUID
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
     private let bottleGuard = SubmitGuard()
 
@@ -70,7 +71,8 @@ final class ProductDetailViewModel {
         formatters: ClinicFormatters,
         clinicID: UUID,
         userID: UUID,
-        productID: UUID
+        productID: UUID,
+        analytics: Analytics
     ) {
         self.repository = repository
         self.cache = cache
@@ -78,6 +80,7 @@ final class ProductDetailViewModel {
         self.clinicID = clinicID
         self.userID = userID
         self.productID = productID
+        self.analytics = analytics
         detail = cache.load(ProductDetail.self, for: cacheKey)
     }
 
@@ -163,6 +166,7 @@ final class ProductDetailViewModel {
                     clinicID: clinicID, productID: productID, quantity: quantity, userID: userID
                 )
                 self.detail = detail.onToBuy(itemID)
+                analytics.track(.addedToBuy)
                 addedToBuy = AddedToBuy(
                     itemID: itemID,
                     title: "Added to To buy",
@@ -214,6 +218,7 @@ final class ProductDetailViewModel {
     /// detail (the server's status, batches and history).
     func adjustmentSaved(_ saved: AdjustInventoryViewModel.Saved) async {
         sheet = nil
+        analytics.track(.stockAdjusted(reason: saved.reason, increase: saved.after > saved.before))
         guard let detail else { return }
         self.detail = detail.adjusted(by: saved.after - saved.before, history: detail.history)
         undoableAdjustmentID = saved.actionID
@@ -251,6 +256,7 @@ final class ProductDetailViewModel {
             generalError = nil
             do {
                 _ = try await repository.openBottle(productID: productID)
+                analytics.track(.bottleOpened)
                 bottleToast = BottleToast(title: "\(bottleNoun.capitalized) opened", detail: nil)
             } catch {
                 generalError = AppError(error)
@@ -266,6 +272,7 @@ final class ProductDetailViewModel {
             generalError = nil
             do {
                 _ = try await repository.finishBottle(openItemID: openItemID)
+                analytics.track(.bottleFinished)
                 let remaining = detail.openBottles.filter { $0.id != openItemID }
                 self.detail = detail.replacingBottles(remaining, unopenedDelta: 0, quantityDelta: -1)
                 bottleToast = BottleToast(

@@ -11,9 +11,11 @@ SPM_DIR ?= .build/spm
 WARNINGS_AS_ERRORS ?= NO
 # CI sets this to -onlyUsePackageVersionsFromResolvedFile so it builds the committed Package.resolved.
 SPM_FLAGS ?=
+# Optional: keep build output in this folder (agents set it to their scratch directory) instead of Xcode's default.
+DERIVED_DATA ?=
 
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
-	-clonedSourcePackagesDirPath $(SPM_DIR) $(SPM_FLAGS) \
+	-clonedSourcePackagesDirPath $(SPM_DIR) $(SPM_FLAGS) $(if $(DERIVED_DATA),-derivedDataPath $(DERIVED_DATA)) \
 	WARNINGS_AS_ERRORS=$(WARNINGS_AS_ERRORS)
 
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
@@ -62,9 +64,10 @@ seed-demo:
 functions-serve:
 	supabase functions serve
 
-# Type-checks every Edge Function (needs Deno: brew install deno).
+# Type-checks every Edge Function and runs their unit tests (`*_test.ts`; needs Deno: brew install deno).
 functions-check:
 	deno check supabase/functions/*/index.ts
+	deno test supabase/functions
 
 # The local stack has no Resend key, so invite_member writes each invitation email to the function log
 # instead of sending it. This prints the links of the last invitations; open one on the simulator with

@@ -23,6 +23,7 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case minus
     case package
     case pencil
+    case penLine = "pen-line"
     case plus
     case search
     case settings
@@ -30,6 +31,7 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case slidersHorizontal = "sliders-horizontal"
     case trash = "trash-2"
     case truck
+    case upload
     case userPlus = "user-plus"
     case user
     case users

@@ -24,14 +24,44 @@ nonisolated struct ClinicFormatters: Sendable {
         amount.formatted(.currency(code: currency).precision(.fractionLength(0)).locale(locale))
     }
 
-    /// "54 cartridges", "1 box", "2.5 bags"
+    /// "$1.80", "$0.0425": a unit cost with its cents, and up to the four decimals a last unit cost keeps.
+    func unitCost(_ amount: Decimal) -> String {
+        amount.formatted(.currency(code: currency).precision(.fractionLength(2...4)).locale(locale))
+    }
+
+    /// "54 cartridges", "1 box", "2.5 bags": one of a unit stored in the plural reads singular ("1 bottle", f27).
     func quantity(_ amount: Decimal, unit: String) -> String {
-        "\(number(amount)) \(unit)"
+        "\(number(amount)) \(amount == 1 ? Self.singular(of: unit) : unit)"
+    }
+
+    /// "bottle" for "bottles", "box" for "boxes", "battery" for "batteries"; a unit that is not an English plural
+    /// stays as it is.
+    nonisolated static func singular(of unit: String) -> String {
+        let lowercased = unit.lowercased()
+        if lowercased.hasSuffix("ies") { return String(unit.dropLast(3)) + "y" }
+        if ["xes", "ches", "shes", "sses"].contains(where: { lowercased.hasSuffix($0) }) {
+            return String(unit.dropLast(2))
+        }
+        if lowercased.hasSuffix("s") && !lowercased.hasSuffix("ss") { return String(unit.dropLast()) }
+        return unit
     }
 
     /// "54", "2.5": at most two decimals, no trailing zeros.
     func number(_ amount: Decimal) -> String {
         amount.formatted(.number.precision(.fractionLength(0...2)).locale(locale))
+    }
+
+    /// "1000", "2.5": a number a field opens on, with no thousands separator, so it reads back as typed.
+    func editableNumber(_ amount: Decimal) -> String {
+        amount.formatted(.number.grouping(.never).precision(.fractionLength(0...2)).locale(locale))
+    }
+
+    /// What a quantity field reads as a number, "1,000" and "1000" alike in the clinic's locale; nil for an empty
+    /// field or anything that is not a number.
+    func parseNumber(_ text: String) -> Decimal? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
+        return try? Decimal(trimmed, format: .number.locale(locale))
     }
 
     /// "Dec 1, 2026"
@@ -51,6 +81,11 @@ nonisolated struct ClinicFormatters: Sendable {
         date(day.start(in: timeZone))
     }
 
+    /// "8:40 AM": an hour of today (f8).
+    func time(_ date: Date) -> String {
+        date.formatted(style.hour().minute())
+    }
+
     /// "Oct 1": a recent day without its year, as lists show it (f20).
     func monthDay(_ date: Date) -> String {
         date.formatted(style.month(.abbreviated).day())
@@ -64,6 +99,19 @@ nonisolated struct ClinicFormatters: Sendable {
         let from = calendar.startOfDay(for: date)
         let today = calendar.startOfDay(for: clock.now)
         return calendar.dateComponents([.day], from: from, to: today).day ?? 0
+    }
+
+    /// "January 6, 2027": a day spelled out, as Billing's trial end (f34).
+    func longDate(_ date: Date) -> String {
+        date.formatted(style.month(.wide).day().year())
+    }
+
+    /// Whole days from today to `date`'s day in the clinic's time zone: 0 on the day itself, negative once it passed.
+    func daysUntil(_ date: Date) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let today = calendar.startOfDay(for: clock.now)
+        return calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: date)).day ?? 0
     }
 
     /// "Thursday, October 2" for the Home eyebrow (f6).

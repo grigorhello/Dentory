@@ -37,6 +37,9 @@ packages:
   Sentry:
     url: https://github.com/getsentry/sentry-cocoa
     from: 8.0.0
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios
+    from: 3.0.0
 
 targets:
   Dentory:
@@ -49,13 +52,17 @@ targets:
     dependencies:
       - package: Supabase
       - package: Sentry
+      - package: PostHog
     # Universal links `https://app.dentory.ca/invite?token=…` (MS-100 D12, MS-112). The domain serves
     # applinks/.well-known/apple-app-site-association with the Apple team id once the team exists.
+    # Push notifications through APNs (MS-144); Xcode turns `development` into `production` when it exports for
+    # TestFlight and the App Store.
     entitlements:
       path: Dentory/Resources/Dentory.entitlements
       properties:
         com.apple.developer.associated-domains:
           - applinks:app.dentory.ca
+        aps-environment: development
     settings:
       base:
         PRODUCT_NAME: Dentory
@@ -67,6 +74,8 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Dentory
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        # Receive delivery's Take a photo scans invoices with VisionKit's document camera (MS-126).
+        INFOPLIST_KEY_NSCameraUsageDescription: "Dentory uses the camera to scan invoices and packing slips."
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"

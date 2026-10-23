@@ -10,10 +10,13 @@ struct ProductDetailBottlesViewModelTests {
         locale: Locale(identifier: "en_US"), clock: FixedClock(Session.demoNow)
     )
 
-    private func make(repository: FakeProductDetailRepository) -> ProductDetailViewModel {
+    private func make(
+        repository: FakeProductDetailRepository, analytics: SpyAnalytics = SpyAnalytics()
+    ) -> ProductDetailViewModel {
         ProductDetailViewModel(
             repository: repository, cache: InMemoryResponseCache(), formatters: formatters,
-            clinicID: Session.demo.clinicID, userID: Session.demo.userID, productID: ProductSummary.demo[0].id
+            clinicID: Session.demo.clinicID, userID: Session.demo.userID, productID: ProductSummary.demo[0].id,
+            analytics: analytics
         )
     }
 
@@ -37,7 +40,8 @@ struct ProductDetailBottlesViewModelTests {
 
     @Test func openingANewBottleCallsTheEngineReloadsAndToasts() async {
         let repository = FakeProductDetailRepository(detailResult: .success(.multiUseFixture(unit: "syringes")))
-        let viewModel = make(repository: repository)
+        let analytics = SpyAnalytics()
+        let viewModel = make(repository: repository, analytics: analytics)
         await viewModel.load()
         #expect(viewModel.openNewBottleTitle == "Open a new syringe")
         #expect(viewModel.canOpenNewBottle)
@@ -47,6 +51,7 @@ struct ProductDetailBottlesViewModelTests {
         #expect(repository.detailCalls.count == 2, "The fresh detail brings the new row")
         viewModel.clearBottleToast()
         #expect(viewModel.bottleToast == nil)
+        #expect(analytics.events == [.bottleOpened])
     }
 
     @Test func nothingUnopenedMeansNothingIsOpened() async {
@@ -70,13 +75,15 @@ struct ProductDetailBottlesViewModelTests {
     @Test func finishingRemovesTheRowAtOnceAndToastsTheLine() async {
         let detail = ProductDetail.multiUseFixture()
         let repository = FakeProductDetailRepository(detailResult: .success(detail))
-        let viewModel = make(repository: repository)
+        let analytics = SpyAnalytics()
+        let viewModel = make(repository: repository, analytics: analytics)
         await viewModel.load()
         #expect(viewModel.bottlesLine == "1 unopened · 2 open")
         let first = detail.openBottles[0].id
         repository.detailResult = .failure(AppError.network)
         await viewModel.finishBottle(first)
         #expect(repository.finishes == [first])
+        #expect(analytics.events == [.bottleFinished])
         #expect(viewModel.bottleRows.map(\.id) == [detail.openBottles[1].id])
         #expect(viewModel.bottlesLine == "1 unopened · 1 open")
         #expect(viewModel.detail?.quantity == 2, "A finished bottle leaves the stock")

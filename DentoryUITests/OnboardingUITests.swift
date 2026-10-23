@@ -10,7 +10,33 @@ final class OnboardingUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-uiTesting", "-signedOut"]
         app.launch()
+        signUpANewClinic(in: app)
+        XCTAssertTrue(app.descendants(matching: .any)["toast"].waitForExistence(timeout: 3), "No toast")
+    }
 
+    /// A new admin who sets up the clinic and signs out hands the device over on Sign in, not on sign-up's first step
+    /// (MS-137 review).
+    @MainActor
+    func testSigningOutAfterSignUpShowsSignIn() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-signedOut"]
+        app.launch()
+        signUpANewClinic(in: app)
+
+        app.buttons["home.header.account"].tap()
+        let signOut = app.buttons["more.signOut"]
+        XCTAssertTrue(signOut.waitForExistence(timeout: 5), "Account did not open")
+        signOut.tap()
+        let confirm = app.buttons["signOut.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(app.buttons["signin.submit"].waitForExistence(timeout: 5), "Sign in did not show")
+        XCTAssertFalse(app.staticTexts["Create your admin account"].exists, "Sign-up's first step came back")
+    }
+
+    /// Admin sign-up's three steps, ending on the new clinic's Home.
+    @MainActor
+    private func signUpANewClinic(in app: XCUIApplication) {
         let signUp = app.descendants(matching: .any)["signin.signUpAdmin"]
         XCTAssertTrue(signUp.waitForExistence(timeout: 5))
         signUp.tap()
@@ -41,6 +67,5 @@ final class OnboardingUITests: XCTestCase {
         app.buttons["onboard.sendInvites"].tap()
 
         XCTAssertTrue(app.staticTexts["New Clinic"].waitForExistence(timeout: 8), "Home did not appear")
-        XCTAssertTrue(app.descendants(matching: .any)["toast"].waitForExistence(timeout: 3), "No toast")
     }
 }

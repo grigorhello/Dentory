@@ -184,42 +184,6 @@ private struct OnboardingClinicStep: View {
 
 }
 
-/// The 72 pt tap-to-upload placeholder of f3, or the chosen image.
-private struct LogoPickerLabel: View {
-    let logoData: Data?
-
-    var body: some View {
-        HStack(spacing: Spacing.lg) {
-            placeholder
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text("Clinic logo").textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
-                Text("Tap to upload. Optional, square works best.")
-                    .textStyle(.body14)
-                    .foregroundStyle(Color.ms.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    private var placeholder: some View {
-        VStack(spacing: Spacing.xs) {
-            if let data = logoData, let image = UIImage(data: data) {
-                Image(uiImage: image).resizable().scaledToFill()
-            } else {
-                IconView(.camera, size: 24).foregroundStyle(Color.ms.textSecondary)
-                Text("Logo").textStyle(.caption12).foregroundStyle(Color.ms.textSecondary)
-            }
-        }
-        .frame(width: 72, height: 72)
-        .background(Color.ms.surfaceCard, in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
-                .strokeBorder(Color.ms.line, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-        )
-    }
-}
-
 /// Step 3 · Invite team (f4).
 private struct OnboardingInviteStep: View {
     @Bindable var viewModel: OnboardingViewModel

@@ -12,6 +12,7 @@ final class AdjustInventoryViewModel {
         let actionID: UUID?
         let before: Decimal
         let after: Decimal
+        let reason: AdjustmentReason
     }
 
     var quantityText: String
@@ -38,7 +39,7 @@ final class AdjustInventoryViewModel {
         unit = detail.unit
         isMultiUse = detail.tracking == .multiUse
         self.estimate = estimate
-        quantityText = formatters.number(estimate)
+        quantityText = formatters.editableNumber(estimate)
         self.repository = repository
         self.formatters = formatters
     }
@@ -59,9 +60,7 @@ final class AdjustInventoryViewModel {
 
     /// The typed quantity, or nil when it is not a number.
     var actualQuantity: Decimal? {
-        let text = quantityText.trimmingCharacters(in: .whitespaces)
-        guard !text.isEmpty, let value = Decimal(string: text, locale: formatters.locale) else { return nil }
-        return value
+        formatters.parseNumber(quantityText)
     }
 
     var quantityError: String? {
@@ -90,7 +89,7 @@ final class AdjustInventoryViewModel {
                     note: trimmedNote.isEmpty ? nil : trimmedNote
                 )
                 let actionID: UUID? = if case .applied(let id) = outcome { id } else { nil }
-                saved = Saved(actionID: actionID, before: estimate, after: actualQuantity)
+                saved = Saved(actionID: actionID, before: estimate, after: actualQuantity, reason: reason)
             } catch {
                 generalError = AppError(error)
             }

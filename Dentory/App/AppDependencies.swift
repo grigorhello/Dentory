@@ -19,10 +19,29 @@ struct AppDependencies: Sendable {
     let homeRepository: HomeRepository
     let inventoryRepository: InventoryRepository
     let productDetailRepository: ProductDetailRepository
+    let proceduresRepository: ProceduresRepository
+    let procedureStartRepository: ProcedureStartRepository
+    let procedureEditRepository: ProcedureEditRepository
+    let toBuyRepository: ToBuyRepository
+    let receiveRepository: ReceiveRepository
+    let clinicSettingsRepository: ClinicSettingsRepository
+    let expiringRepository: ExpiringRepository
+    let activityRepository: ActivityRepository
+    let procedureEventRepository: ProcedureEventRepository
+    let billingRepository: BillingRepository
+    let inventoryValueRepository: InventoryValueRepository
+    let accountRepository: AccountRepository
+    let teamRepository: TeamRepository
     let productFormRepository: ProductFormRepository
     let onboardingRepository: OnboardingRepository
     let onboardingProgress: OnboardingProgressStoring
     let invitationRepository: InvitationRepository
+    /// Push notifications on this device (MS-144).
+    let push: PushNotifications
+    /// Product analytics, PostHog when the build has a project token (MS-147); previews and tests send nothing.
+    var analytics: Analytics = NoopAnalytics()
+    /// Clinic settings' logo waiting for its retry, across a rebuild of the screens (MS-139).
+    let pendingClinicLogo = PendingClinicLogo()
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.
     var locale: Locale = .current
 
@@ -54,7 +73,7 @@ struct AppDependencies: Sendable {
         )
         return AppDependencies(
             rpc: rpc,
-            auth: SupabaseAuthService(client: client),
+            auth: SupabaseAuthService(client: client, passwordResetRedirect: PasswordResetLink.redirectURL()),
             clock: clock,
             networkMonitor: networkMonitor,
             toasts: toasts,
@@ -64,33 +83,50 @@ struct AppDependencies: Sendable {
             homeRepository: SupabaseHomeRepository(client: client),
             inventoryRepository: SupabaseInventoryRepository(client: client),
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
+            proceduresRepository: SupabaseProceduresRepository(client: client),
+            procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
+            procedureEditRepository: SupabaseProcedureEditRepository(client: client),
+            toBuyRepository: SupabaseToBuyRepository(client: client),
+            receiveRepository: SupabaseReceiveRepository(client: client),
+            clinicSettingsRepository: SupabaseClinicSettingsRepository(client: client),
+            expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
+            activityRepository: SupabaseActivityRepository(client: client),
+            procedureEventRepository: SupabaseProcedureEventRepository(client: client, writes: writes),
+            billingRepository: SupabaseBillingRepository(client: client),
+            inventoryValueRepository: SupabaseInventoryValueRepository(client: client),
+            accountRepository: SupabaseAccountRepository(client: client),
+            teamRepository: SupabaseTeamRepository(client: client),
             productFormRepository: SupabaseProductFormRepository(client: client),
             onboardingRepository: SupabaseOnboardingRepository(client: client),
             onboardingProgress: UserDefaultsOnboardingProgress(),
-            invitationRepository: SupabaseInvitationRepository(client: client)
+            invitationRepository: SupabaseInvitationRepository(client: client),
+            push: PushNotifications(
+                authorizer: SystemNotificationAuthorizer(), repository: SupabasePushTokenRepository(client: client),
+                store: UserDefaultsPushExplainerStore()
+            ),
+            analytics: PostHogAnalytics()
         )
     }
 
     /// No network: a demo clinic, a signed-in admin and a fixed moment, for previews and UI tests.
+    /// `offersPush` starts the device as one that never offered notifications, so the explainer shows (MS-144).
     @MainActor
     static func preview(
-        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin, onboarding: String? = nil
+        signedIn: Bool = true, isConnected: Bool = true, role: MembershipRole = .admin, onboarding: String? = nil,
+        offersPush: Bool = false
     ) -> AppDependencies {
         let rpc = PreviewRPCClient()
         let clock = FixedClock(Session.demoNow)
         let networkMonitor = FixedNetworkMonitor(isConnected: isConnected)
         let toasts = ToastCenter()
         let reporter = NoopErrorReporter()
-        let auth = PreviewAuthService(session: signedIn ? Session.demo(role: role) : nil)
-        // `-onboarding clinic` resumes admin sign-up at step 2, `-onboarding invite` at step 3 (screenshots).
-        if onboarding == "clinic" {
-            auth.session = nil
-            auth.account = Account(
-                userID: Session.demo.userID, email: "owner@newclinic.ca", fullName: "Dr. Sarah Mitchell"
-            )
-        }
+        let auth = PreviewAuthService.demo(signedIn: signedIn, role: role, onboarding: onboarding)
+        // `-onboarding invite` resumes admin sign-up at step 3 (screenshots).
         let progress = InMemoryOnboardingProgress(pending: onboarding == "invite" ? Session.demo.clinicID : nil)
+        let expiring = DemoExpiringRepository()
+        let activity = DemoActivityRepository(extraHistory: UserDefaults.standard.integer(forKey: "demoHistoryRows"))
         let products = DemoProductStore()
+        let byName = Session.demo(role: role).fullName
         return AppDependencies(
             rpc: rpc,
             auth: auth,
@@ -99,23 +135,35 @@ struct AppDependencies: Sendable {
             toasts: toasts,
             cache: InMemoryResponseCache(),
             writes: WriteCoordinator(
-                rpc: rpc,
-                queue: PendingWriteQueue(store: InMemoryPendingWriteStore()),
-                networkMonitor: networkMonitor,
-                clock: clock,
-                reporter: reporter,
-                toasts: toasts
+                rpc: rpc, queue: PendingWriteQueue(store: InMemoryPendingWriteStore()), networkMonitor: networkMonitor,
+                clock: clock, reporter: reporter, toasts: toasts
             ),
             reporter: reporter,
-            homeRepository: DemoHomeRepository(),
-            inventoryRepository: DemoInventoryRepository(store: products),
-            productDetailRepository: DemoProductDetailRepository(
-                store: products, byName: Session.demo(role: role).fullName
+            homeRepository: DemoHomeRepository(
+                expiring: { expiring.currentBatches.map(\.value) }, alertsUnseen: { activity.hasUnseenAlerts }
             ),
+            inventoryRepository: DemoInventoryRepository(store: products),
+            productDetailRepository: DemoProductDetailRepository(store: products, byName: byName),
+            proceduresRepository: DemoProceduresRepository(),
+            procedureStartRepository: DemoProcedureStartRepository(),
+            procedureEditRepository: DemoProcedureEditRepository(),
+            toBuyRepository: DemoToBuyRepository(), receiveRepository: DemoReceiveRepository(),
+            clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
+            expiringRepository: expiring,
+            activityRepository: activity,
+            procedureEventRepository: DemoProcedureEventRepository(byName: byName),
+            billingRepository: DemoBillingRepository.launched(),
+            inventoryValueRepository: DemoInventoryValueRepository(),
+            accountRepository: DemoAccountRepository(),
+            teamRepository: DemoTeamRepository(),
             productFormRepository: DemoProductFormRepository(store: products),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
+            push: PushNotifications(
+                authorizer: SystemNotificationAuthorizer(), repository: DemoPushTokenRepository(),
+                store: InMemoryPushExplainerStore(lastOffered: offersPush ? nil : Date())
+            ),
             locale: Locale(identifier: "en_US")
         )
     }
@@ -131,13 +179,138 @@ struct AppDependencies: Sendable {
         )
     }
 
-    /// The New / Edit product sheet of the signed-in clinic (MS-117).
+    /// The Procedures tab of the signed-in clinic (MS-122).
     @MainActor
-    func makeProductFormViewModel(mode: ProductFormViewModel.Mode, session: Session) -> ProductFormViewModel {
-        ProductFormViewModel(
-            repository: productFormRepository, formatters: formatters(for: session), clinicID: session.clinicID,
-            mode: mode
+    func makeProceduresViewModel(session: Session) -> ProceduresViewModel {
+        ProceduresViewModel(
+            repository: proceduresRepository,
+            cache: cache,
+            formatters: formatters(for: session),
+            clinicID: session.clinicID,
+            isAdmin: session.isAdmin
         )
+    }
+
+    /// Adjust, then start for one template of the signed-in clinic (MS-123).
+    @MainActor
+    func makeProcedureStartViewModel(templateID: UUID, session: Session) -> ProcedureStartViewModel {
+        ProcedureStartViewModel(
+            repository: procedureStartRepository, formatters: formatters(for: session), clinicID: session.clinicID,
+            templateID: templateID, analytics: analytics
+        )
+    }
+
+    /// Edit procedure for one template of the signed-in clinic, or New procedure when `templateID` is nil (MS-125).
+    @MainActor
+    func makeProcedureEditViewModel(templateID: UUID?, session: Session) -> ProcedureEditViewModel {
+        ProcedureEditViewModel(
+            repository: procedureEditRepository, clinicID: session.clinicID, templateID: templateID,
+            analytics: analytics
+        )
+    }
+
+    /// To buy of the signed-in clinic (MS-128).
+    @MainActor
+    func makeToBuyViewModel(session: Session) -> ToBuyViewModel {
+        ToBuyViewModel(
+            repository: toBuyRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, isAdmin: session.isAdmin, analytics: analytics
+        )
+    }
+
+    /// Expiring soon of the signed-in clinic (MS-132) on `window` days, or the clinic's own window.
+    @MainActor
+    func makeExpiringViewModel(window: Int?, session: Session) -> ExpiringViewModel {
+        ExpiringViewModel(
+            repository: expiringRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, isAdmin: session.isAdmin, window: window, analytics: analytics
+        )
+    }
+
+    /// Clinic settings of the signed-in clinic, for its admin (MS-139). A save refreshes the session, so the clinic's
+    /// name, currency and time zone follow everywhere.
+    @MainActor
+    func makeClinicSettingsViewModel(session: Session, sessionStore: SessionStore?) -> ClinicSettingsViewModel {
+        ClinicSettingsViewModel(
+            clinicID: session.clinicID, repository: clinicSettingsRepository, analytics: analytics, locale: locale,
+            pendingLogo: pendingClinicLogo, onSaved: { await sessionStore?.revalidate() }
+        )
+    }
+
+    /// Activity's History of the signed-in clinic, or of one product from Product detail's Show all (MS-134).
+    @MainActor
+    func makeActivityHistoryViewModel(session: Session, productID: UUID?) -> ActivityHistoryViewModel {
+        ActivityHistoryViewModel(
+            repository: activityRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID, productID: productID
+        )
+    }
+
+    /// Activity of the signed-in clinic, opened from Home's bell (MS-133).
+    @MainActor
+    func makeActivityViewModel(session: Session) -> ActivityViewModel {
+        ActivityViewModel(
+            repository: activityRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID
+        )
+    }
+
+    /// A past procedure of the signed-in clinic, in editing mode straight away from Home's Edit usage (MS-124).
+    @MainActor
+    func makeProcedureEventViewModel(eventID: UUID, startsEditing: Bool, session: Session) -> ProcedureEventViewModel {
+        ProcedureEventViewModel(
+            repository: procedureEventRepository, formatters: formatters(for: session), clinicID: session.clinicID,
+            eventID: eventID, startsEditing: startsEditing, analytics: analytics
+        )
+    }
+
+    /// Inventory value of the signed-in clinic (MS-135).
+    @MainActor
+    func makeInventoryValueViewModel(session: Session) -> InventoryValueViewModel {
+        InventoryValueViewModel(
+            repository: inventoryValueRepository, cache: cache, formatters: formatters(for: session),
+            clinicID: session.clinicID
+        )
+    }
+
+    /// Account of the signed-in member (MS-137); signing out clears this device's cache and queued writes.
+    /// The clinic's cached answers, the writes waiting for a connection and a logo waiting for its retry, gone when the
+    /// server signs the member out on this device (MS-138), as Sign out clears them (MS-137).
+    @MainActor
+    func clearClinicData() {
+        cache.removeAll()
+        writes.queue.removeAll()
+        pendingClinicLogo.removeAll()
+    }
+
+    @MainActor
+    func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
+        AccountViewModel(
+            session: session, repository: accountRepository, cache: cache,
+            signingOut: DeviceSignOut(
+                sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push,
+                pendingLogo: pendingClinicLogo
+            ),
+            analytics: analytics
+        )
+    }
+
+    /// The team of the signed-in clinic (MS-138). After the admin changes their own role or leaves, the session is
+    /// checked again so the app follows.
+    @MainActor
+    func makeTeamViewModel(session: Session, sessionStore: SessionStore?) -> TeamViewModel {
+        TeamViewModel(
+            session: session, repository: teamRepository, cache: cache, formatters: formatters(for: session),
+            sessionChanged: { await sessionStore?.revalidate() }
+        )
+    }
+
+    /// Invite a teammate (MS-138, Appendix C `invite`).
+    @MainActor
+    func makeInviteTeammateViewModel(
+        clinicID: UUID, onSent: @escaping () async -> Void
+    ) -> InviteTeammateViewModel {
+        InviteTeammateViewModel(clinicID: clinicID, repository: teamRepository, analytics: analytics, onSent: onSent)
     }
 
     /// Product detail for one product of the signed-in clinic (MS-116).
@@ -149,7 +322,8 @@ struct AppDependencies: Sendable {
             formatters: formatters(for: session),
             clinicID: session.clinicID,
             userID: session.userID,
-            productID: productID
+            productID: productID,
+            analytics: analytics
         )
     }
 
@@ -163,14 +337,28 @@ struct AppDependencies: Sendable {
     ) -> OnboardingViewModel {
         OnboardingViewModel(
             auth: auth, repository: onboardingRepository, sessionStore: sessionStore, progress: onboardingProgress,
-            locale: locale, startingAt: step, account: account, clinicID: clinicID
+            analytics: analytics, locale: locale, startingAt: step, account: account, clinicID: clinicID
         )
+    }
+
+    /// Reset password with the email typed on Sign in (MS-113).
+    @MainActor
+    func makeResetPasswordViewModel(email: String) -> ResetPasswordViewModel {
+        ResetPasswordViewModel(email: email, auth: auth)
+    }
+
+    /// Set a new password for the token hash of a reset link (MS-113).
+    @MainActor
+    func makeSetPasswordViewModel(tokenHash: String, sessionStore: SessionStore) -> SetPasswordViewModel {
+        SetPasswordViewModel(tokenHash: tokenHash, auth: auth, sessionStore: sessionStore)
     }
 
     /// The Join screen's view model for the token of an invitation link (MS-112).
     @MainActor
     func makeAcceptInvitationViewModel(token: String, sessionStore: SessionStore) -> AcceptInvitationViewModel {
-        AcceptInvitationViewModel(token: token, repository: invitationRepository, sessionStore: sessionStore)
+        AcceptInvitationViewModel(
+            token: token, repository: invitationRepository, sessionStore: sessionStore, analytics: analytics
+        )
     }
 }
 
@@ -182,92 +370,5 @@ extension EnvironmentValues {
     var appDependencies: AppDependencies {
         get { self[AppDependenciesKey.self] }
         set { self[AppDependenciesKey.self] = newValue }
-    }
-}
-
-// MARK: - Preview doubles
-
-extension Session {
-    /// October 2, 2026, 9:41 in New York, the moment every frame shows (the frames label it a Thursday; it is a Friday).
-    nonisolated static let demoNow = Date(timeIntervalSince1970: 1_790_933_260)
-
-    nonisolated static let demo = demo(role: .admin)
-
-    /// Sarah (Admin) or Michael (Staff) of the demo clinic (MS-109).
-    nonisolated static func demo(role: MembershipRole) -> Session {
-        Session(
-            userID: UUID(uuidString: "00000000-0000-4000-8000-0000000000a1") ?? UUID(),
-            email: role == .admin ? "sarah@smiledental.ca" : "michael@smiledental.ca",
-            fullName: role == .admin ? "Sarah Mitchell" : "Michael Reyes",
-            clinicID: UUID(uuidString: "00000000-0000-4000-8000-000000000001") ?? UUID(),
-            clinicName: "Smile Dental",
-            role: role,
-            currency: "USD",
-            timeZone: "America/New_York"
-        )
-    }
-}
-
-/// Answers every function with an empty object; feature previews swap in their own fakes.
-struct PreviewRPCClient: RPCCalling {
-    func call<Params: Encodable & Sendable, Result: Decodable & Sendable>(
-        _ function: String,
-        params: Params,
-        idempotencyKey: UUID?
-    ) async throws -> Result {
-        if let empty = try? JSONDecoder.supabase.decode(Result.self, from: Data("{}".utf8)) {
-            return empty
-        }
-        throw AppError.unknown("No preview data for \(function)")
-    }
-}
-
-/// Signs in the demo clinic's people with the seed password (MS-109); anything else is refused the
-/// way Supabase would. Sign-up creates an account in memory; `DemoOnboardingRepository` then sets the session.
-final class PreviewAuthService: AuthServicing, @unchecked Sendable {
-    var session: Session?
-    var account: Account?
-    /// Accounts the demo invitation flow created: address to the password set and the session it yields.
-    private var registered: [String: (password: String, session: Session)] = [:]
-    static let demoPassword = "smiledental"
-    static let demoEmails = ["sarah@smiledental.ca", "michael@smiledental.ca"]
-
-    init(session: Session?) {
-        self.session = session
-    }
-
-    func restore() async throws -> RestoredSession {
-        if let session { return .signedIn(session) }
-        if let account { return .needsClinic(account) }
-        return .none
-    }
-
-    func register(email: String, password: String, session: Session) {
-        registered[email.lowercased()] = (password, session)
-    }
-
-    func signIn(email: String, password: String) async throws -> Session {
-        try await Task.sleep(for: .milliseconds(400))
-        if let account = registered[email.lowercased()] {
-            guard password == account.password else { throw AppError.wrongPassword }
-            session = account.session
-            return account.session
-        }
-        guard Self.demoEmails.contains(email.lowercased()) else { throw AppError.unknownEmail }
-        guard password == Self.demoPassword else { throw AppError.wrongPassword }
-        return .demo
-    }
-
-    func signUp(fullName: String, email: String, password: String) async throws -> Account {
-        try await Task.sleep(for: .milliseconds(300))
-        guard !Self.demoEmails.contains(email.lowercased()) else { throw AppError.emailTaken }
-        let account = Account(userID: UUID(), email: email, fullName: fullName)
-        self.account = account
-        return account
-    }
-
-    func signOut() async throws {
-        session = nil
-        account = nil
     }
 }

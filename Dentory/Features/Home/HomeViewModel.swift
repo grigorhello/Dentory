@@ -13,13 +13,11 @@ final class HomeViewModel {
     private let repository: HomeRepository
     private let cache: ResponseCaching
     private let clinicID: UUID
-    private let userID: UUID
 
-    init(repository: HomeRepository, cache: ResponseCaching, clinicID: UUID, userID: UUID) {
+    init(repository: HomeRepository, cache: ResponseCaching, clinicID: UUID) {
         self.repository = repository
         self.cache = cache
         self.clinicID = clinicID
-        self.userID = userID
         summary = cache.load(HomeSummary.self, for: cacheKey)
     }
 
@@ -27,7 +25,7 @@ final class HomeViewModel {
 
     func load() async {
         do {
-            let fresh = try await repository.summary(clinicID: clinicID, userID: userID)
+            let fresh = try await repository.summary(clinicID: clinicID)
             summary = fresh
             cache.store(fresh, for: cacheKey)
             state = .loaded

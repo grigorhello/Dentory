@@ -1,7 +1,6 @@
 import Foundation
 
-/// Screens Home pushes on its own stack. Each arrives with its own ticket; until then the destination
-/// is a placeholder pushed screen.
+/// Screens Home pushes on its own stack.
 enum HomeRoute: Hashable {
     /// Activity, Alerts segment (MS-133).
     case alerts
@@ -15,4 +14,6 @@ enum HomeRoute: Hashable {
     case receive
     /// A procedure event in editing mode (MS-124).
     case editUsage(eventID: UUID)
+    /// Billing, from the read-only notice and sheet (MS-142).
+    case billing
 }

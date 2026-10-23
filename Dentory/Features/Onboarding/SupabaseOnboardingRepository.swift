@@ -19,18 +19,7 @@ struct SupabaseOnboardingRepository: OnboardingRepository {
     }
 
     func uploadLogo(clinicID: UUID, imageData: Data) async throws {
-        guard let jpeg = LogoImage.squareJPEG(from: imageData) else {
-            throw AppError.validation(field: "logo", message: "Choose an image file.")
-        }
-        let path = "\(clinicID.uuidString.lowercased())/logo.jpg"
-        do {
-            try await client.storage.from("logos").upload(
-                path, data: jpeg, options: FileOptions(contentType: LogoImage.contentType, upsert: true)
-            )
-            try await client.from("clinics").update(["logo_path": path]).eq("id", value: clinicID.uuidString).execute()
-        } catch {
-            throw AppError(error)
-        }
+        try await ClinicLogoStorage(client: client).upload(clinicID: clinicID, imageData: imageData)
     }
 
     /// One `invite_member` call per address, in order: each records the invited row with a fresh token and

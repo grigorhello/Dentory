@@ -7,12 +7,10 @@ struct HomeViewModelTests {
     private func makeViewModel(
         repository: FakeHomeRepository, cache: ResponseCaching = InMemoryResponseCache()
     ) -> HomeViewModel {
-        HomeViewModel(
-            repository: repository, cache: cache, clinicID: Session.demo.clinicID, userID: Session.demo.userID
-        )
+        HomeViewModel(repository: repository, cache: cache, clinicID: Session.demo.clinicID)
     }
 
-    @Test func loadsTheSummaryForTheClinicAndUser() async {
+    @Test func loadsTheSummaryForTheClinic() async {
         let repository = FakeHomeRepository()
         let viewModel = makeViewModel(repository: repository)
         #expect(viewModel.state == .loading)
@@ -20,8 +18,7 @@ struct HomeViewModelTests {
         await viewModel.load()
         #expect(viewModel.state == .loaded)
         #expect(viewModel.summary == .demo)
-        #expect(repository.calls.first?.clinicID == Session.demo.clinicID)
-        #expect(repository.calls.first?.userID == Session.demo.userID)
+        #expect(repository.calls == [Session.demo.clinicID])
     }
 
     @Test func aFailureWithNothingCachedIsShown() async {
@@ -54,11 +51,5 @@ struct HomeViewModelTests {
         await viewModel.load()
         #expect(viewModel.summary?.latestProcedure == nil)
         #expect(viewModel.summary?.hasUnseenAlerts == false)
-    }
-
-    @Test func firstNamesComeFromTheFullName() {
-        #expect(PersonName.first(of: "Sarah Chen") == "Sarah")
-        #expect(PersonName.first(of: "Dr. Kim") == "Dr.")
-        #expect(PersonName.first(of: "") == "")
     }
 }

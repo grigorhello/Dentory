@@ -1,7 +1,8 @@
 -- MS-117 · Create, edit and delete products: categories found or created, levels and tracking rules, alerts
--- following the levels, and Delete product archiving with the templates and open To buy lines cleared.
+-- following the levels, Delete product archiving with the templates and open To buy lines cleared, and none of it
+-- in a read-only clinic (MS-142).
 begin;
-select plan(39);
+select plan(43);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000e31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -165,6 +166,24 @@ select is((select count(*) from public.to_buy_items where product_id = '00000000
 select is((select count(*) from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000e61'), 1::bigint, 'the received line stays as history');
 select is((select count(*) from public.transactions where product_id = '00000000-0000-4000-8000-000000000e61'), 2::bigint, 'the ledger is kept');
 select ok(not exists (select 1 from public.alerts where product_id = '00000000-0000-4000-8000-000000000e61' and resolved_at is null), 'its alerts are resolved');
+
+-- Read-only mode (MS-142): once the trial ended without a card, the sheets' writes are refused with the read-only
+-- sentence, which the app shows as read-only mode.
+update public.clinics set trial_ends_at = now() - interval '1 day' where id = '00000000-0000-4000-8000-000000000e41';
+select pg_temp.act_as('00000000-0000-4000-8000-000000000e31');
+select throws_ok(
+  $$ insert into public.products (clinic_id, name, unit) values ('00000000-0000-4000-8000-000000000e41', 'Floss', 'packs') $$,
+  '42501', 'The clinic is read-only until a payment method is added', 'a read-only clinic creates no product');
+select throws_ok(
+  $$ update public.products set name = 'Bonding agent 2' where id = '00000000-0000-4000-8000-000000000e62' $$,
+  '42501', 'The clinic is read-only until a payment method is added', 'nor edits one');
+select throws_ok(
+  $$ select public.category_find_or_create('00000000-0000-4000-8000-000000000e41', 'Lab') $$,
+  '42501', 'The clinic is read-only until a payment method is added', 'nor adds a category');
+select throws_ok(
+  $$ select public.product_archive('00000000-0000-4000-8000-000000000e62') $$,
+  '42501', 'the clinic is read-only until a payment method is added', 'nor deletes a product');
+reset role;
 
 select * from finish();
 rollback;

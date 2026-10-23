@@ -12,11 +12,12 @@ struct ProductDetailViewModelTests {
 
     private func make(
         repository: FakeProductDetailRepository = FakeProductDetailRepository(),
-        cache: ResponseCaching = InMemoryResponseCache()
+        cache: ResponseCaching = InMemoryResponseCache(),
+        analytics: SpyAnalytics = SpyAnalytics()
     ) -> ProductDetailViewModel {
         ProductDetailViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            userID: Session.demo.userID, productID: ProductSummary.demo[0].id
+            userID: Session.demo.userID, productID: ProductSummary.demo[0].id, analytics: analytics
         )
     }
 
@@ -184,7 +185,8 @@ struct ProductDetailViewModelTests {
 
     @Test func addToBuyAddsTheSuggestedQuantityAndUndoRemovesIt() async {
         let repository = FakeProductDetailRepository()
-        let viewModel = make(repository: repository)
+        let analytics = SpyAnalytics()
+        let viewModel = make(repository: repository, analytics: analytics)
         await viewModel.load()
         #expect(viewModel.addToBuyTitle == "Add to buy")
         #expect(!viewModel.isOnToBuy)
@@ -197,6 +199,7 @@ struct ProductDetailViewModelTests {
         #expect(viewModel.addToBuyTitle == "On To buy")
         #expect(viewModel.addedToBuy?.title == "Added to To buy")
         #expect(viewModel.addedToBuy?.detail == "Septocaine 4% 1:100,000 · 6 cartridges")
+        #expect(analytics.events == [.addedToBuy])
         viewModel.clearAddedToBuy()
         await viewModel.undoAddToBuy()
         #expect(repository.removals.count == 1)
@@ -250,11 +253,14 @@ struct ProductDetailViewModelTests {
 
     @Test func aSavedAdjustmentClosesTheSheetMovesTheFiguresAndQueuesTheToastWithUndo() async {
         let repository = FakeProductDetailRepository()
-        let viewModel = make(repository: repository)
+        let analytics = SpyAnalytics()
+        let viewModel = make(repository: repository, analytics: analytics)
         await viewModel.load()
         viewModel.openAdjust()
         let actionID = UUID()
-        await viewModel.adjustmentSaved(.init(actionID: actionID, before: 54, after: 52))
+        await viewModel.adjustmentSaved(.init(actionID: actionID, before: 54, after: 52, reason: .damaged))
+        #expect(analytics.events == [.stockAdjusted(reason: .damaged, increase: false)])
+        #expect(analytics.events.first?.payload == ["reason": .text("damaged"), "direction": .text("decrease")])
         #expect(viewModel.sheet == nil)
         #expect(viewModel.adjusted == .init(
             actionID: actionID, title: "Inventory adjusted", detail: "Septocaine 4% 1:100,000 · 54 → 52"
@@ -269,7 +275,7 @@ struct ProductDetailViewModelTests {
         let viewModel = make(repository: repository)
         await viewModel.load()
         repository.detailResult = .failure(AppError.network)
-        await viewModel.adjustmentSaved(.init(actionID: nil, before: 54, after: 52))
+        await viewModel.adjustmentSaved(.init(actionID: nil, before: 54, after: 52, reason: .physicalCount))
         #expect(viewModel.availableText == "52")
         #expect(viewModel.detail?.unopened == 52)
         #expect(viewModel.state == .loaded, "The screen keeps what it has while offline")
@@ -281,7 +287,7 @@ struct ProductDetailViewModelTests {
         let viewModel = make(repository: repository)
         await viewModel.load()
         let actionID = UUID()
-        await viewModel.adjustmentSaved(.init(actionID: actionID, before: 54, after: 52))
+        await viewModel.adjustmentSaved(.init(actionID: actionID, before: 54, after: 52, reason: .damaged))
         viewModel.clearAdjusted()
         #expect(viewModel.undoableAdjustmentID == actionID, "The toast is shown and cleared before Undo is tapped")
         await viewModel.undoAdjustment()
@@ -297,7 +303,7 @@ struct ProductDetailViewModelTests {
         let repository = FakeProductDetailRepository()
         let viewModel = make(repository: repository)
         await viewModel.load()
-        await viewModel.adjustmentSaved(.init(actionID: nil, before: 54, after: 52))
+        await viewModel.adjustmentSaved(.init(actionID: nil, before: 54, after: 52, reason: .missing))
         await viewModel.undoAdjustment()
         #expect(repository.undos.isEmpty)
     }
@@ -307,7 +313,7 @@ struct ProductDetailViewModelTests {
         repository.undoResult = .failure(AppError.validation(field: nil, message: "the undo window has passed"))
         let viewModel = make(repository: repository)
         await viewModel.load()
-        await viewModel.adjustmentSaved(.init(actionID: UUID(), before: 54, after: 52))
+        await viewModel.adjustmentSaved(.init(actionID: UUID(), before: 54, after: 52, reason: .damaged))
         await viewModel.undoAdjustment()
         #expect(viewModel.generalError == .validation(field: nil, message: "the undo window has passed"))
     }
