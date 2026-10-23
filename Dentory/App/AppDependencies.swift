@@ -23,6 +23,7 @@ struct AppDependencies: Sendable {
     let procedureStartRepository: ProcedureStartRepository
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
+    let receiveRepository: ReceiveRepository
     let clinicSettingsRepository: ClinicSettingsRepository
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
@@ -86,6 +87,7 @@ struct AppDependencies: Sendable {
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
+            receiveRepository: SupabaseReceiveRepository(client: client),
             clinicSettingsRepository: SupabaseClinicSettingsRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
@@ -145,7 +147,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(),
-            toBuyRepository: DemoToBuyRepository(),
+            toBuyRepository: DemoToBuyRepository(), receiveRepository: DemoReceiveRepository(),
             clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
             expiringRepository: expiring,
             activityRepository: activity,

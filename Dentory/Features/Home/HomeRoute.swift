@@ -1,7 +1,6 @@
 import Foundation
 
-/// Screens Home pushes on its own stack. Each arrives with its own ticket; until then the destination
-/// is a placeholder pushed screen.
+/// Screens Home pushes on its own stack.
 enum HomeRoute: Hashable {
     /// Activity, Alerts segment (MS-133).
     case alerts

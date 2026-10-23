@@ -172,8 +172,10 @@ struct RootView: View {
         case .delivery:
             router.popToRoot(on: .home)
             router.selectedTab = .home
+            // Receiving is admin-only (MS-126): for a member who is no longer an admin, the link stops at Home.
+            guard let session = sessionStore.session, session.isAdmin else { return }
             // Receiving is a write: in read-only mode the sheet says why instead (MS-142).
-            if let session = sessionStore.session, !session.canWrite(at: dependencies.clock.now) {
+            if !session.canWrite(at: dependencies.clock.now) {
                 router.isReadOnlySheetPresented = true
             } else {
                 router.push(HomeRoute.receive, on: .home)

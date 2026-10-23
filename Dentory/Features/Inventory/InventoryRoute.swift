@@ -1,7 +1,6 @@
 import Foundation
 
-/// Screens the Inventory tab pushes on its own stack. Each arrives with its own ticket; until then the
-/// destination is a placeholder pushed screen.
+/// Screens the Inventory tab pushes on its own stack.
 enum InventoryRoute: Hashable {
     /// Product detail (MS-116).
     case product(UUID)

@@ -64,8 +64,8 @@ struct HomeView: View {
                     }
                 case .billing:
                     BillingView(session: session, dependencies: dependencies)
-                default:
-                    HomeRoutePlaceholderView(route: route)
+                case .receive:
+                    ReceiveView(session: session, dependencies: dependencies)
                 }
             }
             .debugHooks(
@@ -211,42 +211,6 @@ struct HomeView: View {
     private var debugLaunchSection: String? { nil }
     private func debugOnAppear() {}
     #endif
-}
-
-/// A pushed screen that names the ticket bringing the real one.
-struct HomeRoutePlaceholderView: View {
-    let route: HomeRoute
-
-    var body: some View {
-        Text("\(title) arrives with its own ticket.")
-            .textStyle(.body14)
-            .foregroundStyle(Color.ms.textSecondary)
-            .pushedScreen(title: title, identifier: identifier)
-    }
-
-    private var title: String {
-        switch route {
-        case .alerts: "Alerts"
-        case .account: "Account"
-        case .expiring(let window): window.map { "Expiring soon · \($0) days" } ?? "Expiring soon"
-        case .inventoryValue: "Inventory value"
-        case .receive: "Receive delivery"
-        case .editUsage: "Edit usage"
-        case .billing: "Billing"
-        }
-    }
-
-    private var identifier: String {
-        switch route {
-        case .alerts: "activity"
-        case .account: "more"
-        case .expiring: "expiring"
-        case .inventoryValue: "value"
-        case .receive: "receive"
-        case .editUsage: "procDetail"
-        case .billing: "billing"
-        }
-    }
 }
 
 private extension View {
