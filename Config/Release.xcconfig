@@ -1,7 +1,14 @@
 // Release builds talk to the hosted Supabase project. Its URL and anon key live in Secrets.xcconfig
 // (git-ignored): copy Secrets.example.xcconfig to Secrets.xcconfig and fill it in.
 SUPABASE_URL =
+
+// Where the password reset email's link points (MS-113, MS-100 D12): the universal link, which opens the
+// app or, on a computer, the page in applinks/reset-password. Not a secret.
+PASSWORD_RESET_URL = https:/$()/app.dentory.ca/reset-password
 SUPABASE_ANON_KEY =
 SENTRY_DSN =
+POSTHOG_PROJECT_TOKEN =
+// The EU cloud unless Secrets.xcconfig names another host (MS-147).
+POSTHOG_HOST =
 
 #include? "Secrets.xcconfig"

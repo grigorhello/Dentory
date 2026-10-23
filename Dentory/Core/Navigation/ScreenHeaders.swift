@@ -46,7 +46,8 @@ nonisolated enum PushedHeaderStyle: Sendable {
     case context
 }
 
-/// Pushed screen header (f13): 44 pt back chevron, 24 pt title, optional subtitle and right text action.
+/// Pushed screen header (f13): 44 pt back chevron, 24 pt title, optional subtitle and a right action: a text
+/// button ("Edit", f20) or a small primary one ("Save", f15).
 struct PushedHeader: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
@@ -54,10 +55,17 @@ struct PushedHeader: View {
     var identifier: String
     var action: HeaderAction?
     var style: PushedHeaderStyle = .title
+    /// Runs on Back in place of leaving, for a screen that asks before discarding changes (Clinic settings).
+    var onBack: (() -> Void)?
 
     struct HeaderAction {
         let title: String
         let identifier: String
+        var variant: MSButtonVariant = .text
+        /// A leading icon, as Team's "Invite" (f31).
+        var icon: Icon?
+        var isLoading = false
+        var isDisabled = false
         let perform: () -> Void
     }
 
@@ -65,7 +73,7 @@ struct PushedHeader: View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
                 Button {
-                    dismiss()
+                    if let onBack { onBack() } else { dismiss() }
                 } label: {
                     IconView(.chevronLeft, size: 24)
                         .foregroundStyle(Color.ms.ink)
@@ -90,9 +98,11 @@ struct PushedHeader: View {
                 }
                 Spacer(minLength: Spacing.sm)
                 if let action {
-                    Button(action.title, action: action.perform)
-                        .buttonStyle(.ms(.text, size: .small))
-                        .accessibilityIdentifier(action.identifier)
+                    MSButton(
+                        action.title, icon: action.icon, variant: action.variant, size: .small,
+                        isLoading: action.isLoading, isDisabled: action.isDisabled, action: action.perform
+                    )
+                    .accessibilityIdentifier(action.identifier)
                 }
             }
             .padding(.leading, -Spacing.sm)
@@ -109,7 +119,7 @@ struct PushedHeader: View {
 }
 
 /// A root screen: cream page, custom header, offline banner, 720 pt column. The system
-/// navigation bar is hidden; the header is drawn (PRD §7).
+/// navigation bar is hidden; the header is drawn (PRD §7) and stays pinned while the content scrolls under it.
 struct RootScreenModifier<Trailing: View>: ViewModifier {
     var eyebrow: String?
     let title: String
@@ -117,25 +127,18 @@ struct RootScreenModifier<Trailing: View>: ViewModifier {
     let trailing: () -> Trailing
 
     func body(content: Content) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                RootHeader(eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing)
-                OfflineBannerHost()
-                content
-            }
-            .padding(.horizontal, Spacing.page)
-            .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+        ScreenScaffold {
+            RootHeader(eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing)
+        } content: {
+            content
         }
-        .scrollDismissesKeyboard(.interactively)
-        .background(Color.ms.canvas)
         .toolbar(.hidden, for: .navigationBar)
         .navigationTitle(title)
     }
 }
 
-/// A pushed screen: back chevron header, cream page, 720 pt column. The tab bar hides
+/// A pushed screen: back chevron header, cream page, 720 pt column. The header stays pinned while the content
+/// scrolls under it (f13-2, f15-2, f20-2), so a header action such as Save is always in reach. The tab bar hides
 /// because the tab's path is no longer empty (`AppTabsView`).
 struct PushedScreenModifier: ViewModifier {
     let title: String
@@ -143,24 +146,57 @@ struct PushedScreenModifier: ViewModifier {
     let identifier: String
     var action: PushedHeader.HeaderAction?
     var style: PushedHeaderStyle = .title
+    var onBack: (() -> Void)?
 
     func body(content: Content) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                PushedHeader(title: title, subtitle: subtitle, identifier: identifier, action: action, style: style)
-                OfflineBannerHost()
-                content
-            }
-            .padding(.horizontal, Spacing.page)
-            .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+        ScreenScaffold {
+            PushedHeader(
+                title: title, subtitle: subtitle, identifier: identifier, action: action, style: style, onBack: onBack
+            )
+        } content: {
+            content
         }
-        .scrollDismissesKeyboard(.interactively)
-        .background(Color.ms.canvas)
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
         .navigationTitle(title)
+    }
+}
+
+/// The page both screen kinds share: the header and the offline banner pinned at the top, the content in a
+/// scroll view under them, both in the 720 pt column on the cream page. The 16 pt gap under the header is split
+/// so scrolled content clips 8 pt below the pinned block, where the frames cut it (f13-2, f20-2).
+private struct ScreenScaffold<Header: View, Content: View>: View {
+    @ViewBuilder let header: () -> Header
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                header()
+                OfflineBannerHost()
+            }
+            .padding(.bottom, Spacing.sm)
+            .column()
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    content()
+                }
+                .padding(.top, Spacing.sm)
+                .padding(.bottom, Spacing.xl)
+                .column()
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .background(Color.ms.canvas)
+    }
+}
+
+private extension View {
+    /// The page gutter and the 720 pt column, centred on a wide screen.
+    func column() -> some View {
+        padding(.horizontal, Spacing.page)
+            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
+            .frame(maxWidth: .infinity)
     }
 }
 
@@ -181,15 +217,17 @@ extension View {
 
     /// Lays the view out as a pushed screen. Add `.pinnedPrimaryBar` for its primary action.
     /// `style: .context` reads the title as a secondary line when the content carries the real title (f20).
+    /// `onBack` replaces leaving on Back, for a screen that asks before discarding changes.
     func pushedScreen(
         title: String,
         subtitle: String? = nil,
         identifier: String,
         action: PushedHeader.HeaderAction? = nil,
-        style: PushedHeaderStyle = .title
+        style: PushedHeaderStyle = .title,
+        onBack: (() -> Void)? = nil
     ) -> some View {
         modifier(PushedScreenModifier(
-            title: title, subtitle: subtitle, identifier: identifier, action: action, style: style
+            title: title, subtitle: subtitle, identifier: identifier, action: action, style: style, onBack: onBack
         ))
     }
 }

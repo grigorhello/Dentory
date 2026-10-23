@@ -80,7 +80,11 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
 
     func removeFromToBuy(itemID: UUID) async throws {
         do {
-            try await client.from("to_buy_items").delete().eq("id", value: itemID.uuidString).execute()
+            // Only a line still to buy: Undo never deletes one marked ordered in the meantime (MS-128).
+            try await client.from("to_buy_items").delete()
+                .eq("id", value: itemID.uuidString)
+                .eq("status", value: "to_buy")
+                .execute()
         } catch {
             throw AppError(error)
         }
@@ -147,11 +151,6 @@ nonisolated struct StockAdjustParams: Encodable, Sendable {
         try container.encode(pReason, forKey: .pReason)
         try container.encode(pNote, forKey: .pNote)
     }
-}
-
-/// The parameters of `undo_action`.
-nonisolated struct UndoActionParams: Encodable, Sendable {
-    let pActionId: UUID
 }
 
 /// The object `product_detail` returns. Its keys avoid a digit-led component: the snake_case decoder

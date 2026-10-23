@@ -16,7 +16,7 @@ struct ProductDetailEditDeleteTests {
     ) -> ProductDetailViewModel {
         ProductDetailViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            userID: Session.demo.userID, productID: ProductSummary.demo[0].id
+            userID: Session.demo.userID, productID: ProductSummary.demo[0].id, analytics: SpyAnalytics()
         )
     }
 

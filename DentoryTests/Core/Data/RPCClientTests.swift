@@ -40,6 +40,8 @@ struct RPCClientTests {
          AppError.readOnly),
         (PostgrestError(code: "22023", message: "a note is required to cancel"),
          AppError.validation(field: nil, message: "a note is required to cancel")),
+        (PostgrestError(hint: "name", code: "22023", message: "Another procedure is already called Filling."),
+         AppError.validation(field: "name", message: "Another procedure is already called Filling.")),
         (PostgrestError(code: "PGRST116", message: "no rows"), AppError.notFound)
     ])
     func mapsPostgresErrors(_ error: PostgrestError, _ expected: AppError) async {
@@ -59,7 +61,8 @@ struct RPCClientTests {
 
     @Test func userMessagesFollowThePRDCopy() {
         #expect(AppError.unknown("x").userMessage == "Couldn't save. Try again.")
-        #expect(AppError.readOnly.userMessage == "Add a payment method to keep making changes.")
+        #expect(AppError.readOnly.userMessage
+            == "Your clinic is in read-only mode. Add a card from the link in your billing email.")
         #expect(AppError.validation(field: nil, message: "Out of stock").userMessage == "Out of stock")
     }
 }

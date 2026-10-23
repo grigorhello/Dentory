@@ -2,11 +2,13 @@ import SwiftUI
 
 /// Product detail (f20 Admin, f21 Staff): context header, name and status, the quantity card, Adjust and
 /// Add to buy, the expiry card, the bottles card for multi-use products, the history, and Delete product
-/// for Admin. Edit, batches, history and Delete open their own tickets' screens later.
+/// for Admin. Edit and Delete product open their sheets (MS-117), Show all the product's history (MS-134); batches
+/// open their own ticket's screen later.
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ProductDetailViewModel
     let session: Session
 
@@ -22,11 +24,18 @@ struct ProductDetailView: View {
             .pushedScreen(
                 title: viewModel.contextLine,
                 identifier: "product",
-                action: session.isAdmin
-                    ? .init(title: "Edit", identifier: "product.edit", perform: viewModel.edit) : nil,
+                action: session.isAdmin ? .init(title: "Edit", identifier: "product.edit", perform: edit) : nil,
                 style: .context
             )
             .reloadOnReturn { await viewModel.load() }
+            .navigationDestination(for: ProductDetailRoute.self) { route in
+                switch route {
+                case .history(let productID, let name):
+                    ActivityHistoryView(
+                        productID: productID, productName: name, session: session, dependencies: dependencies
+                    )
+                }
+            }
             .onChange(of: viewModel.generalError) { _, error in
                 guard let error else { return }
                 dependencies.toasts.show(error.userMessage)
@@ -96,7 +105,7 @@ struct ProductDetailView: View {
             }
             ProductHistoryCard(rows: viewModel.historyRows, onShowAll: showAllHistory)
             if session.isAdmin {
-                Button(action: viewModel.askToDelete) {
+                Button(action: deleteProduct) {
                     HStack(spacing: Spacing.sm) {
                         IconView(.trash, size: 16)
                         Text("Delete product")
@@ -138,7 +147,7 @@ struct ProductDetailView: View {
 
     private func adjustButton(isFullWidth: Bool) -> some View {
         MSButton("Adjust", icon: .slidersHorizontal, variant: .tertiary, isFullWidth: isFullWidth) {
-            viewModel.openAdjust()
+            writeAccess.perform(viewModel.openAdjust)
         }
         .accessibilityIdentifier("product.adjust")
     }
@@ -151,21 +160,36 @@ struct ProductDetailView: View {
         .accessibilityIdentifier("product.addToBuy")
     }
 
+    /// Adjust, Add to buy, Open a new bottle and Finished open the read-only sheet instead in read-only mode (MS-142);
+    /// "On To buy" only goes to the list.
     private func addToBuy() {
         if viewModel.isOnToBuy {
             router.select(.toBuy)
         } else {
-            Task { await viewModel.addToBuy() }
+            writeAccess.perform { Task { await viewModel.addToBuy() } }
         }
     }
 
-    private func finishBottle(_ id: UUID) { Task { await viewModel.finishBottle(id) } }
-    private func openNewBottle() { Task { await viewModel.openNewBottle() } }
+    private func finishBottle(_ id: UUID) { writeAccess.perform { Task { await viewModel.finishBottle(id) } } }
+    private func openNewBottle() { writeAccess.perform { Task { await viewModel.openNewBottle() } } }
 
-    // Placeholders until the tickets that bring these screens (MS-119, MS-134).
-    private func editBatch(_ id: UUID) { dependencies.toasts.show("Edit batch arrives with a later update.") }
-    private func addExpiry() { dependencies.toasts.show("Add expiry arrives with a later update.") }
-    private func showAllHistory() { dependencies.toasts.show("History arrives with a later update.") }
+    /// Edit and Delete product (MS-117) open the read-only sheet instead in read-only mode (MS-142).
+    private func edit() { writeAccess.perform(viewModel.edit) }
+    private func deleteProduct() { writeAccess.perform(viewModel.askToDelete) }
+
+    // Placeholders until the ticket that brings these screens (MS-119); each opens the read-only sheet instead in
+    // read-only mode (MS-142).
+    private func editBatch(_ id: UUID) {
+        writeAccess.perform { dependencies.toasts.show("Edit batch arrives with a later update.") }
+    }
+    private func addExpiry() {
+        writeAccess.perform { dependencies.toasts.show("Add expiry arrives with a later update.") }
+    }
+    /// The product's whole history (MS-134).
+    private func showAllHistory() {
+        guard let detail = viewModel.detail else { return }
+        router.push(ProductDetailRoute.history(productID: detail.id, name: detail.name))
+    }
 }
 
 #Preview("Product detail · Admin") {

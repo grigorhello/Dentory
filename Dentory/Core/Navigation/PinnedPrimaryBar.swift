@@ -5,16 +5,22 @@ import SwiftUI
 struct PinnedPrimaryBar<Button: View>: View {
     @Environment(\.appDependencies) private var dependencies
     var caption: String?
-    /// Whether the bar tells `ToastCenter` its height so toasts float above it; off in the catalog specimen.
+    /// Whether the bar tells `ToastCenter` its height so toasts float above it: off in the catalog specimen, and on a
+    /// tab's root only while that tab is shown, since the tabs behind it stay alive.
     var reportsHeight = true
     @ViewBuilder let button: () -> Button
+    @State private var height: CGFloat = 0
 
     var body: some View {
         bar
             .onGeometryChange(for: CGFloat.self) { proxy in
                 proxy.size.height
-            } action: { height in
-                if reportsHeight { dependencies.toasts.bottomInset = height }
+            } action: { newHeight in
+                height = newHeight
+                if reportsHeight { dependencies.toasts.bottomInset = newHeight }
+            }
+            .onChange(of: reportsHeight) { _, reports in
+                dependencies.toasts.bottomInset = reports ? height : 0
             }
             .onDisappear {
                 if reportsHeight { dependencies.toasts.bottomInset = 0 }

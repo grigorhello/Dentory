@@ -52,13 +52,18 @@ final class ProductFormViewModel {
     private let repository: ProductFormRepository
     private let formatters: ClinicFormatters
     private let clinicID: UUID
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
 
-    init(repository: ProductFormRepository, formatters: ClinicFormatters, clinicID: UUID, mode: Mode) {
+    init(
+        repository: ProductFormRepository, formatters: ClinicFormatters, clinicID: UUID, mode: Mode,
+        analytics: Analytics
+    ) {
         self.repository = repository
         self.formatters = formatters
         self.clinicID = clinicID
         self.mode = mode
+        self.analytics = analytics
         switch mode {
         case .create:
             name = ""
@@ -162,7 +167,9 @@ final class ProductFormViewModel {
                 }
                 switch mode {
                 case .create:
-                    outcome = .created(try await repository.createProduct(clinicID: clinicID, draft: draft))
+                    let id = try await repository.createProduct(clinicID: clinicID, draft: draft)
+                    analytics.track(.productCreated)
+                    outcome = .created(id)
                 case .edit(let product):
                     try await repository.updateProduct(id: product.id, draft: draft)
                     outcome = .saved
