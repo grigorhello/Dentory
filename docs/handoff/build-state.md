@@ -63,7 +63,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 
 ## In progress
 
-- **MS-126 · Receive delivery: choose how (#97)**, build step 32, in PR review: built on 2026-10-23 by a `ticket-builder` agent on Grigor's Mac (branch `ms-126-receive-delivery`). `receive_overview` (migration `20261021020000_receive_overview.sql`, 13 pgTAP assertions, admin only) and `Features/Receive`: Take a photo (VisionKit's document scanner, or Photos where there is none), Upload PDF or image (Files, up to 20 MB), Receive manually, the invoices to continue reviewing and the lines waiting for delivery; captured pages become JPEG pages or one PDF and open a Review invoice placeholder until MS-129 uploads and reads them. The earlier cloud attempt (branch `claude/ecstatic-noether-scu5l7`) was abandoned unpushed.
+- **MS-126 · Receive delivery: choose how (#97)**, build step 32, in PR review: [#195](https://github.com/grigorhello/Dentory/pull/195), built on 2026-10-23 by a `ticket-builder` agent on Grigor's Mac (branch `ms-126-receive-delivery`). `receive_overview` (migration `20261021020000_receive_overview.sql`, 13 pgTAP assertions, admin only) and `Features/Receive`: Take a photo (VisionKit's document scanner, or Photos where there is none), Upload PDF or image (Files, up to 20 MB), Receive manually, the invoices to continue reviewing and the lines waiting for delivery; captured pages become JPEG pages or one PDF and open a Review invoice placeholder until MS-129 uploads and reads them. The earlier cloud attempt (branch `claude/ecstatic-noether-scu5l7`) was abandoned unpushed.
 - **MS-119 · Track expiry per batch: Add expiry and Edit batch (#90)**, build step 24, draft [#164](https://github.com/grigorhello/Dentory/pull/164) from the Mac build thread. It was stacked on MS-117 (#161), merged on 2026-10-23: the draft now targets the default branch and waits for its update and review.
 - **MS-121 · Count stock with review before applying (#92)**, build step 26, draft [#166](https://github.com/grigorhello/Dentory/pull/166) from the Mac build thread, in the same state as #164.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
@@ -72,7 +72,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 
 Every step whose blockers are merged is merged or in review.
 
-Receiving and invoices (steps 33 and 35 to 37, MS-127 and MS-129 to MS-131) wait for MS-126 (in review); MS-117, their other blocker, merged on 2026-10-23. The pilot readiness pass (step 41, MS-136) waits for them too. M4 runs from step 54 (MS-151) to step 58 (MS-152, TestFlight and the App Store). The full table is `docs/BUILD-ORDER.md`.
+Receiving and invoices (steps 33 and 35 to 37, MS-127 and MS-129 to MS-131) wait for MS-126 (#195, in review); MS-117, their other blocker, merged on 2026-10-23. The pilot readiness pass (step 41, MS-136) waits for them too. M4 runs from step 54 (MS-151) to step 58 (MS-152, TestFlight and the App Store). The full table is `docs/BUILD-ORDER.md`.
 
 ## Notion board
 
