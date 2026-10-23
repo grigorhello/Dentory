@@ -13,7 +13,7 @@ Give this file to Claude in the first message of the new project and ask it to s
 - He expects Claude to take every step it is permitted to take. When a thread asked him to press Merge himself on 2026-10-15 he pushed back ("why you can not do this?") and added permission rules on the Mac so Claude merges itself.
 - He answers within minutes and asks "what are you doing now?" when a thread goes quiet: post a status refresh before any long wait.
 - He follows progress on the Notion board, not GitHub Projects.
-- Model: claude-fable-5-1 for implementation work (asked 2026-10-15 22:37 UTC).
+- Models (2026-10-23): Opus 5.5 builds, Sonnet 5.5 reviews, Fable 5.1 only for product decisions or a ticket too hard for Opus (was Fable 5.1 for all implementation from 2026-10-15 22:37 UTC).
 - Marketing and sales for Dentory run in the same project as separate threads (said 2026-10-16 01:40 UTC).
 
 ## Where things are
@@ -23,7 +23,7 @@ Give this file to Claude in the first message of the new project and ask it to s
 - Repo process files: `CLAUDE.md`, `.claude/skills/dentory-ios/SKILL.md` (plus vendored MIT skills swiftui-pro and swift-concurrency), `.claude/agents/pr-reviewer.md`, `docs/BUILD-ORDER.md`, `.github/workflows/ci.yml` (iOS job on macOS: project, lint, build, test with warnings as errors; database job on Ubuntu: migrations, seed, pgTAP, Deno check).
 
 ## Grigor's Mac and Remote Control
-- Device "MacBookPro", folder `/Users/grigorgrigoryan/Documents/Personal/MediSave`, repo cloned there, Xcode, Docker Desktop and the Supabase CLI installed. Implementation threads run there through Remote Control; a Remote Control session that goes idle is parked and restarts on the next message with the current settings.
+- Device "MacBookPro", folder `/Users/grigorgrigoryan/Documents/Personal/Dentory` (MediSave until 2026-10-18), repo cloned there, Xcode, Docker Desktop and the Supabase CLI installed. Implementation threads run there through Remote Control; a Remote Control session that goes idle is parked and restarts on the next message with the current settings.
 - Active GitHub CLI account on the Mac is `grigorhello` since 2026-10-15 22:25 UTC (`gh auth switch -u grigorhello`); plain `gh` commands act as him. PRs opened there come from his own account, so his review cannot be requested; the PR is assigned to him instead. Claude must not switch gh accounts itself (the Mac refuses it as a way around the merge rule).
 - Permission rules on the Mac (added 2026-10-15): allow `gh pr merge`, `git checkout`, writes under `.claude/agents`, edits to `CLAUDE.md` and `.claude/skills`. They live in the Claude Code settings on the Mac, not in the repo.
 - The Remote Control session uses Grigor's own usage limit; on 2026-10-16 it paused twice with "I've hit my usage limit" and resumed when he wrote "try again".

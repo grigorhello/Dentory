@@ -11,9 +11,11 @@ SPM_DIR ?= .build/spm
 WARNINGS_AS_ERRORS ?= NO
 # CI sets this to -onlyUsePackageVersionsFromResolvedFile so it builds the committed Package.resolved.
 SPM_FLAGS ?=
+# Optional: keep build output in this folder (agents set it to their scratch directory) instead of Xcode's default.
+DERIVED_DATA ?=
 
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
-	-clonedSourcePackagesDirPath $(SPM_DIR) $(SPM_FLAGS) \
+	-clonedSourcePackagesDirPath $(SPM_DIR) $(SPM_FLAGS) $(if $(DERIVED_DATA),-derivedDataPath $(DERIVED_DATA)) \
 	WARNINGS_AS_ERRORS=$(WARNINGS_AS_ERRORS)
 
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).

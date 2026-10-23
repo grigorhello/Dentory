@@ -48,7 +48,7 @@ meta: milestone=M0; priority=P0; type=tech; area=platform; size=3; frames=f6,f36
 A native SwiftUI app that builds and runs on iPhone and iPad simulators, with the folder structure, build settings, lint and test targets every later ticket assumes, and CI that builds and tests every pull request. No features yet.
 
 ### Read first
-`.claude/skills/dentory-ios/SKILL.md` (architecture standard). This ticket creates exactly the layout in its section 2 and the build settings in its section 6.
+`.claude/skills/dentory-ios/SKILL.md` (architecture standard). This ticket creates exactly the layout in its section 2 (the full tree is in `docs/handoff/ios-architecture.md`) and the build settings in its section 4.
 
 ### Scope
 - **Project generation:** XcodeGen `project.yml` at the repo root; `Dentory.xcodeproj` is generated and git-ignored (avoids project-file merge conflicts across 50+ PRs). `make project` runs `xcodegen generate`.

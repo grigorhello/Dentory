@@ -93,6 +93,8 @@ Cards for MS-101, MS-102, MS-153, MS-104, MS-105, MS-106, MS-107, MS-154, MS-109
 
 11. **Product analytics (MS-147).** Nothing is sent until a PostHog project token is in the build: create a PostHog project on the EU cloud, copy its project token (Project settings, General) into `Config/Secrets.xcconfig` as `POSTHOG_PROJECT_TOKEN = phc_…` (a second project's token in `Secrets.debug.xcconfig` if Debug builds should report, so tests never count), turn on Discard client IP data in the PostHog project's settings (IP data capture) so IP addresses are not stored, as the privacy page says, and before such a build reaches testers outside the team, tick Usage Data, Product Interaction and Other Usage Data in App Store Connect's App Privacy (`app-store-connect.md`, step 3). The pilot dashboard's six insights are written out in `analytics.md`.
 
+12. **Project settings for the token plan (2026-10-23).** The coordinator set the project's default model for new threads to Opus 5.5. Paste the new `docs/handoff/project-instructions.md` into Project settings, Instructions: the copy there still says Fable 5.1 for implementation and three review rounds.
+
 ## Brand assets (outside the build order)
 
 Grigor delivered the visual identity on 2026-10-19 (MS-100 D17): `design/brand/` holds the molar mark, the lockups and wordmark, the iOS icon set, the web favicons and the Android icons, with a README of rules and an inventory. The brand tickets are GitHub issues #152 to #156; their source is `docs/handoff/ticket-sources/brand/brand-assets.md` and their generator `build_brand.py` (see `engineering-process.md` section 9). They are not in `docs/BUILD-ORDER.md`; the icon is merged and the other four wait for Grigor's word.
