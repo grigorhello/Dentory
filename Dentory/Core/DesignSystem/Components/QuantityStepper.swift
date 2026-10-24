@@ -3,20 +3,27 @@ import SwiftUI
 /// 40 pt − and + around a centred value (PRD §7). The value turns primary blue when it differs from `reference`
 /// and never goes below `minimum`. `identifier` is the Appendix B row id; the parts get `.dec`, `.value` and `.inc`.
 struct QuantityStepper: View {
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Binding var value: Int
     var reference: Int?
+    /// Decides the blue instead of `reference` when the caller compares with something the stepper cannot
+    /// hold, such as a count against a fractional or negative estimate (MS-121).
+    var isHighlighted: Bool?
     var minimum = 0
     let identifier: String
 
-    init(value: Binding<Int>, reference: Int? = nil, minimum: Int = 0, identifier: String) {
+    init(
+        value: Binding<Int>, reference: Int? = nil, isHighlighted: Bool? = nil, minimum: Int = 0, identifier: String
+    ) {
         _value = value
         self.reference = reference
+        self.isHighlighted = isHighlighted
         self.minimum = minimum
         self.identifier = identifier
     }
 
     private var model: QuantityStepperModel {
-        QuantityStepperModel(value: value, reference: reference, minimum: minimum)
+        QuantityStepperModel(value: value, reference: reference, highlight: isHighlighted, minimum: minimum)
     }
 
     var body: some View {
@@ -26,12 +33,15 @@ struct QuantityStepper: View {
                 model.decrement()
                 value = model.value
             }
+            // The blue is not the only cue: underlined when colors should not carry meaning, "Changed" for VoiceOver.
             Text("\(model.value)")
+                .underline(model.isHighlighted && differentiateWithoutColor)
                 .textStyle(.bodyStrong16)
                 .monospacedDigit()
-                .foregroundStyle(model.differsFromReference ? Color.ms.primary : Color.ms.ink)
+                .foregroundStyle(model.isHighlighted ? Color.ms.primary : Color.ms.ink)
                 .lineLimit(1)
                 .frame(minWidth: 36, maxWidth: 44)
+                .accessibilityValue(model.isHighlighted ? "Changed" : "")
                 .accessibilityIdentifier("\(identifier).value")
             stepButton(.plus, label: "Increase", id: "inc", isEnabled: true) {
                 var model = model

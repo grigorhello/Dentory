@@ -1,12 +1,23 @@
 import Foundation
 
 /// The demo clinic's products and categories, shared by the demo repositories so a product created,
-/// edited or deleted on one screen shows on the others within the same launch (previews, UI tests).
+/// edited, counted or deleted on one screen shows on the others within the same launch (previews, UI tests).
 final class DemoProductStore: @unchecked Sendable {
+    /// A count that moved one product, for the demo detail's figures, "Counted" line and history.
+    struct CountRecord: Equatable, Sendable {
+        let quantityBefore: Decimal
+        let quantityAfter: Decimal
+        let at: Date
+        let byName: String
+
+        var delta: Decimal { quantityAfter - quantityBefore }
+    }
+
     private let lock = NSLock()
     private var summaries: [ProductSummary] = ProductSummary.demo
     private var drafts: [UUID: ProductDraft] = [:]
     private var categoryList: [ProductCategory] = ProductCategory.demo
+    private var countRecords: [UUID: [CountRecord]] = [:]
 
     var categories: [ProductCategory] { lock.withLock { categoryList } }
     var products: [ProductSummary] { lock.withLock { summaries } }
@@ -77,6 +88,34 @@ final class DemoProductStore: @unchecked Sendable {
         }
     }
 
+    /// Applies counted unopened quantities the way `stock_count_apply` does: a line that matches the stock
+    /// changes nothing; any other moves the product's figures and status (an increase lands on the undated
+    /// quantity, MS-100 D9) and is recorded, newest first. Returns how many products changed.
+    @discardableResult
+    func applyCount(_ counts: [CountedQuantity], at date: Date, by byName: String) -> Int {
+        lock.withLock {
+            var changed = 0
+            for line in counts {
+                guard let index = summaries.firstIndex(where: { $0.id == line.productID }) else { continue }
+                let current = summaries[index]
+                guard line.counted != current.unopened else { continue }
+                let updated = current.afterCount(line.counted)
+                summaries[index] = updated
+                let record = CountRecord(
+                    quantityBefore: current.quantity, quantityAfter: updated.quantity, at: date, byName: byName
+                )
+                countRecords[line.productID, default: []].insert(record, at: 0)
+                changed += 1
+            }
+            return changed
+        }
+    }
+
+    /// The counts applied to the product in this launch, newest first.
+    func countRecords(for id: UUID) -> [CountRecord] {
+        lock.withLock { countRecords[id] ?? [] }
+    }
+
     /// False when the product is unknown (or already archived).
     func archive(id: UUID) -> Bool {
         lock.withLock {
@@ -106,6 +145,25 @@ final class DemoProductStore: @unchecked Sendable {
                 tracking: draft.tracking, quantity: quantity, unopened: unopened, minimum: draft.minimum,
                 missingExpiryQuantity: 0, daysToSoonestExpiry: nil, largestThreshold: 90
             ))
+        )
+    }
+}
+
+private extension ProductSummary {
+    /// The row after a count of its unopened stock, with the status the server would give: a decrease takes
+    /// from the dated batches first and an increase lands on the undated quantity, so an increase reads
+    /// Missing expiry unless the product is low or expiring (MS-100 D9).
+    nonisolated func afterCount(_ unopened: Decimal) -> ProductSummary {
+        let row = counted(unopened)
+        let increase = max(unopened - self.unopened, 0)
+        let undated = status == .missingExpiry ? max(unopened, increase) : increase
+        let status = ProductStatus.evaluate(ProductStatus.Figures(
+            tracking: tracking, quantity: row.quantity, unopened: unopened, minimum: minimum,
+            missingExpiryQuantity: undated, daysToSoonestExpiry: status == .expiring ? 0 : nil, largestThreshold: 90
+        ))
+        return ProductSummary(
+            id: id, name: name, categoryName: categoryName, unit: unit, tracking: tracking, location: location,
+            quantity: row.quantity, unopened: unopened, openCount: openCount, minimum: minimum, status: status
         )
     }
 }

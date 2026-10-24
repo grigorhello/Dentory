@@ -1,12 +1,20 @@
 import Foundation
 
-/// The products of frames f16 and f19 for previews and UI tests, read from the shared demo store so the
-/// sheets of MS-117 change what the list shows.
+/// The products of frames f16, f18 and f19 for previews and UI tests, read from the shared demo store so the
+/// sheets of MS-117 and an applied count (MS-121) change what the list shows.
 struct DemoInventoryRepository: InventoryRepository {
     let store: DemoProductStore
+    /// Who the count's history rows name: the signed-in person of the demo clinic.
+    var byName = "Sarah Mitchell"
 
     func products(clinicID: UUID) async throws -> [ProductSummary] {
         store.products
+    }
+
+    func applyCount(clinicID: UUID, counts: [CountedQuantity]) async throws -> WriteOutcome {
+        try await Task.sleep(for: .milliseconds(200))
+        store.applyCount(counts, at: Session.demoNow, by: byName)
+        return .applied(actionID: UUID())
     }
 }
 
@@ -27,6 +35,14 @@ extension ProductSummary {
         demo(12, "Alginate impression", "Impression", "bags", .multiUse, 4, 3, 1, 1, .healthy)
     ]
 
+    /// Where each demo product sits (`supabase/seed-demo.sql`), as f18's count rows show it.
+    private nonisolated static let demoLocations = [
+        1: "Operatory 1 · Drawer A", 2: "Operatory 2 · Drawer B", 3: "Operatory 1 · Drawer C",
+        4: "Operatory 1 · Drawer C", 5: "Sterilization · Shelf 2", 6: "Sterilization · Cabinet",
+        7: "Operatory 2 · Drawer A", 8: "Operatory 2 · Drawer B", 9: "Operatory 2 · Drawer B",
+        10: "Lab · Shelf 1", 11: "Sterilization · Shelf 1", 12: "Lab · Shelf 1"
+    ]
+
     // swiftlint:disable:next function_parameter_count
     private nonisolated static func demo(
         _ number: Int, _ name: String, _ category: String, _ unit: String, _ tracking: TrackingMode,
@@ -38,7 +54,7 @@ extension ProductSummary {
             categoryName: category,
             unit: unit,
             tracking: tracking,
-            location: nil,
+            location: demoLocations[number],
             quantity: quantity,
             unopened: unopened,
             openCount: openCount,

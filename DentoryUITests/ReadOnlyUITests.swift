@@ -51,7 +51,7 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(trial.label.contains("Trial ended"))
     }
 
-    /// The entry points of screens still to come are gated too: Count stock opens the sheet (MS-142 review).
+    /// Count stock opens the sheet instead of count mode (MS-142 review, MS-121).
     @MainActor
     func testCountStockOpensTheSheet() {
         let app = launch(["-tab", "inventory"])
@@ -59,6 +59,7 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(count.waitForExistence(timeout: 5), "Inventory did not load")
         count.tap()
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "No read-only sheet")
+        XCTAssertFalse(app.buttons["inv.count.cancel"].exists, "Count mode opened")
         app.buttons["readOnly.ok"].tap()
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5))
         app.buttons["inv.newProduct"].tap()

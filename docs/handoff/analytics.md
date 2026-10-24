@@ -26,6 +26,7 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `procEdit.save` | A procedure's defaults were saved | `item_count` supplies, `is_new` |
 | `procEdit.delete` | A procedure template was deleted | |
 | `inv.newProduct` | A product was created on the New product sheet | |
+| `inv.count.review` | A reviewed count was applied on Inventory | `item_count` corrections applied, `duration_s` from Count stock to Apply count (kept with the count across a relaunch) |
 | `product.adjust` | Stock was adjusted from Product detail | `reason` (physical_count, expired, damaged, waste, missing, returned, data_correction, other), `direction` (increase, decrease) |
 | `product.addToBuy` | A product was added to To buy (Report low stock for Staff) | |
 | `product.openNewBottle` | A bottle, syringe or kit was opened | |
@@ -37,7 +38,7 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `more.export` | A CSV export was started | |
 | `settings.save` | Clinic settings were saved | `digest` (the weekly email stays on), `expiry_warning_days` (the first warning: 30, 60 or 90) |
 
-Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: `inv.count.review` when a count is applied (MS-121: `item_count` corrections, `duration_s`), the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm), and `manual.receive`. The tickets carry a comment saying so.
+Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm), and `manual.receive`. The tickets carry a comment saying so.
 
 ## The pilot dashboard
 
@@ -64,7 +65,7 @@ In PostHog (the EU project), Dashboards, New dashboard "Pilot", then one SQL ins
           sum(toInt(properties.matched_count)) / sum(toInt(properties.item_count)) as matched_share
    from events where event = 'invoice.confirm' group by week order by week
    ```
-5. **Counts applied** (once MS-121 sends `inv.count.review`): the second query with that event.
+5. **Counts applied** (`inv.count.review`, MS-121): the second query with that event.
 6. **Time from invoice upload to confirm**
    ```sql
    select toStartOfWeek(timestamp) as week, quantile(0.5)(toInt(properties.duration_s)) as median_seconds

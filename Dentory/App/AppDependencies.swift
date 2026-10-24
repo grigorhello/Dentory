@@ -18,6 +18,8 @@ struct AppDependencies: Sendable {
     let reporter: ErrorReporting
     let homeRepository: HomeRepository
     let inventoryRepository: InventoryRepository
+    /// The count in progress, kept until applied or discarded (MS-121).
+    let countDraftStore: CountDraftStoring
     let productDetailRepository: ProductDetailRepository
     let proceduresRepository: ProceduresRepository
     let procedureStartRepository: ProcedureStartRepository
@@ -81,7 +83,8 @@ struct AppDependencies: Sendable {
             writes: writes,
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
-            inventoryRepository: SupabaseInventoryRepository(client: client),
+            inventoryRepository: SupabaseInventoryRepository(client: client, writes: writes),
+            countDraftStore: FileCountDraftStore(),
             productDetailRepository: SupabaseProductDetailRepository(client: client, writes: writes),
             proceduresRepository: SupabaseProceduresRepository(client: client),
             procedureStartRepository: SupabaseProcedureStartRepository(client: client, writes: writes),
@@ -142,7 +145,8 @@ struct AppDependencies: Sendable {
             homeRepository: DemoHomeRepository(
                 expiring: { expiring.currentBatches.map(\.value) }, alertsUnseen: { activity.hasUnseenAlerts }
             ),
-            inventoryRepository: DemoInventoryRepository(store: products),
+            inventoryRepository: DemoInventoryRepository(store: products, byName: byName),
+            countDraftStore: InMemoryCountDraftStore(),
             productDetailRepository: DemoProductDetailRepository(store: products, byName: byName),
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
@@ -153,8 +157,7 @@ struct AppDependencies: Sendable {
             activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: byName),
             billingRepository: DemoBillingRepository.launched(),
-            inventoryValueRepository: DemoInventoryValueRepository(),
-            accountRepository: DemoAccountRepository(),
+            inventoryValueRepository: DemoInventoryValueRepository(), accountRepository: DemoAccountRepository(),
             teamRepository: DemoTeamRepository(),
             productFormRepository: DemoProductFormRepository(store: products),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
@@ -165,17 +168,6 @@ struct AppDependencies: Sendable {
                 store: InMemoryPushExplainerStore(lastOffered: offersPush ? nil : Date())
             ),
             locale: Locale(identifier: "en_US")
-        )
-    }
-
-    /// The Inventory list of the signed-in clinic (MS-115).
-    @MainActor
-    func makeInventoryListViewModel(session: Session) -> InventoryListViewModel {
-        InventoryListViewModel(
-            repository: inventoryRepository,
-            cache: cache,
-            formatters: formatters(for: session),
-            clinicID: session.clinicID
         )
     }
 
@@ -274,13 +266,14 @@ struct AppDependencies: Sendable {
     }
 
     /// Account of the signed-in member (MS-137); signing out clears this device's cache and queued writes.
-    /// The clinic's cached answers, the writes waiting for a connection and a logo waiting for its retry, gone when the
-    /// server signs the member out on this device (MS-138), as Sign out clears them (MS-137).
+    /// The clinic's cached answers, the writes waiting for a connection, a logo waiting for its retry and a count in
+    /// progress, gone when the server signs the member out on this device (MS-138), as Sign out clears them (MS-137).
     @MainActor
     func clearClinicData() {
         cache.removeAll()
         writes.queue.removeAll()
         pendingClinicLogo.removeAll()
+        countDraftStore.clear()
     }
 
     @MainActor
@@ -289,7 +282,7 @@ struct AppDependencies: Sendable {
             session: session, repository: accountRepository, cache: cache,
             signingOut: DeviceSignOut(
                 sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push,
-                pendingLogo: pendingClinicLogo
+                pendingLogo: pendingClinicLogo, countDraft: countDraftStore
             ),
             analytics: analytics
         )

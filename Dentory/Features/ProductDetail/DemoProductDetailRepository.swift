@@ -3,8 +3,9 @@ import Foundation
 /// Product detail without a server: Septocaine as f20 draws it, and a plain detail for the other demo
 /// products, with whatever the Edit sheet saved applied on top. Add to buy and its Undo, adjustments
 /// and their Undo, bottles opened and finished are remembered in memory, so the figures and the history
-/// move the way the server's would; Delete product takes the product out of the shared store. Add expiry and
-/// Edit batch keep the product's batches here, dating undated stock first like `batch_upsert` (MS-119).
+/// move the way the server's would; a count applied on Inventory (MS-121) shows as "Counted" and a Physical
+/// count row; Delete product takes the product out of the shared store. Add expiry and Edit batch keep the
+/// product's batches here, dating undated stock first like `batch_upsert` (MS-119).
 final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sendable {
     /// What an adjustment did, so Undo can reverse it.
     private struct Adjustment {
@@ -66,9 +67,21 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
             base.applying($0, categoryName: store.categoryName(for: $0.categoryID), status: summary.status)
         } ?? base
         let dated = lock.withLock { batchEdits[productID] }.map { edited.with(batches: $0) } ?? edited
+        let counts = store.countRecords(for: productID)
+        // The other products are built from the store's row, which a count already moved; Septocaine's
+        // drawn figures are not.
+        let countDelta = summary.id == ProductSummary.demo[0].id ? counts.reduce(Decimal(0)) { $0 + $1.delta } : 0
+        let countRows = counts.map { record in
+            StockTransaction(
+                id: UUID(), type: .count, delta: record.delta, quantityBefore: record.quantityBefore,
+                quantityAfter: record.quantityAfter, reason: "Physical count", referenceLabel: "Physical count",
+                at: record.at, byName: record.byName
+            )
+        }
         let bottles = (opened + dated.openBottles).filter { !finished.contains($0.id) }
         return dated
-            .adjusted(by: delta, history: history + dated.history)
+            .counted(at: counts.first?.at)
+            .adjusted(by: delta + countDelta, history: history + countRows + dated.history)
             .replacingBottles(bottles, unopenedDelta: unopenedDelta, quantityDelta: -finishedCount)
     }
 
@@ -245,6 +258,18 @@ private extension ProductDetail {
             quantity: quantity, unopened: unopened, openCount: openCount, missingExpiryQuantity: max(undated, 0),
             usedInLast30Days: usedInLast30Days, lastCountedAt: lastCountedAt, toBuyItemID: toBuyItemID,
             batches: batches, openBottles: openBottles, history: history, categoryID: categoryID, supplier: supplier
+        )
+    }
+
+    /// The detail with the last count's date, when a count moved it.
+    func counted(at date: Date?) -> ProductDetail {
+        guard let date else { return self }
+        return ProductDetail(
+            id: id, name: name, categoryName: categoryName, unit: unit, packUnit: packUnit, packSize: packSize,
+            minimum: minimum, target: target, tracking: tracking, location: location, status: status,
+            quantity: quantity, unopened: unopened, openCount: openCount, missingExpiryQuantity: missingExpiryQuantity,
+            usedInLast30Days: usedInLast30Days, lastCountedAt: date, toBuyItemID: toBuyItemID, batches: batches,
+            openBottles: openBottles, history: history, categoryID: categoryID, supplier: supplier
         )
     }
 

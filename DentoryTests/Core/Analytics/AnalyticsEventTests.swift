@@ -12,7 +12,8 @@ struct AnalyticsEventTests {
         .procedureUsageEdited(items: 3), .procedureCancelled, .templateSaved(items: 12, isNew: true), .templateDeleted,
         .stockAdjusted(reason: .other, increase: true), .addedToBuy, .bottleOpened, .bottleFinished,
         .markedOrdered(items: 2), .toBuyAdded, .batchDisposed, .teammateInvited(role: .admin), .exportStarted,
-        .settingsSaved(digest: true, expiryWarningDays: 30), .productCreated
+        .settingsSaved(digest: true, expiryWarningDays: 30), .productCreated,
+        .countApplied(corrections: 3, seconds: 95)
     ]
 
     @Test func everyEventIsAnAppendixBElementId() {
@@ -51,6 +52,13 @@ struct AnalyticsEventTests {
         ])
         #expect(AnalyticsEvent.stockAdjusted(reason: .dataCorrection, increase: false).payload
             == ["reason": .text("data_correction"), "direction": .text("decrease")])
+    }
+
+    /// The pilot dashboard's "Counts applied" reads it (MS-121).
+    @Test func anAppliedCountCarriesItsCorrectionsAndSeconds() {
+        let event = AnalyticsEvent.countApplied(corrections: 3, seconds: 95)
+        #expect(event.name.rawValue == "inv.count.review")
+        #expect(event.payload == ["item_count": .number(3), "duration_s": .number(95)])
     }
 
     /// A build without a project token sends nothing (the test bundle has none, whatever the developer's Debug

@@ -4,6 +4,13 @@ import Foundation
 final class FakeInventoryRepository: InventoryRepository, @unchecked Sendable {
     var result: Result<[ProductSummary], Error>
     private(set) var calls: [UUID] = []
+    var applyResult: Result<WriteOutcome, Error> = .success(.applied(actionID: UUID()))
+    struct Apply: Equatable {
+        let clinicID: UUID
+        let counts: [CountedQuantity]
+    }
+
+    private(set) var applies: [Apply] = []
 
     init(result: Result<[ProductSummary], Error> = .success(ProductSummary.demo)) {
         self.result = result
@@ -12,5 +19,10 @@ final class FakeInventoryRepository: InventoryRepository, @unchecked Sendable {
     func products(clinicID: UUID) async throws -> [ProductSummary] {
         calls.append(clinicID)
         return try result.get()
+    }
+
+    func applyCount(clinicID: UUID, counts: [CountedQuantity]) async throws -> WriteOutcome {
+        applies.append(Apply(clinicID: clinicID, counts: counts))
+        return try applyResult.get()
     }
 }

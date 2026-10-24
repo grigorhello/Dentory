@@ -2,9 +2,9 @@ import Foundation
 import Testing
 @testable import Dentory
 
-/// Sign out leaves nothing of the clinic on the device (MS-137 acceptance): the cached answers and the queued writes
-/// are gone, the device stops receiving the member's pushes (MS-144), the session has ended, and the router starts
-/// the next person on Home.
+/// Sign out leaves nothing of the clinic on the device (MS-137 acceptance): the cached answers, the queued writes and
+/// a count in progress (MS-121) are gone, the device stops receiving the member's pushes (MS-144), the session has
+/// ended, and the router starts the next person on Home.
 @MainActor
 struct DeviceSignOutTests {
     @Test func signingOutClearsTheDeviceAndEndsTheSession() async {
@@ -22,7 +22,11 @@ struct DeviceSignOutTests {
         await push.didRegister(deviceToken: Data(repeating: 0xab, count: 32))
         let logo = PendingClinicLogo()
         logo.keep(Data("png".utf8), for: Session.demo.clinicID)
-        let signOut = DeviceSignOut(sessionStore: store, cache: cache, writes: queue, push: push, pendingLogo: logo)
+        let count = StockCount(clinicID: Session.demo.clinicID, userID: Session.demo.userID)
+        let draft = InMemoryCountDraftStore(draft: count)
+        let signOut = DeviceSignOut(
+            sessionStore: store, cache: cache, writes: queue, push: push, pendingLogo: logo, countDraft: draft
+        )
         #expect(signOut.unsyncedChangeCount == 1)
 
         await signOut.signOut()
@@ -32,15 +36,18 @@ struct DeviceSignOutTests {
         #expect(signOut.unsyncedChangeCount == 0)
         #expect(tokens.removed == [String(repeating: "ab", count: 32)], "This device gets no more of their pushes")
         #expect(logo.logo(for: Session.demo.clinicID) == nil, "A logo waiting for its retry is forgotten (MS-139)")
+        #expect(draft.load() == nil, "A count in progress is not offered to the next person (MS-121)")
         #expect(store.state == .signedOut)
     }
 
-    /// The server signing the member out here clears the same: a pending Clinic settings logo goes too.
+    /// The server signing the member out here clears the same: a pending Clinic settings logo and a count go too.
     @Test func aRemovedMembersDeviceForgetsAPendingLogo() {
         let dependencies = AppDependencies.preview()
         dependencies.pendingClinicLogo.keep(Data("png".utf8), for: Session.demo.clinicID)
+        dependencies.countDraftStore.save(StockCount(clinicID: Session.demo.clinicID, userID: Session.demo.userID))
         dependencies.clearClinicData()
         #expect(dependencies.pendingClinicLogo.logo(for: Session.demo.clinicID) == nil)
+        #expect(dependencies.countDraftStore.load() == nil)
     }
 
     @Test func theRouterStartsTheNextPersonOnHome() {

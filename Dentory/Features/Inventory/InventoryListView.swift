@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Inventory (f16 Admin, f17 Staff, f19 Low filter): title with Count stock, search, status chips and
-/// the product rows in one card; Admin gets the round + for New product.
+/// the product rows in one card; Admin gets the round + for New product. Count stock (f18, MS-121) turns the
+/// same list into steppers with Cancel in the header and Review pinned above the tab bar.
 struct InventoryListView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -17,17 +18,23 @@ struct InventoryListView: View {
 
     var body: some View {
         content
-            .rootScreen(title: "Inventory", identifier: "inv.header") {
-                MSButton("Count stock", icon: .clipboardList, variant: .tertiary, size: .small, action: countStock)
-                    .accessibilityIdentifier("inv.countStock")
+            .rootScreen(title: viewModel.title, identifier: "inv.header") {
+                InventoryHeaderAction(viewModel: viewModel)
             }
             // Floats over the rows, 20 pt above the tab bar (f16); the list leaves room under its last row.
             .overlay(alignment: .bottomTrailing) {
-                FloatingAddButton(label: "New product", action: newProduct)
-                    .padding(.horizontal, Spacing.page)
-                    .padding(.bottom, Spacing.page)
-                    .accessibilityIdentifier("inv.newProduct")
-                    .adminOnly()
+                if !viewModel.isCounting {
+                    FloatingAddButton(label: "New product", action: newProduct)
+                        .padding(.horizontal, Spacing.page)
+                        .padding(.bottom, Spacing.page)
+                        .accessibilityIdentifier("inv.newProduct")
+                        .adminOnly()
+                }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if viewModel.isCounting {
+                    CountReviewBar(viewModel: viewModel)
+                }
             }
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: InventoryRoute.self) { route in
@@ -55,6 +62,14 @@ struct InventoryListView: View {
                     Task { await viewModel.load() }
                 }
             }
+            .msSheet(item: $viewModel.countSheet) { sheet in
+                CountSheetView(sheet: sheet, viewModel: viewModel)
+            }
+            .onChange(of: viewModel.countApplied) { _, applied in
+                guard let applied else { return }
+                dependencies.toasts.show(applied.title, detail: applied.detail)
+                viewModel.clearCountApplied()
+            }
     }
 
     @ViewBuilder private var content: some View {
@@ -81,6 +96,8 @@ struct InventoryListView: View {
                 }
                 .accessibilityIdentifier("inv.loading")
             }
+        case nil where viewModel.isCounting:
+            InventoryCountRows(viewModel: viewModel)
         case nil:
             InventoryRows(viewModel: viewModel)
             if session.isAdmin {
@@ -88,11 +105,6 @@ struct InventoryListView: View {
                 Color.clear.frame(height: FloatingAddButton.diameter + Spacing.page)
             }
         }
-    }
-
-    /// Count mode arrives with MS-121; in read-only mode the sheet says why instead (MS-142).
-    private func countStock() {
-        writeAccess.perform { dependencies.toasts.show("Count stock arrives with a later update.") }
     }
 
     /// The New product sheet (MS-117); in read-only mode the read-only sheet says why instead (MS-142).

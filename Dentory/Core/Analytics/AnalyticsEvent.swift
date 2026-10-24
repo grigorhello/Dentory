@@ -56,6 +56,12 @@ nonisolated struct AnalyticsEvent: Equatable, Sendable {
         ])
     }
 
+    /// A reviewed count applied on Inventory (MS-121): the corrections it wrote, and the seconds from Count stock to
+    /// Apply count.
+    static func countApplied(corrections: Int, seconds: Int) -> Self {
+        Self(name: .countReview, properties: [.itemCount: .count(corrections), .durationSeconds: .count(seconds)])
+    }
+
     static func markedOrdered(items: Int) -> Self {
         Self(name: .markOrdered, properties: [.itemCount: .count(items)])
     }
@@ -96,6 +102,7 @@ nonisolated enum AnalyticsEventName: String, CaseIterable, Sendable {
     case export = "more.export"
     case settingsSave = "settings.save"
     case productCreate = "inv.newProduct"
+    case countReview = "inv.count.review"
 }
 
 /// Every property key an event may carry.

@@ -112,9 +112,19 @@ final class InventoryUITests: XCTestCase {
         app.launchArguments = ["-uiTesting", "-tab", "inventory"]
         app.launch()
 
+        // Applying a count toasts once Review's bar has gone (MS-121).
         let countStock = app.buttons["inv.countStock"]
         XCTAssertTrue(countStock.waitForExistence(timeout: 5), "No Count stock")
         countStock.tap()
+        XCTAssertTrue(app.buttons["inv.count.cancel"].waitForExistence(timeout: 3), "Count mode did not open")
+        app.buttons["Low"].tap()
+        let inc = app.buttons["inv.count.row[00000000-0000-4000-8000-0000000000d2].inc"]
+        XCTAssertTrue(inc.waitForExistence(timeout: 3), "No Endo file kit row")
+        inc.tap()
+        app.buttons["inv.count.review"].tap()
+        let apply = app.buttons["reviewCount.apply"]
+        XCTAssertTrue(apply.waitForExistence(timeout: 3), "Review corrections did not open")
+        apply.tap()
         let toast = app.descendants(matching: .any)["toast"]
         XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast")
         let gap = app.descendants(matching: .any)["tabBar"].frame.minY - toast.frame.maxY
