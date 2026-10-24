@@ -5,8 +5,8 @@ import SwiftUI
 /// same list into steppers with Cancel in the header and Review pinned above the tab bar.
 struct InventoryListView: View {
     @Environment(\.appDependencies) private var dependencies
-    @Environment(\.tabBarInset) private var tabBarInset
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: InventoryListViewModel
     @State private var isNewProductPresented = false
     let session: Session
@@ -26,7 +26,7 @@ struct InventoryListView: View {
                 if !viewModel.isCounting {
                     FloatingAddButton(label: "New product", action: newProduct)
                         .padding(.horizontal, Spacing.page)
-                        .padding(.bottom, Spacing.page + tabBarInset)
+                        .padding(.bottom, Spacing.page)
                         .accessibilityIdentifier("inv.newProduct")
                         .adminOnly()
                 }
@@ -42,7 +42,7 @@ struct InventoryListView: View {
                 case .product(let id):
                     ProductDetailView(productID: id, session: session, dependencies: dependencies)
                 case .receive:
-                    InventoryRoutePlaceholderView(route: route)
+                    ReceiveView(session: session, dependencies: dependencies)
                 }
             }
             .onChange(of: router.inventoryFilter, initial: true) { _, filter in
@@ -82,7 +82,9 @@ struct InventoryListView: View {
         case .noMatches:
             EmptyStateView("No products match.")
         case .noProducts:
-            InventoryEmptyClinic(isAdmin: session.isAdmin) { router.push(InventoryRoute.receive, on: .inventory) }
+            InventoryEmptyClinic(isAdmin: session.isAdmin) {
+                writeAccess.perform { router.push(InventoryRoute.receive, on: .inventory) }
+            }
         case nil where viewModel.products.isEmpty:
             if case .failed(let error) = viewModel.state {
                 Notice(error.userMessage, tone: .danger)
@@ -105,8 +107,9 @@ struct InventoryListView: View {
         }
     }
 
+    /// The New product sheet (MS-117); in read-only mode the read-only sheet says why instead (MS-142).
     private func newProduct() {
-        isNewProductPresented = true
+        writeAccess.perform { isNewProductPresented = true }
     }
 }
 

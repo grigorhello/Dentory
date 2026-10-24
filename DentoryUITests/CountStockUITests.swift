@@ -39,6 +39,10 @@ final class CountStockUITests: XCTestCase {
         XCTAssertTrue(review.exists, "No Review button")
         XCTAssertFalse(review.isEnabled, "Review is enabled before anything changed")
         XCTAssertEqual(review.label, "Review count")
+        // Pinned just above the tab bar, which stays while counting (f18).
+        let gap = app.descendants(matching: .any)["tabBar"].frame.minY - review.frame.maxY
+        XCTAssertGreaterThanOrEqual(gap, 0, "The tab bar covers Review")
+        XCTAssertLessThan(gap, 40, "Review floats \(gap) pt above the tab bar")
         let subLine = app.staticTexts["est. 54 cartridges · Operatory 1 · Drawer A"]
         XCTAssertTrue(subLine.exists, "The sub-line is not f18's")
 

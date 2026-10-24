@@ -13,6 +13,8 @@ final class AppRouter {
     var inventoryFilter: InventoryFilter?
     /// A category name set by Inventory value (MS-135) before selecting the Inventory tab; applied once, like the filter.
     var inventoryCategory: String?
+    /// The read-only sheet (MS-142), opened by a write entry point while the clinic may not change anything.
+    var isReadOnlySheetPresented = false
     private var paths: [AppTab: NavigationPath] = [:]
 
     init(selectedTab: AppTab = .home, inventoryFilter: InventoryFilter? = nil) {
@@ -49,6 +51,16 @@ final class AppRouter {
 
     func popToRoot(on tab: AppTab? = nil) {
         paths[tab ?? selectedTab] = NavigationPath()
+    }
+
+    /// Home, with every path, hand-over and badge cleared: what the next person to sign in starts from (MS-137).
+    func reset() {
+        selectedTab = .home
+        paths = [:]
+        inventoryFilter = nil
+        inventoryCategory = nil
+        isReadOnlySheetPresented = false
+        toBuyCount = 0
     }
 
     /// Selects a tab; selecting the current one again returns to its root, as the system tab bar does.

@@ -14,12 +14,15 @@ struct InventoryCountTests {
 
     private func make(
         repository: FakeInventoryRepository = FakeInventoryRepository(),
+        cache: ResponseCaching = InMemoryResponseCache(),
         draftStore: CountDraftStoring = InMemoryCountDraftStore(),
+        formatters: ClinicFormatters? = nil,
+        analytics: Analytics = NoopAnalytics(),
         userID: UUID = Session.demo.userID
     ) async -> InventoryListViewModel {
         let viewModel = InventoryListViewModel(
-            repository: repository, cache: InMemoryResponseCache(), draftStore: draftStore, formatters: formatters,
-            clinicID: Session.demo.clinicID, userID: userID
+            repository: repository, cache: cache, draftStore: draftStore, formatters: formatters ?? self.formatters,
+            clinicID: Session.demo.clinicID, userID: userID, analytics: analytics
         )
         await viewModel.load()
         return viewModel
@@ -129,9 +132,11 @@ struct InventoryCountTests {
         #expect(viewModel.countApplied == nil)
     }
 
+    /// The cached list follows the counted figures, so a count queued offline does not come back on the next visit.
     @Test func aCountAppliedOfflineShowsTheCountedFigures() async {
         let repository = FakeInventoryRepository()
-        let viewModel = await make(repository: repository)
+        let cache = InMemoryResponseCache()
+        let viewModel = await make(repository: repository, cache: cache)
         countThreeInDifferentFilters(viewModel)
         repository.applyResult = .success(.queued)
         repository.result = .failure(AppError.network)
@@ -139,12 +144,37 @@ struct InventoryCountTests {
         #expect(viewModel.countApplied?.detail == "3 products updated")
         let figures = viewModel.products.filter { [septocaine.id, bonding.id].contains($0.id) }.map(\.quantity)
         #expect(figures == [52, 2], "Septocaine shows 52; Bonding 1 unopened plus its open bottle")
+        let nextVisit = await make(repository: repository, cache: cache)
+        let cached = nextVisit.products.filter { [septocaine.id, bonding.id].contains($0.id) }.map(\.quantity)
+        #expect(cached == [52, 2], "The next visit reads the counted figures from the cache")
     }
 
+    /// MS-147: `inv.count.review` with the corrections applied and the seconds from Count stock to Apply count, the
+    /// start kept in the draft across a relaunch.
+    @Test func anAppliedCountIsCountedWithItsCorrectionsAndSeconds() async {
+        let clock = MovingClock(Session.demoNow)
+        let moving = ClinicFormatters(
+            currency: "USD", timeZone: TimeZone(identifier: "America/New_York") ?? .current,
+            locale: Locale(identifier: "en_US"), clock: clock
+        )
+        let draftStore = InMemoryCountDraftStore()
+        let first = await make(draftStore: draftStore, formatters: moving)
+        countThreeInDifferentFilters(first)
+        clock.now = Session.demoNow.addingTimeInterval(95)
+        let analytics = SpyAnalytics()
+        let relaunched = await make(draftStore: draftStore, formatters: moving, analytics: analytics)
+        relaunched.reviewCount()
+        await relaunched.applyCount()
+        #expect(analytics.events == [.countApplied(corrections: 3, seconds: 95)])
+        #expect(analytics.events.first?.payload == ["item_count": .number(3), "duration_s": .number(95)])
+    }
+
+    /// A read-only clinic's database refuses the count (MS-142): the sheet says so and nothing is counted as applied.
     @Test func aRefusedCountStaysOnTheReviewSheet() async {
         let repository = FakeInventoryRepository()
         let draftStore = InMemoryCountDraftStore()
-        let viewModel = await make(repository: repository, draftStore: draftStore)
+        let analytics = SpyAnalytics()
+        let viewModel = await make(repository: repository, draftStore: draftStore, analytics: analytics)
         viewModel.startCount()
         viewModel.setCount(52, for: septocaine)
         viewModel.reviewCount()
@@ -154,6 +184,7 @@ struct InventoryCountTests {
         #expect(viewModel.countSheet == .review)
         #expect(viewModel.isCounting)
         #expect(viewModel.countApplied == nil)
+        #expect(analytics.events.isEmpty, "A refused count is not counted")
         #expect(draftStore.load()?.counted == [septocaine.id: 52], "The counts are kept")
         viewModel.closeCountSheet()
         viewModel.reviewCount()

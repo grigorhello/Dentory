@@ -16,7 +16,7 @@ struct ProductDetailEditDeleteTests {
     ) -> ProductDetailViewModel {
         ProductDetailViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            userID: Session.demo.userID, productID: ProductSummary.demo[0].id
+            userID: Session.demo.userID, productID: ProductSummary.demo[0].id, analytics: SpyAnalytics()
         )
     }
 
@@ -77,5 +77,34 @@ struct ProductDetailEditDeleteTests {
         await viewModel.productSaved()
         #expect(viewModel.sheet == nil)
         #expect(repository.detailCalls.count == 2, "The saved fields are read back")
+    }
+
+    // MARK: - Add expiry and Edit batch (MS-119)
+
+    @Test func addExpiryAndEditBatchOpenOnlyForTheLoadedProduct() async {
+        let viewModel = make()
+        viewModel.addExpiry()
+        #expect(viewModel.sheet == nil, "Nothing to date before the detail loaded")
+        await viewModel.load()
+        viewModel.addExpiry()
+        #expect(viewModel.sheet == .addExpiry)
+        #expect(viewModel.makeBatchViewModel(for: .addExpiry)?.title == "Add expiry")
+        let batch = ProductDetail.demoSeptocaine().batches[0]
+        viewModel.editBatch(batch.id)
+        #expect(viewModel.sheet == .editBatch(batch.id))
+        #expect(viewModel.makeBatchViewModel(for: .editBatch(batch.id))?.title == "Edit batch")
+        viewModel.editBatch(UUID())
+        #expect(viewModel.sheet == .editBatch(batch.id), "An unknown batch opens nothing")
+        #expect(viewModel.makeBatchViewModel(for: .delete) == nil)
+    }
+
+    @Test func savingABatchClosesTheSheetAndReloads() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(repository: repository)
+        await viewModel.load()
+        viewModel.addExpiry()
+        await viewModel.batchSaved()
+        #expect(viewModel.sheet == nil)
+        #expect(repository.detailCalls.count == 2, "The fresh detail carries the batches and the status")
     }
 }

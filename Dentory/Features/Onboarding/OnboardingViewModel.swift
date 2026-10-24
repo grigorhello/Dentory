@@ -50,6 +50,7 @@ final class OnboardingViewModel {
     private let repository: OnboardingRepository
     private let sessionStore: SessionStore
     private let progress: OnboardingProgressStoring
+    private let analytics: Analytics
     private let timeZone: TimeZone
     private let submitGuard = SubmitGuard()
 
@@ -58,6 +59,7 @@ final class OnboardingViewModel {
         repository: OnboardingRepository,
         sessionStore: SessionStore,
         progress: OnboardingProgressStoring,
+        analytics: Analytics,
         locale: Locale = .current,
         timeZone: TimeZone = .current,
         startingAt step: Step = .account,
@@ -68,6 +70,7 @@ final class OnboardingViewModel {
         self.repository = repository
         self.sessionStore = sessionStore
         self.progress = progress
+        self.analytics = analytics
         self.timeZone = timeZone
         self.step = step
         self.clinicID = clinicID
@@ -136,6 +139,7 @@ final class OnboardingViewModel {
                     try? await repository.uploadLogo(clinicID: id, imageData: logoData)
                 }
                 await sessionStore.refresh()
+                analytics.track(.clinicCreated)
                 step = .invite
             } catch {
                 handle(AppError(error))
@@ -172,6 +176,7 @@ final class OnboardingViewModel {
             generalError = nil
             do {
                 _ = try await repository.invite(clinicID: clinicID, invites: filledInvites)
+                analytics.track(.onboardingFinished(invitations: filledInvites.count))
                 finish(message: "Invitations sent · They get a link by email.")
             } catch {
                 let appError = AppError(error)
@@ -187,6 +192,7 @@ final class OnboardingViewModel {
     }
 
     func skipInvites() {
+        analytics.track(.onboardingFinished(invitations: 0))
         finish(message: nil)
     }
 

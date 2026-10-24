@@ -49,6 +49,7 @@ final class InventoryListViewModel {
     let formatters: ClinicFormatters
     private let clinicID: UUID
     private let userID: UUID
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
 
     /// A draft left by the same person in the same clinic reopens count mode with its counts.
@@ -59,6 +60,7 @@ final class InventoryListViewModel {
         formatters: ClinicFormatters,
         clinicID: UUID,
         userID: UUID,
+        analytics: Analytics,
         filter: InventoryFilter = .all,
         category: String? = nil
     ) {
@@ -68,6 +70,7 @@ final class InventoryListViewModel {
         self.formatters = formatters
         self.clinicID = clinicID
         self.userID = userID
+        self.analytics = analytics
         self.filter = filter
         self.category = category
         products = cache.load([ProductSummary].self, for: Self.cacheKey(clinicID: clinicID)) ?? []
@@ -164,7 +167,7 @@ final class InventoryListViewModel {
     var isApplyingCount: Bool { submitGuard.isBusy }
 
     func startCount() {
-        count = StockCount(clinicID: clinicID, userID: userID)
+        count = StockCount(clinicID: clinicID, userID: userID, startedAt: formatters.clock.now)
     }
 
     func setCount(_ value: Int, for product: ProductSummary) {
@@ -204,7 +207,8 @@ final class InventoryListViewModel {
     }
 
     /// Writes one Count transaction per corrected product, leaves count mode with the toast, shows the
-    /// counted figures at once and loads the fresh list (the server's status).
+    /// counted figures at once and loads the fresh list (the server's status). The cached list follows, so a count
+    /// queued offline shows its figures on the next visit too, and analytics hears how many corrections went in.
     func applyCount() async {
         guard let count else { return }
         let corrected = corrections
@@ -220,6 +224,9 @@ final class InventoryListViewModel {
                 products = products.map { product in
                     counted[product.id].map { product.counted(Decimal($0)) } ?? product
                 }
+                cache.store(products, for: Self.cacheKey(clinicID: clinicID))
+                let seconds = count.seconds(until: formatters.clock.now)
+                analytics.track(.countApplied(corrections: corrected.count, seconds: seconds))
                 countApplied = CountApplied(title: "Count applied", detail: Self.productsUpdated(corrected.count))
                 countSheet = nil
                 endCount()

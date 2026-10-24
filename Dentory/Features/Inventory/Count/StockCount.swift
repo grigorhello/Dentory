@@ -6,13 +6,22 @@ import Foundation
 nonisolated struct StockCount: Codable, Equatable, Sendable {
     let clinicID: UUID
     let userID: UUID
+    /// When Count stock was tapped; Apply count reports the seconds since (MS-147).
+    let startedAt: Date?
     /// Touched rows only; a row nobody touched stays at its estimate and is not sent.
     private(set) var counted: [UUID: Int]
 
-    init(clinicID: UUID, userID: UUID, counted: [UUID: Int] = [:]) {
+    init(clinicID: UUID, userID: UUID, startedAt: Date? = nil, counted: [UUID: Int] = [:]) {
         self.clinicID = clinicID
         self.userID = userID
+        self.startedAt = startedAt
         self.counted = counted
+    }
+
+    /// From Count stock to `date`, in whole seconds; 0 when the start is unknown.
+    func seconds(until date: Date) -> Int {
+        guard let startedAt else { return 0 }
+        return max(Int(date.timeIntervalSince(startedAt).rounded()), 0)
     }
 
     /// What the row is compared with: the unopened quantity, which for a countable product is all of it.
@@ -57,7 +66,7 @@ nonisolated struct StockCount: Codable, Equatable, Sendable {
 
     // The draft holds the counts as lines, so the file stays readable JSON.
     private enum CodingKeys: String, CodingKey {
-        case clinicID, userID, lines
+        case clinicID, userID, startedAt, lines
     }
 
     private struct Line: Codable {
@@ -69,6 +78,7 @@ nonisolated struct StockCount: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         clinicID = try container.decode(UUID.self, forKey: .clinicID)
         userID = try container.decode(UUID.self, forKey: .userID)
+        startedAt = try container.decodeIfPresent(Date.self, forKey: .startedAt)
         let lines = try container.decode([Line].self, forKey: .lines)
         counted = Dictionary(lines.map { ($0.productID, $0.counted) }, uniquingKeysWith: { _, last in last })
     }
@@ -77,6 +87,7 @@ nonisolated struct StockCount: Codable, Equatable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(clinicID, forKey: .clinicID)
         try container.encode(userID, forKey: .userID)
+        try container.encodeIfPresent(startedAt, forKey: .startedAt)
         let lines = counted
             .map { Line(productID: $0.key, counted: $0.value) }
             .sorted { $0.productID.uuidString < $1.productID.uuidString }

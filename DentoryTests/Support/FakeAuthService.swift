@@ -26,11 +26,22 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
 
     private(set) var signUps: [SignUp] = []
 
+    private(set) var restoreCount = 0
+    /// How long `restore()` takes to answer; the answer is what was stored when it was called.
+    var restoreDelay: Duration = .zero
+
     func restore() async throws -> RestoredSession {
-        if let restoreError { throw restoreError }
-        if let storedSession { return .signedIn(storedSession) }
-        if let storedAccount { return .needsClinic(storedAccount) }
-        return .none
+        restoreCount += 1
+        let answer = storedAnswer()
+        if restoreDelay > .zero { try await Task.sleep(for: restoreDelay) }
+        return try answer.get()
+    }
+
+    private func storedAnswer() -> Result<RestoredSession, Error> {
+        if let restoreError { return .failure(restoreError) }
+        if let storedSession { return .success(.signedIn(storedSession)) }
+        if let storedAccount { return .success(.needsClinic(storedAccount)) }
+        return .success(.none)
     }
 
     func signUp(fullName: String, email: String, password: String) async throws -> Account {
@@ -49,5 +60,30 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
     func signOut() async throws {
         signOutCount += 1
         storedSession = nil
+    }
+
+    var resetResult: Result<Void, Error> = .success(())
+    var verifyResult: Result<Void, Error> = .success(())
+    var updatePasswordResult: Result<Void, Error> = .success(())
+    /// The session `restore()` answers once the new password is saved, as the recovery session would.
+    var sessionAfterReset: Session? = .demo
+    private(set) var resetEmails: [String] = []
+    private(set) var verifiedTokenHashes: [String] = []
+    private(set) var updatedPasswords: [String] = []
+
+    func sendPasswordReset(email: String) async throws {
+        resetEmails.append(email)
+        try resetResult.get()
+    }
+
+    func verifyPasswordReset(tokenHash: String) async throws {
+        verifiedTokenHashes.append(tokenHash)
+        try verifyResult.get()
+    }
+
+    func updatePassword(_ password: String) async throws {
+        updatedPasswords.append(password)
+        try updatePasswordResult.get()
+        storedSession = sessionAfterReset
     }
 }

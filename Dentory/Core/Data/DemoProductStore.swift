@@ -75,6 +75,19 @@ final class DemoProductStore: @unchecked Sendable {
         }
     }
 
+    /// A status the demo works out elsewhere, such as Missing expiry cleared by Add expiry (MS-119).
+    func setStatus(_ status: ProductStatus, for id: UUID) {
+        lock.withLock {
+            guard let index = summaries.firstIndex(where: { $0.id == id }) else { return }
+            let current = summaries[index]
+            summaries[index] = ProductSummary(
+                id: current.id, name: current.name, categoryName: current.categoryName, unit: current.unit,
+                tracking: current.tracking, location: current.location, quantity: current.quantity,
+                unopened: current.unopened, openCount: current.openCount, minimum: current.minimum, status: status
+            )
+        }
+    }
+
     /// Applies counted unopened quantities the way `stock_count_apply` does: a line that matches the stock
     /// changes nothing; any other moves the product's figures and status (an increase lands on the undated
     /// quantity, MS-100 D9) and is recorded, newest first. Returns how many products changed.

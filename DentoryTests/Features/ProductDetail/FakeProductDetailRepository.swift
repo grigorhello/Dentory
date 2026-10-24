@@ -10,6 +10,16 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
     var adjustResult: Result<WriteOutcome, Error> =
         .success(.applied(actionID: UUID(uuidString: "00000000-0000-4000-8000-0000000000ac") ?? UUID()))
     var undoResult: Result<Void, Error> = .success(())
+    var upsertResult: Result<WriteOutcome, Error> = .success(.applied(actionID: nil))
+    struct Upsert: Equatable {
+        let productID: UUID
+        let batchID: UUID?
+        let expiryMonth: CalendarDay
+        let quantity: Decimal
+        let lot: String?
+    }
+
+    private(set) var upserts: [Upsert] = []
     var openResult: Result<WriteOutcome, Error> = .success(.applied(actionID: UUID()))
     var finishResult: Result<WriteOutcome, Error> = .success(.applied(actionID: UUID()))
     private(set) var opens: [UUID] = []
@@ -68,6 +78,15 @@ final class FakeProductDetailRepository: ProductDetailRepository, @unchecked Sen
     func undoAdjustment(actionID: UUID) async throws {
         undos.append(actionID)
         try undoResult.get()
+    }
+
+    func upsertBatch(
+        productID: UUID, batchID: UUID?, expiryMonth: CalendarDay, quantity: Decimal, lot: String?
+    ) async throws -> WriteOutcome {
+        upserts.append(
+            Upsert(productID: productID, batchID: batchID, expiryMonth: expiryMonth, quantity: quantity, lot: lot)
+        )
+        return try upsertResult.get()
     }
 
     func openBottle(productID: UUID) async throws -> WriteOutcome {

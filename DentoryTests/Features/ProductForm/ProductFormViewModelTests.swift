@@ -12,14 +12,16 @@ struct ProductFormViewModelTests {
     private func make(
         mode: ProductFormViewModel.Mode = .create,
         repository: FakeProductFormRepository = FakeProductFormRepository(),
-        locale: Locale = Locale(identifier: "en_US")
+        locale: Locale = Locale(identifier: "en_US"),
+        analytics: SpyAnalytics = SpyAnalytics()
     ) -> ProductFormViewModel {
         let formatters = ClinicFormatters(
             currency: "USD", timeZone: TimeZone(identifier: "America/New_York") ?? .current,
             locale: locale, clock: FixedClock(Session.demoNow)
         )
         return ProductFormViewModel(
-            repository: repository, formatters: formatters, clinicID: Session.demo.clinicID, mode: mode
+            repository: repository, formatters: formatters, clinicID: Session.demo.clinicID, mode: mode,
+            analytics: analytics
         )
     }
 
@@ -65,7 +67,8 @@ struct ProductFormViewModelTests {
 
     @Test func createSendsTheTrimmedDraftAndReportsTheNewID() async {
         let repository = FakeProductFormRepository()
-        let viewModel = make(repository: repository)
+        let analytics = SpyAnalytics()
+        let viewModel = make(repository: repository, analytics: analytics)
         await viewModel.load()
         viewModel.name = " Articaine 4% "
         viewModel.category = .existing(ProductCategory.demo[0])
@@ -85,6 +88,7 @@ struct ProductFormViewModelTests {
         #expect(draft?.minimum == 10 && draft?.target == 40)
         #expect(draft?.supplier == "Patterson" && draft?.location == nil)
         #expect(viewModel.outcome == .created(UUID(uuidString: "00000000-0000-4000-8000-0000000000f1") ?? UUID()))
+        #expect(analytics.events == [.productCreated], "inv.newProduct, without the name (MS-147)")
     }
 
     @Test func aNewCategoryIsCreatedFirstAndUsed() async {
@@ -126,8 +130,9 @@ struct ProductFormViewModelTests {
 
     @Test func editStartsFromTheProductAndSavesChanges() async {
         let repository = FakeProductFormRepository()
+        let analytics = SpyAnalytics()
         let product = ProductDetail.fixture(quantity: 0, unopened: 0)
-        let viewModel = make(mode: .edit(product), repository: repository)
+        let viewModel = make(mode: .edit(product), repository: repository, analytics: analytics)
         #expect(viewModel.title == "Edit product")
         #expect(viewModel.submitTitle == "Save changes")
         #expect(!viewModel.showsReceivingHint)
@@ -140,6 +145,7 @@ struct ProductFormViewModelTests {
         #expect(repository.updates.first?.id == product.id)
         #expect(repository.updates.first?.draft.minimum == 25)
         #expect(viewModel.outcome == .saved)
+        #expect(analytics.events.isEmpty, "Only a new product is tracked")
     }
 
     @Test func theTrackingSwitchIsBlockedWhileStockIsHeld() {

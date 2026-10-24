@@ -1,6 +1,8 @@
--- MS-121 · Count stock: three products from three filters counted in one go by staff, as the app sends them.
+-- MS-121 · Count stock: three products from three filters counted in one go by staff, as the app sends them; the
+-- alerts, the push (MS-144) and To buy follow a count like any stock change, and a read-only clinic's count is refused
+-- (MS-142). Every count below is scoped to this test's clinic: CI runs the file again over the demo clinic.
 begin;
-select plan(16);
+select plan(25);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000000f31', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -59,7 +61,7 @@ select results_eq(
   'the list shows the counted quantities; the open bottle stays open');
 select results_eq(
   $$ select p.name, t.delta, t.reason, t.by_user from public.transactions t join public.products p on p.id = t.product_id
-     where t.type = 'count' order by p.name $$,
+     where t.type = 'count' and t.clinic_id = '00000000-0000-4000-8000-000000000f41' order by p.name $$,
   $$ values ('Bonding agent', 1::numeric, 'Physical count', '00000000-0000-4000-8000-000000000f32'::uuid),
             ('Endo file kit #15-40', 3::numeric, 'Physical count', '00000000-0000-4000-8000-000000000f32'::uuid),
             ('Nitrile gloves M', -2::numeric, 'Physical count', '00000000-0000-4000-8000-000000000f32'::uuid) $$,
@@ -85,7 +87,9 @@ select results_eq(
   $$ values ('Bonding agent', 'expiring'), ('Endo file kit #15-40', 'missing_expiry'), ('Nitrile gloves M', 'healthy') $$,
   'the statuses follow: the kits are no longer low but miss an expiry');
 select lives_ok($$ select pg_temp.apply_count('00000000-0000-4000-8000-000000000fa1') $$, 'a replay of the queued count is accepted');
-select is((select count(*) from public.transactions where type = 'count'), 3::bigint, 'and writes nothing twice');
+select is(
+  (select count(*) from public.transactions where type = 'count' and clinic_id = '00000000-0000-4000-8000-000000000f41'),
+  3::bigint, 'and writes nothing twice');
 select throws_ok(
   $$ select public.stock_count_apply('00000000-0000-4000-8000-000000000f41',
      '[{"product_id":"00000000-0000-4000-8000-000000000f64","counted":-1}]', '00000000-0000-4000-8000-000000000fa2') $$,
@@ -103,6 +107,59 @@ select throws_ok(
   '42501', null, 'nor pass it off as its own product');
 reset role;
 select is((select qty from public.batches where id = '00000000-0000-4000-8000-000000000f75'), 9::numeric, 'Suction tips are untouched');
+
+-- The alerts follow the count: the kits, now undated stock, have a Missing expiry alert and no Low one.
+select results_eq(
+  $$ select kind::text from public.alerts where product_id = '00000000-0000-4000-8000-000000000f61' and resolved_at is null $$,
+  $$ values ('missing_expiry') $$,
+  'the counted kits are no longer low but miss an expiry');
+
+-- A second count finds no gloves left: Out of stock opens, its push is queued (MS-144) and the gloves join To buy.
+select pg_temp.act_as('00000000-0000-4000-8000-000000000f32');
+select lives_ok(
+  $$ select public.stock_count_apply('00000000-0000-4000-8000-000000000f41',
+     '[{"product_id":"00000000-0000-4000-8000-000000000f62","counted":0}]', '00000000-0000-4000-8000-000000000fa5') $$,
+  'staff count the gloves at 0');
+reset role;
+select results_eq(
+  $$ select delta, batch_id is null from public.transactions
+     where type = 'count' and product_id = '00000000-0000-4000-8000-000000000f62' order by delta $$,
+  $$ values (-12::numeric, true), (-2::numeric, true) $$,
+  'one Physical count row per count, though this one emptied two batches');
+select results_eq(
+  $$ select kind::text from public.alerts where product_id = '00000000-0000-4000-8000-000000000f62' and resolved_at is null $$,
+  $$ values ('out_of_stock') $$,
+  'the gloves are out of stock');
+select results_eq(
+  $$ select kind::text, sent_at is null from public.push_outbox where product_id = '00000000-0000-4000-8000-000000000f62' $$,
+  $$ values ('out_of_stock', true) $$,
+  'their Out of stock push waits to go out');
+select results_eq(
+  $$ select qty, source::text, status::text from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000f62' $$,
+  $$ values (20::numeric, 'auto', 'to_buy') $$,
+  'and they join To buy up to their target');
+
+-- Read-only mode (MS-142): once the trial ended without a card, a count is refused with the read-only sentence, which
+-- the app shows as read-only mode, for both roles, and nothing moves.
+update public.clinics set trial_ends_at = now() - interval '1 day' where id = '00000000-0000-4000-8000-000000000f41';
+select pg_temp.act_as('00000000-0000-4000-8000-000000000f32');
+select throws_ok(
+  $$ select public.stock_count_apply('00000000-0000-4000-8000-000000000f41',
+     '[{"product_id":"00000000-0000-4000-8000-000000000f64","counted":5}]', '00000000-0000-4000-8000-000000000fa6') $$,
+  '42501', 'the clinic is read-only until a payment method is added', 'a read-only clinic applies no count');
+reset role;
+select pg_temp.act_as('00000000-0000-4000-8000-000000000f31');
+select throws_ok(
+  $$ select public.stock_count_apply('00000000-0000-4000-8000-000000000f41',
+     '[{"product_id":"00000000-0000-4000-8000-000000000f64","counted":5}]', '00000000-0000-4000-8000-000000000fa7') $$,
+  '42501', 'the clinic is read-only until a payment method is added', 'not even for its admin');
+reset role;
+select results_eq(
+  $$ select (select qty from public.batches where id = '00000000-0000-4000-8000-000000000f75'),
+            (select count(*) from public.transactions
+              where type = 'count' and clinic_id = '00000000-0000-4000-8000-000000000f41') $$,
+  $$ values (9::numeric, 4::bigint) $$,
+  'the refused counts moved nothing: Suction tips hold 9 and the ledger keeps its four count rows');
 
 select * from finish();
 rollback;

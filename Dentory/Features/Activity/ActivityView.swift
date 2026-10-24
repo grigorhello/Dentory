@@ -1,0 +1,92 @@
+import SwiftUI
+
+/// Activity (f8, f9), pushed from Home's bell: "Alerts · N", the open alerts in one card with a dot, a sentence, when
+/// it opened and a chevron to what resolves it ("Nothing needs attention." when all is well); and History, every
+/// stock change by day.
+struct ActivityView: View {
+    @Environment(\.appDependencies) private var dependencies
+    @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
+    @State private var viewModel: ActivityViewModel
+    @State private var history: ActivityHistoryViewModel
+    let session: Session
+
+    init(session: Session, dependencies: AppDependencies) {
+        self.session = session
+        _viewModel = State(initialValue: dependencies.makeActivityViewModel(session: session))
+        _history = State(initialValue: dependencies.makeActivityHistoryViewModel(session: session, productID: nil))
+    }
+
+    var body: some View {
+        content
+            .pushedScreen(title: "Activity", identifier: "activity")
+            .reloadOnReturn { await reload() }
+            .navigationDestination(for: ActivityRoute.self) { route in
+                switch route {
+                case .product(let productID):
+                    ProductDetailView(productID: productID, session: session, dependencies: dependencies)
+                }
+            }
+    }
+
+    @ViewBuilder private var content: some View {
+        SegmentedControl(selection: $viewModel.segment, options: viewModel.segmentOptions)
+            .accessibilityIdentifier("activity.seg")
+        switch viewModel.segment {
+        case .alerts:
+            alerts
+        case .history:
+            ActivityHistoryList(viewModel: history)
+        }
+    }
+
+    @ViewBuilder private var alerts: some View {
+        if case .failed(let error) = viewModel.state {
+            Notice(error.userMessage, tone: .danger)
+        } else if viewModel.state == .loading && viewModel.alerts.isEmpty {
+            ListCard {
+                SkeletonRow()
+                SkeletonRow(showsDivider: false)
+            }
+            .accessibilityIdentifier("activity.loading")
+        } else if viewModel.alerts.isEmpty {
+            EmptyStateView(ActivityViewModel.emptyText)
+        } else {
+            ListCard {
+                ForEach(viewModel.alerts) { alert in
+                    ActivityAlertRow(
+                        sentence: viewModel.sentence(for: alert), when: viewModel.whenText(for: alert),
+                        tone: viewModel.dotTone(for: alert), showsDivider: alert.id != viewModel.alerts.last?.id
+                    ) {
+                        open(alert)
+                    }
+                    .accessibilityIdentifier("activity.alert[\(alert.id.uuidString.lowercased())]")
+                }
+            }
+        }
+    }
+
+    /// The alerts, which the segment's count reads, and History too while it shows; History loads on appear itself.
+    private func reload() async {
+        await viewModel.load()
+        if viewModel.segment == .history {
+            await history.load()
+        }
+    }
+
+    private func open(_ alert: ActivityAlert) {
+        switch viewModel.destination(for: alert) {
+        case .product(let productID): router.push(ActivityRoute.product(productID))
+        case .delivery: writeAccess.perform { router.push(HomeRoute.receive) }
+        case nil: break
+        }
+    }
+}
+
+#Preview("Activity") {
+    NavigationStack {
+        ActivityView(session: .demo, dependencies: .preview())
+    }
+    .environment(AppRouter(selectedTab: .home))
+    .environment(\.session, Session.demo)
+}

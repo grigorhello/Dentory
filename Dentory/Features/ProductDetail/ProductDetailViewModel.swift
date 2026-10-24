@@ -11,11 +11,13 @@ import Observation
 final class ProductDetailViewModel {
     enum LoadState: Equatable { case loading, loaded, failed(AppError) }
 
-    /// The sheets this screen presents (Appendix C `newProduct` in edit mode, `deleteProduct`, `adjust`).
-    enum Sheet: Identifiable, Equatable {
+    /// The sheets this screen presents (Appendix C `newProduct` in edit mode, `deleteProduct`, `adjust`, `batch`).
+    enum Sheet: Hashable, Identifiable {
         case edit
         case delete
         case adjust
+        case addExpiry
+        case editBatch(UUID)
         var id: Self { self }
     }
 
@@ -52,12 +54,14 @@ final class ProductDetailViewModel {
     /// A refusal that belongs to no field; the view shows it as a toast.
     private(set) var generalError: AppError?
 
-    private let repository: ProductDetailRepository
+    /// Read by the sheet factories in `ProductDetailViewModel+Sheets.swift`.
+    let repository: ProductDetailRepository
     private let cache: ResponseCaching
     let formatters: ClinicFormatters
     private let clinicID: UUID
     private let userID: UUID
     private let productID: UUID
+    private let analytics: Analytics
     private let submitGuard = SubmitGuard()
     private let bottleGuard = SubmitGuard()
 
@@ -67,7 +71,8 @@ final class ProductDetailViewModel {
         formatters: ClinicFormatters,
         clinicID: UUID,
         userID: UUID,
-        productID: UUID
+        productID: UUID,
+        analytics: Analytics
     ) {
         self.repository = repository
         self.cache = cache
@@ -75,6 +80,7 @@ final class ProductDetailViewModel {
         self.clinicID = clinicID
         self.userID = userID
         self.productID = productID
+        self.analytics = analytics
         detail = cache.load(ProductDetail.self, for: cacheKey)
     }
 
@@ -160,6 +166,7 @@ final class ProductDetailViewModel {
                     clinicID: clinicID, productID: productID, quantity: quantity, userID: userID
                 )
                 self.detail = detail.onToBuy(itemID)
+                analytics.track(.addedToBuy)
                 addedToBuy = AddedToBuy(
                     itemID: itemID,
                     title: "Added to To buy",
@@ -189,36 +196,7 @@ final class ProductDetailViewModel {
         addedToBuy = nil
     }
 
-    // MARK: - Edit and Delete product (MS-117)
-
-    func edit() {
-        guard detail != nil else { return }
-        sheet = .edit
-    }
-
-    /// "Save changes" closed the Edit sheet: the screen shows the saved fields.
-    func productSaved() async {
-        sheet = nil
-        await load()
-    }
-
-    func askToDelete() {
-        sheet = .delete
-    }
-
-    func keepProduct() {
-        sheet = nil
-    }
-
-    var deleteTitle: String { "Delete \(detail?.name ?? "")?" }
-
-    /// "54 cartridges still in stock. The product and its history are archived, not erased. …"
-    var deleteMessage: String {
-        let archived = "The product and its history are archived, not erased. "
-            + "It disappears from Inventory, To buy and procedures."
-        guard let detail, detail.quantity > 0 else { return archived }
-        return "\(formatters.quantity(detail.quantity, unit: detail.unit)) still in stock. " + archived
-    }
+    // MARK: - Delete product (MS-117); the other sheet intents are in ProductDetailViewModel+Sheets.swift
 
     func deleteProduct() async {
         guard let detail else { return }
@@ -236,20 +214,11 @@ final class ProductDetailViewModel {
 
     // MARK: - Adjust
 
-    /// The sheet's view model for the loaded product; nil while nothing is loaded.
-    func makeAdjustInventoryViewModel() -> AdjustInventoryViewModel? {
-        detail.map { AdjustInventoryViewModel(detail: $0, repository: repository, formatters: formatters) }
-    }
-
-    func openAdjust() {
-        guard detail != nil else { return }
-        sheet = .adjust
-    }
-
     /// Closes the sheet, moves the figures by the difference at once, queues the toast and loads the fresh
     /// detail (the server's status, batches and history).
     func adjustmentSaved(_ saved: AdjustInventoryViewModel.Saved) async {
         sheet = nil
+        analytics.track(.stockAdjusted(reason: saved.reason, increase: saved.after > saved.before))
         guard let detail else { return }
         self.detail = detail.adjusted(by: saved.after - saved.before, history: detail.history)
         undoableAdjustmentID = saved.actionID
@@ -287,6 +256,7 @@ final class ProductDetailViewModel {
             generalError = nil
             do {
                 _ = try await repository.openBottle(productID: productID)
+                analytics.track(.bottleOpened)
                 bottleToast = BottleToast(title: "\(bottleNoun.capitalized) opened", detail: nil)
             } catch {
                 generalError = AppError(error)
@@ -302,6 +272,7 @@ final class ProductDetailViewModel {
             generalError = nil
             do {
                 _ = try await repository.finishBottle(openItemID: openItemID)
+                analytics.track(.bottleFinished)
                 let remaining = detail.openBottles.filter { $0.id != openItemID }
                 self.detail = detail.replacingBottles(remaining, unopenedDelta: 0, quantityDelta: -1)
                 bottleToast = BottleToast(

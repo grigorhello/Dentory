@@ -28,6 +28,20 @@ struct AdjustInventoryViewModelTests {
         #expect(!viewModel.canSave, "Nothing changed yet")
     }
 
+    /// A stock of 1,200 opens on "1200", so an untouched field never reads as 1; "1,250" typed reads as 1250.
+    @Test func aStockOverAThousandReadsBackWhole() async {
+        let repository = FakeProductDetailRepository()
+        let viewModel = make(detail: .fixture(quantity: 1200), repository: repository)
+        #expect(viewModel.quantityText == "1200")
+        #expect(viewModel.actualQuantity == 1200)
+        viewModel.reason = .damaged
+        #expect(!viewModel.canSave, "Nothing changed")
+        viewModel.quantityText = "1,250"
+        #expect(viewModel.actualQuantity == 1250)
+        await viewModel.save()
+        #expect(repository.adjusts.first?.actualQuantity == 1250)
+    }
+
     @Test func aMultiUseProductCountsUnopenedOnly() {
         let detail = ProductDetail.fixture(tracking: .multiUse, quantity: 3, unopened: 1, openCount: 2)
         let viewModel = make(detail: detail)
@@ -95,7 +109,7 @@ struct AdjustInventoryViewModelTests {
             productID: ProductSummary.demo[0].id, actualQuantity: 52, reason: .damaged, note: nil
         )])
         #expect(viewModel.saved == .init(
-            actionID: UUID(uuidString: "00000000-0000-4000-8000-0000000000ac"), before: 54, after: 52
+            actionID: UUID(uuidString: "00000000-0000-4000-8000-0000000000ac"), before: 54, after: 52, reason: .damaged
         ))
         #expect(viewModel.generalError == nil)
     }
@@ -117,7 +131,9 @@ struct AdjustInventoryViewModelTests {
         viewModel.quantityText = "52"
         viewModel.reason = .missing
         await viewModel.save()
-        #expect(viewModel.saved == .init(actionID: nil, before: 54, after: 52), "Offline: nothing to undo yet")
+        #expect(
+            viewModel.saved == .init(actionID: nil, before: 54, after: 52, reason: .missing), "Offline: nothing to undo"
+        )
     }
 
     @Test func aRefusalStaysInTheSheetWithTheInput() async {

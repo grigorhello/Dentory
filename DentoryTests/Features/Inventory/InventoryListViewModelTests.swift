@@ -17,7 +17,8 @@ struct InventoryListViewModelTests {
     ) -> InventoryListViewModel {
         InventoryListViewModel(
             repository: repository, cache: cache, draftStore: InMemoryCountDraftStore(), formatters: formatters,
-            clinicID: Session.demo.clinicID, userID: Session.demo.userID, filter: filter, category: category
+            clinicID: Session.demo.clinicID, userID: Session.demo.userID, analytics: NoopAnalytics(), filter: filter,
+            category: category
         )
     }
 
