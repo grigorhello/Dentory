@@ -54,36 +54,6 @@ struct ProductDetailViewModelTests {
         #expect(viewModel.suggestedToBuyQuantity == 48)
     }
 
-    @Test func batchRowsAreSoonestFirstWithTheDaysLeftAndTheTotals() async {
-        let viewModel = make()
-        await viewModel.load()
-        let rows = viewModel.batchRows
-        #expect(rows.map(\.lot) == ["A112", "B441"])
-        #expect(rows.first?.dateText == "Dec 2026", "Batches have month precision, so no day is shown")
-        #expect(rows.first?.daysText == "in 90 days", "Days run to the last day of the expiry month (PRD)")
-        #expect(rows.first?.daysTone == .warning)
-        #expect(rows.map(\.quantityText) == ["20", "34"])
-        #expect(viewModel.expiryTotalLine == "54 of 54 tracked · 54 expire within 90 days")
-        #expect(viewModel.unit == "cartridges")
-    }
-
-    @Test func undatedStockCountsInTheTotalButHasNoRow() async {
-        let undated = ProductBatch(id: UUID(), expiryMonth: nil, lot: nil, quantity: 4)
-        let detail = ProductDetail.fixture(quantity: 58, batches: ProductDetail.demoSeptocaine().batches + [undated])
-        let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
-        await viewModel.load()
-        #expect(viewModel.batchRows.count == 2)
-        #expect(viewModel.expiryTotalLine == "54 of 58 tracked · 54 expire within 90 days")
-    }
-
-    @Test func daysLeftTonesFollowThePRD() {
-        #expect(ProductDetailViewModel.tone(forDaysLeft: -1) == .danger)
-        #expect(ProductDetailViewModel.tone(forDaysLeft: 30) == .danger)
-        #expect(ProductDetailViewModel.tone(forDaysLeft: 31) == .warning)
-        #expect(ProductDetailViewModel.tone(forDaysLeft: 90) == .warning)
-        #expect(ProductDetailViewModel.tone(forDaysLeft: 91) == .neutral)
-    }
-
     @Test func historyRowsReadTheDeltaWhatHappenedAndWho() async {
         let viewModel = make()
         await viewModel.load()

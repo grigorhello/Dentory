@@ -2,8 +2,8 @@ import SwiftUI
 
 /// Product detail (f20 Admin, f21 Staff): context header, name and status, the quantity card, Adjust and
 /// Add to buy, the expiry card, the bottles card for multi-use products, the history, and Delete product
-/// for Admin. Edit and Delete product open their sheets (MS-117), Show all the product's history (MS-134); batches
-/// open their own ticket's screen later.
+/// for Admin. Its sheets (Edit, Delete, Adjust, Add expiry, Edit batch) are drawn by `ProductDetailSheet`;
+/// the bottles are opened and finished in place (MS-120); Show all opens the product's history (MS-134).
 struct ProductDetailView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -69,28 +69,7 @@ struct ProductDetailView: View {
                 viewModel.clearAdjusted()
             }
             .msSheet(item: $viewModel.sheet) { sheet in
-                switch sheet {
-                case .edit:
-                    if let detail = viewModel.detail {
-                        ProductFormSheet(mode: .edit(detail), session: session, dependencies: dependencies) { _ in
-                            dependencies.toasts.show("Changes saved")
-                            Task { await viewModel.productSaved() }
-                        }
-                    }
-                case .delete:
-                    DeleteProductSheet(
-                        title: viewModel.deleteTitle, message: viewModel.deleteMessage,
-                        isDeleting: viewModel.isSubmitting,
-                        onDelete: { Task { await viewModel.deleteProduct() } },
-                        onKeep: viewModel.keepProduct
-                    )
-                case .adjust:
-                    if let adjustViewModel = viewModel.makeAdjustInventoryViewModel() {
-                        AdjustInventorySheet(viewModel: adjustViewModel) { saved in
-                            Task { await viewModel.adjustmentSaved(saved) }
-                        }
-                    }
-                }
+                ProductDetailSheet(sheet: sheet, viewModel: viewModel, session: session)
             }
     }
 
@@ -98,7 +77,7 @@ struct ProductDetailView: View {
         if let detail = viewModel.detail {
             ProductTitleRow(name: detail.name, status: detail.status)
             ProductQuantityCard(viewModel: viewModel)
-            actions
+            ProductActionsRow(viewModel: viewModel)
             ProductExpiryCard(viewModel: viewModel, onBatch: editBatch, onAddExpiry: addExpiry)
             if viewModel.isMultiUse {
                 ProductBottlesCard(viewModel: viewModel, onFinished: finishBottle, onOpenNew: openNewBottle)
@@ -126,65 +105,15 @@ struct ProductDetailView: View {
         }
     }
 
-    /// Adjust beside Add to buy in equal halves (f20); when a label does not fit its half, Adjust keeps its
-    /// own width and the primary button takes the rest, and on a narrower screen the two stack.
-    private var actions: some View {
-        ViewThatFits(in: .horizontal) {
-            EqualWidthHStack(spacing: Spacing.md) {
-                adjustButton(isFullWidth: true)
-                addToBuyButton
-            }
-            HStack(spacing: Spacing.md) {
-                adjustButton(isFullWidth: false)
-                addToBuyButton
-            }
-            VStack(spacing: Spacing.md) {
-                adjustButton(isFullWidth: true)
-                addToBuyButton
-            }
-        }
-    }
-
-    private func adjustButton(isFullWidth: Bool) -> some View {
-        MSButton("Adjust", icon: .slidersHorizontal, variant: .tertiary, isFullWidth: isFullWidth) {
-            writeAccess.perform(viewModel.openAdjust)
-        }
-        .accessibilityIdentifier("product.adjust")
-    }
-
-    private var addToBuyButton: some View {
-        MSButton(
-            viewModel.addToBuyTitle, icon: .shoppingCart, isFullWidth: true, isLoading: viewModel.isSubmitting,
-            action: addToBuy
-        )
-        .accessibilityIdentifier("product.addToBuy")
-    }
-
-    /// Adjust, Add to buy, Open a new bottle and Finished open the read-only sheet instead in read-only mode (MS-142);
-    /// "On To buy" only goes to the list.
-    private func addToBuy() {
-        if viewModel.isOnToBuy {
-            router.select(.toBuy)
-        } else {
-            writeAccess.perform { Task { await viewModel.addToBuy() } }
-        }
-    }
-
+    /// Open a new bottle, Finished, Edit, Delete product, Add expiry and Edit batch open the read-only sheet
+    /// instead in read-only mode (MS-142); Adjust and Add to buy do the same in `ProductActionsRow`.
     private func finishBottle(_ id: UUID) { writeAccess.perform { Task { await viewModel.finishBottle(id) } } }
     private func openNewBottle() { writeAccess.perform { Task { await viewModel.openNewBottle() } } }
-
-    /// Edit and Delete product (MS-117) open the read-only sheet instead in read-only mode (MS-142).
     private func edit() { writeAccess.perform(viewModel.edit) }
     private func deleteProduct() { writeAccess.perform(viewModel.askToDelete) }
+    private func addExpiry() { writeAccess.perform(viewModel.addExpiry) }
+    private func editBatch(_ id: UUID) { writeAccess.perform { viewModel.editBatch(id) } }
 
-    // Placeholders until the ticket that brings these screens (MS-119); each opens the read-only sheet instead in
-    // read-only mode (MS-142).
-    private func editBatch(_ id: UUID) {
-        writeAccess.perform { dependencies.toasts.show("Edit batch arrives with a later update.") }
-    }
-    private func addExpiry() {
-        writeAccess.perform { dependencies.toasts.show("Add expiry arrives with a later update.") }
-    }
     /// The product's whole history (MS-134).
     private func showAllHistory() {
         guard let detail = viewModel.detail else { return }

@@ -88,6 +88,27 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["deleteProduct.title"].exists, "The Delete sheet opened")
     }
 
+    /// Edit batch and Add expiry open the read-only sheet instead of the batch sheet, for Staff too (MS-119).
+    @MainActor
+    func testEditBatchAndAddExpiryOpenTheSheet() {
+        let app = launch(["-staff", "-tab", "inventory"])
+        let row = app.descendants(matching: .any)["inv.row[00000000-0000-4000-8000-0000000000d1]"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "The Septocaine row is missing")
+        row.tap()
+        let batch = app.buttons["product.batch[00000000-0000-4000-8000-0000000000b1]"]
+        XCTAssertTrue(batch.waitForExistence(timeout: 5), "No A112 batch row")
+        batch.tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "Edit batch is not gated")
+        XCTAssertFalse(app.staticTexts["batch.title"].exists, "The Edit batch sheet opened")
+        app.buttons["readOnly.ok"].tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5))
+        let addExpiry = app.buttons["product.addExpiry"]
+        if !addExpiry.isHittable { app.swipeUp() }
+        addExpiry.tap()
+        XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "Add expiry is not gated")
+        XCTAssertFalse(app.staticTexts["batch.title"].exists, "The Add expiry sheet opened")
+    }
+
     /// Clinic settings' Save opens the sheet once Clinic settings (MS-139) is in.
     @MainActor
     func testClinicSettingsSaveOpensTheSheet() {

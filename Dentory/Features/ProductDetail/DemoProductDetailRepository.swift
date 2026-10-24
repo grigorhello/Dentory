@@ -3,7 +3,8 @@ import Foundation
 /// Product detail without a server: Septocaine as f20 draws it, and a plain detail for the other demo
 /// products, with whatever the Edit sheet saved applied on top. Add to buy and its Undo, adjustments
 /// and their Undo, bottles opened and finished are remembered in memory, so the figures and the history
-/// move the way the server's would; Delete product takes the product out of the shared store.
+/// move the way the server's would; Delete product takes the product out of the shared store. Add expiry and
+/// Edit batch keep the product's batches here, dating undated stock first like `batch_upsert` (MS-119).
 final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sendable {
     /// What an adjustment did, so Undo can reverse it.
     private struct Adjustment {
@@ -20,6 +21,7 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
     private var finishedBottleIDs: Set<UUID> = []
     private var extraHistory: [UUID: [StockTransaction]] = [:]
     private var adjustments: [UUID: Adjustment] = [:]
+    private var batchEdits: [UUID: [ProductBatch]] = [:]
     private let byName: String
     private let lock = NSLock()
     private let store: DemoProductStore
@@ -49,8 +51,10 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
                 packUnit: nil, packSize: nil, minimum: summary.minimum, target: summary.minimum * 3,
                 tracking: summary.tracking, location: summary.location, status: summary.status,
                 quantity: summary.quantity, unopened: summary.unopened, openCount: summary.openCount,
-                missingExpiryQuantity: 0, usedInLast30Days: 0, lastCountedAt: nil, toBuyItemID: onToBuy,
-                batches: [],
+                missingExpiryQuantity: summary.status == .missingExpiry ? summary.unopened : 0,
+                usedInLast30Days: 0, lastCountedAt: nil, toBuyItemID: onToBuy,
+                // A Missing expiry product holds its stock undated, so Add expiry has something to date.
+                batches: summary.status == .missingExpiry ? [Self.undatedBatch(of: summary)] : [],
                 openBottles: summary.tracking == .multiUse
                     ? ProductDetail.demoBottles(count: summary.openCount, of: summary.id)
                     : [],
@@ -61,10 +65,63 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
         let edited = store.draft(for: productID).map {
             base.applying($0, categoryName: store.categoryName(for: $0.categoryID), status: summary.status)
         } ?? base
-        let bottles = (opened + edited.openBottles).filter { !finished.contains($0.id) }
-        return edited
-            .adjusted(by: delta, history: history + edited.history)
+        let dated = lock.withLock { batchEdits[productID] }.map { edited.with(batches: $0) } ?? edited
+        let bottles = (opened + dated.openBottles).filter { !finished.contains($0.id) }
+        return dated
+            .adjusted(by: delta, history: history + dated.history)
             .replacingBottles(bottles, unopenedDelta: unopenedDelta, quantityDelta: -finishedCount)
+    }
+
+    func upsertBatch(
+        productID: UUID, batchID: UUID?, expiryMonth: CalendarDay, quantity: Decimal, lot: String?
+    ) async throws -> WriteOutcome {
+        let current = try await detail(productID: productID)
+        var batches = current.batches
+        let change: Decimal
+        if let batchID {
+            guard let index = batches.firstIndex(where: { $0.id == batchID }) else {
+                throw AppError.validation(field: nil, message: "unknown batch")
+            }
+            change = quantity - batches[index].quantity
+            batches[index] = ProductBatch(id: batchID, expiryMonth: expiryMonth, lot: lot, quantity: quantity)
+        } else {
+            let undatedIndex = batches.firstIndex { $0.expiryMonth == nil }
+            let moved = min(quantity, max(undatedIndex.map { batches[$0].quantity } ?? 0, 0))
+            if let undatedIndex {
+                let undated = batches[undatedIndex]
+                batches[undatedIndex] = ProductBatch(
+                    id: undated.id, expiryMonth: nil, lot: undated.lot, quantity: undated.quantity - moved
+                )
+            }
+            batches.append(ProductBatch(id: UUID(), expiryMonth: expiryMonth, lot: lot, quantity: quantity))
+            change = quantity - moved
+        }
+        lock.withLock {
+            batchEdits[productID] = batches.filter { $0.quantity != 0 }
+            guard change != 0 else { return }
+            quantityDeltas[productID, default: 0] += change
+            extraHistory[productID, default: []].insert(
+                StockTransaction(
+                    id: UUID(), type: .adjustment, delta: change, quantityBefore: current.quantity,
+                    quantityAfter: current.quantity + change, reason: "Data correction",
+                    referenceLabel: batchID == nil ? "Add expiry" : "Edit batch", at: Session.demoNow, byName: byName
+                ),
+                at: 0
+            )
+        }
+        // Dating the last undated stock clears Missing expiry, on this screen and in the list.
+        if current.status == .missingExpiry, !batches.contains(where: { $0.expiryMonth == nil && $0.quantity > 0 }) {
+            store.setStatus(.healthy, for: productID)
+        }
+        return .applied(actionID: nil)
+    }
+
+    private static func undatedBatch(of summary: ProductSummary) -> ProductBatch {
+        // Stable per product (d1…dc → e1…ec), so Edit batch can find it again.
+        ProductBatch(
+            id: ProductDetail.demoID("e" + summary.id.uuidString.suffix(1)), expiryMonth: nil, lot: nil,
+            quantity: summary.unopened
+        )
     }
 
     func addToBuy(clinicID: UUID, productID: UUID, quantity: Decimal, userID: UUID) async throws -> UUID {
@@ -179,6 +236,18 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
 }
 
 private extension ProductDetail {
+    /// The detail with other batches: the undated quantity follows them; the status is the summary's.
+    func with(batches: [ProductBatch]) -> ProductDetail {
+        let undated = batches.filter { $0.expiryMonth == nil }.reduce(Decimal(0)) { $0 + $1.quantity }
+        return ProductDetail(
+            id: id, name: name, categoryName: categoryName, unit: unit, packUnit: packUnit, packSize: packSize,
+            minimum: minimum, target: target, tracking: tracking, location: location, status: status,
+            quantity: quantity, unopened: unopened, openCount: openCount, missingExpiryQuantity: max(undated, 0),
+            usedInLast30Days: usedInLast30Days, lastCountedAt: lastCountedAt, toBuyItemID: toBuyItemID,
+            batches: batches, openBottles: openBottles, history: history, categoryID: categoryID, supplier: supplier
+        )
+    }
+
     /// The detail with the sheet's fields on top; the stock figures and the ledger stay.
     func applying(_ draft: ProductDraft, categoryName: String?, status: ProductStatus) -> ProductDetail {
         ProductDetail(
@@ -233,7 +302,7 @@ extension ProductDetail {
     }
 
     /// A fixed id for the demo rows: `demoID("b1")` is …0000b1.
-    private nonisolated static func demoID(_ suffix: String) -> UUID {
+    fileprivate nonisolated static func demoID(_ suffix: String) -> UUID {
         UUID(uuidString: "00000000-0000-4000-8000-0000000000\(suffix)") ?? UUID()
     }
 

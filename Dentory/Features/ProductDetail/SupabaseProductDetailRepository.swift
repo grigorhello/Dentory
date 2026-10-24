@@ -113,12 +113,46 @@ struct SupabaseProductDetailRepository: ProductDetailRepository {
         _ = try await writes.write("undo_action", params: UndoActionParams(pActionId: actionID))
     }
 
+    func upsertBatch(
+        productID: UUID, batchID: UUID?, expiryMonth: CalendarDay, quantity: Decimal, lot: String?
+    ) async throws -> WriteOutcome {
+        try await writes.write(
+            "batch_upsert",
+            params: BatchUpsertParams(
+                pProductId: productID, pBatchId: batchID, pExpiryMonth: expiryMonth, pQty: quantity, pLot: lot
+            )
+        )
+    }
+
     func openBottle(productID: UUID) async throws -> WriteOutcome {
         try await writes.write("bottle_open", params: BottleOpenParams(pProductId: productID))
     }
 
     func finishBottle(openItemID: UUID) async throws -> WriteOutcome {
         try await writes.write("bottle_finish", params: BottleFinishParams(pOpenItemId: openItemID))
+    }
+}
+
+/// The parameters of `batch_upsert`; the coordinator adds `p_idempotency_key`. A new batch sends `p_batch_id`
+/// as null and a missing lot as null, not left out: PostgREST matches the function by its full parameter list.
+nonisolated struct BatchUpsertParams: Encodable, Sendable {
+    let pProductId: UUID
+    let pBatchId: UUID?
+    let pExpiryMonth: CalendarDay
+    let pQty: Decimal
+    let pLot: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case pProductId, pBatchId, pExpiryMonth, pQty, pLot
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(pProductId, forKey: .pProductId)
+        try container.encode(pBatchId, forKey: .pBatchId)
+        try container.encode(pExpiryMonth, forKey: .pExpiryMonth)
+        try container.encode(pQty, forKey: .pQty)
+        try container.encode(pLot, forKey: .pLot)
     }
 }
 

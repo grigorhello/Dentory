@@ -8,6 +8,7 @@ struct CatalogFormsSection: View {
     @State private var minimum = "20"
     @State private var category: String? = "Anesthetic"
     @State private var supplier: String?
+    @State private var expiry: YearMonth?
 
     var body: some View {
         CatalogSection("Text fields") {
@@ -31,6 +32,16 @@ struct CatalogFormsSection: View {
             ) { $0 }
             MSPicker("Unit", selection: .constant(String?.none), options: ["box"], error: "Choose a unit.") { $0 }
             MSPicker("Disabled", selection: .constant("box"), options: ["box"]) { $0 }.disabled(true)
+        }
+        CatalogSection("Month") {
+            // Tap to open the month and year wheels; they start on `opening` when nothing is chosen.
+            MSMonthField(
+                "Expires", selection: $expiry, years: 2023...2036, opening: YearMonth(year: 2026, month: 10)
+            ) { "\($0.month)/\($0.year)" }
+            MSMonthField(
+                "Expires", selection: .constant(nil), years: 2023...2036, opening: YearMonth(year: 2026, month: 10),
+                error: "Choose a month."
+            ) { "\($0.month)/\($0.year)" }
         }
     }
 }

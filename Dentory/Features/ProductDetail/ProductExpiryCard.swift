@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The expiry card (f20): one row per dated batch, soonest first, the total line, the caption and Add expiry.
-/// Tapping a batch and Add expiry open MS-119's sheets.
+/// Without a dated batch the card says "No expiry dates yet." and the total line still shows the undated stock.
+/// Tapping a batch opens Edit batch and Add expiry adds one (MS-119).
 struct ProductExpiryCard: View {
     let viewModel: ProductDetailViewModel
     let onBatch: (UUID) -> Void
@@ -9,31 +10,28 @@ struct ProductExpiryCard: View {
 
     var body: some View {
         Eyebrow("Expiry")
-        ListCard {
-            ExpiryHeaderRow()
-            ForEach(viewModel.batchRows) { row in
-                Button {
-                    onBatch(row.id)
-                } label: {
-                    ProductBatchRow(row: row)
+        if viewModel.batchRows.isEmpty {
+            EmptyStateView("No expiry dates yet.")
+                .accessibilityIdentifier("product.expiryEmpty")
+            totalLine
+        } else {
+            ListCard {
+                ExpiryHeaderRow()
+                ForEach(viewModel.batchRows) { row in
+                    Button {
+                        onBatch(row.id)
+                    } label: {
+                        ProductBatchRow(row: row)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("product.batch[\(row.id.uuidString.lowercased())]")
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("product.batch[\(row.id.uuidString.lowercased())]")
+                totalLine
             }
-            HStack(alignment: .top, spacing: Spacing.md) {
-                Text(viewModel.expiryTotalLine)
-                    .textStyle(.body16)
-                    .foregroundStyle(Color.ms.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: Spacing.sm)
-                Text(viewModel.unit).textStyle(.body16).foregroundStyle(Color.ms.textSecondary)
-            }
-            .padding(.vertical, Spacing.md)
-            .accessibilityIdentifier("product.expiryTotal")
+            Text("Tap a batch to edit its expiry, lot or quantity.")
+                .textStyle(.body14)
+                .foregroundStyle(Color.ms.textSecondary)
         }
-        Text("Tap a batch to edit its expiry, lot or quantity.")
-            .textStyle(.body14)
-            .foregroundStyle(Color.ms.textSecondary)
         Button(action: onAddExpiry) {
             HStack(spacing: Spacing.sm) {
                 IconView(.plus, size: 16)
@@ -42,6 +40,23 @@ struct ProductExpiryCard: View {
         }
         .buttonStyle(.ms(.text, size: .medium))
         .accessibilityIdentifier("product.addExpiry")
+    }
+}
+
+/// "54 of 54 tracked · 54 expire within 90 days" with the unit on the right.
+private extension ProductExpiryCard {
+    var totalLine: some View {
+        HStack(alignment: .top, spacing: Spacing.md) {
+            Text(viewModel.expiryTotalLine)
+                .textStyle(.body16)
+                .foregroundStyle(Color.ms.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: Spacing.sm)
+            Text(viewModel.unit).textStyle(.body16).foregroundStyle(Color.ms.textSecondary)
+        }
+        .padding(.vertical, Spacing.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("product.expiryTotal")
     }
 }
 
@@ -84,6 +99,10 @@ private struct ProductBatchRow: View {
                     .frame(minWidth: Spacing.xxxl, alignment: .trailing)
             }
             .padding(.vertical, Spacing.md)
+            // The soonest batch due within the window stands out with the ink hairline (MS-119).
+            .padding(.horizontal, row.isEmphasized ? Spacing.sm : 0)
+            .msHairline(row.isEmphasized ? Color.ms.ink : .clear, cornerRadius: Radius.sm)
+            .padding(.vertical, row.isEmphasized ? Spacing.xs : 0)
             ListDivider()
         }
         .contentShape(Rectangle())
