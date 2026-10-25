@@ -33,12 +33,13 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `product.bottle.finished` | An open one was finished | |
 | `order.add` | A product was added from To buy's Add item | |
 | `order.markOrdered` | Lines were marked as ordered | `item_count` lines |
+| `manual.receive` | A delivery was received by hand on Receive manually (sent applied or queued offline) | `item_count` 1 (one product a receipt) |
 | `expiring.card.dispose` | A batch was disposed | |
 | `team.invite` | A teammate was invited | `role` (admin, staff) |
 | `more.export` | A CSV export was started | |
 | `settings.save` | Clinic settings were saved | `digest` (the weekly email stays on), `expiry_warning_days` (the first warning: 30, 60 or 90) |
 
-Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm), and `manual.receive`. The tickets carry a comment saying so.
+Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm). The tickets carry a comment saying so. A product created with New on Receive manually's Choose product counts as `inv.newProduct`, the New product sheet's event.
 
 ## The pilot dashboard
 
