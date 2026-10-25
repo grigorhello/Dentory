@@ -29,6 +29,15 @@ nonisolated struct ClinicFormatters: Sendable {
         amount.formatted(.currency(code: currency).precision(.fractionLength(2...4)).locale(locale))
     }
 
+    /// "$" for the clinic's own dollars, "US$" for US dollars in Canada: what a money field shows before the amount.
+    var currencySymbol: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = locale
+        formatter.currencyCode = currency
+        return formatter.currencySymbol
+    }
+
     /// "54 cartridges", "1 box", "2.5 bags": one of a unit stored in the plural reads singular ("1 bottle", f27).
     func quantity(_ amount: Decimal, unit: String) -> String {
         "\(number(amount)) \(amount == 1 ? Self.singular(of: unit) : unit)"
@@ -44,6 +53,15 @@ nonisolated struct ClinicFormatters: Sendable {
         }
         if lowercased.hasSuffix("s") && !lowercased.hasSuffix("ss") { return String(unit.dropLast()) }
         return unit
+    }
+
+    /// "boxes" for "box", "bottles" for "bottle", "pouches" for "pouch"; a word already plural ("packs") stays as it
+    /// is: enough for the pack units a clinic types (New product's pack sentence, Receive manually's quantity).
+    nonisolated static func plural(of word: String) -> String {
+        let lowercased = word.lowercased()
+        if lowercased.hasSuffix("s") { return word }
+        if ["x", "z", "ch", "sh"].contains(where: lowercased.hasSuffix) { return word + "es" }
+        return word + "s"
     }
 
     /// "54", "2.5": at most two decimals, no trailing zeros.
@@ -127,6 +145,21 @@ nonisolated struct ClinicFormatters: Sendable {
     /// "Dec 2026": the expiry month on a card row (f20), where a day would claim a precision batches lack.
     func shortMonth(_ expiryMonth: CalendarDay) -> String {
         expiryMonth.start(in: timeZone).formatted(style.month(.abbreviated).year())
+    }
+
+    /// This month in the clinic's time zone, as an expiry month is stored (its first day): where the month wheels of
+    /// Add expiry and Receive manually open while no month is chosen.
+    var thisMonth: CalendarDay {
+        let today = CalendarDay(clock.now, in: timeZone)
+        return CalendarDay(year: today.year, month: today.month, day: 1)
+    }
+
+    /// The years the expiry wheels offer: three back (stock found already expired) to ten ahead, stretched to the
+    /// chosen month's year.
+    func expiryYears(including chosen: CalendarDay?) -> ClosedRange<Int> {
+        let thisYear = thisMonth.year
+        let year = chosen?.year ?? thisYear
+        return min(thisYear - 3, year)...max(thisYear + 10, year)
     }
 
     /// An empty date style in the clinic's locale and time zone; callers add the fields.

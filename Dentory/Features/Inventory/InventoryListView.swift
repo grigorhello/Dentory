@@ -2,7 +2,9 @@ import SwiftUI
 
 /// Inventory (f16 Admin, f17 Staff, f19 Low filter): title with Count stock, search, status chips and
 /// the product rows in one card; Admin gets the round + for New product. Count stock (f18, MS-121) turns the
-/// same list into steppers with Cancel in the header and Review pinned above the tab bar.
+/// same list into steppers with Cancel in the header and Review pinned above the tab bar. Like To buy, the list reloads
+/// after any stock change and whenever its tab is chosen, so a delivery received by hand (MS-127), which lands here,
+/// shows its quantity.
 struct InventoryListView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -37,6 +39,10 @@ struct InventoryListView: View {
                 }
             }
             .reloadOnReturn { await viewModel.load() }
+            .onChange(of: dependencies.writes.appliedWrites) { reload() }
+            .onChange(of: router.selectedTab) { _, tab in
+                if tab == .inventory { reload() }
+            }
             .navigationDestination(for: InventoryRoute.self) { route in
                 switch route {
                 case .product(let id):
@@ -110,6 +116,10 @@ struct InventoryListView: View {
     /// The New product sheet (MS-117); in read-only mode the read-only sheet says why instead (MS-142).
     private func newProduct() {
         writeAccess.perform { isNewProductPresented = true }
+    }
+
+    private func reload() {
+        Task { await viewModel.load() }
     }
 }
 

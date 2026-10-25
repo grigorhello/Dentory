@@ -33,6 +33,34 @@ struct FormattersTests {
         #expect(formatters.quantity(1, unit: "batteries") == "1 battery")
     }
 
+    /// The pack units a clinic types, in the plural (New product's sentence, Receive manually's quantity).
+    @Test func pluralsOfTheUnitsAClinicTypes() {
+        #expect(ClinicFormatters.plural(of: "box") == "boxes")
+        #expect(ClinicFormatters.plural(of: "bottle") == "bottles")
+        #expect(ClinicFormatters.plural(of: "packs") == "packs")
+        #expect(ClinicFormatters.plural(of: "pouch") == "pouches")
+        #expect(ClinicFormatters.plural(of: "case") == "cases")
+    }
+
+    /// What a money field shows before the amount (Receive manually's cost).
+    @Test func theCurrencySymbolFollowsTheClinicsCurrencyAndTheLocale() {
+        #expect(formatters.currencySymbol == "$")
+        let canada = Locale(identifier: "en_CA")
+        let zone = formatters.timeZone
+        let cad = ClinicFormatters(currency: "CAD", timeZone: zone, locale: canada, clock: formatters.clock)
+        #expect(cad.currencySymbol == "$")
+        let usd = ClinicFormatters(currency: "USD", timeZone: zone, locale: canada, clock: formatters.clock)
+        #expect(usd.currencySymbol == "US$")
+    }
+
+    /// Where the expiry wheels open and which years they offer (Add expiry, Receive manually).
+    @Test func theExpiryWheelsOpenOnThisMonthInTheClinicsTimeZone() {
+        #expect(formatters.thisMonth == CalendarDay(year: 2026, month: 10, day: 1))
+        #expect(formatters.expiryYears(including: nil) == 2023...2036)
+        #expect(formatters.expiryYears(including: CalendarDay(year: 2040, month: 6, day: 1)) == 2023...2040)
+        #expect(formatters.expiryYears(including: CalendarDay(year: 2019, month: 6, day: 1)) == 2019...2036)
+    }
+
     /// A field opens on a number it reads back whole, and reads what people type with or without separators.
     @Test func editableNumbersReadBackAsTyped() {
         #expect(formatters.editableNumber(1000) == "1000", "No thousands separator to stop the parse")

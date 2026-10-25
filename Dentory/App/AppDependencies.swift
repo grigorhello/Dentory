@@ -26,6 +26,7 @@ struct AppDependencies: Sendable {
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
     let receiveRepository: ReceiveRepository
+    let manualReceiveRepository: ManualReceiveRepository
     let clinicSettingsRepository: ClinicSettingsRepository
     let expiringRepository: ExpiringRepository
     let activityRepository: ActivityRepository
@@ -79,8 +80,7 @@ struct AppDependencies: Sendable {
             clock: clock,
             networkMonitor: networkMonitor,
             toasts: toasts,
-            cache: FileResponseCache(),
-            writes: writes,
+            cache: FileResponseCache(), writes: writes,
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
             inventoryRepository: SupabaseInventoryRepository(client: client, writes: writes),
@@ -91,6 +91,7 @@ struct AppDependencies: Sendable {
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
             receiveRepository: SupabaseReceiveRepository(client: client),
+            manualReceiveRepository: SupabaseManualReceiveRepository(client: client, writes: writes),
             clinicSettingsRepository: SupabaseClinicSettingsRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
             activityRepository: SupabaseActivityRepository(client: client),
@@ -150,11 +151,11 @@ struct AppDependencies: Sendable {
             productDetailRepository: DemoProductDetailRepository(store: products, byName: byName),
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
-            procedureEditRepository: DemoProcedureEditRepository(),
-            toBuyRepository: DemoToBuyRepository(), receiveRepository: DemoReceiveRepository(),
+            procedureEditRepository: DemoProcedureEditRepository(), toBuyRepository: DemoToBuyRepository(),
+            receiveRepository: DemoReceiveRepository(),
+            manualReceiveRepository: DemoManualReceiveRepository(store: products),
             clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
-            expiringRepository: expiring,
-            activityRepository: activity,
+            expiringRepository: expiring, activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: byName),
             billingRepository: DemoBillingRepository.launched(),
             inventoryValueRepository: DemoInventoryValueRepository(), accountRepository: DemoAccountRepository(),

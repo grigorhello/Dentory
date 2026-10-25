@@ -16,6 +16,8 @@ struct MSTextField: View {
     var trailingIcon: Icon?
     /// Makes the trailing icon a button with this label (the password show/hide toggle).
     var trailingAction: TrailingAction?
+    /// Before the input, as a money field shows its currency ("$ 49.80", f24).
+    var prefix: String?
     var suffix: String?
     var isSecure = false
     var keyboard: UIKeyboardType = .default
@@ -34,6 +36,7 @@ struct MSTextField: View {
         icon: Icon? = nil,
         trailingIcon: Icon? = nil,
         trailingAction: TrailingAction? = nil,
+        prefix: String? = nil,
         suffix: String? = nil,
         isSecure: Bool = false,
         keyboard: UIKeyboardType = .default,
@@ -49,6 +52,7 @@ struct MSTextField: View {
         self.icon = icon
         self.trailingIcon = trailingIcon
         self.trailingAction = trailingAction
+        self.prefix = prefix
         self.suffix = suffix
         self.isSecure = isSecure
         self.keyboard = keyboard
@@ -76,6 +80,9 @@ struct MSTextField: View {
         HStack(spacing: Spacing.sm) {
             if let icon {
                 IconView(icon, size: 16).foregroundStyle(Color.ms.textSecondary)
+            }
+            if let prefix {
+                Text(prefix).textStyle(.body16).foregroundStyle(Color.ms.textSecondary).accessibilityHidden(true)
             }
             input
                 .textStyle(.body16)
@@ -155,6 +162,7 @@ struct MSTextField: View {
             isSecure: true
         )
         MSTextField("Minimum", text: .constant("20"), suffix: "cartridges", keyboard: .numberPad)
+        MSTextField("Cost per box", text: .constant(""), placeholder: "0.00", prefix: "$", keyboard: .decimalPad)
         MSTextField("Disabled", text: .constant("Read only")).disabled(true)
     }
     .padding(Spacing.page)
