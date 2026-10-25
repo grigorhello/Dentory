@@ -118,6 +118,23 @@ struct ProcedureEventViewModelTests {
         #expect(viewModel.message == nil)
     }
 
+    /// A product deleted since the procedure can go down but not up (MS-117 fix, #88): the engine's sentence is the
+    /// toast, and the edit stays so the quantity can be lowered and saved again.
+    @Test func raisingADeletedProductSaysWhyAndKeepsTheEdit() async {
+        let repository = FakeProcedureEventRepository()
+        let refusal = "Paper points was deleted. Its usage can go down, not up."
+        repository.editResult = .failure(AppError.validation(field: nil, message: refusal))
+        let viewModel = await make(repository)
+        viewModel.startEditing()
+        let paperPoints = id(of: "Paper points")
+        viewModel[quantityOf: paperPoints] = 2
+        await viewModel.save()
+        #expect(viewModel.generalError?.userMessage == refusal)
+        #expect(viewModel.mode == .editing)
+        #expect(viewModel[quantityOf: paperPoints] == 2)
+        #expect(viewModel.message == nil, "No Usage updated")
+    }
+
     @Test func theXTakesASupplyOffTheRecord() async throws {
         let repository = FakeProcedureEventRepository()
         let viewModel = await make(repository)
