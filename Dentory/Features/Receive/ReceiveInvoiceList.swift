@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The invoices being read or ready to review, above "Waiting for delivery" (PRD §6.5): "Continue reviewing" over
-/// "Patterson · 8:55 AM", each opening Review invoice.
+/// The invoices being read, ready to review or whose reading failed, above "Waiting for delivery" (PRD §6.5):
+/// "Continue reviewing" over "Patterson · 8:55 AM", or "Couldn't read · 9:41 AM", each opening Review invoice.
 struct ReceiveInvoiceList: View {
     let viewModel: ReceiveViewModel
     let onContinue: (PendingInvoice) -> Void

@@ -6,16 +6,25 @@ import Foundation
 extension ReceiveViewModel {
     static let reassurance = "Nothing affects inventory until you confirm."
     static let continueTitle = "Continue reviewing"
+    static let couldNotRead = "Couldn't read"
 
-    /// "Patterson · 8:55 AM" today, "Invoice · Yesterday" while the supplier is not read yet, "Patterson · Sep 28".
+    /// "Patterson · 8:55 AM" today, "Invoice · Yesterday" while the supplier is not read yet, "Patterson · Sep 28"; for
+    /// a reading that failed, "Couldn't read · 9:41 AM", dated by the failure the same way.
     func invoiceLine(for invoice: PendingInvoice) -> String {
-        let supplier = invoice.supplier.flatMap { $0.isEmpty ? nil : $0 } ?? "Invoice"
-        let when = switch formatters.daysSince(invoice.createdAt) {
-        case ...0: formatters.time(invoice.createdAt)
-        case 1: "Yesterday"
-        default: formatters.monthDay(invoice.createdAt)
+        if invoice.status == .failed {
+            return "\(Self.couldNotRead) · \(dated(invoice.failedAt ?? invoice.createdAt))"
         }
-        return "\(supplier) · \(when)"
+        let supplier = invoice.supplier.flatMap { $0.isEmpty ? nil : $0 } ?? "Invoice"
+        return "\(supplier) · \(dated(invoice.createdAt))"
+    }
+
+    /// The time today, "Yesterday", or the day ("Sep 28"), in the clinic's time zone.
+    private func dated(_ date: Date) -> String {
+        switch formatters.daysSince(date) {
+        case ...0: formatters.time(date)
+        case 1: "Yesterday"
+        default: formatters.monthDay(date)
+        }
     }
 
     /// "Patterson · ordered Oct 1", or "Ordered Oct 1" for a product without a supplier.

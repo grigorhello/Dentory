@@ -58,7 +58,7 @@ struct ReceiveView: View {
             .textStyle(.caption12)
             .foregroundStyle(Color.ms.textSecondary)
             .accessibilityIdentifier("receive.reassurance")
-        ReceiveLists(viewModel: viewModel, onContinue: continueReviewing)
+        ReceiveLists(viewModel: viewModel, onContinue: viewModel.continueReviewing)
     }
 
     private func show(_ message: ReceiveViewModel.Message?) {
@@ -67,7 +67,7 @@ struct ReceiveView: View {
         viewModel.clearMessage()
     }
 
-    /// Captured pages go on to Review invoice.
+    /// Captured pages, or an invoice to continue, go on to Review invoice.
     private func open(_ route: ReceiveRoute?) {
         guard let route else { return }
         router.push(route)
@@ -86,10 +86,6 @@ struct ReceiveView: View {
 
     private func receiveManually() {
         writeAccess.perform { router.push(ReceiveRoute.manual()) }
-    }
-
-    private func continueReviewing(_ invoice: PendingInvoice) {
-        router.push(ReceiveRoute.invoice(invoice.id))
     }
 }
 

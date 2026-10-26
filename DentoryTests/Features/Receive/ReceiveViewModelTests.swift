@@ -2,8 +2,9 @@ import Foundation
 import Testing
 @testable import Dentory
 
-/// Receive delivery (f22): the invoices to continue and the lines waiting for delivery with their captions, the cache,
-/// the pickers behind Take a photo and Upload, and what happens to captured pages.
+/// Receive delivery (f22): the invoices to continue (a reading that failed among them) and the lines waiting for
+/// delivery with their captions, where each invoice leads, the cache, the pickers behind Take a photo and Upload, and
+/// what happens to captured pages.
 struct ReceiveViewModelTests {
     private let formatters = ClinicFormatters(
         currency: "USD", timeZone: TimeZone(identifier: "America/New_York") ?? .current,
@@ -73,6 +74,43 @@ struct ReceiveViewModelTests {
         #expect(viewModel.invoiceLine(for: reading) == "Invoice · 5:27\u{202F}AM")
         #expect(viewModel.invoiceLine(for: yesterday) == "Henry Schein · Yesterday")
         #expect(viewModel.invoiceLine(for: older) == "Benco · Sep 28")
+    }
+
+    @Test func aReadingThatFailedReadsCouldNotReadDatedByTheFailureLikeTheOthers() async {
+        let viewModel = await make()
+        let day: TimeInterval = 24 * 60 * 60
+        func failed(at failedAt: Date?) -> PendingInvoice {
+            PendingInvoice(
+                id: UUID(), status: .failed, supplier: nil,
+                createdAt: (failedAt ?? Session.demoNow).addingTimeInterval(-60), failedAt: failedAt
+            )
+        }
+        let today = failed(at: Session.demoNow.addingTimeInterval(-30))
+        let yesterday = failed(at: Session.demoNow.addingTimeInterval(-day))
+        let older = failed(at: Session.demoNow.addingTimeInterval(-4 * day))
+        #expect(viewModel.invoiceLine(for: today) == "Couldn't read · 5:27\u{202F}AM")
+        #expect(viewModel.invoiceLine(for: yesterday) == "Couldn't read · Yesterday")
+        #expect(viewModel.invoiceLine(for: older) == "Couldn't read · Sep 28")
+        #expect(
+            viewModel.invoiceLine(for: failed(at: nil)) == "Couldn't read · 5:26\u{202F}AM",
+            "Dated by the upload when no failure time came"
+        )
+    }
+
+    @Test func eachInvoiceToContinueOpensReviewInvoiceAFailedReadingIncluded() async throws {
+        let repository = FakeReceiveRepository()
+        repository.result = .success(.demo(now: Session.demoNow, added: .failed))
+        let viewModel = await make(repository)
+        #expect(viewModel.invoices.map(\.status) == [.failed, .ready], "The failed reading first, newest upload first")
+        let failed = try #require(viewModel.invoices.first)
+        #expect(viewModel.invoiceLine(for: failed) == "Couldn't read · 5:27\u{202F}AM")
+
+        viewModel.continueReviewing(failed)
+        #expect(viewModel.pendingRoute == .invoice(failed.id), "Review invoice, which opens on the failure")
+        viewModel.clearPendingRoute()
+        let ready = try #require(viewModel.invoices.last)
+        viewModel.continueReviewing(ready)
+        #expect(viewModel.pendingRoute == .invoice(ready.id))
     }
 
     @Test func nothingWaitingLeavesBothListsEmpty() async {
@@ -221,5 +259,6 @@ struct ReceiveViewModelTests {
     @Test func theCopyFollowsThePRD() {
         #expect(ReceiveViewModel.reassurance == "Nothing affects inventory until you confirm.")
         #expect(ReceiveViewModel.continueTitle == "Continue reviewing")
+        #expect(ReceiveViewModel.couldNotRead == "Couldn't read")
     }
 }

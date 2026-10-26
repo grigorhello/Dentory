@@ -38,8 +38,9 @@ struct ReceiveRow: View {
 #Preview("Rows") {
     VStack(spacing: Spacing.lg) {
         ListCard {
+            ReceiveRow(title: "Continue reviewing", caption: "Patterson · 8:55 AM", navigates: true)
             ReceiveRow(
-                title: "Continue reviewing", caption: "Patterson · 8:55 AM", navigates: true, showsDivider: false
+                title: "Continue reviewing", caption: "Couldn't read · 9:41 AM", navigates: true, showsDivider: false
             )
         }
         ListCard {

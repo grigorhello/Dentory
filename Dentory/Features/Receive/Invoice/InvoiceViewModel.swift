@@ -69,6 +69,8 @@ final class InvoiceViewModel {
     private var needsUpload: Bool
     private var isCreated: Bool
     private var readingRequests = 0
+    /// Try again after a failed reading: the set-aside every tap waits for.
+    private var settingAside: Task<Void, Never>?
 
     /// Pages just captured (`ReceiveRoute.newInvoice`): they become the invoice `document.id`.
     convenience init(
@@ -139,16 +141,18 @@ final class InvoiceViewModel {
         attempt += 1
     }
 
-    /// Receive manually instead: the upload stops for good, and once it has stopped the invoice is set aside, so its
-    /// reading, when it ends, raises no delivery waiting for review to be received a second time. Pages that had not
-    /// become an invoice show as set aside when the admin comes back; an invoice shows what the server says of it. Best
-    /// effort: the admin is on Receive manually by then, and an invoice that could not be set aside (no connection)
-    /// stays in Continue reviewing until it is discarded there (MS-130), so nothing is shown for it.
+    /// Receive manually instead, and Receive manually after a failed reading: the upload stops for good, and once it
+    /// has stopped the invoice is set aside, so its reading, when it ends, raises no delivery waiting for review to be
+    /// received a second time, and a reading that failed leaves Continue reviewing. Pages that had not become an
+    /// invoice, and an invoice whose reading failed, show as set aside when the admin comes back; an invoice being read
+    /// shows what the server says of it. Best effort: the admin is on Receive manually by then, and an invoice that
+    /// could not be set aside (no connection) stays in Continue reviewing until it is discarded there (MS-130), so
+    /// nothing is shown for it.
     func setAside() {
         needsUpload = false
         let submission = submission
         submission?.cancel()
-        if !isCreated {
+        if !isCreated || state == .failed {
             state = .closed
         }
         let repository = repository
@@ -158,6 +162,21 @@ final class InvoiceViewModel {
             await submission?.value
             try? await repository.discard(invoiceID: invoiceID, clinicID: clinicID)
         }
+    }
+
+    /// Try again after a failed reading, for a clearer photo or another file on Receive delivery's options: the invoice
+    /// that could not be read is set aside first, so the options' list, loaded again as they come back, does not show
+    /// it beside the next try. Returns once the server has answered, whatever it said: an invoice it could not set
+    /// aside stays listed and opens this failure again. Taps made meanwhile wait for the same answer.
+    func setAsideToCaptureAgain() async {
+        guard state == .failed else { return }
+        if settingAside == nil {
+            let repository = repository
+            let invoiceID = invoiceID
+            let clinicID = clinicID
+            settingAside = Task { try? await repository.discard(invoiceID: invoiceID, clinicID: clinicID) }
+        }
+        await settingAside?.value
     }
 
     /// Runs with the state already uploading (the captured pages, or Try again after a failed upload).
