@@ -3,7 +3,8 @@ import Observation
 
 /// The New / Edit product sheet (PRD §6.4, Appendix C `newProduct`): the fields an admin types, the live
 /// pack conversion sentence, the rules the sheet checks before saving (name and unit required, pack size
-/// 2 or more, target at least the minimum, no tracking change while stock is held) and the save itself.
+/// 2 or more, target at least the minimum, no tracking change while stock is held) and the save itself. The titles
+/// and fixed lines are in `ProductFormViewModel+Copy.swift`.
 @MainActor
 @Observable
 final class ProductFormViewModel {
@@ -12,6 +13,10 @@ final class ProductFormViewModel {
         /// New on Choose product (Receive manually, MS-127): the name starts as what was searched for, and the button
         /// creates the product and chooses it on the receiving form.
         case createAndSelect(name: String)
+        /// Add new or No, create new on an invoice line (Review invoice, MS-130): the notice quotes the line, the name
+        /// and the counted-in unit start as the line suggests them, and the button creates the product and uses it for
+        /// the line.
+        case invoiceLine(raw: String, name: String, unit: String)
         case edit(ProductDetail)
     }
 
@@ -68,9 +73,9 @@ final class ProductFormViewModel {
         self.mode = mode
         self.analytics = analytics
         switch mode {
-        case .create, .createAndSelect:
-            name = Self.searchedName(in: mode)
-            unit = ""
+        case .create, .createAndSelect, .invoiceLine:
+            name = Self.startingName(in: mode)
+            unit = Self.startingUnit(in: mode)
             packUnit = ""
             packSizeText = ""
             isMultiUse = false
@@ -93,15 +98,6 @@ final class ProductFormViewModel {
 
     var isSubmitting: Bool { submitGuard.isBusy }
     var isEditing: Bool { if case .edit = mode { return true } else { return false } }
-    var title: String { isEditing ? "Edit product" : "New product" }
-
-    var submitTitle: String {
-        switch mode {
-        case .create: "Create product"
-        case .createAndSelect: "Create and select"
-        case .edit: "Save changes"
-        }
-    }
 
     /// Create, Save changes: the ticket's "Disabled until a name and unit are entered".
     var canSubmit: Bool { !trimmed(name).isEmpty && !trimmed(unit).isEmpty && !isSubmitting }
@@ -110,13 +106,6 @@ final class ProductFormViewModel {
 
     var categoryChoices: [CategoryChoice] { categories.map(CategoryChoice.existing) + [.new] }
     var isNamingNewCategory: Bool { category == .new }
-
-    func categoryTitle(_ choice: CategoryChoice) -> String {
-        switch choice {
-        case .existing(let category): category.name
-        case .new: "New category…"
-        }
-    }
 
     // MARK: - Units
 
@@ -136,7 +125,6 @@ final class ProductFormViewModel {
     }
 
     var packSize: Int? { QuantityText.count(packSizeText, locale: formatters.locale) }
-    var trackingCaption: String { "Tracked as unopened and open items." }
 
     /// The switch moves unless the product holds stock (G1): then the inline error stays until it is 0.
     func setMultiUse(_ isOn: Bool) {
@@ -177,7 +165,7 @@ final class ProductFormViewModel {
                     draft.categoryID = created.id
                 }
                 switch mode {
-                case .create, .createAndSelect:
+                case .create, .createAndSelect, .invoiceLine:
                     let id = try await repository.createProduct(clinicID: clinicID, draft: draft)
                     analytics.track(.productCreated)
                     outcome = .created(id)
@@ -258,10 +246,21 @@ final class ProductFormViewModel {
 
     private var countedUnitWord: String { trimmed(unit).isEmpty ? "units" : trimmed(unit) }
 
-    /// What Choose product's search held when New was tapped, so the name is not typed twice.
-    private static func searchedName(in mode: Mode) -> String {
-        guard case .createAndSelect(let name) = mode else { return "" }
-        return name.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// What Choose product's search held when New was tapped, so the name is not typed twice, or the name an invoice
+    /// line suggests.
+    private static func startingName(in mode: Mode) -> String {
+        switch mode {
+        case .createAndSelect(let name), .invoiceLine(_, let name, _):
+            name.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .create, .edit:
+            ""
+        }
+    }
+
+    /// The counted-in unit an invoice line suggests ("packs").
+    private static func startingUnit(in mode: Mode) -> String {
+        guard case .invoiceLine(_, _, let unit) = mode else { return "" }
+        return unit.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func trimmed(_ text: String) -> String {

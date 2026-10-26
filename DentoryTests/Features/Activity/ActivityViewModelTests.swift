@@ -23,12 +23,14 @@ struct ActivityViewModelTests {
     private func alert(
         _ kind: ActivityAlert.Kind, name: String? = "Endo file kit #15-40", quantity: Decimal = 1,
         unopened: Decimal = 0, minimum: Decimal = 3, tracking: TrackingMode = .countable, lot: String? = nil,
-        month: CalendarDay? = nil, batches: Int = 0, supplier: String? = nil, openedAt: Date = Session.demoNow
+        month: CalendarDay? = nil, batches: Int = 0, supplier: String? = nil, openedAt: Date = Session.demoNow,
+        invoiceID: UUID? = nil
     ) -> ActivityAlert {
         ActivityAlert(
             id: UUID(), kind: kind, openedAt: openedAt, thresholdDays: nil, productID: UUID(), name: name,
             unit: "kits", tracking: tracking, minimum: minimum, quantity: quantity, unopened: unopened,
-            batchID: nil, lot: lot, expiryMonth: month, expiringBatches: batches, invoiceID: nil, supplier: supplier
+            batchID: nil, lot: lot, expiryMonth: month, expiringBatches: batches, invoiceID: invoiceID,
+            supplier: supplier
         )
     }
 
@@ -79,7 +81,15 @@ struct ActivityViewModelTests {
         let unnamed = alert(.invoiceReady, name: nil)
         #expect(viewModel.sentence(for: unnamed) == "A delivery is read and waiting for review.")
         #expect(viewModel.dotTone(for: delivery) == .info)
-        #expect(viewModel.destination(for: delivery) == .delivery)
+    }
+
+    @Test func aDeliveryOpensItsInvoiceForReview() async {
+        let viewModel = await make()
+        let invoiceID = UUID()
+        let delivery = alert(.invoiceReady, name: nil, supplier: "Patterson", invoiceID: invoiceID)
+        #expect(viewModel.destination(for: delivery) == .delivery(invoiceID: invoiceID))
+        let unknown = alert(.invoiceReady, name: nil)
+        #expect(viewModel.destination(for: unknown) == .delivery(invoiceID: nil), "Receive delivery, without an id")
     }
 
     @Test func olderAlertsShowTheirDay() async {

@@ -1,12 +1,13 @@
 import Foundation
 import Observation
 
-/// Review invoice (f23, f38; PRD §6.5 Reading state; Appendix B `invoice`), Admin only, up to its reading (MS-129). For
-/// pages just captured it uploads them, creates the invoice and asks the server to read it (flow step 1); for an
-/// invoice opened from Receive delivery it follows the reading already under way. Then the read header (the lines to
-/// review arrive with MS-130), or the failure with a clearer photo or receiving by hand. The admin may leave at any
+/// Review invoice (f23, f38; PRD §6.5 Reading state and Review invoice; Appendix B `invoice`), Admin only. For pages
+/// just captured it uploads them, creates the invoice and asks the server to read it (flow step 1, MS-129); for an
+/// invoice opened from Receive delivery it follows the reading already under way. Then the read header with the lines
+/// to review (`review`, MS-130), or the failure with a clearer photo or receiving by hand. The admin may leave at any
 /// point: the upload carries on, the server reads on, and the bell and a push say when the delivery is ready (MS-144).
-/// The lines it shows are in `InvoiceViewModel+Copy.swift`.
+/// The header's menu discards the invoice (`InvoiceViewModel+Discard.swift`). The lines it shows are in
+/// `InvoiceViewModel+Copy.swift`.
 @MainActor
 @Observable
 final class InvoiceViewModel {
@@ -34,12 +35,27 @@ final class InvoiceViewModel {
     /// How many times a reading that has not started is asked for (a request lost on the way).
     static let maxReadingRequests = 3
 
+    /// A toast the screen shows.
+    struct Message: Equatable {
+        let title: String
+        let detail: String?
+    }
+
     let invoiceID: UUID
     let formatters: ClinicFormatters
     private(set) var state: State
     private(set) var invoice: InvoiceSummary?
+    /// The lines to review, once the invoice is read (MS-130).
+    private(set) var review: InvoiceReviewViewModel?
     /// Grows with each Try again, so the screen's task runs `load()` again.
     private(set) var attempt = 0
+    /// The question Discard invoice asks, from the header's "…" menu.
+    var isConfirmingDiscard = false
+    /// Set once the invoice is discarded: the screen goes back to Receive delivery with the toast.
+    private(set) var discarded: Message?
+    /// A discard that failed; the screen shows it as a toast.
+    private(set) var generalError: AppError?
+    let discardGuard = SubmitGuard()
 
     private let document: InvoiceDocument?
     private let repository: InvoiceRepository
@@ -101,6 +117,14 @@ final class InvoiceViewModel {
         await follow()
     }
 
+    /// Reads the invoice again (back in the foreground, pull to refresh, a choice the server refused): its lines as
+    /// they are now, or the news that it was received or set aside meanwhile. A read that fails keeps what is shown.
+    func refresh() async {
+        guard state == .ready || state == .failed else { return }
+        guard let current = try? await repository.invoice(id: invoiceID) else { return }
+        show(current)
+    }
+
     /// Try again after a failed upload (the same pages, under the same invoice) or a failed first load.
     func retry() {
         switch state {
@@ -129,9 +153,10 @@ final class InvoiceViewModel {
         }
         let repository = repository
         let invoiceID = invoiceID
+        let clinicID = clinicID
         Task {
             await submission?.value
-            try? await repository.discard(invoiceID: invoiceID)
+            try? await repository.discard(invoiceID: invoiceID, clinicID: clinicID)
         }
     }
 
@@ -193,5 +218,35 @@ final class InvoiceViewModel {
         case .failed: .failed
         case .confirmed, .discarded: .closed
         }
+        guard invoice.status == .ready else { return }
+        if let review {
+            review.update(with: invoice.lines)
+        } else {
+            review = InvoiceReviewViewModel(
+                invoice: invoice, repository: repository, formatters: formatters(for: invoice),
+                reload: { [weak self] in await self?.refresh() }
+            )
+        }
+    }
+
+    /// Discard invoice: the pages are deleted and the invoice set aside; the screen leaves with the toast.
+    func discard() async {
+        await discardGuard.run {
+            review?.dropPendingSaves()
+            do {
+                try await repository.discard(invoiceID: invoiceID, clinicID: clinicID)
+                isConfirmingDiscard = false
+                state = .closed
+                discarded = Message(title: Self.discardedTitle, detail: header)
+            } catch {
+                // Not queued offline: a lost connection reads "Couldn't save. Try again."
+                let error = AppError(error)
+                generalError = error == .network ? .unknown("No connection") : error
+            }
+        }
+    }
+
+    func clearGeneralError() {
+        generalError = nil
     }
 }

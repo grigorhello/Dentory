@@ -1,12 +1,16 @@
 import SwiftUI
 
-/// The fields of the New / Edit product sheet in the order of Appendix C: name, category, units with the
-/// pack question and its sentence, the Multi-use switch (G1), the stock levels, supplier and location.
+/// The fields of the New / Edit product sheet in the order of Appendix C: the notice quoting an invoice line (MS-130),
+/// name, category, units with the pack question and its sentence, the Multi-use switch (G1), the stock levels,
+/// supplier and location.
 struct ProductFormFields: View {
     @Bindable var viewModel: ProductFormViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
+            if let notice = viewModel.invoiceNotice {
+                Notice(notice, identifier: "newProduct.fromInvoice")
+            }
             MSTextField(
                 "Name", text: $viewModel.name, identifier: "newProduct.name",
                 placeholder: "As written on the box", error: viewModel.nameError

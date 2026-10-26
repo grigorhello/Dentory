@@ -104,6 +104,41 @@ struct ProductFormViewModelTests {
         #expect(analytics.events == [.productCreated])
     }
 
+    /// Add new or No, create new on an invoice line (Review invoice, MS-130): the notice quotes the line, the name and
+    /// unit start as suggested, and the button creates the product for the line.
+    @Test func newFromAnInvoiceLineStartsAsTheLineSuggestsAndUsesTheProductForIt() async {
+        let repository = FakeProductFormRepository()
+        let analytics = SpyAnalytics()
+        let viewModel = make(
+            mode: .invoiceLine(raw: "TEMPBOND NE 1PK", name: "Tempbond NE", unit: "packs"), repository: repository,
+            analytics: analytics
+        )
+        #expect(viewModel.title == "New product")
+        #expect(viewModel.submitTitle == "Create and use for this line")
+        #expect(viewModel.invoiceNotice
+            == "From invoice: TEMPBOND NE 1PK. Name and unit are suggested. Check them and add the rest.")
+        #expect(viewModel.name == "Tempbond NE")
+        #expect(viewModel.unit == "packs")
+        #expect(viewModel.packUnit.isEmpty)
+        #expect(viewModel.showsReceivingHint)
+        #expect(viewModel.canSubmit, "Name and unit are there already")
+        viewModel.name = "Temp-Bond NE"
+        await viewModel.save()
+        #expect(repository.creates.map(\.name) == ["Temp-Bond NE"])
+        #expect(repository.creates.map(\.unit) == ["packs"])
+        #expect(viewModel.outcome == .created(UUID(uuidString: "00000000-0000-4000-8000-0000000000f1") ?? UUID()))
+        #expect(analytics.events == [.productCreated], "Counted as the New product sheet's inv.newProduct")
+    }
+
+    @Test func onlyAnInvoiceLineShowsTheNotice() {
+        #expect(make().invoiceNotice == nil)
+        #expect(make(mode: .createAndSelect(name: "Gauze")).invoiceNotice == nil)
+        #expect(make(mode: .invoiceLine(raw: "GAUZE 2X2.", name: "", unit: "")).invoiceNotice
+            == "From invoice: GAUZE 2X2. Name and unit are suggested. Check them and add the rest.",
+            "One full stop after the line")
+        #expect(!make(mode: .invoiceLine(raw: "GAUZE", name: " ", unit: "")).canSubmit, "No name suggested")
+    }
+
     @Test func aNewCategoryIsCreatedFirstAndUsed() async {
         let repository = FakeProductFormRepository()
         let viewModel = make(repository: repository)

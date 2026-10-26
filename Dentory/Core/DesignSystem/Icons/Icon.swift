@@ -13,6 +13,8 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case clipboardList = "clipboard-list"
     case creditCard = "credit-card"
     case download
+    /// The "…" of a screen's menu (Review invoice's Discard invoice).
+    case ellipsis
     case eye
     case eyeOff = "eye-off"
     case fileText = "file-text"
