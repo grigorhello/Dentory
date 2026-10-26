@@ -14,6 +14,27 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["toast"].waitForExistence(timeout: 3), "No toast")
     }
 
+    /// Return moves from Full name to Work email to Password, as on Sign in and Join, and continues from Password
+    /// (MS-136 audit V-04).
+    @MainActor
+    func testReturnMovesThroughStepOneAndContinues() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-signedOut"]
+        app.launch()
+        let signUp = app.descendants(matching: .any)["signin.signUpAdmin"]
+        XCTAssertTrue(signUp.waitForExistence(timeout: 5))
+        signUp.tap()
+
+        let name = app.textFields["onboard.name"].firstMatch
+        XCTAssertTrue(name.waitForExistence(timeout: 5), "Step 1 did not appear")
+        name.tap()
+        app.typeText("Dr. Sarah Mitchell\n")
+        app.typeText("owner@newclinic.ca\n")
+        XCTAssertEqual(app.textFields["onboard.email"].firstMatch.value as? String, "owner@newclinic.ca")
+        app.typeText("smiledental\n")
+        XCTAssertTrue(app.staticTexts["Create your clinic"].waitForExistence(timeout: 5), "Return did not continue")
+    }
+
     /// A new admin who sets up the clinic and signs out hands the device over on Sign in, not on sign-up's first step
     /// (MS-137 review).
     @MainActor
@@ -53,6 +74,7 @@ final class OnboardingUITests: XCTestCase {
         app.typeText("smiledental")
         XCTAssertTrue(continueButton.isEnabled)
         continueButton.tap()
+        app.declineSavingPassword()
 
         XCTAssertTrue(app.staticTexts["Create your clinic"].waitForExistence(timeout: 5), "Step 2 did not appear")
         app.textFields["onboard.clinicName"].firstMatch.tap()

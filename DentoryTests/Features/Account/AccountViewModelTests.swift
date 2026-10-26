@@ -21,11 +21,11 @@ struct AccountViewModelTests {
         let admin = make()
         #expect(admin.initials == "SM")
         #expect(admin.name == "Sarah Mitchell")
-        #expect(admin.roleLine == "Admin · Smile Dental")
+        #expect(admin.roleLine == "Admin\u{00A0}· Smile Dental")
         #expect(admin.isAdmin)
         let staff = make(session: .demo(role: .staff))
         #expect(staff.initials == "MR")
-        #expect(staff.roleLine == "Staff · Smile Dental")
+        #expect(staff.roleLine == "Staff\u{00A0}· Smile Dental")
         #expect(staff.isAdmin == false, "Staff get Team, Help and Sign out only (f30)")
     }
 

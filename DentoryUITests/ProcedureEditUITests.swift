@@ -60,7 +60,7 @@ final class ProcedureEditUITests: XCTestCase {
 
         app.swipeUp()
         XCTAssertEqual(
-            app.staticTexts["\(disinfectant).caption"].label, "Multi-use · listed under Opened a new one?"
+            app.staticTexts["\(disinfectant).caption"].label, "Multi-use\u{00A0}· listed under Opened a new one?"
         )
         XCTAssertFalse(app.buttons["\(disinfectant).inc"].exists, "A multi-use supply has a stepper")
         XCTAssertTrue(app.staticTexts["procEdit.note"].exists)
@@ -75,7 +75,7 @@ final class ProcedureEditUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["procEdit.item[00000000-0000-4000-8000-000000000208].value"].label, "1")
 
         app.buttons["procEdit.save"].tap()
-        expectToast("Procedure saved", "Root canal · 12 default supplies", in: app)
+        expectToast("Procedure saved", "Root canal\u{00A0}· 12 default supplies", in: app)
     }
 
     /// "+ Procedure": an empty template, a multi-use product added at 0, and no name saves as Untitled procedure.
@@ -92,16 +92,16 @@ final class ProcedureEditUITests: XCTestCase {
 
         app.buttons["procEdit.addItem"].tap()
         XCTAssertTrue(app.buttons[composite].waitForExistence(timeout: 5), "Composite A2 is not offered")
-        XCTAssertTrue(app.otherElements["addItem"].staticTexts["Restorative · multi-use"].firstMatch.exists)
+        XCTAssertTrue(app.otherElements["addItem"].staticTexts["Restorative\u{00A0}· multi-use"].firstMatch.exists)
         app.buttons[composite].tap()
         XCTAssertFalse(app.staticTexts["addItem.title"].waitForExistence(timeout: 2), "The sheet did not close")
         XCTAssertEqual(
             app.staticTexts["procEdit.item[00000000-0000-4000-8000-0000000000d3].caption"].label,
-            "Multi-use · listed under Opened a new one?"
+            "Multi-use\u{00A0}· listed under Opened a new one?"
         )
 
         app.buttons["procEdit.save"].tap()
-        expectToast("Procedure saved", "Untitled procedure · 1 default supply", in: app)
+        expectToast("Procedure saved", "Untitled procedure\u{00A0}· 1 default supply", in: app)
     }
 
     /// Delete procedure: Keep closes the sheet; Delete archives the template and goes back.

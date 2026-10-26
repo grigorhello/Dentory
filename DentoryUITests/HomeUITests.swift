@@ -20,7 +20,7 @@ final class HomeUITests: XCTestCase {
         let value = app.descendants(matching: .any)["home.tile.inventoryValue"]
         XCTAssertTrue(value.label.contains("$12,420"), "Inventory value reads \(value.label)")
         let latest = app.descendants(matching: .any)["home.procedure.latest"]
-        XCTAssertTrue(latest.label.contains("12 supplies · Sarah"), "Latest reads \(latest.label)")
+        XCTAssertTrue(latest.label.contains("12 supplies\u{00A0}· Sarah"), "Latest reads \(latest.label)")
 
         app.descendants(matching: .any)["home.tile.toBuy"].tap()
         XCTAssertTrue(app.staticTexts["order.header.title"].waitForExistence(timeout: 5), "To buy did not open")

@@ -28,4 +28,10 @@ struct DesignSystemAssetTests {
             #expect(UIColor(named: "Colors/\(name)") != nil, "\(name) is missing")
         }
     }
+
+    /// V1.1 is light only (MS-136 audit V-01): the tokens have no dark variants, so the app opts out of Dark Mode and
+    /// the system's wheels, menus and sheets stay light on the cream page.
+    @Test func theAppIsLightOnly() {
+        #expect(Bundle.main.object(forInfoDictionaryKey: "UIUserInterfaceStyle") as? String == "Light")
+    }
 }

@@ -31,7 +31,7 @@ extension InventoryListViewModel {
         case .multiUse: "Count unopened only"
         }
         guard let location = product.location, !location.isEmpty else { return figures }
-        return "\(figures) · \(location)"
+        return "\(figures)\u{00A0}· \(location)"
     }
 
     /// "Review · 2 corrections", or "Review count" (disabled) until a quantity changed (f18).

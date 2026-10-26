@@ -71,7 +71,7 @@ final class AccountViewModel {
 
     /// "Admin · Smile Dental"
     var roleLine: String {
-        "\(session.role.label) · \(session.clinicName)"
+        "\(session.role.label)\u{00A0}· \(session.clinicName)"
     }
 
     /// "3 people", "1 person"; nil until the size is known.

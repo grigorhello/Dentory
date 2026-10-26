@@ -19,7 +19,13 @@ extension ActivityHistoryViewModel {
     /// What happened: "Procedure started", "Edited usage", "Cancelled · Logged by mistake" for a procedure's row; on
     /// one product's rows the procedure's name ("Root canal"); otherwise what the engine recorded ("Invoice
     /// INV-10092", "Physical count", "Damaged", "Opened a new bottle", "Finished", "Undo · Damaged").
+    /// The engine writes its " · " ("Undo · Damaged") with a plain space; here it gets the no-break space before the
+    /// dot that every caption has.
     func reasonText(for entry: ActivityHistoryEntry) -> String {
+        engineReason(for: entry).replacing(" · ", with: "\u{00A0}· ")
+    }
+
+    private func engineReason(for entry: ActivityHistoryEntry) -> String {
         if entry.refType == "undo" { return entry.refLabel ?? "Undo" }
         let isProcedureRow = entry.productID == nil
         switch entry.type {
@@ -29,9 +35,9 @@ extension ActivityHistoryViewModel {
         case .cancellation:
             if isProcedureRow {
                 guard let note = entry.note, !note.isEmpty else { return "Cancelled" }
-                return "Cancelled · \(note)"
+                return "Cancelled\u{00A0}· \(note)"
             }
-            return "Cancelled · \(entry.refLabel ?? "procedure")"
+            return "Cancelled\u{00A0}· \(entry.refLabel ?? "procedure")"
         case .receiving:
             return entry.refLabel ?? "Received"
         case .count:
@@ -39,7 +45,7 @@ extension ActivityHistoryViewModel {
         case .adjustment:
             return entry.refLabel ?? entry.reason ?? "Adjusted"
         case .disposal:
-            return "Disposed · \(entry.reason ?? "Expired")"
+            return "Disposed\u{00A0}· \(entry.reason ?? "Expired")"
         }
     }
 
@@ -47,7 +53,7 @@ extension ActivityHistoryViewModel {
     func whoText(for entry: ActivityHistoryEntry) -> String {
         let time = formatters.time(entry.at)
         let name = PersonName.first(of: entry.byName)
-        return name.isEmpty ? time : "\(name) · \(time)"
+        return name.isEmpty ? time : "\(name)\u{00A0}· \(time)"
     }
 
     /// "+4", "−6", "43 → 41" for a count, and a plain "0" for a row that moved nothing, such as a bottle opened, as

@@ -208,7 +208,7 @@ struct InvoiceReceiptViewModelTests {
         viewModel[lotOf: lines[1].id] = "E7"
         #expect(repository.calls.isEmpty)
         #expect(viewModel.refusedChanges == 0, "Not a read-only refusal: there is nothing to change")
-        #expect(viewModel.receivedBatch(for: viewModel.lines[0]) == "Expiry Mar 2028 · Lot B441")
+        #expect(viewModel.receivedBatch(for: viewModel.lines[0]) == "Expiry Mar 2028\u{00A0}· Lot B441")
         #expect(viewModel.receivedBatch(for: viewModel.lines[2]) == "No expiry")
     }
 }

@@ -74,19 +74,19 @@ struct ActivityHistoryViewModelTests {
         let cancelled = entry(
             .cancellation, "Crown", product: nil, refType: "procedure_event", note: "Logged by mistake"
         )
-        #expect(viewModel.reasonText(for: cancelled) == "Cancelled · Logged by mistake")
+        #expect(viewModel.reasonText(for: cancelled) == "Cancelled\u{00A0}· Logged by mistake")
         #expect(viewModel.reasonText(for: entry(.cancellation, "Crown", product: nil)) == "Cancelled")
         // One product's history names the procedure on the reason line (f9's Septocaine row).
         #expect(viewModel.reasonText(for: entry(.procedure, label: "Root canal")) == "Root canal")
-        #expect(viewModel.reasonText(for: entry(.cancellation, label: "Crown")) == "Cancelled · Crown")
+        #expect(viewModel.reasonText(for: entry(.cancellation, label: "Crown")) == "Cancelled\u{00A0}· Crown")
         #expect(viewModel.reasonText(for: entry(.receiving, label: "Invoice INV-10092")) == "Invoice INV-10092")
         #expect(viewModel.reasonText(for: entry(.count, label: "Physical count")) == "Physical count")
         #expect(viewModel.reasonText(for: entry(.adjustment, label: "Damaged", reason: "Damaged")) == "Damaged")
         #expect(viewModel.reasonText(for: entry(.adjustment, label: "Opened a new bottle")) == "Opened a new bottle")
         let disposed = entry(.disposal, label: "Mark disposed", reason: "Expired")
-        #expect(viewModel.reasonText(for: disposed) == "Disposed · Expired")
+        #expect(viewModel.reasonText(for: disposed) == "Disposed\u{00A0}· Expired")
         let undo = entry(.adjustment, refType: "undo", label: "Undo · Damaged", reason: "Damaged")
-        #expect(viewModel.reasonText(for: undo) == "Undo · Damaged")
+        #expect(viewModel.reasonText(for: undo) == "Undo\u{00A0}· Damaged")
     }
 
     @Test func theChangeReadsInItsColor() {
@@ -109,7 +109,7 @@ struct ActivityHistoryViewModelTests {
     @Test func whoAndWhenOnTheirOwnLine() {
         let viewModel = make()
         // The demo moment is 5:27 AM in New York; two hours before reads 3:27 AM.
-        #expect(viewModel.whoText(for: entry(.receiving, hoursAgo: 2)) == "Sarah · 3:27\u{202F}AM")
+        #expect(viewModel.whoText(for: entry(.receiving, hoursAgo: 2)) == "Sarah\u{00A0}· 3:27\u{202F}AM")
         #expect(viewModel.whoText(for: entry(.receiving, by: "", hoursAgo: 2)) == "3:27\u{202F}AM", "Someone who left")
     }
 

@@ -51,7 +51,7 @@ struct InvoiceReviewViewModelTests {
             "Fees and surcharges should not go into stock."
         ])
         #expect(viewModel.lines.map(viewModel.amount(for:)) == [
-            "5 boxes · $49.80", "4 boxes · $45.00", "1 pack · $26.40", "1 · $4.80"
+            "5 boxes\u{00A0}· $49.80", "4 boxes\u{00A0}· $45.00", "1 pack\u{00A0}· $26.40", "1\u{00A0}· $4.80"
         ])
         #expect(viewModel.summary == "Resolve every line to continue.")
         #expect(!viewModel.canConfirm, "Disabled until every line is resolved")
@@ -76,7 +76,7 @@ struct InvoiceReviewViewModelTests {
         let oneBox = InvoiceLine.line(9, "GLOVES", qty: 1, unit: "boxes", price: nil, .newProduct)
         let price = Decimal(string: "0.9960")
         let noQuantity = InvoiceLine.line(9, "GLOVES", qty: nil, unit: "box", price: price, .newProduct)
-        #expect(viewModel.amount(for: twoBoxes) == "2 boxes · $12.00")
+        #expect(viewModel.amount(for: twoBoxes) == "2 boxes\u{00A0}· $12.00")
         #expect(viewModel.amount(for: oneBox) == "1 box")
         #expect(viewModel.amount(for: noQuantity) == "$0.996", "A unit price keeps up to four decimals")
     }
@@ -128,8 +128,10 @@ struct InvoiceReviewViewModelTests {
         #expect(repository.calls == [.createLine(InvoiceLine.tempBond.id, product: productID)])
         let created = try line(3, in: viewModel)
         #expect(created.state == .created)
-        #expect(viewModel.headline(for: created) == "Tempbond NE · new product")
-        #expect(viewModel.message == .init(title: "Product created", detail: "Tempbond NE · add expiry on the line"))
+        #expect(viewModel.headline(for: created) == "Tempbond NE\u{00A0}· new product")
+        #expect(
+            viewModel.message == .init(title: "Product created", detail: "Tempbond NE\u{00A0}· add expiry on the line")
+        )
     }
 
     @Test func aCreatedProductsLineIsTriedAgainWhenTheConnectionDrops() async throws {
@@ -166,7 +168,7 @@ struct InvoiceReviewViewModelTests {
         await viewModel.perform(.ignore, on: InvoiceLine.surcharge)
         let skipped = try line(4, in: viewModel)
         #expect(skipped.state == .skipped)
-        #expect(viewModel.headline(for: skipped) == "Ignored · not added to inventory")
+        #expect(viewModel.headline(for: skipped) == "Ignored\u{00A0}· not added to inventory")
         #expect(viewModel.choices(for: skipped) == nil)
 
         await viewModel.reopen(skipped)

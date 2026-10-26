@@ -49,7 +49,7 @@ private extension ProductExpiryCard {
         HStack(alignment: .top, spacing: Spacing.md) {
             Text(viewModel.expiryTotalLine)
                 .textStyle(.body16)
-                .foregroundStyle(Color.ms.textSecondary)
+                .foregroundStyle(Color.ms.textBody)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: Spacing.sm)
             Text(viewModel.unit).textStyle(.body16).foregroundStyle(Color.ms.textSecondary)

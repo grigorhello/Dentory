@@ -35,7 +35,7 @@ extension ProcedureStartViewModel {
         } else {
             "all in stock"
         }
-        return "\(supplies) · \(stock). Add or remove items before you start."
+        return "\(supplies)\u{00A0}· \(stock). Add or remove items before you start."
     }
 
     /// "Start procedure · 10 items" (the count only); "Start procedure" until the template is in.
@@ -53,7 +53,7 @@ extension ProcedureStartViewModel {
         let quantity = Decimal(supply.quantity)
         if quantity > supply.item.quantity {
             let stock = formatters.number(max(supply.item.quantity, 0))
-            return Warning(text: "Not available · \(stock) in stock", tone: .danger)
+            return Warning(text: "Not available\u{00A0}· \(stock) in stock", tone: .danger)
         }
         if quantity == supply.item.quantity {
             return Warning(text: "0 will remain", tone: .warning)
@@ -65,9 +65,9 @@ extension ProcedureStartViewModel {
     func line(for bottle: Bottle) -> String {
         let unopened = bottle.item.unopened
         if bottle.takesNew {
-            return "Will take 1 from stock · \(formatters.number(max(unopened - 1, 0))) unopened left"
+            return "Will take 1 from stock\u{00A0}· \(formatters.number(max(unopened - 1, 0))) unopened left"
         }
-        return "\(bottle.item.openCount) open · \(formatters.number(max(unopened, 0))) in stock"
+        return "\(bottle.item.openCount) open\u{00A0}· \(formatters.number(max(unopened, 0))) in stock"
     }
 
     /// The bottles taken new, listed with the supplies as one item each.
@@ -79,7 +79,7 @@ extension ProcedureStartViewModel {
         if product.id == outOfStockProductID { return "Out of stock" }
         return switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
-        case .multiUse: "\(formatters.number(product.unopened)) unopened · \(product.openCount) open"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened\u{00A0}· \(product.openCount) open"
         }
     }
 
@@ -91,7 +91,7 @@ extension ProcedureStartViewModel {
     /// What Add item says with nothing to list: nothing while the products load, and how to retry when they failed.
     var addItemEmptyText: String {
         if hasLoadedProducts { return "No products match." }
-        return productsFailed ? "Couldn't load products. Close and reopen Add item to try again." : ""
+        return productsFailed ? "Couldn't load products. Reopen Add item to try again." : ""
     }
 
     /// The template's multi-use products, listed under "Opened a new one?"; one Add item brought in is listed with

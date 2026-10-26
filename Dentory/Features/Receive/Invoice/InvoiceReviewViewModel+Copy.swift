@@ -23,8 +23,8 @@ extension InvoiceReviewViewModel {
         case .possibleMatch: line.suggestedProductName.map { "Is this \($0)?" } ?? "Not in your inventory"
         case .newProduct: "Not in your inventory"
         case .needsReview: "Looks like a fee, not a product"
-        case .created: "\(line.productName ?? line.suggestedName ?? line.raw) · new product"
-        case .skipped: "Ignored · not added to inventory"
+        case .created: "\(line.productName ?? line.suggestedName ?? line.raw)\u{00A0}· new product"
+        case .skipped: "Ignored\u{00A0}· not added to inventory"
         }
     }
 
@@ -48,7 +48,7 @@ extension InvoiceReviewViewModel {
         }
         let price = (line.unitPrice ?? Self.unitPrice(of: line)).map(formatters.unitCost)
         let parts = [quantity, price].compactMap(\.self)
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        return parts.isEmpty ? nil : parts.joined(separator: "\u{00A0}· ")
     }
 
     /// The two buttons of a line waiting for a choice, `.a` then `.b`: Yes, match and No, create new; Add new and Pick
@@ -97,7 +97,7 @@ extension InvoiceReviewViewModel {
     /// A received line's lot and expiry, read-only (MS-131): "Expiry Mar 2028 · Lot B441", "No expiry".
     func receivedBatch(for line: InvoiceLine) -> String {
         let expiry = line.expiryMonth.map { "Expiry \(formatters.shortMonth($0))" } ?? "No expiry"
-        return ([expiry] + [line.lot.map { "Lot \($0)" }].compactMap(\.self)).joined(separator: " · ")
+        return ([expiry] + [line.lot.map { "Lot \($0)" }].compactMap(\.self)).joined(separator: "\u{00A0}· ")
     }
 
     /// The month the wheels open on while none is chosen: this month in the clinic's time zone.
@@ -115,7 +115,7 @@ extension InvoiceReviewViewModel {
 
     /// The toast's line once New product created the product for a line: "Tempbond NE · add expiry on the line".
     static func createdDetail(_ line: InvoiceLine) -> String {
-        "\(line.productName ?? line.suggestedName ?? line.raw) · add expiry on the line"
+        "\(line.productName ?? line.suggestedName ?? line.raw)\u{00A0}· add expiry on the line"
     }
 
     /// The price of one when the invoice gives only the line's amount.

@@ -47,7 +47,10 @@ struct InvoiceViewModelReviewTests {
         let review = try #require(viewModel.review)
         #expect(review.lines == InvoiceLine.frames)
         #expect(review.invoiceID == invoiceID)
-        #expect(review.amount(for: InvoiceLine.septo) == "5 boxes · CA$49.80", "The prices in the invoice's currency")
+        #expect(
+            review.amount(for: InvoiceLine.septo) == "5 boxes\u{00A0}· CA$49.80",
+            "The prices in the invoice's currency"
+        )
     }
 
     @Test func comingBackToTheForegroundReadsTheLinesAgain() async throws {
@@ -83,9 +86,10 @@ struct InvoiceViewModelReviewTests {
         let viewModel = opened(repository)
         await viewModel.load()
         #expect(viewModel.state == .received)
-        #expect(viewModel.header == "Patterson Dental · INV-10092 · $449.00")
+        #expect(viewModel.header == "Patterson Dental\u{00A0}· INV-10092\u{00A0}· $449.00")
         #expect(viewModel.banner == nil)
-        #expect(viewModel.receivedNotice == "Received · \(formatters.dateTime(Session.demoNow)) · Sarah")
+        let when = formatters.dateTime(Session.demoNow)
+        #expect(viewModel.receivedNotice == "Received\u{00A0}· \(when)\u{00A0}· Sarah")
         #expect(!viewModel.canDiscard, "A received invoice is not discarded")
         let review = try #require(viewModel.review)
         #expect(review.isReceived && !review.canConfirm)
@@ -148,7 +152,7 @@ struct InvoiceViewModelReviewTests {
         #expect(!viewModel.isConfirmingDiscard)
         #expect(viewModel.state == .closed)
         #expect(viewModel.discarded == .init(
-            title: "Invoice discarded", detail: "Patterson Dental · INV-10092 · $449.00"
+            title: "Invoice discarded", detail: "Patterson Dental\u{00A0}· INV-10092\u{00A0}· $449.00"
         ))
     }
 
@@ -201,7 +205,7 @@ struct InvoiceViewModelReviewTests {
         #expect(InvoiceViewModel.discardTitle == "Discard invoice")
         #expect(InvoiceViewModel.discardQuestion == "Discard this invoice?")
         #expect(InvoiceViewModel.discardMessage
-            == "Nothing is added to inventory, and the invoice's photo or file is deleted.")
+            == "Nothing is added to inventory. The photo or file is deleted.")
         #expect(InvoiceViewModel.keepTitle == "Keep")
     }
 }

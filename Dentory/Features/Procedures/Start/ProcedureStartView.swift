@@ -56,7 +56,7 @@ struct ProcedureStartView: View {
         case .loaded:
             Text(viewModel.summary)
                 .textStyle(.body14)
-                .foregroundStyle(Color.ms.textSecondary)
+                .foregroundStyle(Color.ms.textBody)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("procDetail.summary")
             ProcedureSuppliesCard(viewModel: viewModel)

@@ -54,7 +54,7 @@ struct InvoiceViewModelTests {
             .invoice(document.id), .invoice(document.id)
         ])
         #expect(viewModel.state == .ready)
-        #expect(viewModel.header == "Patterson Dental · INV-10092 · $449.00")
+        #expect(viewModel.header == "Patterson Dental\u{00A0}· INV-10092\u{00A0}· $449.00")
         #expect(viewModel.banner == "AI read 4 lines. Check each one, then confirm.")
     }
 
@@ -288,8 +288,8 @@ struct InvoiceViewModelTests {
 
     @Test func theHeaderIsInTheInvoicesCurrencyAndLeavesOutWhatTheInvoiceDoesNotShow() async {
         let cases: [(InvoiceSummary, String?)] = [
-            (.ready(invoiceID, currency: "CAD"), "Patterson Dental · INV-10092 · CA$449.00"),
-            (.ready(invoiceID, supplier: nil), "INV-10092 · $449.00"),
+            (.ready(invoiceID, currency: "CAD"), "Patterson Dental\u{00A0}· INV-10092\u{00A0}· CA$449.00"),
+            (.ready(invoiceID, supplier: nil), "INV-10092\u{00A0}· $449.00"),
             (.ready(invoiceID, number: "", total: nil), "Patterson Dental"),
             (.ready(invoiceID, supplier: nil, number: nil, total: nil), nil)
         ]

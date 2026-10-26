@@ -59,7 +59,7 @@ struct InvoicesViewModelTests {
             + "Each one appears here, and its receipt goes to your billing emails.")
         let ended = make(trialEndsAt: Session.demoNow.addingTimeInterval(-86_400))
         #expect(ended.emptyCaption
-            == "Each invoice appears here once it is issued, and its receipt goes to your billing emails.")
+            == "Each invoice appears here once it is issued.")
     }
 
     @Test func theLastListShowsOffline() async {

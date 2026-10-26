@@ -25,7 +25,7 @@ final class ProcedureEventUITests: XCTestCase {
         let app = XCUIApplication()
         openRootCanal(app)
         let recorded = app.staticTexts["procDetail.summary"].label
-        XCTAssertEqual(recorded, "10 items deducted · Oct 1 · 3:14\u{202F}PM · Sarah")
+        XCTAssertEqual(recorded, "10 items deducted\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Sarah")
         app.buttons["procDetail.editUsage"].tap()
 
         XCTAssertTrue(app.staticTexts["procDetail.editing"].waitForExistence(timeout: 3), "Editing did not start")
@@ -41,7 +41,7 @@ final class ProcedureEventUITests: XCTestCase {
         XCTAssertTrue(toast.staticTexts["Usage updated"].exists)
         let summary = app.staticTexts["procDetail.summary"]
         XCTAssertTrue(summary.waitForExistence(timeout: 5), "Save did not end editing")
-        XCTAssertEqual(summary.label, "11 items deducted · Oct 1 · 3:14\u{202F}PM · Sarah")
+        XCTAssertEqual(summary.label, "11 items deducted\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Sarah")
     }
 
     /// Cancel procedure waits for a note, then goes back with the items returned.
@@ -85,7 +85,7 @@ final class ProcedureEventUITests: XCTestCase {
         app.buttons["procDetail.discard"].tap()
         let summary = app.staticTexts["procDetail.summary"]
         XCTAssertTrue(summary.waitForExistence(timeout: 3), "Discard did not end editing")
-        XCTAssertEqual(summary.label, "10 items deducted · Oct 1 · 3:14\u{202F}PM · Sarah")
+        XCTAssertEqual(summary.label, "10 items deducted\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Sarah")
         app.buttons["procDetail.back"].tap()
         XCTAssertTrue(app.staticTexts["Smile Dental"].waitForExistence(timeout: 5), "Back did not return Home")
     }

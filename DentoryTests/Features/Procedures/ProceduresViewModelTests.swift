@@ -62,17 +62,20 @@ struct ProceduresViewModelTests {
         // The time style puts a narrow no-break space before "PM", as iOS writes times.
         let viewModel = make()
         let rootCanal = ProcedureEventSummary.demo[0]
-        #expect(viewModel.historyLine(for: rootCanal) == "Oct 1 · 3:14\u{202F}PM · Sarah")
+        #expect(viewModel.historyLine(for: rootCanal) == "Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Sarah")
         let cancelled = ProcedureEventSummary(
             id: UUID(), name: "Crown", startedAt: rootCanal.startedAt, startedByName: "Michael Reyes", itemCount: 10,
             cancelledAt: Session.demoNow
         )
-        #expect(viewModel.historyLine(for: cancelled) == "Cancelled · Oct 1 · 3:14\u{202F}PM · Michael")
+        #expect(
+            viewModel.historyLine(for: cancelled)
+                == "Cancelled\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Michael"
+        )
         let bySomeoneGone = ProcedureEventSummary(
             id: UUID(), name: "Crown", startedAt: rootCanal.startedAt, startedByName: "", itemCount: 10,
             cancelledAt: nil
         )
-        #expect(viewModel.historyLine(for: bySomeoneGone) == "Oct 1 · 3:14\u{202F}PM")
+        #expect(viewModel.historyLine(for: bySomeoneGone) == "Oct 1\u{00A0}· 3:14\u{202F}PM")
     }
 
     @Test func theNoteDependsOnTheRole() {

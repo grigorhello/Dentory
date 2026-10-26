@@ -147,7 +147,7 @@ struct RootView: View {
                 )) { pendingInviteClinicID = nil }
             }
         case .signedIn(let session):
-            AppTabsView(router: router)
+            AppTabsView(router: router, session: session)
                 .environment(router)
                 .environment(sessionStore)
                 .environment(\.session, session)
@@ -193,8 +193,8 @@ struct RootView: View {
 /// drawn `AppTabBar`. The bar disappears while a tab shows a pushed screen (PRD §3).
 struct AppTabsView: View {
     @Environment(\.appDependencies) private var dependencies
-    @Environment(\.session) private var session
     @Bindable var router: AppRouter
+    let session: Session
     /// Measured from the bar, so a tab's root screen keeps its content above it.
     @State private var tabBarHeight: CGFloat = 0
 
@@ -220,7 +220,7 @@ struct AppTabsView: View {
             router.isReadOnlySheetPresented = true
         })
         .msSheet(isPresented: $router.isReadOnlySheetPresented) {
-            ReadOnlySheet(isAdmin: session?.isAdmin == true, onBilling: openBilling) {
+            ReadOnlySheet(isAdmin: session.isAdmin, onBilling: openBilling) {
                 router.isReadOnlySheetPresented = false
             }
         }
@@ -246,16 +246,11 @@ struct AppTabsView: View {
     }
 
     @ViewBuilder private func root(of tab: AppTab) -> some View {
-        if tab == .home, let session {
-            HomeView(session: session, dependencies: dependencies)
-        } else if tab == .inventory, let session {
-            InventoryListView(session: session, dependencies: dependencies)
-        } else if tab == .procedures, let session {
-            ProceduresView(session: session, dependencies: dependencies)
-        } else if tab == .toBuy, let session {
-            ToBuyView(session: session, dependencies: dependencies)
-        } else {
-            TabPlaceholderView(tab: tab)
+        switch tab {
+        case .home: HomeView(session: session, dependencies: dependencies)
+        case .inventory: InventoryListView(session: session, dependencies: dependencies)
+        case .procedures: ProceduresView(session: session, dependencies: dependencies)
+        case .toBuy: ToBuyView(session: session, dependencies: dependencies)
         }
     }
 }

@@ -74,6 +74,9 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Dentory
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        # V1.1 is light only (MS-136 audit V-01): every frame is light, and the system's own controls (month wheels,
+        # menus, action sheets) would draw dark on the cream page with the phone set to Dark.
+        INFOPLIST_KEY_UIUserInterfaceStyle: Light
         # Receive delivery's Take a photo scans invoices with VisionKit's document camera (MS-126).
         INFOPLIST_KEY_NSCameraUsageDescription: "Dentory uses the camera to scan invoices and packing slips."
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
@@ -118,6 +121,8 @@ targets:
     platform: iOS
     sources:
       - DentoryE2ETests
+      # Not Now on iOS 26's Save Password? after a sign-in, as in the UI flows.
+      - DentoryUITests/XCUIApplication+SavePassword.swift
     dependencies:
       - target: Dentory
     settings:
