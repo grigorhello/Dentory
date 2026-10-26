@@ -21,6 +21,8 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     var startError: Error?
     /// Runs inside `upload`, before it answers: a test can leave the screen or tap something mid-upload there.
     var duringUpload: (@Sendable () async -> Void)?
+    /// Runs inside `create`, before it answers.
+    var duringCreate: (@Sendable () async -> Void)?
 
     var calls: [Call] { lock.withLock { recorded } }
 
@@ -36,6 +38,7 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
 
     func create(_ document: InvoiceDocument, clinicID: UUID) async throws -> InvoiceSummary {
         record(.create(document.id))
+        await duringCreate?()
         if let createError { throw createError }
         return .reading(document.id, started: false)
     }

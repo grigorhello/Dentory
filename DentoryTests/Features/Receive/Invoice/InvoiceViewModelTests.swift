@@ -2,9 +2,10 @@ import Foundation
 import Testing
 @testable import Dentory
 
-/// Review invoice up to its review (MS-129): captured pages are uploaded as their invoice, created and read; an invoice
-/// opened from Receive delivery is followed; failures say what to do next; Receive manually instead sets the invoice
-/// aside; and leaving the screen stops the questions, never the upload.
+/// Review invoice up to its review (MS-129): captured pages are uploaded as their invoice, created and read, once
+/// (again only after Try again); an invoice opened from Receive delivery is followed; failures say what to do next;
+/// Receive manually instead sets the invoice aside for good; and leaving the screen stops the questions, never the
+/// upload.
 @MainActor
 struct InvoiceViewModelTests {
     private let formatters = ClinicFormatters(
@@ -85,6 +86,27 @@ struct InvoiceViewModelTests {
         #expect(viewModel.state == .ready)
         #expect(repository.calls.filter { $0 == .upload(document.id, pages: 2) }.count == 2)
         #expect(repository.calls.filter { $0 == .create(document.id) }.count == 1)
+    }
+
+    @Test func comingBackAfterAFailedUploadSendsNothingUntilTryAgain() async {
+        let repository = FakeInvoiceRepository()
+        repository.uploadError = AppError.network
+        repository.readings = [.success(.ready(document.id))]
+        let viewModel = captured(repository)
+        await viewModel.load()
+        repository.uploadError = nil
+
+        await viewModel.load()
+        #expect(repository.calls == [.upload(document.id, pages: 2)], "Only Try again sends the pages again")
+        #expect(viewModel.state == .uploadFailed(.network))
+
+        viewModel.retry()
+        await viewModel.load()
+        #expect(repository.calls == [
+            .upload(document.id, pages: 2), .upload(document.id, pages: 2), .create(document.id),
+            .startReading(document.id), .invoice(document.id)
+        ])
+        #expect(viewModel.state == .ready)
     }
 
     @Test func anInvoiceRefusedOnCreationIsAFailedUploadToo() async {
@@ -190,13 +212,61 @@ struct InvoiceViewModelTests {
 
     @Test func receiveManuallyInsteadDuringTheUploadStopsItAndSetsTheInvoiceAside() async {
         let repository = FakeInvoiceRepository()
+        repository.readings = [.success(.ready(document.id))]
         let viewModel = captured(repository)
         repository.duringUpload = { await MainActor.run { viewModel.setAside() } }
         await viewModel.load()
         await eventually { repository.calls.contains(.discard(document.id)) }
         #expect(!repository.calls.contains(.create(document.id)), "No invoice is created after the tap")
         #expect(repository.calls.contains(.discard(document.id)))
-        #expect(viewModel.state == .uploading, "No failure is shown for an upload stopped on purpose")
+        #expect(viewModel.state == .closed, "No failure is shown for an upload stopped on purpose")
+    }
+
+    @Test func comingBackAfterReceiveManuallyInsteadDuringTheUploadSendsNothingAgain() async {
+        let repository = FakeInvoiceRepository()
+        repository.readings = [.success(.ready(document.id))]
+        let viewModel = captured(repository)
+        repository.duringUpload = { await MainActor.run { viewModel.setAside() } }
+        await viewModel.load()
+        await eventually { repository.calls.contains(.discard(document.id)) }
+        repository.duringUpload = nil
+
+        await viewModel.load()
+        #expect(repository.calls == [.upload(document.id, pages: 2), .discard(document.id)])
+        #expect(viewModel.state == .closed, "Back lands on the invoice set aside, never on its reading")
+        #expect(viewModel.header == nil)
+    }
+
+    @Test func receiveManuallyAfterAFailedUploadSetsThePagesAsideForGood() async {
+        let repository = FakeInvoiceRepository()
+        repository.uploadError = AppError.network
+        repository.readings = [.success(.ready(document.id))]
+        let viewModel = captured(repository)
+        await viewModel.load()
+        viewModel.setAside()
+        #expect(viewModel.state == .closed)
+        await eventually { repository.calls.contains(.discard(document.id)) }
+
+        repository.uploadError = nil
+        viewModel.retry()
+        await viewModel.load()
+        #expect(repository.calls == [.upload(document.id, pages: 2), .discard(document.id)])
+        #expect(viewModel.state == .closed)
+        #expect(viewModel.attempt == 0, "Nothing is tried again once set aside")
+    }
+
+    @Test func receiveManuallyInsteadWhileTheInvoiceIsCreatedSetsItAsideOnceItExists() async {
+        let repository = FakeInvoiceRepository()
+        repository.readings = [.success(.ready(document.id))]
+        let viewModel = captured(repository)
+        repository.duringCreate = { await MainActor.run { viewModel.setAside() } }
+        await viewModel.load()
+        await eventually { repository.calls.contains(.discard(document.id)) }
+        #expect(
+            repository.calls == [.upload(document.id, pages: 2), .create(document.id), .discard(document.id)],
+            "The invoice is discarded after its creation answers, and never read"
+        )
+        #expect(viewModel.state == .closed)
     }
 
     @Test func receiveManuallyInsteadWhileReadingSetsTheInvoiceAside() async {

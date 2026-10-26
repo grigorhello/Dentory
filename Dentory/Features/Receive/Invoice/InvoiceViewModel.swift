@@ -47,6 +47,10 @@ final class InvoiceViewModel {
     private let pause: @Sendable (Duration) async throws -> Void
     /// The upload and the invoice's creation, which carry on when the admin leaves the screen.
     private var submission: Task<Void, Never>?
+    /// Pages just captured that are still to go up. Cleared when their upload starts, so a screen that appears again
+    /// never sends them a second time; set again only by Try again after a failed upload, and cleared for good by
+    /// Receive manually instead.
+    private var needsUpload: Bool
     private var isCreated: Bool
     private var readingRequests = 0
 
@@ -82,13 +86,15 @@ final class InvoiceViewModel {
         self.formatters = formatters
         self.clinicID = clinicID
         self.pause = pause
+        needsUpload = document != nil
         isCreated = document == nil
         state = document == nil ? .loading : .uploading
     }
 
     /// Uploads captured pages once (again after Try again), then follows the reading until it ends or the screen goes.
     func load() async {
-        if !isCreated, submission == nil, let document {
+        if needsUpload, let document {
+            needsUpload = false
             submission = Task { await self.submit(document) }
         }
         await submission?.value
@@ -98,36 +104,47 @@ final class InvoiceViewModel {
     /// Try again after a failed upload (the same pages, under the same invoice) or a failed first load.
     func retry() {
         switch state {
-        case .uploadFailed: state = .uploading
-        case .loadFailed: state = .loading
-        default: return
+        case .uploadFailed:
+            needsUpload = true
+            state = .uploading
+        case .loadFailed:
+            state = .loading
+        default:
+            return
         }
         attempt += 1
     }
 
-    /// Receive manually instead: the upload stops, and the invoice is set aside, so its reading, when it ends, raises
-    /// no delivery waiting for review to be received a second time. Best effort: the admin is on Receive manually by
-    /// then, and an invoice that could not be set aside (no connection) stays in Continue reviewing until it is
-    /// discarded there (MS-130), so nothing is shown for it.
+    /// Receive manually instead: the upload stops for good, and once it has stopped the invoice is set aside, so its
+    /// reading, when it ends, raises no delivery waiting for review to be received a second time. Pages that had not
+    /// become an invoice show as set aside when the admin comes back; an invoice shows what the server says of it. Best
+    /// effort: the admin is on Receive manually by then, and an invoice that could not be set aside (no connection)
+    /// stays in Continue reviewing until it is discarded there (MS-130), so nothing is shown for it.
     func setAside() {
+        needsUpload = false
+        let submission = submission
         submission?.cancel()
+        if !isCreated {
+            state = .closed
+        }
         let repository = repository
         let invoiceID = invoiceID
-        Task { try? await repository.discard(invoiceID: invoiceID) }
+        Task {
+            await submission?.value
+            try? await repository.discard(invoiceID: invoiceID)
+        }
     }
 
+    /// Runs with the state already uploading (the captured pages, or Try again after a failed upload).
     private func submit(_ document: InvoiceDocument) async {
         defer { submission = nil }
-        state = .uploading
         do {
             try await repository.upload(document, clinicID: clinicID)
             try Task.checkCancellation()
             let created = try await repository.create(document, clinicID: clinicID)
             isCreated = true
-            if Task.isCancelled {
-                try? await repository.discard(invoiceID: invoiceID)
-                return
-            }
+            // Set aside meanwhile: `setAside()` discards the invoice now that it exists.
+            guard !Task.isCancelled else { return }
             show(created)
             await requestReading()
         } catch {
