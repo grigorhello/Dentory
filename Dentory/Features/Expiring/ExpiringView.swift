@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Expiring soon (f27 Admin, f28 Staff), pushed from Home's Expiring soon and At risk tiles: the 30 / 60 / 90 days
-/// segments, the summary, a card per batch with View product and the admin's Mark disposed, and the empty state.
+/// segments, pinned under the title, the summary, a card per batch with View product and the admin's Mark disposed,
+/// and the empty state.
 struct ExpiringView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -16,7 +17,10 @@ struct ExpiringView: View {
 
     var body: some View {
         content
-            .pushedScreen(title: "Expiring soon", identifier: "expiring")
+            .pushedScreen(title: "Expiring soon", identifier: "expiring", pinned: {
+                SegmentedControl(selection: $viewModel.window, options: viewModel.windowOptions)
+                    .accessibilityIdentifier("expiring.seg")
+            })
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: ExpiringRoute.self) { route in
                 switch route {
@@ -43,8 +47,6 @@ struct ExpiringView: View {
     }
 
     @ViewBuilder private var content: some View {
-        SegmentedControl(selection: $viewModel.window, options: viewModel.windowOptions)
-            .accessibilityIdentifier("expiring.seg")
         if case .failed(let error) = viewModel.state {
             Notice(error.userMessage, tone: .danger)
         } else if viewModel.state == .loading && viewModel.list == nil {

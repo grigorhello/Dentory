@@ -94,6 +94,40 @@ final class ToBuyUITests: XCTestCase {
         XCTAssertFalse(app.buttons["\(composite).inc"].exists)
     }
 
+    /// The segments stay pinned under the title while the lines scroll, as the frames pin the controls under a title
+    /// (f16-2, f09-2): three more lines through Add item make the list longer than the screen, and from its end the
+    /// segments are where they were and still switch the list.
+    @MainActor
+    func testTheSegmentsStayPinnedWhileTheLinesScroll() {
+        let app = launch()
+        let toast = app.descendants(matching: .any)["toast"]
+        let offered = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'addOrder.row['"))
+        for count in 4...6 {
+            // Add item at the end of the list, once the last toast, which would take the tap, has gone.
+            app.swipeUp()
+            XCTAssertTrue(toast.waitForNonExistence(timeout: 6), "The toast stayed")
+            app.buttons["order.add"].tap()
+            XCTAssertTrue(offered.firstMatch.waitForExistence(timeout: 5), "Add item offers no product")
+            offered.firstMatch.tap()
+            XCTAssertTrue(app.buttons["To buy · \(count)"].waitForExistence(timeout: 5), "Line \(count) was not added")
+        }
+        app.swipeDown()
+        app.swipeDown()
+        let summary = app.staticTexts["order.selectionBar.summary"]
+        XCTAssertTrue(summary.isHittable, "The list is not back at its top")
+        let pinned = PinnedElements([("The segments", app.buttons["To buy · 6"])])
+
+        app.swipeUp()
+        app.swipeUp()
+        XCTAssertFalse(summary.isHittable, "The lines did not scroll")
+        pinned.assertInReach()
+        app.buttons["Ordered · 5"].tap()
+        XCTAssertTrue(
+            element("order.ordered[00000000-0000-4000-8000-000000000504]", in: app).waitForExistence(timeout: 3),
+            "Ordered did not open from the end of the list"
+        )
+    }
+
     /// Staff change quantities and add items but see no checkboxes, no selection bar and no Mark as ordered (f26).
     @MainActor
     func testStaffSeeNoOrdering() {

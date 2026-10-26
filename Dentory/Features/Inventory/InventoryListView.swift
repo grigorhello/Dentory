@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// Inventory (f16 Admin, f17 Staff, f19 Low filter): title with Count stock, search, status chips and
-/// the product rows in one card; Admin gets the round + for New product. Count stock (f18, MS-121) turns the
-/// same list into steppers with Cancel in the header and Review pinned above the tab bar. Like To buy, the list reloads
-/// after any stock change and whenever its tab is chosen, so a delivery received by hand (MS-127), which lands here,
-/// shows its quantity.
+/// the product rows in one card; Admin gets the round + for New product. The search field and the chips stay under
+/// the title while the rows scroll (f16-2, f17-2), also while counting (f18-2 to f18-5). Count stock (f18, MS-121)
+/// turns the same list into steppers with Cancel in the header and Review pinned above the tab bar. Like To buy, the
+/// list reloads after any stock change and whenever its tab is chosen, so a delivery received by hand (MS-127), which
+/// lands here, shows its quantity.
 struct InventoryListView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -22,6 +23,8 @@ struct InventoryListView: View {
         content
             .rootScreen(title: viewModel.title, identifier: "inv.header") {
                 InventoryHeaderAction(viewModel: viewModel)
+            } pinned: {
+                InventorySearchAndFilters(viewModel: viewModel)
             }
             // Floats over the rows, 20 pt above the tab bar (f16); the list leaves room under its last row.
             .overlay(alignment: .bottomTrailing) {
@@ -79,11 +82,6 @@ struct InventoryListView: View {
     }
 
     @ViewBuilder private var content: some View {
-        MSTextField(
-            nil, text: $viewModel.searchText, identifier: "inv.search", placeholder: "Search products", icon: .search
-        )
-        .submitLabel(.search)
-        InventoryFilterChips(viewModel: viewModel)
         switch viewModel.emptyReason {
         case .noMatches:
             EmptyStateView("No products match.")
@@ -120,26 +118,6 @@ struct InventoryListView: View {
 
     private func reload() {
         Task { await viewModel.load() }
-    }
-}
-
-/// The status chips, with the removable category chip in front when a category was handed over.
-private struct InventoryFilterChips: View {
-    @Bindable var viewModel: InventoryListViewModel
-
-    var body: some View {
-        FilterChipRow(
-            selection: $viewModel.filter,
-            options: InventoryFilter.allCases.map { SegmentOption($0, label: $0.rawValue) }
-        ) {
-            if let category = viewModel.category {
-                FilterChip("\(category) ×", isSelected: true) { viewModel.clearCategory() }
-                    .accessibilityLabel("Remove the \(category) filter")
-                    .accessibilityIdentifier("inv.filter.category")
-            }
-        }
-        .padding(.horizontal, -Spacing.page)
-        .accessibilityIdentifier("inv.filter")
     }
 }
 

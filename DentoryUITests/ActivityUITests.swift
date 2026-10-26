@@ -117,6 +117,29 @@ final class ActivityUITests: XCTestCase {
         XCTAssertTrue(oldest.exists, "The second visit did not page")
     }
 
+    /// The header, the segments and History's chips stay pinned while the days scroll under them (f09-2), so Back,
+    /// Alerts and the chips are always in reach, and a chip still filters from the scrolled list.
+    @MainActor
+    func testTheSegmentsAndChipsStayPinnedWhileHistoryScrolls() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-demoHistoryRows", "120"]
+        app.launch()
+        openHistory(in: app)
+        let newest = row(0xe1, in: app)
+        XCTAssertTrue(newest.waitForExistence(timeout: 5), "No first page")
+        let pinned = PinnedElements([
+            ("Back", app.buttons["activity.back"]), ("The segments", app.buttons["Alerts · 3"]),
+            ("The chips", app.buttons["Counts"])
+        ])
+
+        app.swipeUp()
+        app.swipeUp()
+        XCTAssertFalse(newest.exists && newest.isHittable, "History did not scroll")
+        pinned.assertInReach()
+        app.buttons["Counts"].tap()
+        XCTAssertTrue(row(0xf1, in: app).waitForExistence(timeout: 5), "Counts did not filter the scrolled list")
+    }
+
     @MainActor
     private func openHistory(in app: XCUIApplication) {
         let bell = app.buttons["home.header.bell"]

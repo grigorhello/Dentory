@@ -67,25 +67,42 @@ final class InventoryUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Missing expiry"].isSelected, "The Missing expiry chip is not selected")
     }
 
-    /// The title row stays pinned while the list scrolls under it (f16-2), so Count stock is always in reach.
+    /// The title row, the search field and the chips stay pinned while the list scrolls under them (f16-2), and so
+    /// do they while counting (f18-2), so Count stock, the search and the filters are always in reach.
     @MainActor
-    func testTheTitleRowStaysPinnedWhileTheListScrolls() {
+    func testTheTitleSearchAndChipsStayPinnedWhileTheListScrolls() {
         let app = XCUIApplication()
         app.launchArguments = ["-uiTesting", "-tab", "inventory"]
         app.launch()
 
         let title = app.staticTexts["inv.header.title"]
         XCTAssertTrue(title.waitForExistence(timeout: 5), "Inventory did not open")
-        let search = app.textFields["inv.search"].firstMatch
-        XCTAssertTrue(search.waitForExistence(timeout: 5), "No search field")
-        let top = title.frame.minY
-        for _ in 0..<4 {
-            app.swipeUp()
-        }
-        XCTAssertFalse(search.isHittable, "The list did not scroll")
-        XCTAssertTrue(title.isHittable, "The title scrolled away")
-        XCTAssertEqual(title.frame.minY, top, accuracy: 1, "The title moved")
+        let firstRow = app.descendants(matching: .any)["inv.row[00000000-0000-4000-8000-0000000000d7]"]
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 5), "The Rubber dam row is missing")
+        let pinned = PinnedElements([
+            ("The title", title), ("The search field", app.textFields["inv.search"].firstMatch),
+            ("The Low chip", app.buttons["Low"])
+        ])
+        app.swipeUp()
+        app.swipeUp()
+        XCTAssertFalse(firstRow.exists && firstRow.isHittable, "The list did not scroll")
+        pinned.assertInReach()
         XCTAssertTrue(app.descendants(matching: .any)["inv.countStock"].isHittable, "Count stock scrolled away")
+        // A chip still takes a tap 2 pt above the bottom of its 44 pt target, over the strip the rows are cut under.
+        let low = app.buttons["Low"]
+        low.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 1 - 2 / low.frame.height)).tap()
+        XCTAssertTrue(low.isSelected, "The bottom of the Low chip did not take the tap")
+        app.buttons["All"].tap()
+
+        app.buttons["inv.countStock"].tap()
+        let cancel = app.buttons["inv.count.cancel"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 3), "Count mode did not open")
+        app.swipeUp()
+        app.swipeUp()
+        let firstCount = app.buttons["inv.count.row[00000000-0000-4000-8000-0000000000d7].inc"]
+        XCTAssertFalse(firstCount.exists && firstCount.isHittable, "The count did not scroll")
+        pinned.assertInReach()
+        XCTAssertTrue(cancel.isHittable, "Cancel scrolled away")
     }
 
     /// The last row scrolls clear of the tab bar; Staff have no room left under it for the round +.

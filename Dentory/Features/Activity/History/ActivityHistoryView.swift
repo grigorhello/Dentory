@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// One product's history, from Product detail's Show all (Appendix B `activity` with `productId`): History's chips and
-/// days for that product alone, each procedure listed with the product's own quantity.
+/// One product's history, from Product detail's Show all (Appendix B `activity` with `productId`): History's chips,
+/// pinned under the title as on Activity (f09-2), and days for that product alone, each procedure listed with the
+/// product's own quantity.
 struct ActivityHistoryView: View {
     @State private var viewModel: ActivityHistoryViewModel
     let productName: String
@@ -15,7 +16,9 @@ struct ActivityHistoryView: View {
 
     var body: some View {
         ActivityHistoryList(viewModel: viewModel)
-            .pushedScreen(title: "History", subtitle: productName, identifier: "activity")
+            .pushedScreen(title: "History", subtitle: productName, identifier: "activity", pinned: {
+                ActivityHistoryFilters(viewModel: viewModel)
+            })
             .reloadOnReturn(loadsOnAppear: false) { await viewModel.load() }
     }
 }
