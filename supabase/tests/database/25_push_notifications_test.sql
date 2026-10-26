@@ -1,6 +1,6 @@
--- MS-144 · Push notifications: which alerts queue a push, one per product per day and once per expiring batch, quiet
--- hours, what push_claim answers and to whose devices, what it skips, push_finish, the device token RPCs, the shared
--- APNs provider token, the cron job.
+-- MS-144 · Push notifications: which alerts queue a push, one per product per day and once per expiring batch and
+-- month (a batch moved to another month: 37_expiry_push_month_test.sql), quiet hours, what push_claim answers and to
+-- whose devices, what it skips, push_finish, the device token RPCs, the shared APNs provider token, the cron job.
 begin;
 select plan(42);
 
@@ -75,7 +75,7 @@ select is(pg_temp.queued('00000000-0000-4000-8000-000000014455'), 1, 'expiring w
 select pg_temp.open_alert('00000000-0000-4000-8000-000000014456', 'invoice_ready', null, null, null, '00000000-0000-4000-8000-000000014441');
 select is(pg_temp.queued('00000000-0000-4000-8000-000000014456'), 1, 'a delivery ready to review queues a push');
 
--- One push per product per day; an expiring batch pushes once.
+-- One push per product per day; an expiring batch pushes once per month.
 update public.push_outbox set sent_at = now() where alert_id = '00000000-0000-4000-8000-000000014451';
 update public.alerts set resolved_at = now() where id = '00000000-0000-4000-8000-000000014451';
 select pg_temp.open_alert('00000000-0000-4000-8000-000000014457', 'out_of_stock', '00000000-0000-4000-8000-000000014421');
@@ -88,7 +88,7 @@ select ok((select abs(extract(epoch from (not_before - (now() + interval '1 day'
   where alert_id = '00000000-0000-4000-8000-00000001445c'), 'a push that never went out does not hold the next one back');
 update public.alerts set resolved_at = now() where id = '00000000-0000-4000-8000-000000014455';
 select pg_temp.open_alert('00000000-0000-4000-8000-000000014458', 'expiring', '00000000-0000-4000-8000-000000014422', '00000000-0000-4000-8000-000000014431', 30);
-select is(pg_temp.queued('00000000-0000-4000-8000-000000014458'), 0, 'a batch that expires again is not pushed twice');
+select is(pg_temp.queued('00000000-0000-4000-8000-000000014458'), 0, 'a batch that expires again in the same month is not pushed twice');
 delete from public.alerts where id = '00000000-0000-4000-8000-000000014458';
 update public.alerts set resolved_at = null where id = '00000000-0000-4000-8000-000000014455';
 
