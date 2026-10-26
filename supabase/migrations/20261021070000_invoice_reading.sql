@@ -323,8 +323,10 @@ as $$
 $$;
 
 -- Numbers and dates as the reading hands them over, or null for anything else: a number that does not fit its
--- column, a date that is not a real day.
-create function engine.json_numeric(p_value jsonb, p_scale integer)
+-- column once rounded to its scale (p_limit: under 1e9 for the numeric(12, 2) quantities and amounts, under 1e8 for a
+-- numeric(12, 4) unit price), a date that is not a real day. So a misread number leaves its field empty for the
+-- admin to fill instead of failing the whole reading.
+create function engine.json_numeric(p_value jsonb, p_scale integer, p_limit numeric)
 returns numeric
 language plpgsql
 immutable
@@ -337,7 +339,7 @@ begin
     return null;
   end if;
   v_number := round((p_value #>> '{}')::numeric, p_scale);
-  return case when abs(v_number) < 1e9 then v_number end;
+  return case when abs(v_number) < p_limit then v_number end;
 end;
 $$;
 
@@ -361,7 +363,7 @@ $$;
 revoke execute on function engine.invoice_alias_key(text), engine.invoice_match_text(text),
   engine.invoice_variant_numbers(text), engine.invoice_suggested_name(text), engine.invoice_suggested_unit(text),
   engine.invoice_match_line(uuid, text, text, text, text, numeric, numeric), engine.invoice_json(uuid),
-  engine.json_numeric(jsonb, integer), engine.json_date(jsonb)
+  engine.json_numeric(jsonb, integer, numeric), engine.json_date(jsonb)
   from public, anon, authenticated;
 
 -- The app ------------------------------------------------------------------------------------------------------------
@@ -548,7 +550,7 @@ begin
   set supplier = v_supplier,
       number = left(nullif(btrim(p_extraction ->> 'invoice_number'), ''), 60),
       invoice_date = engine.json_date(p_extraction -> 'invoice_date'),
-      total = engine.json_numeric(p_extraction -> 'total', 2),
+      total = engine.json_numeric(p_extraction -> 'total', 2, 1e9),
       currency = case when v_currency ~ '^[A-Z]{3}$' then v_currency end,
       raw_extraction = p_extraction,
       status = 'ready',
@@ -560,9 +562,9 @@ begin
     continue when v_raw = '';
     v_n := v_n + 1;
     v_kind := case when v_line ->> 'kind' = 'fee' then 'fee' else 'product' end;
-    v_qty := engine.json_numeric(v_line -> 'qty', 2);
+    v_qty := engine.json_numeric(v_line -> 'qty', 2, 1e9);
     v_unit := left(nullif(btrim(lower(v_line ->> 'unit')), ''), 30);
-    v_line_total := engine.json_numeric(v_line -> 'line_total', 2);
+    v_line_total := engine.json_numeric(v_line -> 'line_total', 2, 1e9);
     v_expiry := date_trunc('month', engine.json_date(v_line -> 'expiry'))::date;
     select * into v_match
     from engine.invoice_match_line(v_invoice.clinic_id, v_supplier_key, v_raw, v_kind, v_unit, v_qty, v_line_total);
@@ -570,7 +572,7 @@ begin
       clinic_id, invoice_id, n, raw, qty, unit, unit_price, line_total, lot, expiry_month, kind, state,
       product_id, suggested_product_id, match_score, suggested_name, suggested_unit
     ) values (
-      v_invoice.clinic_id, p_invoice_id, v_n, v_raw, v_qty, v_unit, engine.json_numeric(v_line -> 'unit_price', 4),
+      v_invoice.clinic_id, p_invoice_id, v_n, v_raw, v_qty, v_unit, engine.json_numeric(v_line -> 'unit_price', 4, 1e8),
       v_line_total, left(nullif(btrim(v_line ->> 'lot'), ''), 60), v_expiry, v_kind, v_match.o_state,
       v_match.o_product_id, v_match.o_suggested_product_id, v_match.o_score, v_match.o_suggested_name,
       v_match.o_suggested_unit

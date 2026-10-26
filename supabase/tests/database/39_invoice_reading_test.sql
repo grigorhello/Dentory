@@ -1,9 +1,9 @@
 -- MS-129 · Reading an invoice: the upload's files (named, sized and refused in a read-only clinic), invoice_create for
 -- admins only, the reading claimed once by extract_invoice, its result saved with the alert and the admins' push and
--- no stock moved, a failure kept with its reason, a reading nobody finished failed after its time, and the invoice set
--- aside by Receive manually instead.
+-- no stock moved (a number too big for its column left empty), a failure kept with its reason, a reading nobody
+-- finished failed after its time, and the invoice set aside by Receive manually instead.
 begin;
-select plan(67);
+select plan(69);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000129001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@dentory.test'),
@@ -225,6 +225,24 @@ select throws_ok($$ insert into public.invoice_lines (clinic_id, invoice_id, n, 
   ('00000000-0000-4000-8000-000000129011', '00000000-0000-4000-8000-000000129031', 9, 'EXTRA') $$,
   '42501', null, 'lines come from the reading only');
 reset role;
+
+-- A number too big for its column leaves the field empty for the admin instead of failing the reading: a unit price
+-- holds less than 100,000,000 (numeric(12, 4)), a quantity or an amount less than 1,000,000,000.
+insert into public.invoices (id, clinic_id, storage_path, source, status, created_by, file_kind, file_count) values
+  ('00000000-0000-4000-8000-000000129044', '00000000-0000-4000-8000-000000129011',
+   '00000000-0000-4000-8000-000000129011/00000000-0000-4000-8000-000000129044', 'file', 'reading', '00000000-0000-4000-8000-000000129001', 'pdf', 1);
+select is(public.invoice_reading_finish('00000000-0000-4000-8000-000000129044', $json$
+  {"supplier": "Northbridge Dental Supply", "total": 123456789, "lines": [
+     {"raw": "SEPTOCAINE 4% 1:100,000 CARTRIDGES 50/BX", "qty": 1, "unit": "box", "unit_price": 123456789,
+      "line_total": 123456789, "lot": null, "expiry": null, "kind": "product"},
+     {"raw": "NEEDLE 27G SHORT 100/BX", "qty": 1, "unit": "box", "unit_price": 99999999.9999,
+      "line_total": 99999999.99, "lot": null, "expiry": null, "kind": "product"}]}
+  $json$) ->> 'status', 'ready', 'a unit price of 123456789 does not fail the reading');
+select results_eq(
+  $$ select n, unit_price, line_total from public.invoice_lines
+     where invoice_id = '00000000-0000-4000-8000-000000129044' order by n $$,
+  $$ values (1, null::numeric, 123456789::numeric), (2, 99999999.9999::numeric, 99999999.99::numeric) $$,
+  'it is saved empty, too big for its column, and a unit price under 100,000,000 is kept');
 
 -- A reading that finds no lines is refused, and its invoice is failed by extract_invoice.
 insert into public.invoices (id, clinic_id, storage_path, source, status, created_by, file_kind, file_count) values

@@ -13,6 +13,10 @@ export const readerModel = "claude-sonnet-5-5";
 const maxAnswerTokens = 16_000;
 /** More rows than any delivery's invoice has: an answer longer than this was not read from an invoice. */
 const maxLines = 300;
+/** Under what each column holds, as engine.json_numeric checks it again: numeric(12, 2) quantities and amounts, and
+ * the numeric(12, 4) unit price, which holds less than 100,000,000. */
+const amountLimit = 1e9;
+const unitPriceLimit = 1e8;
 
 export type PageKind = "jpg" | "pdf";
 
@@ -218,7 +222,7 @@ export function parseExtraction(text: string): Extraction {
     invoice_number: words(value.invoice_number, 60),
     invoice_date: day(value.invoice_date),
     currency: currency(value.currency),
-    total: amount(value.total, 2),
+    total: amount(value.total, 2, amountLimit),
     lines,
   };
 }
@@ -228,10 +232,10 @@ function tidyLine(line: Record<string, unknown>): ExtractedLine | null {
   if (!raw) return null;
   return {
     raw,
-    qty: amount(line.qty, 2),
+    qty: amount(line.qty, 2, amountLimit),
     unit: unit(line.unit),
-    unit_price: amount(line.unit_price, 4),
-    line_total: amount(line.line_total, 2),
+    unit_price: amount(line.unit_price, 4, unitPriceLimit),
+    line_total: amount(line.line_total, 2, amountLimit),
     lot: words(line.lot, 60),
     expiry: month(line.expiry),
     kind: line.kind === "fee" ? "fee" : "product",
@@ -249,11 +253,13 @@ function words(value: unknown, limit: number): string | null {
   return text === "" ? null : text;
 }
 
-/** A number rounded to `digits` decimals that fits the database's columns; null otherwise. */
-function amount(value: unknown, digits: number): number | null {
-  if (typeof value !== "number" || !Number.isFinite(value) || Math.abs(value) >= 1e9) return null;
+/** A number rounded to `digits` decimals and then under `limit`, so it fits its column; null otherwise, which leaves
+ * the field for the admin to fill rather than failing the reading. */
+function amount(value: unknown, digits: number, limit: number): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
   const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
+  const rounded = Math.round(value * factor) / factor;
+  return Math.abs(rounded) < limit ? rounded : null;
 }
 
 function currency(value: unknown): string | null {

@@ -259,6 +259,22 @@ Deno.test("an answer is tidied: spaces, rounding, currency, units, real days and
   });
 });
 
+Deno.test("a unit price from 100,000,000 up, too big for its column, is left out and the reading goes on", () => {
+  const extraction = parseExtraction(JSON.stringify({
+    total: 123456789, lines: [
+      { raw: "SEPTOCAINE", qty: 1, unit: "box", unit_price: 123456789, line_total: 123456789, kind: "product" },
+      { raw: "NEEDLES", qty: 1, unit: "box", unit_price: 99999999.9999, line_total: 99999999.99, kind: "product" },
+      { raw: "GAUZE", qty: 1, unit: "box", unit_price: 99999999.99996, line_total: 1, kind: "product" },
+    ],
+  }));
+  assertEquals(extraction.total, 123456789);
+  assertEquals(extraction.lines.map(({ unit_price, line_total }) => ({ unit_price, line_total })), [
+    { unit_price: null, line_total: 123456789 },
+    { unit_price: 99999999.9999, line_total: 99999999.99 },
+    { unit_price: null, line_total: 1 },
+  ]);
+});
+
 Deno.test("base64 encodes pages larger than one chunk", () => {
   const data = Uint8Array.from({ length: 100_003 }, (_, index) => (index * 7919) % 256);
   assertEquals(Uint8Array.from(atob(base64(data)), (character) => character.charCodeAt(0)), data);
