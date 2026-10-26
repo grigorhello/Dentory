@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Activity (f8, f9), pushed from Home's bell: "Alerts · N", the open alerts in one card with a dot, a sentence, when
 /// it opened and a chevron to what resolves it ("Nothing needs attention." when all is well); and History, every
-/// stock change by day, where an admin opens the invoice a receipt came from (MS-131).
+/// stock change by day, where an admin opens the invoice a receipt came from (MS-131). The segments, and History's
+/// chips, stay under the title while the list scrolls (f09-2).
 struct ActivityView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -19,7 +20,13 @@ struct ActivityView: View {
 
     var body: some View {
         content
-            .pushedScreen(title: "Activity", identifier: "activity")
+            .pushedScreen(title: "Activity", identifier: "activity", pinned: {
+                SegmentedControl(selection: $viewModel.segment, options: viewModel.segmentOptions)
+                    .accessibilityIdentifier("activity.seg")
+                if viewModel.segment == .history {
+                    ActivityHistoryFilters(viewModel: history)
+                }
+            })
             .reloadOnReturn { await reload() }
             .navigationDestination(for: ActivityRoute.self) { route in
                 switch route {
@@ -32,8 +39,6 @@ struct ActivityView: View {
     }
 
     @ViewBuilder private var content: some View {
-        SegmentedControl(selection: $viewModel.segment, options: viewModel.segmentOptions)
-            .accessibilityIdentifier("activity.seg")
         switch viewModel.segment {
         case .alerts:
             alerts
