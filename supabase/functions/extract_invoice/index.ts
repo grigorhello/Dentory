@@ -7,13 +7,15 @@
 // admins' push; or marks it failed with the reason (invoice_reading_fail). The reading gives up 60 seconds after its
 // claim (reason timeout). Calling it again for an invoice already claimed or read changes nothing.
 //
-// Needs ANTHROPIC_API_KEY (`supabase secrets set`); without it, as on the local stack, every reading fails with the
-// reason error. Invoice contents are never logged: only ids, page counts, sizes, timings, tokens and reasons.
+// Needs ANTHROPIC_API_KEY (`supabase secrets set`); without it every reading fails with the reason error, except on the
+// local stack, where the fixture invoices are read from their recorded answers (replay.ts, MS-136). Invoice contents are
+// never logged: only ids, page counts, sizes, timings, tokens and reasons.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, isUUID, json, readJSON, text } from "../_shared/http.ts";
 import { caller, rpcError, serviceClient } from "../_shared/supabase.ts";
 import { claudeCall } from "./claude.ts";
 import { errorName, type InvoicePage, type PageKind, readInvoice, ReadingFailure } from "./reading.ts";
+import { isLocalStack, replayCall } from "./replay.ts";
 
 /** Supabase's runtime keeps the function alive for work handed to it after the answer. */
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined;
@@ -56,10 +58,10 @@ async function read(db: SupabaseClient, invoiceID: string, claim: Claim) {
   const facts: Record<string, unknown> = { invoice: invoiceID, pages: claim.file_count };
   try {
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) throw new ReadingFailure("error", "ANTHROPIC_API_KEY is not set");
+    if (!apiKey && !isLocalStack()) throw new ReadingFailure("error", "ANTHROPIC_API_KEY is not set");
     const pages = await download(db, claim);
     facts.bytes = pages.reduce((sum, page) => sum + page.data.length, 0);
-    const call = claudeCall(apiKey);
+    const call = apiKey ? claudeCall(apiKey) : replayCall;
     const extraction = await readInvoice(pages, async (request, abort) => {
       const answer = await call(request, abort);
       facts.tokens = `${answer.inputTokens ?? "?"} in, ${answer.outputTokens ?? "?"} out`;

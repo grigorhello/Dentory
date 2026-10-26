@@ -112,6 +112,20 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Dentory
 
+  # The end-to-end flows on the local stack seeded with the demo clinic (MS-136): `make e2e`, never `make uitest`.
+  DentoryE2ETests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - DentoryE2ETests
+    dependencies:
+      - target: Dentory
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ca.dentory.app.e2etests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Dentory
+
 schemes:
   Dentory:
     build:
@@ -123,3 +137,15 @@ schemes:
       targets:
         - DentoryTests
         - DentoryUITests
+        # Built with the others and skipped here: the DentoryE2E scheme runs them (`make e2e`), which needs the local
+        # stack (MS-136).
+        - name: DentoryE2ETests
+          skipped: true
+  DentoryE2E:
+    build:
+      targets:
+        Dentory: all
+    test:
+      config: Debug
+      targets:
+        - DentoryE2ETests

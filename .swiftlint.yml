@@ -2,6 +2,7 @@ included:
   - Dentory
   - DentoryTests
   - DentoryUITests
+  - DentoryE2ETests
 
 opt_in_rules:
   - force_unwrapping

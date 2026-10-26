@@ -21,8 +21,8 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
-.PHONY: project build test uitest lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check invite-links \
-	invoice-reading-live
+.PHONY: project build test uitest e2e lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check \
+	invite-links invoice-reading-live
 
 project:
 	xcodegen generate
@@ -37,6 +37,22 @@ test:
 uitest:
 	$(CHECK_SIM)
 	$(XCODEBUILD) -destination '$(SIM_DESTINATION)' -only-testing:DentoryUITests test
+
+# The end-to-end flows (MS-136, DentoryE2ETests, run by the DentoryE2E scheme) on the local stack: the demo clinic
+# seeded afresh, then the flows in the simulator against it. A Debug build talks to the local stack unless
+# Config/Secrets.debug.xcconfig points it elsewhere, so that file stops the run. The stack must run from this checkout
+# (`make db-start`) to serve these Edge Functions, among them extract_invoice reading the fixture invoice.
+e2e:
+	$(CHECK_SIM)
+	@if [ -f Config/Secrets.debug.xcconfig ]; then \
+		echo "Config/Secrets.debug.xcconfig points Debug builds away from the local stack: move it aside first."; exit 1; fi
+	@functions=$$(docker inspect $(EDGE_CONTAINER) --format '{{range .Mounts}}{{println .Destination}}{{end}}' \
+		2>/dev/null | grep '/supabase/functions$$'); [ -n "$$functions" ] && [ "$$functions" -ef supabase/functions ] \
+		|| { echo "The local stack serves another checkout's Edge Functions: supabase stop, then make db-start here."; \
+		exit 1; }
+	supabase db reset
+	$(MAKE) seed-demo
+	$(subst -scheme $(SCHEME) ,-scheme DentoryE2E ,$(XCODEBUILD)) -destination '$(SIM_DESTINATION)' test
 
 lint:
 	swiftlint lint --strict
