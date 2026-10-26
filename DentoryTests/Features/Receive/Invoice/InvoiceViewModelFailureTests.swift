@@ -58,18 +58,24 @@ struct InvoiceViewModelFailureTests {
         )
     }
 
-    @Test func tryAgainSetsTheInvoiceAsideOnceBeforeTheScreenGoesBack() async {
+    @Test func tryAgainSetsTheInvoiceAsideBeforeTheScreenGoesBack() async {
         let repository = FakeInvoiceRepository()
         let viewModel = await openedFailed(repository)
+        await viewModel.setAsideToCaptureAgain()
+        #expect(
+            repository.calls == [.invoice(invoiceID), .discard(invoiceID)],
+            "Set aside before the options come back, so their list, loaded again, does not show it"
+        )
+        #expect(viewModel.state == .failed, "The failure stays on screen until the screen goes back")
+    }
 
+    @Test func tapsOnTryAgainMeanwhileWaitForTheSameSetAside() async {
+        let repository = FakeInvoiceRepository()
+        let viewModel = await openedFailed(repository)
         async let first: Void = viewModel.setAsideToCaptureAgain()
         async let second: Void = viewModel.setAsideToCaptureAgain()
         _ = await (first, second)
-        #expect(
-            repository.calls == [.invoice(invoiceID), .discard(invoiceID)],
-            "Set aside once, and before the options come back, so their list does not show it"
-        )
-        #expect(viewModel.state == .failed, "The failure stays on screen until the screen goes back")
+        #expect(repository.calls == [.invoice(invoiceID), .discard(invoiceID)], "Set aside once")
     }
 
     @Test func tryAgainSetsNothingAsideUnlessTheReadingFailed() async {
