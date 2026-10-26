@@ -6,7 +6,7 @@ import Foundation
 /// `ReceiveOverview.demo`). Captured pages upload in a moment and are read 1.5 seconds after they are asked for, as the
 /// prototype's 1.4, into the frames' invoice. Lines are settled as the server settles them (MS-130), against the shared
 /// demo products, and stay so for the launch; Confirm & receive adds the delivery to those products and its Undo puts
-/// them back (MS-131).
+/// them back (MS-131); a received invoice's file is deleted by the demo's admin (MS-146).
 final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     /// What `-demoInvoice` asks for.
     enum Launched: String {
@@ -144,6 +144,28 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         }
     }
 
+    // MARK: - The file (MS-146)
+
+    /// Delete invoice file as `invoice_file_delete` and the invoices bucket do it: a received invoice's photo goes, by
+    /// the demo's admin at the demo's moment, kept as the first deletion said when asked again; any other invoice is
+    /// refused with the server's sentence.
+    func deleteFile(invoiceID: UUID, clinicID: UUID) async throws -> InvoiceSummary {
+        try await Task.sleep(for: .milliseconds(300))
+        return try lock.withLock {
+            guard var invoice = invoices[invoiceID] else { throw AppError.forbidden }
+            guard invoice.status == .confirmed else {
+                throw AppError.validation(field: nil, message: Self.notReceivedRefusal)
+            }
+            if invoice.fileDeletedAt == nil {
+                invoice.fileDeletedAt = Session.demoNow
+                invoice.fileDeletedByName = Self.receivedBy
+            }
+            invoice.hasFile = false
+            invoices[invoiceID] = invoice
+            return invoice
+        }
+    }
+
     private func countedPerUnit(_ line: InvoiceLine, productID: UUID) -> Int {
         guard let pack = store?.pack(of: productID), let unit = store?.summary(id: productID)?.unit else { return 1 }
         let lineUnit = line.unit.map(ClinicFormatters.singular(of:))?.lowercased()
@@ -222,6 +244,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     private static let resolvedRefusal = "This line is already resolved."
     private static let closedRefusal = "This invoice is no longer waiting for review."
     private static let receivedRefusal = "This delivery was already received"
+    private static let notReceivedRefusal = "Only a received invoice's file can be deleted"
 
     private func productName(_ id: UUID) -> String? {
         store?.summary(id: id)?.name ?? ProductSummary.demo.first { $0.id == id }?.name
@@ -232,7 +255,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     private static func reading(id: UUID, started: Bool) -> InvoiceSummary {
         InvoiceSummary(
             id: id, status: .reading, supplier: nil, number: nil, total: nil, currency: nil, readingStarted: started,
-            lineCount: 0
+            lineCount: 0, hasFile: true
         )
     }
 
@@ -242,7 +265,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         return InvoiceSummary(
             id: id, status: .ready, supplier: "Patterson", number: "INV-10092", total: 449, currency: nil,
             readingStarted: true, lineCount: lines.count, lines: lines,
-            createdAt: id == readyID ? readyUploadedAt : .now
+            createdAt: id == readyID ? readyUploadedAt : .now, hasFile: true
         )
     }
 
@@ -254,14 +277,15 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
             id: invoice.id, status: status, supplier: invoice.supplier, number: invoice.number, total: invoice.total,
             currency: invoice.currency, readingStarted: invoice.readingStarted, lineCount: invoice.lineCount,
             lines: invoice.lines, createdAt: invoice.createdAt, confirmedAt: receivedAt,
-            confirmedByName: receivedAt == nil ? nil : receivedBy
+            confirmedByName: receivedAt == nil ? nil : receivedBy, hasFile: invoice.hasFile,
+            fileDeletedAt: invoice.fileDeletedAt, fileDeletedByName: invoice.fileDeletedByName
         )
     }
 
     private static func failed(id: UUID) -> InvoiceSummary {
         InvoiceSummary(
             id: id, status: .failed, supplier: nil, number: nil, total: nil, currency: nil, readingStarted: true,
-            lineCount: 0
+            lineCount: 0, hasFile: true
         )
     }
 

@@ -4,7 +4,8 @@ import Testing
 
 /// The demo clinic behind previews and UI tests reviews its Patterson invoice the way the server does: f23's four
 /// lines, settled and reopened as the line functions settle them, kept for the launch, gone from Receive delivery once
-/// discarded or received, and received into the shared demo products until Undo (MS-131).
+/// discarded or received, received into the shared demo products until Undo (MS-131), and its photo deleted once
+/// received (MS-146).
 @MainActor
 struct DemoInvoiceTests {
     private let clinicID = Session.demo.clinicID
@@ -134,5 +135,31 @@ struct DemoInvoiceTests {
         #expect(store.summary(id: endoKit)?.quantity == 1)
         #expect(try await invoices.invoice(id: invoiceID).status == .ready, "Back in review")
         #expect(try await receive.overview(clinicID: clinicID).invoices.map(\.id) == [invoiceID])
+    }
+
+    /// Delete invoice file as the server does it (MS-146): refused before the delivery is received, then the photo
+    /// goes by the demo's admin, the lines stay, and asked again it keeps who deleted it and when.
+    @Test func aReceivedInvoicesFileIsDeletedAndItsLinesStay() async throws {
+        let store = DemoProductStore()
+        let invoices = DemoInvoiceRepository(launched: nil, store: store)
+        let invoiceID = DemoInvoiceRepository.readyID
+        let lines = try await invoices.invoice(id: invoiceID).lines
+        #expect(try await invoices.invoice(id: invoiceID).hasFile, "The frames' invoice has its photo")
+        let refusal = AppError.validation(field: nil, message: "Only a received invoice's file can be deleted")
+        await #expect(throws: refusal) {
+            try await invoices.deleteFile(invoiceID: invoiceID, clinicID: clinicID)
+        }
+        _ = try await invoices.matchLine(lines[1].id, to: ProductSummary.demo[1].id)
+        _ = try await invoices.matchLine(lines[2].id, to: ProductSummary.demo[2].id)
+        _ = try await invoices.skipLine(lines[3].id)
+        _ = try await invoices.confirm(invoiceID: invoiceID)
+        #expect(try await invoices.invoice(id: invoiceID).hasFile, "Received, it keeps its photo")
+
+        let deleted = try await invoices.deleteFile(invoiceID: invoiceID, clinicID: clinicID)
+        #expect(!deleted.hasFile && deleted.status == .confirmed)
+        #expect(deleted.fileDeletedAt == Session.demoNow && deleted.fileDeletedByName == "Sarah Mitchell")
+        #expect(deleted.lines.count == 4, "The lines stay")
+        #expect(try await invoices.invoice(id: invoiceID) == deleted, "Kept for the launch")
+        #expect(try await invoices.deleteFile(invoiceID: invoiceID, clinicID: clinicID) == deleted, "Asked again")
     }
 }

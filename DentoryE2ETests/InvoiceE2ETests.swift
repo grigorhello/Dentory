@@ -3,7 +3,8 @@ import XCTest
 /// Receive invoice (fixture) → confirm (MS-136): Northbridge's PDF picked on Upload PDF or image goes to the invoices
 /// bucket, `invoice_create` makes the invoice and `extract_invoice` reads it, with the recorded answer on the local
 /// stack; the matching gives f23's four lines; each is resolved; Confirm & receive puts 250 Septocaine cartridges and 4
-/// endo kits into Inventory and creates Tempbond NE.
+/// endo kits into Inventory and creates Tempbond NE. Then Delete invoice file (MS-146): opened again from Activity's
+/// History, the received invoice deletes its PDF from the bucket, and says so once the server finds no page left.
 final class InvoiceE2ETests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
@@ -48,5 +49,37 @@ final class InvoiceE2ETests: XCTestCase {
         E2E.expect(septocaine, toRead: "304 cartridges", "Septocaine did not get its 250 cartridges")
         let endoKits = E2E.inventoryRow(E2E.product(2), searching: "Endo file kit", in: app)
         E2E.expect(endoKits, toRead: "5 kits", "The endo file kits did not arrive")
+
+        deleteTheInvoiceFile(in: app)
+    }
+
+    /// The received invoice, opened from one of its receipts in Activity's History, deletes its PDF; the server answers
+    /// that no page is left in the bucket, and the lines stay.
+    @MainActor
+    private func deleteTheInvoiceFile(in app: XCUIApplication) {
+        app.buttons["tab.home"].tap()
+        app.buttons["home.header.bell"].appears("No bell")
+        app.buttons["home.header.bell"].tap()
+        app.buttons["History"].appears("Activity did not open")
+        app.buttons["History"].tap()
+        let receipt = NSPredicate(
+            format: "identifier BEGINSWITH 'activity.row[' AND label CONTAINS 'Invoice INV-10092'"
+        )
+        let row = app.buttons.matching(receipt).firstMatch
+        row.appears("History has no receipt of the invoice")
+        row.tap()
+        app.staticTexts["invoice.received"].appears("The invoice did not open as received")
+
+        app.buttons["invoice.menu"].tap()
+        app.buttons["invoice.menu.deleteFile"].appears("The menu does not offer Delete invoice file")
+        app.buttons["invoice.menu.deleteFile"].tap()
+        app.buttons["invoice.deleteFile.confirm"].appears("Delete invoice file did not ask first")
+        app.buttons["invoice.deleteFile.confirm"].tap()
+        let toast = app.descendants(matching: .any)["toast"]
+        toast.appears("No toast after Delete file")
+        XCTAssertTrue(toast.staticTexts["Invoice file deleted"].exists, "The toast is not \"Invoice file deleted\"")
+        E2E.expect(app.staticTexts["invoice.fileDeleted"], toRead: "Invoice file deleted · ", "No file left")
+        XCTAssertTrue(app.buttons["invoice.menu"].waitForNonExistence(timeout: 5), "The menu still offers the file")
+        XCTAssertEqual(app.staticTexts["invoice.line[1].headline"].label, "Septocaine 4% 1:100,000")
     }
 }
