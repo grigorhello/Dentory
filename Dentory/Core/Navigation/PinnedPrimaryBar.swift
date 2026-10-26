@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The bottom bar of a pushed screen: hairline top, optional caption, one full-width 48 pt primary
+/// The bottom bar of a pushed screen: hairline top, optional caption in body text (f23), one full-width 48 pt primary
 /// (PRD §7). Safe-area aware; content scrolls under nothing.
 struct PinnedPrimaryBar<Button: View>: View {
     @Environment(\.appDependencies) private var dependencies
@@ -36,7 +36,7 @@ struct PinnedPrimaryBar<Button: View>: View {
                 if let caption {
                     Text(caption)
                         .textStyle(.caption12)
-                        .foregroundStyle(Color.ms.textSecondary)
+                        .foregroundStyle(Color.ms.textBody)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .accessibilityIdentifier(captionIdentifier ?? "shell.pinned.caption")
                 }

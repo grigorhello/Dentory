@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The Dentory color tokens (`design/.../tokens/colors.css`), one asset-catalog color set per token
-/// under `Assets.xcassets/Colors` so each can gain a dark variant later. V1.1 is light only.
+/// under `Assets.xcassets/Colors` so each can gain a dark variant later. V1.1 is light only: the app opts out of Dark
+/// Mode (`UIUserInterfaceStyle` Light in `project.yml`), so system controls draw light on these colors too.
 ///
 /// Usage: `Color.ms.primary`, `Color.ms.textSecondary`.
 nonisolated struct MSColorPalette: Sendable {

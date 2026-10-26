@@ -34,9 +34,9 @@ final class ProceduresUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["7 items"].exists)
         let note = app.staticTexts["proc.note"]
         XCTAssertTrue(note.label.contains("Pencil edits the default supplies."), "The admin note is not f11's")
-        let eyebrow = NSPredicate(format: "label ==[c] %@", "History · tap to edit usage")
+        let eyebrow = NSPredicate(format: "label ==[c] %@", "History\u{00A0}· tap to edit usage")
         XCTAssertTrue(app.staticTexts.matching(eyebrow).firstMatch.exists, "No history eyebrow")
-        let sarah = NSPredicate(format: "label BEGINSWITH %@ AND label ENDSWITH %@", "Oct 1 · 3:14", "· Sarah")
+        let sarah = NSPredicate(format: "label BEGINSWITH %@ AND label ENDSWITH %@", "Oct 1\u{00A0}· 3:14", "· Sarah")
         XCTAssertTrue(app.staticTexts.matching(sarah).firstMatch.exists, "The history line is not f11's")
 
         rootCanal.tap()

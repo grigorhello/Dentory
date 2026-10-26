@@ -15,7 +15,7 @@ import { errorResponse, HttpError, isUUID, json, readJSON, text } from "../_shar
 import { caller, rpcError, serviceClient } from "../_shared/supabase.ts";
 import { claudeCall } from "./claude.ts";
 import { errorName, type InvoicePage, type PageKind, readInvoice, ReadingFailure } from "./reading.ts";
-import { isLocalStack, replayCall } from "./replay.ts";
+import { modelCallFor } from "./replay.ts";
 
 /** Supabase's runtime keeps the function alive for work handed to it after the answer. */
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined;
@@ -57,11 +57,9 @@ async function read(db: SupabaseClient, invoiceID: string, claim: Claim) {
   const signal = AbortSignal.timeout(readingLimitMs);
   const facts: Record<string, unknown> = { invoice: invoiceID, pages: claim.file_count };
   try {
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey && !isLocalStack()) throw new ReadingFailure("error", "ANTHROPIC_API_KEY is not set");
+    const call = modelCallFor(Deno.env.get("ANTHROPIC_API_KEY"), Deno.env.get("SUPABASE_URL"), claudeCall);
     const pages = await download(db, claim);
     facts.bytes = pages.reduce((sum, page) => sum + page.data.length, 0);
-    const call = apiKey ? claudeCall(apiKey) : replayCall;
     const extraction = await readInvoice(pages, async (request, abort) => {
       const answer = await call(request, abort);
       facts.tokens = `${answer.inputTokens ?? "?"} in, ${answer.outputTokens ?? "?"} out`;

@@ -32,7 +32,7 @@ struct TeamViewModelTests {
             "Sarah Mitchell", "Dr. Daniel Kim", "Michael Reyes", "priya@smiledental.ca"
         ])
         #expect(viewModel.subtitle(for: sarah) == "sarah@smiledental.ca")
-        #expect(viewModel.subtitle(for: priya) == "Invited · Oct 1")
+        #expect(viewModel.subtitle(for: priya) == "Invited\u{00A0}· Oct 1")
         let named = TeamMember(
             id: UUID(), userID: nil, fullName: "Anna Lee", email: "anna@smiledental.ca", role: .staff, status: .invited,
             invitedAt: Session.demoNow

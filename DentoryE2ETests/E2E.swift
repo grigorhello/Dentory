@@ -64,13 +64,22 @@ enum E2E {
         app.typeText(password)
         app.buttons["signin.submit"].tap()
         app.buttons["home.header.account"].appears("Home did not show")
+        app.declineSavingPassword()
         dismissNotificationsExplainer(in: app)
     }
 
+    /// Whether this run has waited out the notifications explainer: the device offers it once, then not for 30 days.
+    private static var explainerSettled = false
+
     /// Not now on the notifications explainer, which the device offers after its first sign-in and then every 30 days.
+    /// The first sign-in of a run waits for it as long as for any screen: a cold simulator or a slower Mac decides late,
+    /// and an explainer that comes after the wait covers the next taps (MS-136 review). Later sign-ins wait 3 seconds,
+    /// as the explainer is not offered twice in a run.
     static func dismissNotificationsExplainer(in app: XCUIApplication) {
         let notNow = app.buttons["push.notNow"]
-        guard notNow.waitForExistence(timeout: 3) else { return }
+        let wait = explainerSettled ? 3 : patience
+        explainerSettled = true
+        guard notNow.waitForExistence(timeout: wait) else { return }
         notNow.tap()
         XCTAssertTrue(notNow.waitForNonExistence(timeout: 5), "The notifications explainer stayed")
     }

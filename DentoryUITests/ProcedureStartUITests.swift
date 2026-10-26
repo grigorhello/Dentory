@@ -30,9 +30,9 @@ final class ProcedureStartUITests: XCTestCase {
         openRootCanal(app)
         XCTAssertEqual(
             app.staticTexts["procDetail.summary"].label,
-            "12 supplies · 1 not available. Add or remove items before you start."
+            "12 supplies\u{00A0}· 1 not available. Add or remove items before you start."
         )
-        XCTAssertEqual(app.staticTexts["\(rubberDam).warning"].label, "Not available · 0 in stock")
+        XCTAssertEqual(app.staticTexts["\(rubberDam).warning"].label, "Not available\u{00A0}· 0 in stock")
         let start = app.buttons["procDetail.start"]
         XCTAssertEqual(start.label, "Start procedure · 10 items")
 
@@ -102,7 +102,7 @@ final class ProcedureStartUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["addItem.title"].exists, "The sheet closed")
 
         let composite = app.buttons["addItem.row[00000000-0000-4000-8000-0000000000d3].add"]
-        XCTAssertTrue(app.staticTexts["1 unopened · 1 open"].exists, "The multi-use caption is off")
+        XCTAssertTrue(app.staticTexts["1 unopened\u{00A0}· 1 open"].exists, "The multi-use caption is off")
         composite.tap()
         XCTAssertFalse(app.staticTexts["addItem.title"].waitForExistence(timeout: 2), "The sheet did not close")
         XCTAssertEqual(start.label, "Start procedure · 11 items", "Composite A2 was not taken new")

@@ -20,6 +20,7 @@ Nothing in this pack is secret. Supabase keys, database passwords, Stripe or Res
 | [build-state.md](build-state.md) | Continuing the build: what is merged, what is in progress, what comes next, what Grigor still owes. |
 | [product-knowledge.md](product-knowledge.md) | Marketing, sales, pitch, landing page, support or pricing chats. What Dentory is and is not, in plain words. |
 | [decisions-log.md](decisions-log.md) | Checking why something is the way it is. Dated decisions from the first day to now. |
+| [pilot-audit.md](pilot-audit.md) | Checking how the app compares with the frames and the copy rules: MS-136's audit, each finding with its status. |
 | [ticket-sources/](ticket-sources/) | Changing a ticket: the Markdown sources of the 58 tickets and the script that regenerates the issues, the ticket list and the build order. |
 
 Sources of truth that the pack points at, in the order a new thread should read them:

@@ -36,7 +36,8 @@ final class BatchExpiryUITests: XCTestCase {
         let toast = app.descendants(matching: .any)["toast"]
         XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Save")
         XCTAssertTrue(toast.staticTexts["Expiry saved"].exists)
-        XCTAssertTrue(toast.staticTexts["Gutta percha F2 · 7 packs · Mar 2027"].exists, "The toast detail is off")
+        let detail = "Gutta percha F2\u{00A0}· 7 packs\u{00A0}· Mar 2027"
+        XCTAssertTrue(toast.staticTexts[detail].exists, "The toast detail is off")
         let healthy = NSPredicate(format: "label == %@", "Healthy")
         XCTAssertEqual(
             XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: healthy, object: status)], timeout: 5),

@@ -80,8 +80,8 @@ final class InvoiceReviewUITests: XCTestCase {
         ])
         let states = (1...4).map { app.descendants(matching: .any)["invoice.line[\($0)].state"].label }
         XCTAssertEqual(states, ["Matched", "Possible match", "New product", "Needs review"])
-        XCTAssertEqual(app.staticTexts["invoice.line[1].amount"].label, "5 boxes · $49.80")
-        XCTAssertEqual(app.staticTexts["invoice.line[4].amount"].label, "1 · $4.80")
+        XCTAssertEqual(app.staticTexts["invoice.line[1].amount"].label, "5 boxes\u{00A0}· $49.80")
+        XCTAssertEqual(app.staticTexts["invoice.line[4].amount"].label, "1\u{00A0}· $4.80")
         let choices = (2...4).map { line in
             ["a", "b"].map { app.buttons["invoice.line[\(line)].\($0)"].label }
         }
@@ -105,7 +105,7 @@ final class InvoiceReviewUITests: XCTestCase {
         XCTAssertEqual(app.buttons["invoice.line[2].state"].label, "Matched")
 
         app.buttons["invoice.line[4].a"].tap()
-        expectHeadline(4, "Ignored · not added to inventory", in: app)
+        expectHeadline(4, "Ignored\u{00A0}· not added to inventory", in: app)
         XCTAssertEqual(app.buttons["invoice.line[4].undo"].label, "Undo")
 
         app.buttons["invoice.line[3].a"].tap()
@@ -119,7 +119,7 @@ final class InvoiceReviewUITests: XCTestCase {
         let create = app.buttons["newProduct.submit"]
         XCTAssertEqual(create.label, "Create and use for this line")
         create.tap()
-        expectHeadline(3, "Tempbond NE · new product", in: app)
+        expectHeadline(3, "Tempbond NE\u{00A0}· new product", in: app)
         XCTAssertEqual(app.buttons["invoice.line[3].state"].label, "Created")
 
         XCTAssertEqual(app.staticTexts["invoice.summary"].label, "3 of 4 lines will increase inventory.")
@@ -128,8 +128,8 @@ final class InvoiceReviewUITests: XCTestCase {
         app.buttons["invoice.back"].tap()
         reopen(in: app)
         expectHeadline(2, "Endo file kit #15-40", in: app)
-        expectHeadline(3, "Tempbond NE · new product", in: app)
-        expectHeadline(4, "Ignored · not added to inventory", in: app)
+        expectHeadline(3, "Tempbond NE\u{00A0}· new product", in: app)
+        expectHeadline(4, "Ignored\u{00A0}· not added to inventory", in: app)
 
         app.buttons["invoice.line[2].state"].tap()
         expectHeadline(2, "Is this Endo file kit #15-40?", in: app)
@@ -223,7 +223,7 @@ final class InvoiceReviewUITests: XCTestCase {
         XCTAssertEqual(question.label, "Discard this invoice?")
         XCTAssertEqual(
             app.staticTexts["invoice.discard.message"].label,
-            "Nothing is added to inventory, and the invoice's photo or file is deleted."
+            "Nothing is added to inventory. The photo or file is deleted."
         )
         app.buttons["invoice.discard.keep"].tap()
         XCTAssertTrue(question.waitForNonExistence(timeout: 5), "Keep did not close the question")

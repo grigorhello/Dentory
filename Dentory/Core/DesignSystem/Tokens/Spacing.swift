@@ -26,6 +26,12 @@ nonisolated enum ControlHeight {
     static let hitTarget: CGFloat = 44
 }
 
+/// Widths of controls that sit beside a field that takes the rest of the row.
+nonisolated enum ControlWidth {
+    /// A select of one short word: an invited teammate's Role (f4), the clinic's Currency (f33).
+    static let shortSelect: CGFloat = 120
+}
+
 /// Page layout limits. The web `container-max` and `sidebar-width` do not apply to the app.
 nonisolated enum PageLayout {
     /// iPad content is capped at this width and centred (PRD §7).

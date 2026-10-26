@@ -58,12 +58,12 @@ struct DeleteInvoiceFileViewModelTests {
 
     @Test func aRefusalSaysWhy() async {
         let repository = FakeInvoiceRepository()
-        let refusal = AppError.validation(field: nil, message: "Only a received invoice's file can be deleted")
-        repository.fileDeletion = .failure(refusal)
+        repository.fileDeletion = .failure(AppError.refusal("Only a received invoice's file can be deleted"))
         let viewModel = question(repository)
 
         await viewModel.delete()
-        #expect(viewModel.generalError == refusal, "The server's sentence")
+        #expect(viewModel.generalError?.userMessage == "Only a received invoice's file can be deleted.",
+            "The server's sentence, in house copy")
 
         repository.fileDeletion = .failure(AppError.readOnly)
         await viewModel.delete()

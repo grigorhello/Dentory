@@ -114,7 +114,7 @@ final class ProductDetailViewModel {
         } else {
             detail.unit
         }
-        return [detail.categoryName, pack].compactMap { $0 }.joined(separator: " · ")
+        return [detail.categoryName, pack].compactMap { $0 }.joined(separator: "\u{00A0}· ")
     }
 
     var availableText: String { detail.map { formatters.number($0.quantity) } ?? "" }
@@ -124,7 +124,8 @@ final class ProductDetailViewModel {
     /// "System estimate · 38 cartridges used in 30 days"
     var estimateLine: String {
         guard let detail else { return "" }
-        return "System estimate · \(formatters.quantity(detail.usedInLast30Days, unit: detail.unit)) used in 30 days"
+        let used = formatters.quantity(detail.usedInLast30Days, unit: detail.unit)
+        return "System estimate\u{00A0}· \(used) used in 30 days"
     }
 
     /// "Counted Oct 1" or "Never counted"
@@ -170,7 +171,7 @@ final class ProductDetailViewModel {
                 addedToBuy = AddedToBuy(
                     itemID: itemID,
                     title: "Added to To buy",
-                    detail: "\(detail.name) · \(formatters.quantity(quantity, unit: detail.unit))"
+                    detail: "\(detail.name)\u{00A0}· \(formatters.quantity(quantity, unit: detail.unit))"
                 )
             } catch {
                 generalError = AppError(error)
@@ -225,7 +226,7 @@ final class ProductDetailViewModel {
         adjusted = Adjusted(
             actionID: saved.actionID,
             title: "Inventory adjusted",
-            detail: "\(detail.name) · \(formatters.number(saved.before)) → \(formatters.number(saved.after))"
+            detail: "\(detail.name)\u{00A0}· \(formatters.number(saved.before)) → \(formatters.number(saved.after))"
         )
         await load()
     }
@@ -276,7 +277,7 @@ final class ProductDetailViewModel {
                 let remaining = detail.openBottles.filter { $0.id != openItemID }
                 self.detail = detail.replacingBottles(remaining, unopenedDelta: 0, quantityDelta: -1)
                 bottleToast = BottleToast(
-                    title: "\(bottleNoun.capitalized) finished", detail: "\(detail.name) · \(bottlesLine)"
+                    title: "\(bottleNoun.capitalized) finished", detail: "\(detail.name)\u{00A0}· \(bottlesLine)"
                 )
             } catch {
                 generalError = AppError(error)

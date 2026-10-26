@@ -112,7 +112,7 @@ final class BatchViewModel {
                 )
                 saved = Saved(
                     title: "Expiry saved",
-                    detail: "\(productName) · \(formatters.quantity(quantity, unit: unit)) · "
+                    detail: "\(productName)\u{00A0}· \(formatters.quantity(quantity, unit: unit))\u{00A0}· "
                         + formatters.shortMonth(expiryMonth)
                 )
             } catch {

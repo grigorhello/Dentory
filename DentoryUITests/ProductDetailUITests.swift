@@ -16,8 +16,8 @@ final class ProductDetailUITests: XCTestCase {
         row.tap()
 
         XCTAssertTrue(app.staticTexts["product.title"].waitForExistence(timeout: 5), "Product detail did not open")
-        XCTAssertEqual(app.staticTexts["product.context"].label, "Anesthetic · 1 box = 50 cartridges")
-        XCTAssertTrue(app.staticTexts["System estimate · 38 cartridges used in 30 days"].exists)
+        XCTAssertEqual(app.staticTexts["product.context"].label, "Anesthetic\u{00A0}· 1 box = 50 cartridges")
+        XCTAssertTrue(app.staticTexts["System estimate\u{00A0}· 38 cartridges used in 30 days"].exists)
         XCTAssertTrue(app.staticTexts["Counted Oct 1"].exists)
         XCTAssertTrue(app.staticTexts["Dec 2026"].firstMatch.exists, "No batch row")
         XCTAssertTrue(app.descendants(matching: .any)["product.expiryTotal"].exists)
@@ -30,7 +30,7 @@ final class ProductDetailUITests: XCTestCase {
         let toast = app.descendants(matching: .any)["toast"]
         XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Add to buy")
         XCTAssertTrue(toast.staticTexts["Added to To buy"].exists, "No toast title")
-        XCTAssertTrue(toast.staticTexts["Septocaine 4% 1:100,000 · 6 cartridges"].exists, "Toast detail is off")
+        XCTAssertTrue(toast.staticTexts["Septocaine 4% 1:100,000\u{00A0}· 6 cartridges"].exists, "Toast detail is off")
         XCTAssertTrue(app.buttons["On To buy"].waitForExistence(timeout: 3), "The button did not switch")
         app.buttons["toast.undo"].tap()
         XCTAssertTrue(app.buttons["Add to buy"].waitForExistence(timeout: 3), "Undo did not take it off the list")
@@ -82,14 +82,15 @@ final class ProductDetailUITests: XCTestCase {
         let toast = app.descendants(matching: .any)["toast"]
         XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Save adjustment")
         XCTAssertTrue(toast.staticTexts["Inventory adjusted"].exists, "No toast title")
-        XCTAssertTrue(toast.staticTexts["Septocaine 4% 1:100,000 · 54 → 52"].exists, "Toast detail is off")
+        XCTAssertTrue(toast.staticTexts["Septocaine 4% 1:100,000\u{00A0}· 54 → 52"].exists, "Toast detail is off")
         XCTAssertTrue(availableColumn(app, reads: "52").waitForExistence(timeout: 3), "The quantity did not move")
         app.buttons["toast.undo"].tap()
         XCTAssertTrue(availableColumn(app, reads: "54").waitForExistence(timeout: 5), "Undo did not restore 54")
 
         app.swipeUp()
-        XCTAssertTrue(historyRow(app, reading: "Undo · Damaged · Sarah").waitForExistence(timeout: 3), "No undo row")
-        XCTAssertTrue(historyRow(app, reading: "Damaged · Sarah").exists, "No adjustment row in History")
+        let undoRow = historyRow(app, reading: "Undo\u{00A0}· Damaged\u{00A0}· Sarah")
+        XCTAssertTrue(undoRow.waitForExistence(timeout: 3), "No undo row")
+        XCTAssertTrue(historyRow(app, reading: "Damaged\u{00A0}· Sarah").exists, "No adjustment row in History")
     }
 
     /// The Available column of the quantity card is one combined element ("Available, 52, cartridges") that
@@ -126,7 +127,7 @@ final class ProductDetailUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["product.title"].waitForExistence(timeout: 5), "Product detail did not open")
         let line = app.staticTexts["product.bottles"]
         XCTAssertTrue(line.waitForExistence(timeout: 5), "No bottles card")
-        XCTAssertEqual(line.label, "1 unopened · 2 open")
+        XCTAssertEqual(line.label, "1 unopened\u{00A0}· 2 open")
 
         let openNew = app.buttons["product.openNewBottle"]
         XCTAssertEqual(openNew.label, "Open a new bottle")
@@ -135,7 +136,8 @@ final class ProductDetailUITests: XCTestCase {
         let toast = app.descendants(matching: .any)["toast"]
         XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Open a new bottle")
         XCTAssertTrue(toast.staticTexts["Bottle opened"].exists, "Toast title is off")
-        XCTAssertTrue(app.staticTexts["0 unopened · 3 open"].waitForExistence(timeout: 5), "The line did not move")
+        let moved = app.staticTexts["0 unopened\u{00A0}· 3 open"]
+        XCTAssertTrue(moved.waitForExistence(timeout: 5), "The line did not move")
         XCTAssertFalse(openNew.isEnabled, "Nothing is unopened, so the button is disabled (stock rule)")
 
         let finished = app.buttons
@@ -144,10 +146,12 @@ final class ProductDetailUITests: XCTestCase {
         XCTAssertTrue(finished.exists, "No Finished button")
         finished.tap()
         XCTAssertTrue(
-            app.staticTexts["0 unopened · 2 open"].waitForExistence(timeout: 5), "Finished did not remove the row"
+            app.staticTexts["0 unopened\u{00A0}· 2 open"].waitForExistence(timeout: 5),
+            "Finished did not remove the row"
         )
         XCTAssertTrue(toast.staticTexts["Bottle finished"].waitForExistence(timeout: 5), "No toast after Finished")
-        XCTAssertTrue(toast.staticTexts["Surface disinfectant · 0 unopened · 2 open"].exists, "Toast detail is off")
+        let detail = "Surface disinfectant\u{00A0}· 0 unopened\u{00A0}· 2 open"
+        XCTAssertTrue(toast.staticTexts[detail].exists, "Toast detail is off")
     }
 
     @MainActor

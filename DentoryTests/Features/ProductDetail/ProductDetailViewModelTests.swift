@@ -28,11 +28,11 @@ struct ProductDetailViewModelTests {
         await viewModel.load()
         #expect(viewModel.state == .loaded)
         #expect(repository.detailCalls == [ProductSummary.demo[0].id])
-        #expect(viewModel.contextLine == "Anesthetic · 1 box = 50 cartridges")
+        #expect(viewModel.contextLine == "Anesthetic\u{00A0}· 1 box = 50 cartridges")
         #expect(viewModel.availableText == "54")
         #expect(viewModel.minimumText == "20")
         #expect(viewModel.targetText == "60")
-        #expect(viewModel.estimateLine == "System estimate · 38 cartridges used in 30 days")
+        #expect(viewModel.estimateLine == "System estimate\u{00A0}· 38 cartridges used in 30 days")
         #expect(viewModel.countedLine == "Counted Oct 1")
         #expect(viewModel.recommendationLine == nil, "Healthy products get no recommendation")
         #expect(!viewModel.isMultiUse)
@@ -61,7 +61,7 @@ struct ProductDetailViewModelTests {
         #expect(rows.map(\.deltaText) == ["43 → 41", "−2", "+40"])
         #expect(rows.map(\.deltaTone) == [.neutral, .danger, .success])
         #expect(rows.map(\.description) == [
-            "Physical count · Michael", "Root canal · Sarah", "Invoice INV-10092 · Michael"
+            "Physical count\u{00A0}· Michael", "Root canal\u{00A0}· Sarah", "Invoice INV-10092\u{00A0}· Michael"
         ])
         #expect(rows.map(\.dateText) == ["Oct 1", "Oct 1", "Sep 30"])
     }
@@ -79,7 +79,7 @@ struct ProductDetailViewModelTests {
         let row = viewModel.historyRows.first
         #expect(row?.deltaText == "0", "A bottle opened is no addition (MS-100 D5)")
         #expect(row?.deltaTone == .neutral)
-        #expect(row?.description == "Opened a new bottle · Sarah")
+        #expect(row?.description == "Opened a new bottle\u{00A0}· Sarah")
     }
 
     @Test func theExpiryTotalOfAMultiUseProductCountsBatchesNotOpenBottles() async {
@@ -96,7 +96,7 @@ struct ProductDetailViewModelTests {
         let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
         await viewModel.load()
         #expect(
-            viewModel.expiryTotalLine == "1 of 1 tracked · 0 expire within 90 days",
+            viewModel.expiryTotalLine == "1 of 1 tracked\u{00A0}· 0 expire within 90 days",
             "Open bottles are not undated stock"
         )
     }
@@ -122,9 +122,9 @@ struct ProductDetailViewModelTests {
         let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
         await viewModel.load()
         #expect(viewModel.isMultiUse)
-        #expect(viewModel.bottlesLine == "1 unopened · 2 open")
+        #expect(viewModel.bottlesLine == "1 unopened\u{00A0}· 2 open")
         #expect(viewModel.canOpenNewBottle)
-        #expect(viewModel.bottleRows.map(\.title) == ["Open · Sarah", "Open · Michael"])
+        #expect(viewModel.bottleRows.map(\.title) == ["Open\u{00A0}· Sarah", "Open\u{00A0}· Michael"])
         #expect(viewModel.bottleRows.map(\.subtitle) == ["opened 3 days ago", "opened today"])
     }
 
@@ -143,7 +143,7 @@ struct ProductDetailViewModelTests {
         #expect(viewModel.isOnToBuy)
         #expect(viewModel.addToBuyTitle == "On To buy")
         #expect(viewModel.addedToBuy?.title == "Added to To buy")
-        #expect(viewModel.addedToBuy?.detail == "Septocaine 4% 1:100,000 · 6 cartridges")
+        #expect(viewModel.addedToBuy?.detail == "Septocaine 4% 1:100,000\u{00A0}· 6 cartridges")
         #expect(analytics.events == [.addedToBuy])
         viewModel.clearAddedToBuy()
         await viewModel.undoAddToBuy()
@@ -179,7 +179,7 @@ struct ProductDetailViewModelTests {
             id: UUID(), type: .adjustment, delta: 2, quantityBefore: 52, quantityAfter: 54, reason: "Damaged",
             referenceLabel: "Undo · Damaged", at: Session.demoNow, byName: "Sarah Mitchell"
         )
-        #expect(ProductDetailViewModel.label(for: undone) == "Undo · Damaged")
+        #expect(ProductDetailViewModel.label(for: undone) == "Undo\u{00A0}· Damaged")
         #expect(ProductDetailViewModel.deltaText(for: undone, formatters: formatters) == "+2")
     }
 
@@ -208,7 +208,7 @@ struct ProductDetailViewModelTests {
         #expect(analytics.events.first?.payload == ["reason": .text("damaged"), "direction": .text("decrease")])
         #expect(viewModel.sheet == nil)
         #expect(viewModel.adjusted == .init(
-            actionID: actionID, title: "Inventory adjusted", detail: "Septocaine 4% 1:100,000 · 54 → 52"
+            actionID: actionID, title: "Inventory adjusted", detail: "Septocaine 4% 1:100,000\u{00A0}· 54 → 52"
         ))
         #expect(repository.detailCalls.count == 2, "The fresh detail is loaded after the adjustment")
         viewModel.clearAdjusted()

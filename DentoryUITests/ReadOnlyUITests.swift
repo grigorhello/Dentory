@@ -43,7 +43,7 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "No read-only sheet")
         XCTAssertEqual(
             app.staticTexts["readOnly.message"].label,
-            "You can still see everything. To make changes, add a card from the link in your billing email."
+            "You can still see everything. To make changes, add a card from your billing email."
         )
         XCTAssertFalse(app.descendants(matching: .any)["toast"].exists, "Nothing started")
         app.buttons["readOnly.billing"].tap()

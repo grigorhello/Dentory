@@ -78,17 +78,17 @@ struct ProductDetailBottlesViewModelTests {
         let analytics = SpyAnalytics()
         let viewModel = make(repository: repository, analytics: analytics)
         await viewModel.load()
-        #expect(viewModel.bottlesLine == "1 unopened · 2 open")
+        #expect(viewModel.bottlesLine == "1 unopened\u{00A0}· 2 open")
         let first = detail.openBottles[0].id
         repository.detailResult = .failure(AppError.network)
         await viewModel.finishBottle(first)
         #expect(repository.finishes == [first])
         #expect(analytics.events == [.bottleFinished])
         #expect(viewModel.bottleRows.map(\.id) == [detail.openBottles[1].id])
-        #expect(viewModel.bottlesLine == "1 unopened · 1 open")
+        #expect(viewModel.bottlesLine == "1 unopened\u{00A0}· 1 open")
         #expect(viewModel.detail?.quantity == 2, "A finished bottle leaves the stock")
         #expect(viewModel.bottleToast == .init(
-            title: "Bottle finished", detail: "Septocaine 4% 1:100,000 · 1 unopened · 1 open"
+            title: "Bottle finished", detail: "Septocaine 4% 1:100,000\u{00A0}· 1 unopened\u{00A0}· 1 open"
         ))
     }
 
@@ -108,7 +108,7 @@ struct ProductDetailBottlesViewModelTests {
         await viewModel.openNewBottle()
         #expect(viewModel.generalError == .validation(field: nil, message: "Out of stock"))
         #expect(viewModel.bottleToast == nil)
-        #expect(viewModel.bottlesLine == "1 unopened · 2 open")
+        #expect(viewModel.bottlesLine == "1 unopened\u{00A0}· 2 open")
     }
 }
 

@@ -14,8 +14,8 @@ final class InventoryUITests: XCTestCase {
         app.buttons["Inventory"].tap()
         XCTAssertTrue(app.staticTexts["inv.header.title"].waitForExistence(timeout: 5), "Inventory did not open")
         XCTAssertTrue(app.staticTexts["Septocaine 4% 1:100,000"].waitForExistence(timeout: 5), "No rows")
-        XCTAssertTrue(app.staticTexts["54 cartridges · Anesthetic"].exists)
-        XCTAssertTrue(app.staticTexts["1 unopened · 1 open · Restorative"].exists)
+        XCTAssertTrue(app.staticTexts["54 cartridges\u{00A0}· Anesthetic"].exists)
+        XCTAssertTrue(app.staticTexts["1 unopened\u{00A0}· 1 open\u{00A0}· Restorative"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["inv.newProduct"].exists, "Admin has no + button")
         XCTAssertTrue(app.descendants(matching: .any)["inv.countStock"].exists, "No Count stock button")
 

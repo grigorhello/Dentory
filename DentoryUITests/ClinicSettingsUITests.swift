@@ -48,7 +48,7 @@ final class ClinicSettingsUITests: XCTestCase {
         back.tap()
         let user = app.descendants(matching: .any)["more.user"]
         XCTAssertTrue(user.waitForExistence(timeout: 5), "Back did not return to Account")
-        XCTAssertTrue(user.label.contains("Admin · Smile Dental Group"), "The card reads \(user.label)")
+        XCTAssertTrue(user.label.contains("Admin\u{00A0}· Smile Dental Group"), "The card reads \(user.label)")
     }
 
     @MainActor

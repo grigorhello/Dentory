@@ -17,12 +17,12 @@ struct ProductQuantityCard: View {
                 HStack(alignment: .top, spacing: Spacing.md) {
                     Text(viewModel.estimateLine)
                         .textStyle(.body16)
-                        .foregroundStyle(Color.ms.textSecondary)
+                        .foregroundStyle(Color.ms.textBody)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: Spacing.sm)
                     Text(viewModel.countedLine)
                         .textStyle(.body16)
-                        .foregroundStyle(Color.ms.textSecondary)
+                        .foregroundStyle(Color.ms.textBody)
                         .multilineTextAlignment(.trailing)
                         .fixedSize(horizontal: false, vertical: true)
                 }

@@ -141,8 +141,8 @@ final class InvoiceConfirmUITests: XCTestCase {
     func testAReceivedInvoiceOpensReadOnlyFromActivity() {
         let app = openReceivedFromActivity()
         let notice = app.staticTexts["invoice.received"]
-        XCTAssertTrue(notice.label.hasPrefix("Received · Oct 2 · "), "The notice reads \(notice.label)")
-        XCTAssertTrue(notice.label.hasSuffix(" · Sarah"), "The notice reads \(notice.label)")
+        XCTAssertTrue(notice.label.hasPrefix("Received\u{00A0}· Oct 2\u{00A0}· "), "The notice reads \(notice.label)")
+        XCTAssertTrue(notice.label.hasSuffix("\u{00A0}· Sarah"), "The notice reads \(notice.label)")
         XCTAssertEqual(app.staticTexts["invoice.line[1].batch"].label, "No expiry")
         XCTAssertFalse(app.textFields["invoice.line[1].lot"].exists, "A received line takes a lot")
         XCTAssertFalse(app.buttons["invoice.line[4].undo"].exists, "A received line reopens")
@@ -186,8 +186,10 @@ final class InvoiceConfirmUITests: XCTestCase {
         XCTAssertTrue(toast.staticTexts["Invoice file deleted"].exists)
         let notice = app.staticTexts["invoice.fileDeleted"]
         XCTAssertTrue(notice.waitForExistence(timeout: 5), "The invoice does not say its file was deleted")
-        XCTAssertTrue(notice.label.hasPrefix("Invoice file deleted · Oct 2 · "), "The notice reads \(notice.label)")
-        XCTAssertTrue(notice.label.hasSuffix(" · Sarah"), "The notice reads \(notice.label)")
+        XCTAssertTrue(
+            notice.label.hasPrefix("Invoice file deleted\u{00A0}· Oct 2\u{00A0}· "), "The notice reads \(notice.label)"
+        )
+        XCTAssertTrue(notice.label.hasSuffix("\u{00A0}· Sarah"), "The notice reads \(notice.label)")
         XCTAssertTrue(menu.waitForNonExistence(timeout: 5), "The menu still offers to delete the file")
         XCTAssertTrue(app.staticTexts["invoice.received"].exists, "The invoice is no longer shown as received")
         XCTAssertTrue(app.staticTexts["invoice.line[1].raw"].exists, "The lines did not stay")

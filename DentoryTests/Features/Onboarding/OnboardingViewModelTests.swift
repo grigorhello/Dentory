@@ -136,7 +136,7 @@ struct OnboardingViewModelTests {
             TeamInvite(email: "kim@smiledental.ca", role: .admin)
         ])
         #expect(viewModel.isFinished)
-        #expect(viewModel.completionMessage == "Invitations sent · They get a link by email.")
+        #expect(viewModel.completionMessage == "Invitations sent\u{00A0}· They get a link by email.")
         #expect(progress.pendingInviteClinicID() == nil)
         #expect(analytics.events == [.onboardingFinished(invitations: 2)], "Only the send that went out")
         #expect(analytics.events.first?.name.rawValue == "onboard.sendInvites")

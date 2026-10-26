@@ -122,7 +122,7 @@ struct DemoInvoiceTests {
         let received = try await invoices.invoice(id: invoiceID)
         #expect(received.status == .confirmed && received.confirmedByName == "Sarah Mitchell")
         #expect(try await receive.overview(clinicID: clinicID).invoices.isEmpty, "No longer to continue reviewing")
-        await #expect(throws: AppError.validation(field: nil, message: "This delivery was already received")) {
+        await #expect(throws: AppError.validation(field: nil, message: "This delivery was already received.")) {
             try await invoices.discard(invoiceID: invoiceID, clinicID: clinicID)
         }
 
@@ -145,8 +145,7 @@ struct DemoInvoiceTests {
         let invoiceID = DemoInvoiceRepository.readyID
         let lines = try await invoices.invoice(id: invoiceID).lines
         #expect(try await invoices.invoice(id: invoiceID).hasFile, "The frames' invoice has its photo")
-        let refusal = AppError.validation(field: nil, message: "Only a received invoice's file can be deleted")
-        await #expect(throws: refusal) {
+        await #expect(throws: AppError.refusal("Only a received invoice's file can be deleted")) {
             try await invoices.deleteFile(invoiceID: invoiceID, clinicID: clinicID)
         }
         _ = try await invoices.matchLine(lines[1].id, to: ProductSummary.demo[1].id)

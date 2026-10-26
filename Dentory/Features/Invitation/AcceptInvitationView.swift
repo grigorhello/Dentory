@@ -51,6 +51,7 @@ struct AcceptInvitationView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.ms.canvas)
+        .statusBarBackground()
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if viewModel.invitation != nil {
@@ -93,7 +94,7 @@ private struct InvitationHeader: View {
             if let caption {
                 Text(caption)
                     .textStyle(.body16)
-                    .foregroundStyle(Color.ms.textSecondary)
+                    .foregroundStyle(Color.ms.textBody)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

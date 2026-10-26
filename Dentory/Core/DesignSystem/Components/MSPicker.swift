@@ -44,12 +44,14 @@ struct MSPicker<Value: Hashable & Sendable>: View {
                     Button(title(option)) { selection = option }
                 }
             } label: {
+                // One 8 pt gap before the chevron (a Spacer between them would add a second), so the value keeps the
+                // whole width left of it ("America/Toronto", f33).
                 HStack(spacing: Spacing.sm) {
                     Text(selection.map(title) ?? placeholder)
                         .textStyle(.body16)
                         .foregroundStyle(selection == nil ? Color.ms.textSecondary : Color.ms.ink)
                         .lineLimit(1)
-                    Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     IconView(.chevronDown, size: 16).foregroundStyle(Color.ms.textSecondary)
                 }
                 .padding(.horizontal, Spacing.md)

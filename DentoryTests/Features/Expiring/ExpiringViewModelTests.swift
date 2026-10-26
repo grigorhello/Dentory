@@ -39,20 +39,20 @@ struct ExpiringViewModelTests {
         #expect(viewModel.window == 90)
         #expect(viewModel.windowOptions.map(\.text) == ["30 days", "60 days", "90 days"])
         #expect(viewModel.batches.map(\.name) == ["Bonding agent", "Septocaine 4% 1:100,000"])
-        #expect(viewModel.summary == "2 products · $186 at risk within 90 days.")
+        #expect(viewModel.summary == "2 products\u{00A0}· $186 at risk within 90 days.")
     }
 
     @Test func eachCardSaysWhatTheBatchHoldsAndWhenItGoes() async {
         let viewModel = await make()
-        #expect(viewModel.line(for: bonding) == "1 bottle · lot BA7 · Nov 2026")
-        #expect(viewModel.line(for: septocaine) == "34 cartridges · lot B441 · Dec 2026")
+        #expect(viewModel.line(for: bonding) == "1 bottle\u{00A0}· lot BA7\u{00A0}· Nov 2026")
+        #expect(viewModel.line(for: septocaine) == "34 cartridges\u{00A0}· lot B441\u{00A0}· Dec 2026")
         #expect(viewModel.daysText(for: bonding) == "59 days")
         #expect(viewModel.daysText(for: septocaine) == "90 days")
         #expect(viewModel.daysTone(for: bonding) == .warning)
         #expect(viewModel.valueText(for: bonding) == "$82")
         #expect(viewModel.valueText(for: septocaine) == "$104")
         let undated = batch("Gauze", quantity: 2, month: CalendarDay(year: 2026, month: 12, day: 1))
-        #expect(viewModel.line(for: undated) == "2 packs · Dec 2026", "No lot, no lot part")
+        #expect(viewModel.line(for: undated) == "2 packs\u{00A0}· Dec 2026", "No lot, no lot part")
     }
 
     @Test func daysReadExpiredTodayAndOneDayInDanger() async {
@@ -70,7 +70,7 @@ struct ExpiringViewModelTests {
         let viewModel = await make(repository)
         viewModel.window = 60
         #expect(viewModel.batches.map(\.name) == ["Bonding agent"])
-        #expect(viewModel.summary == "1 product · $82 at risk within 60 days.")
+        #expect(viewModel.summary == "1 product\u{00A0}· $82 at risk within 60 days.")
         viewModel.window = 30
         #expect(viewModel.batches.isEmpty)
         #expect(viewModel.summary == nil, "The empty state takes its place")
@@ -90,7 +90,7 @@ struct ExpiringViewModelTests {
         #expect(viewModel.window == 30, "Home's tiles and alerts pick the window")
         #expect(viewModel.batches.map(\.lot) == ["A001"])
         viewModel.window = 90
-        #expect(viewModel.summary == "2 products · $198 at risk within 90 days.")
+        #expect(viewModel.summary == "2 products\u{00A0}· $198 at risk within 90 days.")
     }
 
     /// A segment picked before the list arrives, or while it cannot, stays picked once the list comes.
@@ -124,7 +124,7 @@ struct ExpiringViewModelTests {
         #expect(viewModel.disposing == nil)
         #expect(analytics.events == [.batchDisposed], "MS-147")
         #expect(viewModel.batches.map(\.name) == ["Bonding agent"])
-        #expect(viewModel.summary == "1 product · $82 at risk within 90 days.")
+        #expect(viewModel.summary == "1 product\u{00A0}· $82 at risk within 90 days.")
         #expect(viewModel.message == .init(
             title: "Disposed", detail: "34 cartridges Septocaine 4% 1:100,000", undoActionID: actionID
         ))

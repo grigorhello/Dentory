@@ -13,6 +13,10 @@ struct InvoiceViewModelFileTests {
     )
     private let invoiceID = UUID()
     private let deletedAt = Session.demoNow.addingTimeInterval(3_600)
+    /// "Invoice file deleted · Oct 2 · 10:41 AM · Grigor", with the no-break space before each "·" (MS-136 V-16).
+    private var deletedByGrigor: String {
+        "Invoice file deleted\u{00A0}· \(formatters.dateTime(deletedAt))\u{00A0}· Grigor"
+    }
 
     private func opened(_ repository: FakeInvoiceRepository) -> InvoiceViewModel {
         InvoiceViewModel(
@@ -61,8 +65,9 @@ struct InvoiceViewModelFileTests {
         let viewModel = opened(repository)
         await viewModel.load()
         #expect(!viewModel.canDeleteFile, "Nothing left to delete")
-        #expect(viewModel.fileNotice == "Invoice file deleted · \(formatters.dateTime(deletedAt)) · Grigor")
-        #expect(viewModel.receivedNotice == "Received · \(formatters.dateTime(Session.demoNow)) · Sarah")
+        #expect(viewModel.fileNotice == deletedByGrigor)
+        let receivedAt = formatters.dateTime(Session.demoNow)
+        #expect(viewModel.receivedNotice == "Received\u{00A0}· \(receivedAt)\u{00A0}· Sarah")
         let review = try #require(viewModel.review)
         #expect(review.isReceived && review.lines.count == 4, "The lines stay, read-only")
     }
@@ -72,7 +77,7 @@ struct InvoiceViewModelFileTests {
         repository.readings = [.success(received(hasFile: false, deletedBy: nil))]
         let viewModel = opened(repository)
         await viewModel.load()
-        #expect(viewModel.fileNotice == "Invoice file deleted · \(formatters.dateTime(deletedAt))")
+        #expect(viewModel.fileNotice == "Invoice file deleted\u{00A0}· \(formatters.dateTime(deletedAt))")
     }
 
     @Test func aPageLeftAfterADeletionCutShortIsOfferedAgain() async {
@@ -113,9 +118,9 @@ struct InvoiceViewModelFileTests {
         #expect(!viewModel.isConfirmingFileDeletion, "The question closes")
         #expect(viewModel.state == .received)
         #expect(!viewModel.canDeleteFile, "The menu has nothing left to offer")
-        #expect(viewModel.fileNotice == "Invoice file deleted · \(formatters.dateTime(deletedAt)) · Grigor")
+        #expect(viewModel.fileNotice == deletedByGrigor)
         #expect(viewModel.review === review, "The same lines, still read-only")
         #expect(review.lines.count == 4)
-        #expect(viewModel.header == "Patterson Dental · INV-10092 · $449.00")
+        #expect(viewModel.header == "Patterson Dental\u{00A0}· INV-10092\u{00A0}· $449.00")
     }
 }

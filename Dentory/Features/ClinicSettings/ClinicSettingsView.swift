@@ -78,11 +78,14 @@ struct ClinicSettingsView: View {
                 "Country", selection: $viewModel.country, options: viewModel.countries, identifier: "settings.country"
             ) { $0.name }
         }
+        // A currency is three letters: its select is narrow, so the time zone gets the rest of the row and reads whole
+        // ("America/Vancouver" on an iPhone SE, MS-136 audit V-14).
         HStack(alignment: .top, spacing: Spacing.md) {
             MSPicker(
                 "Currency", selection: $viewModel.currency, options: ClinicSettingsViewModel.currencies,
                 identifier: "settings.currency"
             ) { $0 }
+            .frame(width: ControlWidth.shortSelect)
             MSPicker(
                 "Time zone", selection: $viewModel.timeZone, options: viewModel.timeZones,
                 identifier: "settings.timeZone"

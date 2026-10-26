@@ -40,7 +40,7 @@ struct ListRow<Trailing: View>: View {
                 Spacer(minLength: Spacing.sm)
                 trailing()
                 if navigates {
-                    IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.textSecondary)
+                    IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.textBody)
                 }
             }
             .padding(.vertical, Spacing.md + Spacing.xxs)

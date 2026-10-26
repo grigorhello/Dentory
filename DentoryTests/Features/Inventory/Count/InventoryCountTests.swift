@@ -64,8 +64,8 @@ struct InventoryCountTests {
         let repository = FakeInventoryRepository(result: .success(ProductSummary.demo + [unplaced]))
         let viewModel = await make(repository: repository)
         viewModel.startCount()
-        #expect(viewModel.countLine(for: septocaine) == "est. 54 cartridges · Operatory 1 · Drawer A")
-        #expect(viewModel.countLine(for: bonding) == "Count unopened only · Operatory 1 · Drawer C")
+        #expect(viewModel.countLine(for: septocaine) == "est. 54 cartridges\u{00A0}· Operatory 1 · Drawer A")
+        #expect(viewModel.countLine(for: bonding) == "Count unopened only\u{00A0}· Operatory 1 · Drawer C")
         #expect(viewModel.countLine(for: unplaced) == "est. 6 packs")
     }
 

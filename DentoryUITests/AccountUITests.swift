@@ -18,7 +18,7 @@ final class AccountUITests: XCTestCase {
 
         let user = app.descendants(matching: .any)["more.user"]
         XCTAssertTrue(user.label.contains("Sarah Mitchell"), "The card reads \(user.label)")
-        XCTAssertTrue(user.label.contains("Admin · Smile Dental"), "The card reads \(user.label)")
+        XCTAssertTrue(user.label.contains("Admin\u{00A0}· Smile Dental"), "The card reads \(user.label)")
         for id in ["more.team", "more.help", "more.signOut"] + adminRows {
             XCTAssertTrue(app.buttons[id].exists, "Missing \(id)")
         }
@@ -72,7 +72,7 @@ final class AccountUITests: XCTestCase {
 
         let user = app.descendants(matching: .any)["more.user"]
         XCTAssertTrue(user.label.contains("Michael Reyes"), "The card reads \(user.label)")
-        XCTAssertTrue(user.label.contains("Staff · Smile Dental"), "The card reads \(user.label)")
+        XCTAssertTrue(user.label.contains("Staff\u{00A0}· Smile Dental"), "The card reads \(user.label)")
         for id in ["more.team", "more.help", "more.signOut"] {
             XCTAssertTrue(app.buttons[id].exists, "Missing \(id)")
         }

@@ -8,8 +8,7 @@ struct ReadOnlySheet: View {
     let onClose: () -> Void
 
     static let title = "Your clinic is in read-only mode"
-    static let message = "You can still see everything. "
-        + "To make changes, add a card from the link in your billing email."
+    static let message = "You can still see everything. To make changes, add a card from your billing email."
 
     var body: some View {
         MSSheet(Self.title, identifier: "readOnly") {

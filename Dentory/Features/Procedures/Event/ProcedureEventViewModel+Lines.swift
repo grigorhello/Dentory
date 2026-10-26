@@ -15,7 +15,7 @@ extension ProcedureEventViewModel {
             Self.items(detail.itemsDeducted) + " deducted", formatters.dateTime(detail.startedAt),
             PersonName.first(of: detail.startedByName)
         ]
-        return parts.filter { !$0.isEmpty }.joined(separator: " · ")
+        return parts.filter { !$0.isEmpty }.joined(separator: "\u{00A0}· ")
     }
 
     /// "Cancelled · Oct 2 · 9:41 AM · Sarah: Logged by mistake".
@@ -23,7 +23,7 @@ extension ProcedureEventViewModel {
         guard let detail, let cancelledAt = detail.cancelledAt else { return nil }
         let head = ["Cancelled", formatters.dateTime(cancelledAt), PersonName.first(of: detail.cancelledByName)]
             .filter { !$0.isEmpty }
-            .joined(separator: " · ")
+            .joined(separator: "\u{00A0}· ")
         guard let note = detail.cancelNote, !note.isEmpty else { return head }
         return "\(head): \(note)"
     }
@@ -58,11 +58,11 @@ extension ProcedureEventViewModel {
         case (true, true):
             "Opened a new bottle"
         case (true, false):
-            "Will take 1 from stock · \(formatters.number(max(bottle.item.unopened - 1, 0))) unopened left"
+            "Will take 1 from stock\u{00A0}· \(formatters.number(max(bottle.item.unopened - 1, 0))) unopened left"
         case (false, true):
             "Goes back to stock"
         case (false, false):
-            "\(bottle.item.openCount) open · \(formatters.number(bottle.item.unopened)) in stock"
+            "\(bottle.item.openCount) open\u{00A0}· \(formatters.number(bottle.item.unopened)) in stock"
         }
     }
 
@@ -82,7 +82,7 @@ extension ProcedureEventViewModel {
         if product.id == outOfStockProductID { return "Out of stock" }
         return switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
-        case .multiUse: "\(formatters.number(product.unopened)) unopened · \(product.openCount) open"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened\u{00A0}· \(product.openCount) open"
         }
     }
 
@@ -93,7 +93,7 @@ extension ProcedureEventViewModel {
     /// What Add item says with nothing to list: nothing while the products load, and how to retry when they failed.
     var addItemEmptyText: String {
         if hasLoadedProducts { return "No products match." }
-        return productsFailed ? "Couldn't load products. Close and reopen Add item to try again." : ""
+        return productsFailed ? "Couldn't load products. Reopen Add item to try again." : ""
     }
 
     /// "10 items", "1 item".

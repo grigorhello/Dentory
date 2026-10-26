@@ -44,13 +44,13 @@ final class ReceiveUITests: XCTestCase {
         let row = app.buttons[invoice]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "No invoice to continue")
         XCTAssertTrue(row.label.contains("Continue reviewing"), "The invoice row reads \(row.label)")
-        XCTAssertTrue(row.label.contains("Patterson · 8:55\u{202F}AM"), "The invoice row reads \(row.label)")
+        XCTAssertTrue(row.label.contains("Patterson\u{00A0}· 8:55\u{202F}AM"), "The invoice row reads \(row.label)")
 
         XCTAssertTrue(app.staticTexts["Waiting for delivery"].exists || app.staticTexts["WAITING FOR DELIVERY"].exists)
         let waiting = app.descendants(matching: .any)[needles]
         XCTAssertTrue(waiting.exists, "No Needle 27g short waiting")
         XCTAssertEqual(waiting.label, "Needle 27g short")
-        XCTAssertEqual(waiting.value as? String, "Patterson · ordered Oct 1, 60 needles ordered")
+        XCTAssertEqual(waiting.value as? String, "Patterson\u{00A0}· ordered Oct 1, 60 needles ordered")
     }
 
     @MainActor
@@ -76,7 +76,7 @@ final class ReceiveUITests: XCTestCase {
         let row = app.buttons[failed]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "No failed reading to continue")
         XCTAssertTrue(row.label.contains("Continue reviewing"), "The failed row reads \(row.label)")
-        XCTAssertTrue(row.label.contains("Couldn't read · 5:27\u{202F}AM"), "The failed row reads \(row.label)")
+        XCTAssertTrue(row.label.contains("Couldn't read\u{00A0}· 5:27\u{202F}AM"), "The failed row reads \(row.label)")
         let ready = app.buttons[invoice]
         XCTAssertTrue(ready.exists, "The invoice ready to review is still listed")
         XCTAssertLessThan(row.frame.minY, ready.frame.minY, "The newest upload comes first")

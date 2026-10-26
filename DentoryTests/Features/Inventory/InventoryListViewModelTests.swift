@@ -103,9 +103,9 @@ struct InventoryListViewModelTests {
         func caption(_ name: String) -> String? {
             viewModel.products.first { $0.name == name }.map(viewModel.caption(for:))
         }
-        #expect(caption("Septocaine 4% 1:100,000") == "54 cartridges · Anesthetic")
-        #expect(caption("Surface disinfectant") == "1 unopened · 2 open · Sterilization")
-        #expect(caption("Rubber dam latex-free") == "0 sheets · Endodontics")
+        #expect(caption("Septocaine 4% 1:100,000") == "54 cartridges\u{00A0}· Anesthetic")
+        #expect(caption("Surface disinfectant") == "1 unopened\u{00A0}· 2 open\u{00A0}· Sterilization")
+        #expect(caption("Rubber dam latex-free") == "0 sheets\u{00A0}· Endodontics")
         let uncategorised = ProductSummary(
             id: UUID(), name: "Gauze", categoryName: nil, unit: "packs", tracking: .countable, location: nil,
             quantity: 2.5, unopened: 2.5, openCount: 0, minimum: 4, status: .low

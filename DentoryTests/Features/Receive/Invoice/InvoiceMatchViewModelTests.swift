@@ -30,9 +30,9 @@ struct InvoiceMatchViewModelTests {
         #expect(viewModel.pickableProducts.map(\.name) == [
             "Composite A2", "Endo file kit #15-40", "Gauze", "Root canal sealer", "Septocaine 4% 1:100,000"
         ])
-        #expect(viewModel.caption(for: .septocaine) == "Anesthetic · 54 cartridges")
-        #expect(viewModel.caption(for: .endoKit) == "Endodontics · 1 kit")
-        #expect(viewModel.caption(for: .sealer) == "Endodontics · 0 unopened · 1 open")
+        #expect(viewModel.caption(for: .septocaine) == "Anesthetic\u{00A0}· 54 cartridges")
+        #expect(viewModel.caption(for: .endoKit) == "Endodontics\u{00A0}· 1 kit")
+        #expect(viewModel.caption(for: .sealer) == "Endodontics\u{00A0}· 0 unopened\u{00A0}· 1 open")
         #expect(viewModel.caption(for: .gauze) == "8 packs", "No category, no separator")
     }
 
@@ -58,6 +58,6 @@ struct InvoiceMatchViewModelTests {
         let failed = make(failing)
         await failed.load()
         #expect(failed.state == .failed(.network))
-        #expect(failed.emptyText == "Couldn't load products. Close and reopen this sheet to try again.")
+        #expect(failed.emptyText == "Couldn't load products. Reopen this sheet to try again.")
     }
 }

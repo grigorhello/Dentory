@@ -22,7 +22,7 @@ final class DemoClinicSettingsRepository: ClinicSettingsRepository, @unchecked S
 
     func save(clinicID: UUID, settings: ClinicSettings) async throws {
         guard !settings.name.trimmingCharacters(in: .whitespaces).isEmpty else {
-            throw AppError.validation(field: "name", message: "Enter the clinic name")
+            throw AppError.refusal("Enter the clinic name", field: "name")
         }
         let previous = lock.withLock {
             defer { current = settings }

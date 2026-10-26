@@ -8,7 +8,7 @@ struct ProcedureHistorySection: View {
     var body: some View {
         let events = viewModel.history
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Eyebrow("History · tap to edit usage")
+            Eyebrow("History\u{00A0}· tap to edit usage")
                 .accessibilityAddTraits(.isHeader)
             ListCard {
                 LazyVStack(spacing: 0) {

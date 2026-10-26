@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The bottom tab bar of f25, drawn once for iPhone and iPad (iOS 18 would otherwise float the iPad
-/// tabs at the top): Lucide icons, active tab in primary blue, red count badge on To buy.
+/// tabs at the top): Lucide icons on the cream-soft bar, the active tab in primary blue and the others in body text, as
+/// the frames draw them (above PRD §7's 4.5:1 contrast), red count badge on To buy.
 struct AppTabBar: View {
     let selected: AppTab
     let toBuyCount: Int
@@ -26,7 +27,7 @@ struct AppTabBar: View {
             .frame(maxWidth: PageLayout.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.ms.surfacePage)
+        .background(Color.ms.surfaceCard)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("tabBar")
     }
@@ -50,7 +51,7 @@ private struct AppTabBarItem: View {
                     }
                 Text(tab.title).textStyle(.micro12)
             }
-            .foregroundStyle(isSelected ? Color.ms.primary : Color.ms.textSecondary)
+            .foregroundStyle(isSelected ? Color.ms.primary : Color.ms.textBody)
             .frame(maxWidth: .infinity, minHeight: ControlHeight.lg)
             .contentShape(Rectangle())
         }

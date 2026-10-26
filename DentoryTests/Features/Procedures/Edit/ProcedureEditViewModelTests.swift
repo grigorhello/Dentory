@@ -108,7 +108,7 @@ struct ProcedureEditViewModelTests {
         #expect(names.contains("Gauze") && names.contains("Composite A2"))
         #expect(!names.contains("Septocaine 4% 1:100,000") && !names.contains("Surface disinfectant"))
         #expect(viewModel.addCaption(for: try product("Gauze")) == "Surgical")
-        #expect(viewModel.addCaption(for: try product("Composite A2")) == "Restorative · multi-use")
+        #expect(viewModel.addCaption(for: try product("Composite A2")) == "Restorative\u{00A0}· multi-use")
         viewModel.searchText = "comp"
         #expect(viewModel.addableProducts.map(\.name) == ["Composite A2"])
         viewModel.searchText = "zzz"
@@ -122,7 +122,7 @@ struct ProcedureEditViewModelTests {
         let viewModel = await make(repository)
         viewModel.openAddItem()
         await viewModel.loadProducts()
-        #expect(viewModel.addItemEmptyText == "Couldn't load products. Close and reopen Add item to try again.")
+        #expect(viewModel.addItemEmptyText == "Couldn't load products. Reopen Add item to try again.")
         #expect(viewModel.generalError == nil, "No toast: it would sit behind the sheet")
     }
 
@@ -154,7 +154,10 @@ struct ProcedureEditViewModelTests {
         #expect(request.name == "Root canal, molar")
         #expect(request.lines.map(\.productID) == viewModel.items.map(\.id))
         #expect(request.lines.map(\.defaultQuantity) == [3, 1, 2, 1, 1, 1, 1, 0, 0, 0, 0, 1])
-        #expect(viewModel.outcome == .init(title: "Procedure saved", detail: "Root canal, molar · 12 default supplies"))
+        #expect(
+            viewModel.outcome
+                == .init(title: "Procedure saved", detail: "Root canal, molar\u{00A0}· 12 default supplies")
+        )
         #expect(analytics.events == [.templateSaved(items: 12, isNew: false)], "The count, never the name (MS-147)")
     }
 
@@ -166,7 +169,10 @@ struct ProcedureEditViewModelTests {
         await viewModel.save()
         #expect(repository.saves.first?.templateID == nil)
         #expect(repository.saves.first?.name == "")
-        #expect(viewModel.outcome == .init(title: "Procedure saved", detail: "Untitled procedure · 1 default supply"))
+        #expect(
+            viewModel.outcome
+                == .init(title: "Procedure saved", detail: "Untitled procedure\u{00A0}· 1 default supply")
+        )
     }
 
     @Test func aTakenNameShowsUnderTheFieldUntilItChanges() async {

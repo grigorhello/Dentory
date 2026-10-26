@@ -1,9 +1,10 @@
 import XCTest
 
 /// Start procedure with Take new → Edit usage → Cancel procedure (MS-136), on the demo clinic's Cleaning: the start
-/// takes a new Fluoride varnish and deducts the supplies through `stock_procedure_start`, Edit usage on the procedure
-/// opened from the history raises the gloves through `stock_procedure_edit`, and Cancel procedure gives everything back
-/// through `stock_procedure_cancel`, the varnish unopened, as Inventory shows after each step.
+/// takes a new Fluoride varnish and deducts the supplies through `stock_procedure_start`, Edit usage on Home's procedure
+/// card, which now shows the procedure just started, raises the gloves through `stock_procedure_edit`, and Cancel
+/// procedure gives everything back through `stock_procedure_cancel`, the varnish unopened, as Inventory shows after
+/// each step.
 final class ProcedureE2ETests: XCTestCase {
     private let gloves = E2E.product(5)
     private let fluorideVarnish = E2E.product(14)
@@ -15,7 +16,7 @@ final class ProcedureE2ETests: XCTestCase {
     @MainActor
     func testACleaningIsStartedWithANewVarnishEditedThenCancelled() {
         let app = E2E.signedIn(E2E.admin)
-        expectStock("14 boxes", "2 unopened · 1 open", "before the procedure", in: app)
+        expectStock("14 boxes", "2 unopened\u{00A0}· 1 open", "before the procedure", in: app)
 
         app.buttons["tab.procedures"].tap()
         let cleaning = app.descendants(matching: .any)["proc.template[\(E2E.template(2))]"]
@@ -30,21 +31,17 @@ final class ProcedureE2ETests: XCTestCase {
         E2E.expect(start, toRead: "Start procedure · 6 items", "Take new did not count the varnish")
         start.tap()
         E2E.expectToast("Cleaning started", "6 items deducted", in: app)
-        expectStock("12 boxes", "1 unopened · 2 open", "after the start", in: app)
+        expectStock("12 boxes", "1 unopened\u{00A0}· 2 open", "after the start", in: app)
 
-        // History, newest first; the seed's own Cleaning is Michael's.
-        app.buttons["tab.procedures"].tap()
-        let started = NSPredicate(
-            format: "identifier BEGINSWITH 'proc.history[' AND label BEGINSWITH 'Cleaning' AND label CONTAINS 'Sarah'"
-        )
-        let event = app.descendants(matching: .any).matching(started).firstMatch
-        event.appears("The Cleaning is not in the history")
-        event.tap()
-        let editUsage = app.buttons["procDetail.editUsage"]
-        editUsage.appears("The procedure did not open")
-        E2E.expect(app.staticTexts["procDetail.summary"], toRead: "6 items deducted", "The record of the start")
-        editUsage.tap()
-        app.staticTexts["procDetail.editing"].appears("Editing did not open")
+        // Home reloads as its tab is chosen: its card shows the Cleaning just started, with its seven products (the
+        // toast counted the six items deducted), and Edit usage opens it.
+        app.buttons["tab.home"].tap()
+        let latest = app.descendants(matching: .any)["home.procedure.latest"]
+        latest.appears("Home has no latest procedure")
+        E2E.expect(latest, toRead: "Cleaning", "Home's card does not show the procedure just started")
+        E2E.expect(latest, toRead: "7 supplies\u{00A0}· Sarah", "Home's card does not count the Cleaning's supplies")
+        app.buttons["home.procedure.editUsage"].tap()
+        app.staticTexts["procDetail.editing"].appears("Edit usage did not open the procedure")
         app.buttons["procDetail.item[\(gloves)].inc"].tap()
         XCTAssertEqual(app.staticTexts["procDetail.item[\(gloves)].value"].label, "3")
         app.buttons["procDetail.save"].tap()
@@ -66,7 +63,7 @@ final class ProcedureE2ETests: XCTestCase {
         app.buttons["cancelProcedure.confirm"].tap()
         E2E.expectToast("Cleaning cancelled", "7 items returned", in: app)
         // The varnish opened for the procedure goes back unopened.
-        expectStock("14 boxes", "2 unopened · 1 open", "after the cancellation", in: app)
+        expectStock("14 boxes", "2 unopened\u{00A0}· 1 open", "after the cancellation", in: app)
     }
 
     /// The gloves and the varnish on Inventory, which reloads as its tab is chosen.

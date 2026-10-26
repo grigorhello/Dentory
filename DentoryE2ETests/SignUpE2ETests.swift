@@ -26,6 +26,7 @@ final class SignUpE2ETests: XCTestCase {
         app.secureTextFields["onboard.password"].firstMatch.tap()
         app.typeText(E2E.password)
         continueButton.tap()
+        app.declineSavingPassword()
 
         let clinicName = app.textFields["onboard.clinicName"].firstMatch
         clinicName.appears("Create your clinic did not open")

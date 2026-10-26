@@ -38,7 +38,7 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.bottles.map(\.item.name) == [
             "Topical anesthetic gel", "Sodium hypochlorite", "Root canal sealer", "Surface disinfectant"
         ])
-        #expect(viewModel.summary == "12 supplies · 1 not available. Add or remove items before you start.")
+        #expect(viewModel.summary == "12 supplies\u{00A0}· 1 not available. Add or remove items before you start.")
         #expect(viewModel.startTitle == "Start procedure · 10 items")
         #expect(viewModel.canStart)
     }
@@ -47,14 +47,14 @@ struct ProcedureStartViewModelTests {
         let viewModel = await make()
         let rows = Dictionary(uniqueKeysWithValues: viewModel.supplies.map { ($0.item.name, $0) })
         #expect(rows["Rubber dam latex-free"].flatMap(viewModel.warning(for:))
-            == .init(text: "Not available · 0 in stock", tone: .danger))
+            == .init(text: "Not available\u{00A0}· 0 in stock", tone: .danger))
         #expect(rows["Endo file kit #15-40"].flatMap(viewModel.warning(for:))
             == .init(text: "0 will remain", tone: .warning))
         #expect(rows["Septocaine 4% 1:100,000"].flatMap(viewModel.warning(for:)) == nil)
         viewModel[quantityOf: id(of: "Rubber dam latex-free")] = 0
         #expect(viewModel.supplies.first { $0.item.name == "Rubber dam latex-free" }.flatMap(viewModel.warning(for:))
             == nil, "Nothing taken, nothing short")
-        #expect(viewModel.summary == "12 supplies · 1 will reach 0. Add or remove items before you start.")
+        #expect(viewModel.summary == "12 supplies\u{00A0}· 1 will reach 0. Add or remove items before you start.")
     }
 
     @Test func theSteppersChangeTheCountAndNeverGoBelowZero() async {
@@ -71,7 +71,7 @@ struct ProcedureStartViewModelTests {
         let viewModel = await make()
         viewModel.remove(id(of: "Rubber dam latex-free"))
         #expect(viewModel.supplies.count == 7)
-        #expect(viewModel.summary == "11 supplies · 1 will reach 0. Add or remove items before you start.")
+        #expect(viewModel.summary == "11 supplies\u{00A0}· 1 will reach 0. Add or remove items before you start.")
         #expect(viewModel.startTitle == "Start procedure · 9 items")
     }
 
@@ -82,10 +82,10 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.takenNew.map(\.item.name) == ["Surface disinfectant"])
         #expect(viewModel.startTitle == "Start procedure · 11 items")
         let bottle = try #require(viewModel.bottles.first { $0.id == disinfectant })
-        #expect(viewModel.line(for: bottle) == "Will take 1 from stock · 0 unopened left")
+        #expect(viewModel.line(for: bottle) == "Will take 1 from stock\u{00A0}· 0 unopened left")
         viewModel.toggleTakeNew(disinfectant)
         #expect(viewModel.takenNew.isEmpty, "Tapping again removes it")
-        #expect(viewModel.line(for: .init(item: bottle.item)) == "2 open · 1 in stock")
+        #expect(viewModel.line(for: .init(item: bottle.item)) == "2 open\u{00A0}· 1 in stock")
     }
 
     @Test func nothingUnopenedMeansOutOfStock() async {
@@ -125,7 +125,7 @@ struct ProcedureStartViewModelTests {
         await viewModel.loadProducts()
         viewModel.openAddItem()
         let composite = try #require(viewModel.addableProducts.first { $0.name == "Composite A2" })
-        #expect(viewModel.addCaption(for: composite) == "1 unopened · 1 open")
+        #expect(viewModel.addCaption(for: composite) == "1 unopened\u{00A0}· 1 open")
         viewModel.add(composite)
         #expect(viewModel.sheet == nil)
         #expect(viewModel.takenNew.map(\.item.name) == ["Composite A2"])
@@ -143,7 +143,7 @@ struct ProcedureStartViewModelTests {
         await viewModel.loadProducts()
         viewModel.openAddItem()
         let bonding = try #require(viewModel.addableProducts.first { $0.name == "Bonding agent" })
-        #expect(viewModel.addCaption(for: bonding) == "0 unopened · 1 open")
+        #expect(viewModel.addCaption(for: bonding) == "0 unopened\u{00A0}· 1 open")
         viewModel.add(bonding)
         #expect(viewModel.addCaption(for: bonding) == "Out of stock", "Said on the row, inside the sheet")
         #expect(viewModel.addCaptionTone(for: bonding) == .danger)
@@ -152,7 +152,9 @@ struct ProcedureStartViewModelTests {
         #expect(viewModel.sheet == .addItem, "The sheet stays open to pick another")
         viewModel.sheet = nil
         viewModel.openAddItem()
-        #expect(viewModel.addCaption(for: bonding) == "0 unopened · 1 open", "A new look at the sheet starts fresh")
+        #expect(
+            viewModel.addCaption(for: bonding) == "0 unopened\u{00A0}· 1 open", "A new look at the sheet starts fresh"
+        )
     }
 
     @Test func productsThatFailToLoadAreExplainedInTheSheet() async {
@@ -162,7 +164,7 @@ struct ProcedureStartViewModelTests {
         viewModel.openAddItem()
         await viewModel.loadProducts()
         #expect(viewModel.addableProducts.isEmpty)
-        #expect(viewModel.addItemEmptyText == "Couldn't load products. Close and reopen Add item to try again.")
+        #expect(viewModel.addItemEmptyText == "Couldn't load products. Reopen Add item to try again.")
         #expect(viewModel.generalError == nil, "No toast: it would sit behind the sheet")
         repository.productsResult = .success(ProductSummary.demo)
         await viewModel.loadProducts()
@@ -234,7 +236,7 @@ struct ProcedureStartViewModelTests {
 
     @Test func aTemplateWithEverythingInStockSaysSo() async {
         let viewModel = await make(FakeProcedureStartRepository(template: ProcedureTemplateDetail.demo[1]))
-        #expect(viewModel.summary == "7 supplies · all in stock. Add or remove items before you start.")
+        #expect(viewModel.summary == "7 supplies\u{00A0}· all in stock. Add or remove items before you start.")
     }
 
     @Test func aMissingTemplateShowsTheError() async {

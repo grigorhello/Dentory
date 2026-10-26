@@ -64,7 +64,7 @@ struct BatchViewModelTests {
             productID: ProductSummary.demo[0].id, batchID: nil, expiryMonth: december, quantity: 4, lot: "C17"
         )])
         #expect(viewModel.saved == .init(
-            title: "Expiry saved", detail: "Septocaine 4% 1:100,000 · 4 cartridges · Dec 2026"
+            title: "Expiry saved", detail: "Septocaine 4% 1:100,000\u{00A0}· 4 cartridges\u{00A0}· Dec 2026"
         ))
     }
 
