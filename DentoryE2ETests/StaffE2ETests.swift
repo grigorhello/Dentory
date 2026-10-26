@@ -1,8 +1,9 @@
 import XCTest
 
 /// Staff login cannot see admin controls (MS-136, PRD §2): Michael, the demo clinic's Staff member, signs in on the
-/// local stack and finds every screen without what only admins do (Receive delivery, Mark disposed, New product, Edit
-/// product, template editing, Mark as ordered, Clinic settings, Billing, Export CSV, Invite), while what Staff do stays.
+/// local stack and finds no screen with what only admins do (Receive delivery, Mark disposed, New product, Edit
+/// product, template editing, Mark as ordered, Clinic settings, Billing, Export CSV, Invite); what Staff do is still
+/// there.
 final class StaffE2ETests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
