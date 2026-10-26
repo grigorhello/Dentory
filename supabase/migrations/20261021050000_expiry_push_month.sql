@@ -11,7 +11,8 @@
 
 alter table public.push_outbox add column expiry_month date;
 comment on column public.push_outbox.expiry_month is
-  'The batch''s month when an expiring push was queued: a batch pushes once per month. Null for the other kinds.';
+  'The batch''s month when an expiring push was queued: a batch pushes once per month. Null for the other kinds, and '
+  'for a push queued before this column whose batch has moved to a later month since.';
 
 -- Pushes queued before this fix get the month their batch has now, unless that month was more than 30 days away on
 -- the day the push was queued: such a batch has been moved to a later month since, so its push was for another
@@ -41,12 +42,14 @@ declare
   v_expiry_month date;
 begin
   if new.kind = 'expiring' then
+    if new.threshold_days <> 30 then
+      return null;
+    end if;
     select b.expiry_month into v_expiry_month from public.batches b where b.id = new.batch_id;
-    if new.threshold_days <> 30
-       or exists (
-         select 1 from public.push_outbox o
-         where o.batch_id = new.batch_id and o.kind = 'expiring' and o.expiry_month = v_expiry_month
-       ) then
+    if exists (
+      select 1 from public.push_outbox o
+      where o.batch_id = new.batch_id and o.kind = 'expiring' and o.expiry_month = v_expiry_month
+    ) then
       return null;
     end if;
   elsif new.kind = 'invoice_ready' then
