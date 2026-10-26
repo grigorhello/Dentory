@@ -94,9 +94,8 @@ final class InvoiceViewModel {
         await follow()
     }
 
-    /// Reads the invoice again (back in the foreground, a choice or a discard the server refused): its lines as they
-    /// are now, or the news that it was received, set aside or (by Undo) put back meanwhile. A read that fails keeps
-    /// what is shown.
+    /// Reads the invoice again (back in the foreground, a choice or a discard refused): its lines as they are now, or
+    /// that it was received, set aside or (by Undo) put back meanwhile. A read that fails keeps what is shown.
     func refresh() async {
         guard state == .ready || state == .received || state == .failed else { return }
         guard let current = try? await repository.invoice(id: invoiceID) else { return }
@@ -117,13 +116,11 @@ final class InvoiceViewModel {
         attempt += 1
     }
 
-    /// Receive manually instead, and Receive manually after a failed reading: the upload stops for good, and once it
-    /// has stopped the invoice is set aside, so its reading, when it ends, raises no delivery waiting for review to be
-    /// received a second time, and a reading that failed leaves Continue reviewing. Pages that had not become an
-    /// invoice, and an invoice whose reading failed, show as set aside when the admin comes back; an invoice being read
-    /// shows what the server says of it. Best effort: the admin is on Receive manually by then, and an invoice that
-    /// could not be set aside (no connection) stays in Continue reviewing until it is discarded there (MS-130), so
-    /// nothing is shown for it.
+    /// Receive manually instead, and Receive manually after a failed reading: the upload stops for good, then the
+    /// invoice is set aside, so a reading that ends later raises no delivery to receive twice and a failed one leaves
+    /// Continue reviewing. Pages that never became an invoice, and a failed invoice, show as set aside on coming back;
+    /// one being read shows what the server says. Best effort: one that could not be set aside (no connection) stays in
+    /// Continue reviewing until it is discarded there (MS-130), so nothing is shown for it.
     func setAside() {
         needsUpload = false
         let submission = submission

@@ -82,7 +82,7 @@ extension InvoiceReviewViewModel {
     /// nothing), else "Resolve every line to continue."
     var summary: String {
         guard allResolved else { return "Resolve every line to continue." }
-        let receiving = lines.filter(\.receivesStock).count
+        let receiving = lines.count(where: \.receivesStock)
         return "\(receiving) of \(lines.count) \(lines.count == 1 ? "line" : "lines") will increase inventory."
     }
 

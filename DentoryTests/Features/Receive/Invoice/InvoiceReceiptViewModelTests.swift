@@ -134,6 +134,19 @@ struct InvoiceReceiptViewModelTests {
         #expect(!viewModel.isConfirming)
     }
 
+    @Test func nothingOnTheLinesChangesWhileTheDeliveryIsReceived() async {
+        let repository = FakeInvoiceRepository()
+        let viewModel = make(repository)
+        let skipped = viewModel.lines[3]
+        repository.duringConfirm = {
+            await viewModel.reopen(skipped)
+            await MainActor.run { viewModel[lotOf: InvoiceLine.septo.id] = "B441" }
+        }
+        await viewModel.confirm()
+        #expect(repository.calls == [.confirm(invoiceID)], "No line is reopened or given a lot mid-receipt")
+        #expect(viewModel[lotOf: InvoiceLine.septo.id].isEmpty)
+    }
+
     @Test func undoHandsTheActionBackAndSaysWhatWentWrong() async {
         let repository = FakeInvoiceRepository()
         let viewModel = make(repository)

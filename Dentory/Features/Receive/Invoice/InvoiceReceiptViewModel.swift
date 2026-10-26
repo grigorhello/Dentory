@@ -46,7 +46,7 @@ final class InvoiceReceiptViewModel {
         self.reload = reload
     }
 
-    /// Receives the delivery as `lines` stand on the server: the products they increase make the toast's count.
+    /// Receives the delivery the lines describe: the products they increase make the toast's count.
     func receive(_ lines: [InvoiceLine]) async {
         generalError = nil
         do {
@@ -98,8 +98,8 @@ final class InvoiceReceiptViewModel {
     private func event(for lines: [InvoiceLine]) -> AnalyticsEvent {
         let seconds = uploadedAt.map { max(Int(clock.now.timeIntervalSince($0).rounded()), 0) } ?? 0
         return .invoiceConfirmed(
-            lines: lines.count, matched: lines.filter { $0.readState == .matched }.count,
-            created: lines.filter { $0.state == .created }.count, seconds: seconds
+            lines: lines.count, matched: lines.count(where: { $0.readState == .matched }),
+            created: lines.count(where: { $0.state == .created }), seconds: seconds
         )
     }
 }

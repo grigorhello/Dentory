@@ -2,11 +2,13 @@ import XCTest
 
 /// Confirm & receive (f23, MS-131) on the demo clinic's Patterson invoice: with every line resolved, the delivery is
 /// received and Inventory opens with "Delivery received · Inventory increased for 3 products." over Septocaine's 250
-/// more cartridges; Receive delivery no longer lists the invoice; and the toast's Undo takes the delivery back out and
-/// puts the invoice back in review.
+/// more cartridges; Receive delivery no longer lists the invoice; the toast's Undo takes the delivery back out and
+/// puts the invoice back in review; and Activity's History opens the received invoice read-only.
 final class InvoiceConfirmUITests: XCTestCase {
     private let invoice = "receive.continue[00000000-0000-4000-8000-000000000401]"
     private let septocaineID = "00000000-0000-4000-8000-0000000000d1"
+    /// The demo History's receipt from Patterson's INV-10092.
+    private let receiptRow = "activity.row[00000000-0000-4000-8000-0000000000f3]"
 
     override func setUp() {
         continueAfterFailure = false
@@ -107,5 +109,37 @@ final class InvoiceConfirmUITests: XCTestCase {
         row.tap()
         XCTAssertTrue(app.buttons["receive.photo"].waitForExistence(timeout: 5), "Receive delivery did not open")
         XCTAssertTrue(app.buttons[invoice].waitForNonExistence(timeout: 5), "The received invoice is still listed")
+    }
+
+    /// The ticket: opening a confirmed invoice later, from Activity, shows it read-only.
+    @MainActor
+    func testAReceivedInvoiceOpensReadOnlyFromActivity() {
+        let app = openInvoice()
+        resolveEveryLine(in: app)
+        app.buttons["invoice.confirm"].tap()
+        XCTAssertTrue(app.staticTexts["inv.header.title"].waitForExistence(timeout: 5), "Inventory did not open")
+
+        app.buttons["tab.home"].tap()
+        let bell = app.buttons["home.header.bell"]
+        XCTAssertTrue(bell.waitForExistence(timeout: 5), "No bell")
+        bell.tap()
+        XCTAssertTrue(app.buttons["History"].waitForExistence(timeout: 5), "Activity did not open")
+        app.buttons["History"].tap()
+        let receipt = app.buttons[receiptRow]
+        for _ in 0..<3 where !(receipt.exists && receipt.isHittable) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(receipt.waitForExistence(timeout: 5), "The receipt does not open its invoice")
+        receipt.tap()
+
+        let notice = app.staticTexts["invoice.received"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 5), "The invoice did not open as received")
+        XCTAssertTrue(notice.label.hasPrefix("Received · Oct 2 · "), "The notice reads \(notice.label)")
+        XCTAssertTrue(notice.label.hasSuffix(" · Sarah"), "The notice reads \(notice.label)")
+        XCTAssertEqual(app.staticTexts["invoice.line[1].batch"].label, "No expiry")
+        XCTAssertFalse(app.textFields["invoice.line[1].lot"].exists, "A received line takes a lot")
+        XCTAssertFalse(app.buttons["invoice.line[4].undo"].exists, "A received line reopens")
+        XCTAssertFalse(app.buttons["invoice.confirm"].exists, "A received invoice is confirmed again")
+        XCTAssertFalse(app.buttons["invoice.menu"].exists, "A received invoice can be discarded")
     }
 }

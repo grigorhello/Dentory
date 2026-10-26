@@ -8,7 +8,7 @@
 -- takes the invoice's, and the invoice is confirmed, which closes its delivery alert. Undo (D10: the same person,
 -- within 10 seconds) puts all of it back through undo_action, and the invoice waits for review again. A received
 -- invoice keeps its photo or file: discarding it was refused already (MS-129), and deleting or replacing its pages is
--- refused now too.
+-- refused now too. Activity's History names the invoice each receipt came from, so an admin opens it there, read-only.
 
 -- What a confirmation changed besides stock, so that its Undo puts it back -----------------------------------------------
 
@@ -19,6 +19,9 @@ alter table public.invoices
   -- buy suggestion of theirs was removed), their open To buy lines, and the supplier aliases it learned (product_id
   -- null) or pointed at another product (the product before).
   add column confirm_undo jsonb;
+-- Undo finds the invoice by its action; the pages' policies find a received invoice by its folder.
+create index invoices_confirm_action_idx on public.invoices (confirm_action_id) where confirm_action_id is not null;
+create index invoices_confirmed_path_idx on public.invoices (storage_path) where status = 'confirmed';
 
 -- Counted units -----------------------------------------------------------------------------------------------------------
 
@@ -288,7 +291,9 @@ grant execute on function public.invoice_confirm(uuid, uuid) to authenticated, s
 -- refresh finds its To buy line as it was): the To buy lines the delivery's own refresh opened for a product still low
 -- go, the lines it received are to buy or ordered again (a line to buy only while none other is), each product's last
 -- unit cost, supplier and removed suggestion are as before, the aliases it learned are forgotten and those it pointed
--- elsewhere point back, and the invoice waits for review again with its delivery alert open.
+-- elsewhere point back, and the invoice waits for review again with its delivery alert open. A delivery whose dated
+-- batch was partly used since (a procedure within the 10 seconds) stays received: taking it back would leave a dated
+-- batch below zero (MS-100 D9), so Undo refuses with a sentence instead of reversing part of it.
 create function engine.invoice_confirm_undo(p_action_id uuid)
 returns void
 language plpgsql
@@ -303,6 +308,14 @@ begin
     return;
   end if;
   v_undo := coalesce(v_invoice.confirm_undo, '{}');
+  if exists (
+    select 1 from public.transactions t join public.batches b on b.id = t.batch_id
+    where t.action_id = p_action_id and b.expiry_month is not null
+    group by b.id, b.qty
+    having b.qty < sum(t.delta)
+  ) then
+    perform engine.fail('22023', 'Some of this delivery was used already, so it stays received.');
+  end if;
   perform 1 from public.products p
   where p.id in (select (x ->> 'id')::uuid from jsonb_array_elements(coalesce(v_undo -> 'products', '[]')) x)
   order by p.id
@@ -463,3 +476,90 @@ create policy invoices_admin_update on storage.objects for update to authenticat
     and public.is_admin((storage.foldername(name))[1]::uuid)
     and coalesce(public.clinic_can_write((storage.foldername(name))[1]::uuid), false)
   );
+
+-- Activity's History opens the invoice a receipt came from ------------------------------------------------------------
+
+-- MS-134's activity_history, unchanged but for each row's invoice: the one an invoice's receiving row came from, so an
+-- admin opens the delivery from History and sees it as it was received (read-only); null for every other row, an Undo
+-- of the receipt included. A function's columns change only by creating it again, with its grants.
+drop function public.activity_history(uuid, text, uuid, uuid, integer);
+create function public.activity_history(
+  p_clinic_id uuid,
+  p_filter text default null,
+  p_product_id uuid default null,
+  p_after_id uuid default null,
+  p_limit integer default 50
+)
+returns table (
+  id uuid,
+  at timestamptz,
+  type public.transaction_type,
+  subject text,
+  product_id uuid,
+  delta numeric,
+  qty_before numeric,
+  qty_after numeric,
+  ref_type public.transaction_ref_type,
+  ref_label text,
+  reason text,
+  note text,
+  is_edit boolean,
+  by_name text,
+  invoice_id uuid
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with filtered as (
+    select t.*, p.name as product_name,
+           p_product_id is null and t.type in ('procedure', 'cancellation') and t.ref_type = 'procedure_event'
+             as grouped
+    from public.transactions t
+    join public.products p on p.id = t.product_id
+    where t.clinic_id = p_clinic_id
+      and (p_product_id is null or t.product_id = p_product_id)
+      and case p_filter
+        when 'receiving' then t.type = 'receiving'
+        when 'procedures' then t.type in ('procedure', 'cancellation')
+        when 'counts' then t.type = 'count'
+        when 'adjustments' then t.type in ('adjustment', 'disposal')
+        else true
+      end
+  ),
+  listed as (
+    select f.action_id as id, min(f.at) as at, min(f.type::text)::public.transaction_type as type,
+           min(e.name) as subject, null::uuid as product_id, sum(f.delta) as delta,
+           null::numeric as qty_before, null::numeric as qty_after,
+           'procedure_event'::public.transaction_ref_type as ref_type, min(e.name) as ref_label,
+           null::text as reason, max(f.note) as note,
+           bool_and(f.type = 'procedure' and f.action_id <> f.ref_id) as is_edit,
+           min(f.by_user::text)::uuid as by_user, null::uuid as invoice_id
+    from filtered f
+    join public.procedure_events e on e.id = f.ref_id
+    where f.grouped
+    group by f.action_id
+    union all
+    select f.id, f.at, f.type, f.product_name, f.product_id, f.delta, f.qty_before, f.qty_after,
+           f.ref_type, f.ref_label, f.reason, f.note, false, f.by_user,
+           case when f.ref_type = 'invoice' then f.ref_id end
+    from filtered f
+    where not f.grouped
+  ),
+  after_row as (
+    select coalesce(
+      (select t.at from public.transactions t where t.id = p_after_id and t.clinic_id = p_clinic_id),
+      (select min(t.at) from public.transactions t where t.action_id = p_after_id and t.clinic_id = p_clinic_id)
+    ) as at
+  )
+  select l.id, l.at, l.type, l.subject, l.product_id, l.delta, l.qty_before, l.qty_after, l.ref_type, l.ref_label,
+         l.reason, l.note, l.is_edit, coalesce(m.full_name, ''), l.invoice_id
+  from listed l
+  left join public.memberships m on m.clinic_id = p_clinic_id and m.user_id = l.by_user
+  where p_after_id is null or (l.at, l.id) < ((select a.at from after_row a), p_after_id)
+  order by l.at desc, l.id desc
+  limit least(greatest(coalesce(p_limit, 50), 1), 100);
+$$;
+revoke execute on function public.activity_history(uuid, text, uuid, uuid, integer) from public, anon;
+grant execute on function public.activity_history(uuid, text, uuid, uuid, integer) to authenticated, service_role;

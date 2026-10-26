@@ -23,14 +23,7 @@ struct InvoiceLineDetails: View {
             )
             .padding(.top, Spacing.xxs)
         } else if line.increasesInventory, viewModel.isReceived {
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                ListDivider()
-                Text(viewModel.receivedBatch(for: line))
-                    .textStyle(.body14)
-                    .foregroundStyle(Color.ms.textBody)
-                    .accessibilityIdentifier("\(identifier).batch")
-            }
-            .padding(.top, Spacing.xs)
+            InvoiceLineReceivedBatch(text: viewModel.receivedBatch(for: line), identifier: identifier)
         } else if line.increasesInventory {
             InvoiceLineBatchRow(viewModel: viewModel, line: line, identifier: identifier)
         } else if line.state == .skipped, !viewModel.isReceived {

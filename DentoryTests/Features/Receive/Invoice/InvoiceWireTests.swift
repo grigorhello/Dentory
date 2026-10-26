@@ -3,8 +3,15 @@ import Testing
 @testable import Dentory
 
 /// `invoice_detail` and `invoice_create` decode straight into `InvoiceSummary`, and the line functions into
-/// `InvoiceLine`, as the local database answers them.
+/// `InvoiceLine`, as the local database answers them; `invoice_confirm` takes the invoice (MS-131).
 struct InvoiceWireTests {
+    @Test func aConfirmationSendsItsInvoice() throws {
+        let invoiceID = UUID()
+        let data = try JSONEncoder.supabase.encode(InvoiceConfirmParams(pInvoiceId: invoiceID))
+        let object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: String])
+        #expect(object == ["p_invoice_id": invoiceID.uuidString], "The coordinator adds p_idempotency_key")
+    }
+
     @Test func anInvoiceToReviewDecodesWithItsLines() throws {
         let json = #"""
         {"id": "d0000000-0000-4000-8000-000000000401", "total": 449.00, "number": "INV-10092", "source": "camera",

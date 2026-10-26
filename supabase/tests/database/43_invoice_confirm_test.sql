@@ -4,9 +4,10 @@
 -- empty supplier and confirms the invoice; a replay answers the first action; Undo within 10 seconds, by the same admin,
 -- puts every quantity and all the rest back and the invoice waits for review again; a received invoice keeps its pages
 -- and refuses a discard, a line change and a second confirmation; only an admin of a clinic that may write receives, an
--- unresolved line or a deleted product stops it, and a delivery in another currency keeps the clinic's cost.
+-- unresolved line or a deleted product stops it, and a delivery in another currency keeps the clinic's cost; Activity's
+-- History names the invoice each receipt came from.
 begin;
-select plan(52);
+select plan(56);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000131001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@confirm.test'),
@@ -226,6 +227,15 @@ select is((select format('%s · %s · %s', d ->> 'status', d ->> 'confirmed_by_n
   'confirmed · Sarah Mitchell · true', 'invoice_detail says when it was received and by whom, for the read-only screen');
 
 -- A received invoice stays as it is -------------------------------------------------------------------------------------
+select results_eq(
+  $$ select subject, invoice_id from public.activity_history('00000000-0000-4000-8000-000000131011', 'receiving')
+     order by subject $$,
+  $$ values ('Endo file kit #15-40', '00000000-0000-4000-8000-000000131031'::uuid),
+            ('Nitrile gloves M', '00000000-0000-4000-8000-000000131031'::uuid),
+            ('Rubber dam latex-free', '00000000-0000-4000-8000-000000131031'::uuid),
+            ('Septocaine 4% 1:100,000', '00000000-0000-4000-8000-000000131031'::uuid),
+            ('Tempbond NE', '00000000-0000-4000-8000-000000131031'::uuid) $$,
+  'Activity''s History names the invoice each receipt came from, for the admin to open it read-only');
 select is(public.invoice_confirm('00000000-0000-4000-8000-000000131031', pg_temp.k('10')), current_setting('test.confirm')::uuid,
   'the same key answers the first action');
 select throws_ok($$ select public.invoice_confirm('00000000-0000-4000-8000-000000131031', pg_temp.k('11')) $$,
@@ -260,6 +270,16 @@ select results_eq(
   'with the same words, both lines are Matched: the endo kit that was a Possible match, and the product created (the acceptance criterion)');
 
 -- Undo --------------------------------------------------------------------------------------------------------------------
+-- A delivery partly used within its 10 seconds stays received: its dated batch would go below zero.
+savepoint used;
+select pg_temp.act_as('00000000-0000-4000-8000-000000131001');
+select lives_ok($$ select public.stock_adjust(pg_temp.p('21'), 10, 'Physical count', null, pg_temp.k('30')) $$,
+  'a count takes Septocaine down to 10 within the 10 seconds, into the cartridges just received');
+select throws_ok($$ select public.undo_action(current_setting('test.confirm')::uuid, pg_temp.k('31')) $$,
+  '22023', 'Some of this delivery was used already, so it stays received.', 'so Undo refuses rather than take back part of it');
+reset role;
+rollback to savepoint used;
+
 select pg_temp.act_as('00000000-0000-4000-8000-000000131005');
 select throws_ok($$ select public.undo_action(current_setting('test.confirm')::uuid, pg_temp.k('20')) $$,
   '42501', 'only the person who did it can undo it', 'another admin does not undo Sarah''s delivery (MS-100 D10)');
@@ -272,6 +292,9 @@ select is(pg_temp.products(), (select products from before_confirm),
 select is((select format('%s rows · %s · %s', count(*), sum(delta), min(ref_label)) from public.transactions
     where action_id = current_setting('test.undo')::uuid and ref_type = 'undo' and ref_id = current_setting('test.confirm')::uuid),
   '5 rows · -280.00 · Undo · Invoice INV-10092', 'as reversal rows in the ledger, which keeps the delivery');
+select is((select count(*)::integer from public.activity_history('00000000-0000-4000-8000-000000131011', 'receiving')
+    where ref_type = 'undo' and invoice_id is null), 5,
+  'History lists the reversals too, which open no invoice');
 select is(pg_temp.to_buy(), (select to_buy from before_confirm),
   'the To buy lines are back as they were, and the one the delivery opened again is gone');
 select is((select bool_or(to_buy_dismissed) from public.products where id in (pg_temp.p('22'), pg_temp.p('24'))), false,

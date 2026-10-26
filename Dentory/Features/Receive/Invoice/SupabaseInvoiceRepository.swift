@@ -127,8 +127,3 @@ struct SupabaseInvoiceRepository: InvoiceRepository {
         }
     }
 }
-
-/// The parameters of `invoice_confirm`; the coordinator adds `p_idempotency_key`.
-nonisolated struct InvoiceConfirmParams: Encodable, Sendable {
-    let pInvoiceId: UUID
-}

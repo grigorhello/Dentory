@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Activity (f8, f9), pushed from Home's bell: "Alerts · N", the open alerts in one card with a dot, a sentence, when
 /// it opened and a chevron to what resolves it ("Nothing needs attention." when all is well); and History, every
-/// stock change by day.
+/// stock change by day, where an admin opens the invoice a receipt came from (MS-131).
 struct ActivityView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -25,6 +25,8 @@ struct ActivityView: View {
                 switch route {
                 case .product(let productID):
                     ProductDetailView(productID: productID, session: session, dependencies: dependencies)
+                case .invoice(let invoiceID):
+                    InvoiceView(invoiceID: invoiceID, session: session, dependencies: dependencies)
                 }
             }
     }
@@ -36,7 +38,7 @@ struct ActivityView: View {
         case .alerts:
             alerts
         case .history:
-            ActivityHistoryList(viewModel: history)
+            ActivityHistoryList(viewModel: history, onOpenInvoice: openInvoice)
         }
     }
 
@@ -72,6 +74,11 @@ struct ActivityView: View {
         if viewModel.segment == .history {
             await history.load()
         }
+    }
+
+    /// A receipt's invoice, from History: as it was received, read-only, or its lines to review again after an Undo.
+    private func openInvoice(_ invoiceID: UUID) {
+        router.push(ActivityRoute.invoice(invoiceID))
     }
 
     /// A delivery opens on Review invoice for its invoice, over Receive delivery, where Back leads (MS-130); receiving

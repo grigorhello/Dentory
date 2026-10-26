@@ -127,7 +127,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
                 let counted = qty * Decimal(countedPerUnit(line, productID: productID))
                 _ = store?.receive(counted, of: productID, dated: line.expiryMonth != nil)
             }
-            invoices[invoiceID] = Self.invoice(invoice, status: .confirmed, receivedAt: .now)
+            invoices[invoiceID] = Self.invoice(invoice, status: .confirmed, receivedAt: Session.demoNow)
             return .applied(actionID: actionID)
         }
     }

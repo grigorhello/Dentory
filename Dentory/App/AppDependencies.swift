@@ -231,12 +231,13 @@ struct AppDependencies: Sendable {
         )
     }
 
-    /// Activity's History of the signed-in clinic, or of one product from Product detail's Show all (MS-134).
+    /// Activity's History of the signed-in clinic, or of one product from Product detail's Show all (MS-134); an
+    /// admin's History on Activity opens the invoice a receipt came from (MS-131).
     @MainActor
     func makeActivityHistoryViewModel(session: Session, productID: UUID?) -> ActivityHistoryViewModel {
         ActivityHistoryViewModel(
             repository: activityRepository, cache: cache, formatters: formatters(for: session),
-            clinicID: session.clinicID, productID: productID
+            clinicID: session.clinicID, productID: productID, opensInvoices: session.isAdmin && productID == nil
         )
     }
 

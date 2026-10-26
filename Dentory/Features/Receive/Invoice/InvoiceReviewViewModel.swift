@@ -8,36 +8,11 @@ import Observation
 /// the lot and expiry month of a Matched or Created line are saved a moment after the last change
 /// (`InvoiceReviewViewModel+Batch.swift`). Every choice is saved on the server, so the admin can leave and come back.
 /// Confirm & receive waits for every line to be resolved, then receives the delivery (`receipt`, MS-131); a received
-/// invoice opened later shows its lines read-only. The words are in `InvoiceReviewViewModel+Copy.swift`.
+/// invoice opened later shows its lines read-only. Its sheet, choices and toasts are in
+/// `InvoiceReviewViewModel+Types.swift`, the words in `InvoiceReviewViewModel+Copy.swift`.
 @MainActor
 @Observable
 final class InvoiceReviewViewModel {
-    /// The sheet over the lines.
-    enum Sheet: Identifiable, Equatable {
-        /// Which product is this? (Appendix C `match`), from a New product's Pick existing or a fee's Pick product.
-        case match(InvoiceLine)
-        /// New product from the line (Appendix C `newProduct`), from Add new or No, create new.
-        case newProduct(InvoiceLine)
-
-        var id: String {
-            switch self {
-            case .match(let line): "match-\(line.id)"
-            case .newProduct(let line): "newProduct-\(line.id)"
-            }
-        }
-    }
-
-    /// A choice a line waits for (Appendix B `invoice.line[n].a` and `.b`).
-    enum Choice: Equatable {
-        case yesMatch, createNew, addNew, pickExisting, ignore, pickProduct
-    }
-
-    /// A toast the screen shows.
-    struct Message: Equatable {
-        let title: String
-        let detail: String?
-    }
-
     private(set) var lines: [InvoiceLine]
     var sheet: Sheet?
     /// Lines whose choice is being saved; their buttons wait meanwhile.
@@ -172,13 +147,14 @@ final class InvoiceReviewViewModel {
 
     /// Saves one line's choice and shows the line the server answers. A refusal (the line already resolved, a product
     /// deleted, the invoice received or set aside meanwhile) shows as a toast and the invoice is read again; a failed
-    /// connection leaves the line as it was for the admin to try again. Nothing changes on a received invoice.
+    /// connection leaves the line as it was for the admin to try again. Nothing changes on a received invoice, nor
+    /// while it is being received.
     @discardableResult
     private func save(
         _ line: InvoiceLine, attempts: Int = 1,
         _ operation: (InvoiceLinesRepository) async throws -> InvoiceLine
     ) async -> InvoiceLine? {
-        guard !isReceived, !savingLineIDs.contains(line.id) else { return nil }
+        guard !isReceived, !isConfirming, !savingLineIDs.contains(line.id) else { return nil }
         savingLineIDs.insert(line.id)
         defer { savingLineIDs.remove(line.id) }
         var failure = AppError.unknown("Not saved")
@@ -199,9 +175,10 @@ final class InvoiceReviewViewModel {
         return nil
     }
 
-    /// A change to a line's lot or expiry (`InvoiceReviewViewModel+Batch.swift`), saved a moment after the last one.
+    /// A change to a line's lot or expiry (`InvoiceReviewViewModel+Batch.swift`), saved a moment after the last one;
+    /// none once the delivery is received or while it is.
     func changeBatch(of id: UUID, _ change: (inout InvoiceLine) -> Void) {
-        guard !isReceived, let index = lines.firstIndex(where: { $0.id == id }) else { return }
+        guard !isReceived, !isConfirming, let index = lines.firstIndex(where: { $0.id == id }) else { return }
         guard !isReadOnly else {
             refusedChanges += 1
             return
