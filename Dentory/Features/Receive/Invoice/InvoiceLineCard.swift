@@ -22,8 +22,8 @@ struct InvoiceLineCard: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityIdentifier("\(identifier).raw")
                     InvoiceLineBadge(
-                        line: line, canReopen: viewModel.canReopen(line), identifier: "\(identifier).state",
-                        onReopen: reopen
+                        line: line, action: viewModel.badgeAction(for: line), identifier: "\(identifier).state",
+                        onTap: tapBadge
                     )
                 }
                 HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
@@ -54,7 +54,14 @@ struct InvoiceLineCard: View {
         }
     }
 
-    /// The badge of a resolved line, or Undo on a skipped one.
+    /// The badge: the line reopens, or Which product is this? opens for it.
+    private func tapBadge() {
+        writeAccess.perform {
+            Task { await viewModel.tapBadge(on: line) }
+        }
+    }
+
+    /// Undo on a skipped line.
     private func reopen() {
         writeAccess.perform {
             Task { await viewModel.reopen(line) }

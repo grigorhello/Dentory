@@ -1,8 +1,8 @@
 import Foundation
 
 /// What Review invoice's lines say (f23, PRD §6.5, Appendix B `invoice`, the ticket's wording): each state's line and
-/// question, the amounts as read, the two choices a line waits for, the Lot and Expiry inputs (as text once the
-/// invoice is received, MS-131), and the summary over Confirm & receive. The state and the intents are in
+/// question, the amounts as read, the two choices a line waits for, what a badge does, the Lot and Expiry inputs (as
+/// text once the invoice is received, MS-131), and the summary over Confirm & receive. The state and the intents are in
 /// `InvoiceReviewViewModel.swift`.
 extension InvoiceReviewViewModel {
     static let expiryLabel = "Expiry"
@@ -76,6 +76,14 @@ extension InvoiceReviewViewModel {
     /// The primary button of a pair; Ignore is tertiary like its partner (f23).
     static func isPrimary(_ choice: Choice) -> Bool {
         choice == .yesMatch || choice == .addNew
+    }
+
+    /// What VoiceOver says a line's badge does.
+    static func badgeHint(_ action: BadgeAction) -> String {
+        switch action {
+        case .reopen: "Reopens the line"
+        case .pickAnother: "Picks another product for this line"
+        }
     }
 
     /// "3 of 4 lines will increase inventory." once every line is resolved (a line without a quantity increases

@@ -3,7 +3,8 @@ import Testing
 @testable import Dentory
 
 /// `invoice_detail` and `invoice_create` decode straight into `InvoiceSummary`, and the line functions into
-/// `InvoiceLine`, as the local database answers them; `invoice_confirm` takes the invoice (MS-131).
+/// `InvoiceLine` (with the product a line was read as, the fix on #101), as the local database answers them;
+/// `invoice_confirm` takes the invoice (MS-131).
 struct InvoiceWireTests {
     @Test func aConfirmationSendsItsInvoice() throws {
         let invoiceID = UUID()
@@ -22,12 +23,13 @@ struct InvoiceWireTests {
            "raw": "SEPTO 4% 1:100K 50/BX", "kind": "product", "unit": "boxes", "state": "matched", "line_total": 249.00,
            "product_id": "d0000000-0000-4000-8000-000000000201", "read_state": "matched", "unit_price": 49.8000,
            "expiry_month": "2028-03-01", "product_name": "Septocaine 4% 1:100,000", "suggested_name": "Septo 4% 1:100K",
-           "suggested_unit": "boxes", "suggested_product_id": null, "suggested_product_name": null},
+           "suggested_unit": "boxes", "suggested_product_id": null, "suggested_product_name": null,
+           "read_product_id": "d0000000-0000-4000-8000-000000000201"},
           {"n": 4, "id": "ad4e1068-941b-42ae-be4f-d50ca3237ab4", "lot": null, "qty": 1.00,
            "raw": "HANDLING / FUEL SURCHARGE", "kind": "fee", "unit": null, "state": "skipped", "line_total": 4.80,
            "product_id": null, "read_state": "needs_review", "unit_price": 4.8000, "expiry_month": null,
            "product_name": null, "suggested_name": "Handling / fuel surcharge", "suggested_unit": "units",
-           "suggested_product_id": null, "suggested_product_name": null}]}
+           "suggested_product_id": null, "suggested_product_name": null, "read_product_id": null}]}
         """#
         let invoice = try JSONDecoder.supabase.decode(InvoiceSummary.self, from: Data(json.utf8))
         #expect(invoice.lines.count == 2)
@@ -35,6 +37,7 @@ struct InvoiceWireTests {
         #expect(septo.number == 1)
         #expect(septo.state == .matched && septo.readState == .matched)
         #expect(septo.productID == UUID(uuidString: "d0000000-0000-4000-8000-000000000201"))
+        #expect(septo.readProductID == septo.productID && !septo.isMatchChanged && septo.canPickAnother)
         #expect(septo.productName == "Septocaine 4% 1:100,000")
         #expect(septo.qty == 5 && septo.unitPrice == Decimal(string: "49.8") && septo.lineTotal == 249)
         #expect(septo.lot == "B441" && septo.expiryMonth == CalendarDay(year: 2028, month: 3, day: 1))
@@ -58,6 +61,19 @@ struct InvoiceWireTests {
         #expect(line.suggestedProductID == UUID(uuidString: "d0000000-0000-4000-8000-000000000202"))
         #expect(line.suggestedProductName == "Endo file kit #15-40")
         #expect(line.productID == nil)
+    }
+
+    /// A line read as Matched whose product the admin changed (the decision on #101): the product it is on, and the one
+    /// it was read as, which its badge reopens it to.
+    @Test func aChangedLineDecodesWithTheProductItWasReadAs() throws {
+        let json = #"""
+        {"n": 1, "id": "ec29548f-c54b-4241-a568-2ef0e40c543f", "raw": "SEPTO 4% 1:100K 50/BX", "kind": "product",
+         "state": "matched", "read_state": "matched", "product_id": "d0000000-0000-4000-8000-000000000203",
+         "product_name": "Composite A2", "read_product_id": "d0000000-0000-4000-8000-000000000201"}
+        """#
+        let line = try JSONDecoder.supabase.decode(InvoiceLine.self, from: Data(json.utf8))
+        #expect(line.readProductID == UUID(uuidString: "d0000000-0000-4000-8000-000000000201"))
+        #expect(line.isMatchChanged && line.canReopen && !line.canPickAnother)
     }
 
     @Test func everyLineStateTheServerKeepsDecodes() throws {

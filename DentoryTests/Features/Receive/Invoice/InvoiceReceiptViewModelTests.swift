@@ -168,6 +168,17 @@ struct InvoiceReceiptViewModelTests {
         #expect(InvoiceReceiptViewModel.receivedDetail(products: 0) == "Nothing was added to inventory.")
     }
 
+    /// A line read as Matched and changed to another product still counts as matched when read: the state a line was
+    /// read in never changes (MS-147, the decision on #101).
+    @Test func aLineChangedFromItsMatchStillCountsAsMatchedWhenRead() async {
+        let analytics = SpyAnalytics()
+        var lines = resolved
+        lines[0] = InvoiceLine.septo.with(.matched, product: ReceivableProduct.composite.id, name: "Composite A2")
+        let viewModel = make(FakeInvoiceRepository(), lines: lines, analytics: analytics)
+        await viewModel.confirm()
+        #expect(analytics.events == [.invoiceConfirmed(lines: 4, matched: 1, created: 1, seconds: 300)])
+    }
+
     @Test func aLineWithoutAQuantityAddsNothing() {
         let backorder = InvoiceLine.line(
             5, "GLOVES BACKORDER", qty: nil, unit: "CS", price: nil, .matched, product: ReceivableProduct.gauze
@@ -187,8 +198,11 @@ struct InvoiceReceiptViewModelTests {
         #expect(viewModel.isReceived)
         #expect(!viewModel.canConfirm, "Nothing left to confirm")
         #expect(!viewModel.canReopen(lines[1]) && lines[1].canReopen, "No badge reopens a line")
+        #expect(viewModel.badgeAction(for: lines[0]) == nil && lines[0].canPickAnother, "nor offers another product")
 
         await viewModel.reopen(lines[1])
+        await viewModel.tapBadge(on: lines[0])
+        #expect(viewModel.sheet == nil)
         await viewModel.perform(.ignore, on: lines[3])
         await viewModel.confirm()
         viewModel[lotOf: lines[1].id] = "E7"

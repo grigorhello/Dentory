@@ -108,7 +108,7 @@ select is((public.invoice_detail('00000000-0000-4000-8000-000000130031') -> 'lin
   jsonb_build_object('n', 1, 'raw', 'SEPTO 4% 1:100K 50/BX', 'qty', 5.00, 'unit', 'boxes', 'unit_price', 49.8000,
     'line_total', 249.00, 'kind', 'product', 'state', 'matched', 'read_state', 'matched',
     'product_id', '00000000-0000-4000-8000-000000130021', 'product_name', 'Septocaine 4% 1:100,000',
-    'suggested_product_id', null, 'suggested_product_name', null, 'suggested_name', 'Septo 4% 1:100K',
+    'read_product_id', '00000000-0000-4000-8000-000000130021', 'suggested_product_id', null, 'suggested_product_name', null, 'suggested_name', 'Septo 4% 1:100K',
     'suggested_unit', 'boxes', 'lot', 'B441', 'expiry_month', '2028-03-01'),
   'a Matched line: what was read, its product, and the lot and expiry month it came with');
 select results_eq(
@@ -204,7 +204,8 @@ select is(public.invoice_line_match('00000000-0000-4000-8000-000000130044', '000
 
 -- Lot and expiry -----------------------------------------------------------------------------------------------------------
 select is(public.invoice_line_batch('00000000-0000-4000-8000-000000130041', '  A112  ', '2027-03-17') - 'id' - 'suggested_name' - 'suggested_unit'
-  - 'raw' - 'qty' - 'unit' - 'unit_price' - 'line_total' - 'kind' - 'n' - 'product_id' - 'suggested_product_id' - 'suggested_product_name',
+  - 'raw' - 'qty' - 'unit' - 'unit_price' - 'line_total' - 'kind' - 'n' - 'product_id' - 'read_product_id' - 'suggested_product_id'
+  - 'suggested_product_name',
   jsonb_build_object('state', 'matched', 'read_state', 'matched', 'product_name', 'Septocaine 4% 1:100,000', 'lot', 'A112',
     'expiry_month', '2027-03-01'),
   'the lot is kept trimmed and the expiry as its month');

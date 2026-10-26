@@ -1,9 +1,10 @@
 import Foundation
 import Observation
 
-/// Which product is this? (Appendix C `match`), over Review invoice for a New product's Pick existing or a fee's Pick
-/// product: the line as read, a search, and the clinic's products, each with its category and stock ("Anesthetic · 54
-/// cartridges"). A tap picks the product, and the line is Matched to it (`InvoiceReviewViewModel.choose`).
+/// Which product is this? (Appendix C `match`), over Review invoice for a New product's Pick existing, a fee's Pick
+/// product, or the badge of a line read as Matched or of a Possible match: the line as read, a search, and the clinic's
+/// products, each with its category and stock ("Anesthetic · 54 cartridges"). A tap picks the product, and the line is
+/// Matched to it (`InvoiceReviewViewModel.choose`).
 @MainActor
 @Observable
 final class InvoiceMatchViewModel {

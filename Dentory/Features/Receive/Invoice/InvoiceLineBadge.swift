@@ -1,17 +1,18 @@
 import SwiftUI
 
-/// A line's state as a small badge (Appendix B `invoice.line[n].state`). On a line the admin resolved it is a button
-/// that reopens the line in the state it was read in, until the invoice is received (MS-131); its target reaches 44 pt
-/// without growing the row.
+/// A line's state as a small badge (Appendix B `invoice.line[n].state`). Until the invoice is received (MS-131) it is a
+/// button wherever it does something: on a line the admin settled, or whose product the admin changed, it reopens the
+/// line as it was read; on a line read as Matched and still on that product, and on a Possible match, it opens Which
+/// product is this? (`InvoiceReviewViewModel+Badge.swift`). Its target reaches 44 pt without growing the row.
 struct InvoiceLineBadge: View {
     let line: InvoiceLine
-    let canReopen: Bool
+    let action: InvoiceReviewViewModel.BadgeAction?
     let identifier: String
-    let onReopen: () -> Void
+    let onTap: () -> Void
 
     var body: some View {
-        if canReopen {
-            Button(action: onReopen) {
+        if let action {
+            Button(action: onTap) {
                 badge
                     .padding(.vertical, Spacing.md)
                     .contentShape(.rect)
@@ -19,7 +20,7 @@ struct InvoiceLineBadge: View {
             .buttonStyle(.plain)
             .padding(.vertical, -Spacing.md)
             .accessibilityLabel(kind.rawValue)
-            .accessibilityHint("Reopens the line")
+            .accessibilityHint(InvoiceReviewViewModel.badgeHint(action))
             .accessibilityIdentifier(identifier)
         } else {
             badge.accessibilityIdentifier(identifier)

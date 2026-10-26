@@ -5,7 +5,8 @@ import Testing
 /// Review invoice's lines (MS-130): what each state says and offers, every choice saved as it is made and answered by
 /// the server, a resolved line reopened in the state it was read in, the lot and expiry saved a moment after the last
 /// change and kept as typed, refusals and lost connections, read-only mode, and Confirm & receive waiting for every
-/// line (receiving itself is in `InvoiceReceiptViewModelTests`).
+/// line (receiving itself is in `InvoiceReceiptViewModelTests`, the badge of a line read as Matched or of a Possible
+/// match in `InvoiceLineBadgeTests`).
 @MainActor
 struct InvoiceReviewViewModelTests {
     private let formatters = ClinicFormatters(
