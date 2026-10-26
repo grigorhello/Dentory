@@ -14,7 +14,10 @@ end in `.example`, and every page says it is a synthetic sample. No real custome
 
 `<name>.json` is the reader's answer for each invoice: the JSON the extraction schema (`../reading.ts`) returns.
 `reading_test.ts` replays these answers through the reading code, so the tests need no API key, and
-`supabase/tests/database/40_invoice_matching_test.sql` matches the lines they give against the demo catalog.
+`supabase/tests/database/40_invoice_matching_test.sql` matches the lines they give against the demo catalog. On the
+local stack, which has no key, `../replay.ts` gives them to `extract_invoice` for the uploaded pages of a fixture, found
+by the SHA-256 of its files (MS-136's end-to-end flows upload `northbridge-inv-10092.pdf` from the app); made again, the
+files need their new `shasum -a 256` there, which `replay_test.ts` asks for.
 The answers were written from the documents' known content, as the schema shapes them. `make invoice-reading-live`
 (with `ANTHROPIC_API_KEY` set) reads the documents with the real API and compares; `RECORD=1 make
 invoice-reading-live` writes the live answers here instead, after which `reading_test.ts` names any block of the

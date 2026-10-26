@@ -14,12 +14,13 @@ Dental inventory app for small clinics, native SwiftUI for iPhone and iPad (iOS 
 | `make project` | Generate `Dentory.xcodeproj` from `project.yml` (XcodeGen) |
 | `make build` | Build the app for the iOS Simulator |
 | `make test` | Run the unit tests (Swift Testing) on the iPhone 16 simulator |
-| `make uitest` | Run the UI tests (XCUITest) on the iPhone 16 simulator |
+| `make uitest` | Run the UI tests (XCUITest) on the iPhone 16 simulator, on the app's demo doubles (`-uiTesting`) |
+| `make e2e` | Run the end-to-end flows (MS-136, `DentoryE2ETests`) on the iPhone 16 simulator against the local stack, which it resets and seeds with the demo clinic first; needs `make db-start` from this checkout |
 | `make lint` | Run SwiftLint in strict mode |
 
 Add `WARNINGS_AS_ERRORS=YES` to fail on any compiler warning (CI does). `SIM_NAME="iPad Pro 11-inch (M4)"` runs the tests on another simulator. CI adds `SPM_FLAGS=-onlyUsePackageVersionsFromResolvedFile` so it builds exactly the committed package versions.
 
-CI (`.github/workflows/ci.yml`) runs `make project lint build test WARNINGS_AS_ERRORS=YES` on every pull request, and the database job below next to it.
+CI (`.github/workflows/ci.yml`) runs `make project lint build test WARNINGS_AS_ERRORS=YES` on every pull request, and the database job below next to it. It compiles the UI tests and the end-to-end flows but runs neither: the flows need the local stack, which GitHub's macOS runners cannot run, so `make e2e` runs on a Mac (`docs/handoff/mac-tooling.md`).
 
 ## Database
 Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one timestamped SQL file per change), `seed.sql` (runs on every reset; empty for now), `seed-demo.sql` (the demo clinic from the design, MS-109), `functions/` (Deno Edge Functions, one folder each), `tests/database/` (pgTAP).

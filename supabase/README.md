@@ -52,9 +52,13 @@ function. The ticket's target, half the readings under 20 seconds, can only be m
   `select percentile_cont(0.5) within group (order by extract(epoch from read_at - created_at)) from invoices where read_at is not null and status in ('ready', 'confirmed') and clinic_id <> 'd0000000-0000-4000-8000-000000000001';`
 
 The tests need no key: `make functions-check` replays the recorded answers (`reading_test.ts`), and
-`40_invoice_matching_test.sql` matches their lines against the demo catalog. Locally, without a key, every reading fails
-with the reason error; to read real invoices on the local stack, put the key in the git-ignored `supabase/functions/.env`
-and run `supabase functions serve --env-file supabase/functions/.env`. Each minute `engine.invoice_reading_timeout`
+`40_invoice_matching_test.sql` matches their lines against the demo catalog. The local stack has no key either: there
+`extract_invoice` reads the five fixture invoices from their recorded answers (`replay.ts`, MS-136), chosen by the
+SHA-256 of the pages, and fails any other pages with the reason error. The app uploads a PDF as it is, so a fixture PDF
+picked on Upload PDF or image is read end to end on the simulator, as `make e2e` does; images are re-encoded as they are
+captured and never match. A hosted project never replays (its `SUPABASE_URL` is not the local gateway, `kong`): without
+its key every reading fails there. To read real invoices on the local stack, put the key in the git-ignored
+`supabase/functions/.env` and run `supabase functions serve --env-file supabase/functions/.env`. Each minute `engine.invoice_reading_timeout`
 fails a reading that never started or ran past its time, so no invoice stays "Reading invoice".
 
 ### Weekly digest (MS-145)

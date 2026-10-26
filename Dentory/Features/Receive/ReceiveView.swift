@@ -81,6 +81,19 @@ struct ReceiveView: View {
     }
 
     private func uploadFile() {
+        #if DEBUG
+        // `-receiveFile <path>`: the file is taken as if picked in Files, Apple's own picker, which the end-to-end flows
+        // cannot drive (MS-136).
+        if let path = UserDefaults.standard.string(forKey: "receiveFile") {
+            let url = URL(filePath: path)
+            writeAccess.perform {
+                Task { await viewModel.capture { () async throws(InvoiceCaptureError) in
+                    try await InvoiceCapture.document(fileAt: url)
+                } }
+            }
+            return
+        }
+        #endif
         writeAccess.perform(viewModel.uploadFile)
     }
 
