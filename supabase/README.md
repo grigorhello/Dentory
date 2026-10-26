@@ -47,8 +47,9 @@ function. The ticket's target, half the readings under 20 seconds, can only be m
   `functions/extract_invoice/fixtures` with the real API (a few cents), checks what comes back against the recorded
   answers and that no personal data came back, and prints each reading's time and the median, which must be under 20
   seconds. `RECORD=1` writes the live answers over the recorded ones instead (`fixtures/README.md`).
-- On a hosted project, the median of real readings, from the upload to the result:
-  `select percentile_cont(0.5) within group (order by extract(epoch from read_at - created_at)) from invoices where read_at is not null;`
+- On a hosted project, the median of real readings, from the upload to the result, counting the invoices read
+  (failed ones have a `read_at` too) and leaving out the demo clinic's seeded invoice:
+  `select percentile_cont(0.5) within group (order by extract(epoch from read_at - created_at)) from invoices where read_at is not null and status in ('ready', 'confirmed') and clinic_id <> 'd0000000-0000-4000-8000-000000000001';`
 
 The tests need no key: `make functions-check` replays the recorded answers (`reading_test.ts`), and
 `40_invoice_matching_test.sql` matches their lines against the demo catalog. Locally, without a key, every reading fails
