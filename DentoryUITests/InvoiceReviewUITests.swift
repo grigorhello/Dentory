@@ -2,11 +2,15 @@ import XCTest
 
 /// Review invoice's lines (f23, MS-130) on the demo clinic's Patterson invoice: the four lines as the frame draws them;
 /// Yes, match, Add new through New product, Ignore and Pick product through Which product is this?; the badge and Undo
-/// reopening a line; every choice, lot and expiry still there after leaving and coming back; Confirm & receive enabled
-/// once every line is resolved; and Discard invoice asking first, then leaving Receive delivery without the invoice.
+/// reopening a line; the badge of the line read as Matched and of the Possible match pointing it at another product
+/// (the decision on #101); every choice, lot and expiry still there after leaving and coming back; Confirm & receive
+/// enabled once every line is resolved; and Discard invoice asking first, then leaving Receive delivery without the
+/// invoice.
 final class InvoiceReviewUITests: XCTestCase {
     private let invoice = "receive.continue[00000000-0000-4000-8000-000000000401]"
     private let glovesID = "00000000-0000-4000-8000-0000000000d5"
+    private let rubberDamID = "00000000-0000-4000-8000-0000000000d7"
+    private let guttaPerchaID = "00000000-0000-4000-8000-0000000000d8"
 
     override func setUp() {
         continueAfterFailure = false
@@ -48,6 +52,18 @@ final class InvoiceReviewUITests: XCTestCase {
             XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: reads, object: element)], timeout: 5),
             .completed, "Line \(number) reads \"\(element.label)\", not \"\(text)\""
         )
+    }
+
+    /// Searches Which product is this? and taps the product, which closes the sheet.
+    @MainActor
+    private func pick(_ search: String, id: String, in app: XCUIApplication) {
+        let field = app.textFields["match.search"].firstMatch
+        field.tap()
+        field.typeText(search)
+        let row = app.buttons["match.row[\(id)]"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "\(search) is not on the list")
+        row.tap()
+        XCTAssertTrue(app.staticTexts["match.title"].waitForNonExistence(timeout: 5), "The sheet stayed open")
     }
 
     @MainActor
@@ -131,15 +147,42 @@ final class InvoiceReviewUITests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 5), "Which product is this? did not open")
         XCTAssertEqual(app.staticTexts["match.title"].label, "Which product is this?")
         XCTAssertEqual(app.staticTexts["match.code"].label, "HANDLING / FUEL SURCHARGE")
-        let search = app.textFields["match.search"].firstMatch
-        search.tap()
-        search.typeText("nitrile")
-        let gloves = app.buttons["match.row[\(glovesID)]"]
-        XCTAssertTrue(gloves.waitForExistence(timeout: 5), "Nitrile gloves are not on the list")
-        gloves.tap()
-        XCTAssertTrue(app.staticTexts["match.title"].waitForNonExistence(timeout: 5), "The sheet stayed open")
+        pick("nitrile", id: glovesID, in: app)
         expectHeadline(4, "Nitrile gloves M", in: app)
         XCTAssertEqual(app.buttons["invoice.line[4].state"].label, "Matched")
+    }
+
+    /// The decision on #101: the badge of the line read as Matched opens Which product is this?, the product picked
+    /// replaces the one read, and the badge then reopens the line to it; the Possible match is pointed at another
+    /// product the same way. Both stay so after leaving and coming back.
+    @MainActor
+    func testTheBadgePointsTheMatchedLineAndThePossibleMatchAtAnotherProduct() {
+        let app = openInvoice()
+        let title = app.staticTexts["match.title"]
+        app.buttons["invoice.line[1].state"].tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "Which product is this? did not open from the Matched badge")
+        XCTAssertEqual(app.staticTexts["match.code"].label, "SEPTO 4% 1:100K 50/BX")
+        pick("gutta", id: guttaPerchaID, in: app)
+        expectHeadline(1, "Gutta percha F2", in: app)
+        XCTAssertEqual(app.buttons["invoice.line[1].state"].label, "Matched")
+
+        app.buttons["invoice.line[2].state"].tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "Which product is this? did not open for the Possible match")
+        XCTAssertEqual(app.staticTexts["match.code"].label, "ENDO FILE KIT 15-40 21MM")
+        pick("rubber", id: rubberDamID, in: app)
+        expectHeadline(2, "Rubber dam latex-free", in: app)
+        XCTAssertEqual(app.buttons["invoice.line[2].state"].label, "Matched")
+
+        app.buttons["invoice.back"].tap()
+        reopen(in: app)
+        expectHeadline(1, "Gutta percha F2", in: app)
+        expectHeadline(2, "Rubber dam latex-free", in: app)
+
+        app.buttons["invoice.line[1].state"].tap()
+        expectHeadline(1, "Septocaine 4% 1:100,000", in: app)
+        app.buttons["invoice.line[2].state"].tap()
+        expectHeadline(2, "Is this Endo file kit #15-40?", in: app)
+        XCTAssertFalse(title.exists, "A badge that reopens opened Which product is this?")
     }
 
     @MainActor

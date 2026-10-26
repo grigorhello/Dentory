@@ -40,7 +40,7 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `more.export` | A CSV export was started | |
 | `settings.save` | Clinic settings were saved | `digest` (the weekly email stays on), `expiry_warning_days` (the first warning: 30, 60 or 90) |
 
-`invoice.confirm` (MS-131) reads what MS-129 keeps on the invoice: `invoices.created_at` is the moment the upload finished, and each line's `read_state` is the state matching gave it, which the admin's choices never change, so `matched_count` is the lines read as `matched`; an Undo within 10 seconds sends nothing. A product created with New on Receive manually's Choose product, or for an invoice line on Review invoice (Add new, No, create new; MS-130), counts as `inv.newProduct`, the New product sheet's event.
+`invoice.confirm` (MS-131) reads what MS-129 keeps on the invoice: `invoices.created_at` is the moment the upload finished, and each line's `read_state` is the state matching gave it, which the admin's choices never change, so `matched_count` is the lines read as `matched`, a line the admin then changed to another product from its badge included (the MS-130 fix, #101); an Undo within 10 seconds sends nothing. A product created with New on Receive manually's Choose product, or for an invoice line on Review invoice (Add new, No, create new; MS-130), counts as `inv.newProduct`, the New product sheet's event.
 
 ## The pilot dashboard
 

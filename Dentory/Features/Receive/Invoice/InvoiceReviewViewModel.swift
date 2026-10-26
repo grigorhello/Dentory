@@ -4,8 +4,9 @@ import Observation
 /// Review invoice once read (f23, f38; PRD §6.5 Review invoice and Confirm; Appendix B `invoice.line[n]`,
 /// `invoice.summary`, `invoice.confirm`; Appendix C `match`, `newProduct`), Admin only: each line with its state and
 /// the choice it waits for. Yes, match, Ignore and a resolved line's badge (back to the state it was read in) are saved
-/// at once; Pick existing and Pick product open Which product is this?; Add new and No, create new open New product;
-/// the lot and expiry month of a Matched or Created line are saved a moment after the last change
+/// at once; Pick existing, Pick product and the badge of a line read as Matched or of a Possible match open Which
+/// product is this? (`InvoiceReviewViewModel+Badge.swift`); Add new and No, create new open New product; the lot and
+/// expiry month of a Matched or Created line are saved a moment after the last change
 /// (`InvoiceReviewViewModel+Batch.swift`). Every choice is saved on the server, so the admin can leave and come back.
 /// Confirm & receive waits for every line to be resolved, then receives the delivery (`receipt`, MS-131); a received
 /// invoice opened later shows its lines read-only. Its sheet, choices and toasts are in
@@ -86,16 +87,17 @@ final class InvoiceReviewViewModel {
         }
     }
 
-    /// A resolved line's badge, or Undo on a skipped one: back to the state it was read in.
+    /// A badge that reopens, or Undo on a skipped line: back to the state, and the product, it was read in.
     func reopen(_ line: InvoiceLine) async {
         guard canReopen(line) else { return }
         await save(line) { try await $0.reopenLine(line.id) }
     }
 
-    /// The badge reopens a line the admin resolved, until the invoice is received.
+    /// The badge reopens a line the admin settled or changed, until the invoice is received.
     func canReopen(_ line: InvoiceLine) -> Bool { !isReceived && line.canReopen }
 
-    /// Which product is this?: the line is Matched to the product picked.
+    /// Which product is this?: the line is Matched to the product picked, in place of the one a line read as Matched
+    /// is on.
     func choose(_ productID: UUID, for line: InvoiceLine) async {
         sheet = nil
         await save(line) { try await $0.matchLine(line.id, to: productID) }

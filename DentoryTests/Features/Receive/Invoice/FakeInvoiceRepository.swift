@@ -98,10 +98,11 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
 
     // MARK: - Lines
 
+    /// A line read as Matched takes the product in place of the one it is on (the decision on #101).
     func matchLine(_ lineID: UUID, to productID: UUID) async throws -> InvoiceLine {
         record(.match(lineID, product: productID))
-        return try await settle(lineID, from: [.possibleMatch, .newProduct, .needsReview]) {
-            $0.with(.matched, product: productID, name: "Product \(productID.uuidString.prefix(4))")
+        return try await settle(lineID, from: [.possibleMatch, .newProduct, .needsReview], orReadMatched: true) {
+            $0.with(.matched, product: productID, name: Self.name(of: productID))
         }
     }
 
@@ -117,11 +118,18 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         return try await settle(lineID, from: [.needsReview]) { $0.with(.skipped, product: nil, name: nil) }
     }
 
+    /// Back to the state it was read in and to the product a line read as Matched was read as.
     func reopenLine(_ lineID: UUID) async throws -> InvoiceLine {
         record(.reopen(lineID))
         return try await settle(lineID, from: nil) { line in
-            line.readState == .matched ? line : line.with(line.readState, product: nil, name: nil)
+            guard line.state != line.readState || line.productID != line.readProductID else { return line }
+            return line.with(line.readState, product: line.readProductID, name: line.readProductID.map(Self.name))
         }
+    }
+
+    /// A product's name, as `ReceivableProduct.samples` has it.
+    private static func name(of productID: UUID) -> String {
+        ReceivableProduct.samples.first { $0.id == productID }?.name ?? "Product \(productID.uuidString.prefix(4))"
     }
 
     func setBatch(of lineID: UUID, lot: String?, expiryMonth: CalendarDay?) async throws -> InvoiceLine {
@@ -135,7 +143,8 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     }
 
     private func settle(
-        _ lineID: UUID, from states: Set<InvoiceLine.State>?, change: (InvoiceLine) -> InvoiceLine
+        _ lineID: UUID, from states: Set<InvoiceLine.State>?, orReadMatched: Bool = false,
+        change: (InvoiceLine) -> InvoiceLine
     ) async throws -> InvoiceLine {
         await duringLine?()
         // A request the app cancelled fails, as URLSession fails it.
@@ -143,7 +152,8 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         return try lock.withLock {
             if !lineErrors.isEmpty { throw lineErrors.removeFirst() }
             guard let index = lines.firstIndex(where: { $0.id == lineID }) else { throw AppError.forbidden }
-            if let states, !states.contains(lines[index].state) {
+            let readMatched = orReadMatched && lines[index].state == .matched && lines[index].readState == .matched
+            if let states, !states.contains(lines[index].state), !readMatched {
                 throw AppError.validation(field: nil, message: "This line is already resolved.")
             }
             lines[index] = change(lines[index])
@@ -208,9 +218,9 @@ extension InvoiceLine {
             id: UUID(uuidString: String(format: "00000000-0000-4000-8000-000000000%03x", 0x410 + number)) ?? UUID(),
             number: number, raw: raw, qty: qty, unit: unit, unitPrice: price,
             lineTotal: price.flatMap { price in qty.map { $0 * price } }, kind: kind, state: state, readState: state,
-            productID: product?.id, productName: product?.name, suggestedProductID: suggestion?.id,
-            suggestedProductName: suggestion?.name, suggestedName: suggestedName, suggestedUnit: suggestedUnit,
-            lot: nil, expiryMonth: nil
+            readProductID: state == .matched ? product?.id : nil, productID: product?.id, productName: product?.name,
+            suggestedProductID: suggestion?.id, suggestedProductName: suggestion?.name, suggestedName: suggestedName,
+            suggestedUnit: suggestedUnit, lot: nil, expiryMonth: nil
         )
     }
 
@@ -218,8 +228,8 @@ extension InvoiceLine {
     func with(_ state: State, product: UUID?, name: String?) -> InvoiceLine {
         InvoiceLine(
             id: id, number: number, raw: raw, qty: qty, unit: unit, unitPrice: unitPrice, lineTotal: lineTotal,
-            kind: kind, state: state, readState: readState, productID: product, productName: name,
-            suggestedProductID: suggestedProductID, suggestedProductName: suggestedProductName,
+            kind: kind, state: state, readState: readState, readProductID: readProductID, productID: product,
+            productName: name, suggestedProductID: suggestedProductID, suggestedProductName: suggestedProductName,
             suggestedName: suggestedName, suggestedUnit: suggestedUnit, lot: lot, expiryMonth: expiryMonth
         )
     }

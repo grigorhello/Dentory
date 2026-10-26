@@ -152,8 +152,9 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
 
     // MARK: - Lines
 
+    /// A line read as Matched takes the product picked in place of the one it is on (the decision on #101).
     func matchLine(_ lineID: UUID, to productID: UUID) async throws -> InvoiceLine {
-        try await settle(lineID, from: [.possibleMatch, .newProduct, .needsReview]) { line in
+        try await settle(lineID, from: [.possibleMatch, .newProduct, .needsReview], orReadAs: .matched) { line in
             line.settled(.matched, productID: productID, productName: productName(productID))
         }
     }
@@ -170,12 +171,13 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         }
     }
 
+    /// Back to the state it was read in and the product it was read as (none but for a line read as Matched).
     func reopenLine(_ lineID: UUID) async throws -> InvoiceLine {
         try await settle(lineID, from: nil) { line in
-            guard line.state != line.readState else { return line }
-            return line.readState == .matched
-                ? line.settled(.matched, productID: line.productID, productName: line.productName)
-                : line.settled(line.readState, productID: nil, productName: nil)
+            guard line.state != line.readState || line.productID != line.readProductID else { return line }
+            return line.settled(
+                line.readState, productID: line.readProductID, productName: line.readProductID.flatMap(productName)
+            )
         }
     }
 
@@ -190,9 +192,11 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     }
 
     /// Changes one line of an invoice waiting for review, as the line functions do: `from` the states it may leave
-    /// (nil for any), refusing a resolved line with the server's sentence.
+    /// (nil for any), and a line still in the state it was read in when that is `readState`; a resolved line is refused
+    /// with the server's sentence.
     private func settle(
-        _ lineID: UUID, from states: Set<InvoiceLine.State>?, change: (InvoiceLine) -> InvoiceLine
+        _ lineID: UUID, from states: Set<InvoiceLine.State>?, orReadAs readState: InvoiceLine.State? = nil,
+        change: (InvoiceLine) -> InvoiceLine
     ) async throws -> InvoiceLine {
         try await Task.sleep(for: .milliseconds(150))
         return try lock.withLock {
@@ -201,7 +205,8 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
             else { throw AppError.forbidden }
             guard invoice.status == .ready else { throw AppError.validation(field: nil, message: Self.closedRefusal) }
             let line = invoice.lines[index]
-            if let states, !states.contains(line.state) {
+            let asRead = readState != nil && line.state == readState && line.readState == readState
+            if let states, !states.contains(line.state), !asRead {
                 throw AppError.validation(
                     field: nil,
                     message: line.isResolved ? Self.resolvedRefusal : "This line cannot be resolved that way."

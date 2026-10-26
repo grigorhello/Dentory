@@ -52,6 +52,34 @@ struct DemoInvoiceTests {
         #expect(try await repository.reopenLine(lines[0].id).productName == "Septocaine 4% 1:100,000")
     }
 
+    /// The decision on #101: a line read as Matched takes another product and reopens to the one it was read as; a
+    /// Possible match is pointed at another product than its suggestion.
+    @Test func aMatchedLineAndAPossibleMatchTakeAnotherProductAsTheServerAllows() async throws {
+        let repository = DemoInvoiceRepository(launched: nil, store: DemoProductStore())
+        let lines = try await repository.invoice(id: DemoInvoiceRepository.readyID).lines
+        let septocaine = ProductSummary.demo[0]
+        let rubberDam = ProductSummary.demo[6]
+        let gutta = ProductSummary.demo[7]
+
+        let changed = try await repository.matchLine(lines[0].id, to: gutta.id)
+        #expect(changed.productName == "Gutta percha F2" && changed.readProductID == septocaine.id)
+        #expect(changed.isMatchChanged)
+        let reopened = try await repository.reopenLine(lines[0].id)
+        #expect(reopened.productID == septocaine.id && reopened.productName == "Septocaine 4% 1:100,000")
+        await #expect(throws: AppError.validation(field: nil, message: "This line is already resolved.")) {
+            try await repository.createLine(lines[0].id, as: rubberDam.id)
+        }
+
+        let pointed = try await repository.matchLine(lines[1].id, to: rubberDam.id)
+        #expect(pointed.state == .matched && pointed.productName == "Rubber dam latex-free")
+        await #expect(throws: AppError.validation(field: nil, message: "This line is already resolved.")) {
+            try await repository.matchLine(lines[1].id, to: gutta.id)
+        }
+        let suggestion = try await repository.reopenLine(lines[1].id)
+        #expect(suggestion.state == .possibleMatch && suggestion.productID == nil)
+        #expect(suggestion.suggestedProductName == "Endo file kit #15-40")
+    }
+
     @Test func aDiscardedInvoiceLeavesReceiveDeliveryAndTakesNoChoice() async throws {
         let invoices = DemoInvoiceRepository(launched: nil)
         let receive = DemoReceiveRepository(added: nil, settled: { invoices.settled })

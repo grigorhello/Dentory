@@ -2,8 +2,9 @@ import Foundation
 
 /// One line of an invoice as Review invoice shows it (f23; PRD §6.5; Appendix B `invoice.line[n]`), as
 /// `invoice_detail` and the line functions answer it: what was read, the state the line is in and the state it was
-/// read in, the product it became, the product a Possible match suggests, what New product starts from, and the lot
-/// and expiry month. Decoded with the client's decoder (`JSONDecoder.supabase`, snake_case keys).
+/// read in, the product it became and the one it was read as, the product a Possible match suggests, what New product
+/// starts from, and the lot and expiry month. Decoded with the client's decoder (`JSONDecoder.supabase`, snake_case
+/// keys).
 nonisolated struct InvoiceLine: Codable, Equatable, Identifiable, Sendable {
     /// PRD §7's invoice line states.
     nonisolated enum State: String, Codable, Sendable {
@@ -34,6 +35,8 @@ nonisolated struct InvoiceLine: Codable, Equatable, Identifiable, Sendable {
     let state: State
     /// The state the reading gave the line; the admin's choices never change it (MS-147's matched share).
     let readState: State
+    /// The product a line read as Matched was read as (nil for any other line); the admin's choices never change it.
+    let readProductID: UUID?
     /// The product a Matched or Created line is.
     let productID: UUID?
     let productName: String?
@@ -61,12 +64,26 @@ nonisolated struct InvoiceLine: Codable, Equatable, Identifiable, Sendable {
     /// quantity the reading could not tell, or a credit, adds nothing.
     var receivesStock: Bool { increasesInventory && (qty ?? 0) > 0 }
 
-    /// The admin settled it: its badge (or Undo) takes it back to the state it was read in. A line read as Matched
-    /// is already in that state.
-    var canReopen: Bool { isResolved && state != readState }
+    /// A line read as Matched that the admin matched to another product since (the decision on #101).
+    var isMatchChanged: Bool { readState == .matched && readProductID != nil && productID != readProductID }
+
+    /// The admin settled it, or changed the product of a line read as Matched: its badge (or Undo) takes it back to
+    /// the state it was read in, and to the product it was read as.
+    var canReopen: Bool { isResolved && (state != readState || isMatchChanged) }
+
+    /// Its badge opens Which product is this?, to point the line at another product: a line read as Matched and still
+    /// on that product, or a Possible match whose suggestion is wrong (the decision on #101).
+    var canPickAnother: Bool {
+        switch state {
+        case .matched: readState == .matched && !isMatchChanged
+        case .possibleMatch: true
+        case .newProduct, .needsReview, .created, .skipped: false
+        }
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id, number = "n", raw, qty, unit, unitPrice, lineTotal, kind, state, readState
+        case readProductID = "readProductId"
         case productID = "productId", productName, suggestedProductID = "suggestedProductId", suggestedProductName
         case suggestedName, suggestedUnit, lot, expiryMonth
     }
