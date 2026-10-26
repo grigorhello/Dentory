@@ -17,7 +17,7 @@ extension ExpiringViewModel {
         let products = Set(batches.map(\.productID)).count
         let atRisk = batches.reduce(Decimal(0)) { $0 + $1.value }
         let noun = products == 1 ? "1 product" : "\(products) products"
-        return "\(noun) · \(formatters.wholeMoney(atRisk)) at risk within \(window) days."
+        return "\(noun)\u{00A0}· \(formatters.wholeMoney(atRisk)) at risk within \(window) days."
     }
 
     /// "1 bottle · lot BA7 · Nov 2026": the quantity, the lot when there is one and the month, since a batch
@@ -28,7 +28,7 @@ extension ExpiringViewModel {
             batch.lot.map { "lot \($0)" },
             formatters.shortMonth(batch.expiryMonth)
         ]
-        return parts.compactMap { $0 }.joined(separator: " · ")
+        return parts.compactMap { $0 }.joined(separator: "\u{00A0}· ")
     }
 
     /// "59 days", "1 day", "Today", "Expired".

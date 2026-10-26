@@ -53,7 +53,7 @@ final class ManualReceiveUITests: XCTestCase {
         XCTAssertEqual(app.textFields["manual.cost"].label, "Cost per unit")
 
         chooseProduct("septo", id: septocaineID, in: app)
-        XCTAssertEqual(product.value as? String, "Septocaine 4% 1:100,000, Anesthetic · 54 cartridges in stock")
+        XCTAssertEqual(product.value as? String, "Septocaine 4% 1:100,000, Anesthetic\u{00A0}· 54 cartridges in stock")
         XCTAssertEqual(app.textFields["manual.qty"].label, "Quantity (boxes)", "The quantity is not in boxes")
         XCTAssertEqual(app.textFields["manual.cost"].label, "Cost per box", "The cost is not per box")
         let effect = app.staticTexts["manual.effect"]
@@ -62,7 +62,7 @@ final class ManualReceiveUITests: XCTestCase {
         let quantity = app.textFields["manual.qty"]
         quantity.tap()
         quantity.typeText("5")
-        XCTAssertEqual(effect.label, "5 boxes = 250 cartridges · Current 54 → after 304")
+        XCTAssertEqual(effect.label, "5 boxes = 250 cartridges\u{00A0}· Current 54 → after 304")
         let cost = app.textFields["manual.cost"]
         cost.tap()
         cost.typeText("49.80")
@@ -173,7 +173,9 @@ final class ManualReceiveUITests: XCTestCase {
         let quantity = app.textFields["manual.qty"]
         quantity.tap()
         quantity.typeText("2")
-        XCTAssertEqual(app.staticTexts["manual.effect"].label, "2 boxes = 100 cartridges · Current 0 → after 100")
+        XCTAssertEqual(
+            app.staticTexts["manual.effect"].label, "2 boxes = 100 cartridges\u{00A0}· Current 0 → after 100"
+        )
         app.buttons["manual.receive"].tap()
         XCTAssertTrue(toast.staticTexts["Articaine +100 cartridges"].waitForExistence(timeout: 5), "No receipt toast")
         XCTAssertTrue(app.staticTexts["inv.header.title"].waitForExistence(timeout: 5), "Inventory did not open")

@@ -19,7 +19,7 @@ final class InvoiceE2ETests: XCTestCase {
 
         let header = app.staticTexts["invoice.header"]
         XCTAssertTrue(header.waitForExistence(timeout: 60), "The invoice was not read")
-        XCTAssertEqual(header.label, "Northbridge Dental Supply · INV-10092 · $520.03")
+        XCTAssertEqual(header.label, "Northbridge Dental Supply\u{00A0}· INV-10092\u{00A0}· $520.03")
         XCTAssertEqual(app.staticTexts["invoice.banner"].label, "AI read 4 lines. Check each one, then confirm.")
         let states = (1...4).map { app.descendants(matching: .any)["invoice.line[\($0)].state"].label }
         XCTAssertEqual(states, ["Matched", "Possible match", "New product", "Needs review"])
@@ -35,7 +35,7 @@ final class InvoiceE2ETests: XCTestCase {
         create.appears("New product did not open from the line")
         XCTAssertEqual(app.textFields["newProduct.name"].value as? String, "Tempbond NE")
         create.tap()
-        E2E.expect(app.staticTexts["invoice.line[3].headline"], toRead: "Tempbond NE · new product", "Add new")
+        E2E.expect(app.staticTexts["invoice.line[3].headline"], toRead: "Tempbond NE\u{00A0}· new product", "Add new")
 
         XCTAssertEqual(app.staticTexts["invoice.summary"].label, "3 of 4 lines will increase inventory.")
         let confirm = app.buttons["invoice.confirm"]

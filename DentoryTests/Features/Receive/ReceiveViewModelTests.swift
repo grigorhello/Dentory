@@ -44,12 +44,12 @@ struct ReceiveViewModelTests {
         #expect(viewModel.state == .loaded)
         #expect(repository.calls == [Session.demo.clinicID])
         #expect(viewModel.invoices.count == 1)
-        #expect(viewModel.invoiceLine(for: viewModel.invoices[0]) == "Patterson · 8:55\u{202F}AM")
+        #expect(viewModel.invoiceLine(for: viewModel.invoices[0]) == "Patterson\u{00A0}· 8:55\u{202F}AM")
         #expect(viewModel.waiting.map(\.name) == [
             "Gauze", "Needle 27g short", "Prophy angle", "Root canal sealer", "Temporary cement"
         ])
         let needles = viewModel.waiting[1]
-        #expect(viewModel.waitingLine(for: needles) == "Patterson · ordered Oct 1")
+        #expect(viewModel.waitingLine(for: needles) == "Patterson\u{00A0}· ordered Oct 1")
         #expect(viewModel.quantityText(for: needles) == "60")
         #expect(viewModel.spokenQuantity(for: needles) == "60 needles ordered")
         #expect(viewModel.spokenQuantity(for: viewModel.waiting[3]) == "1 kit ordered")
@@ -71,9 +71,9 @@ struct ReceiveViewModelTests {
         let older = PendingInvoice(
             id: UUID(), status: .ready, supplier: "Benco", createdAt: Session.demoNow.addingTimeInterval(-4 * day)
         )
-        #expect(viewModel.invoiceLine(for: reading) == "Invoice · 5:27\u{202F}AM")
-        #expect(viewModel.invoiceLine(for: yesterday) == "Henry Schein · Yesterday")
-        #expect(viewModel.invoiceLine(for: older) == "Benco · Sep 28")
+        #expect(viewModel.invoiceLine(for: reading) == "Invoice\u{00A0}· 5:27\u{202F}AM")
+        #expect(viewModel.invoiceLine(for: yesterday) == "Henry Schein\u{00A0}· Yesterday")
+        #expect(viewModel.invoiceLine(for: older) == "Benco\u{00A0}· Sep 28")
     }
 
     @Test func aReadingThatFailedReadsCouldNotReadDatedByTheFailureLikeTheOthers() async {
@@ -88,11 +88,11 @@ struct ReceiveViewModelTests {
         let today = failed(at: Session.demoNow.addingTimeInterval(-30))
         let yesterday = failed(at: Session.demoNow.addingTimeInterval(-day))
         let older = failed(at: Session.demoNow.addingTimeInterval(-4 * day))
-        #expect(viewModel.invoiceLine(for: today) == "Couldn't read · 5:27\u{202F}AM")
-        #expect(viewModel.invoiceLine(for: yesterday) == "Couldn't read · Yesterday")
-        #expect(viewModel.invoiceLine(for: older) == "Couldn't read · Sep 28")
+        #expect(viewModel.invoiceLine(for: today) == "Couldn't read\u{00A0}· 5:27\u{202F}AM")
+        #expect(viewModel.invoiceLine(for: yesterday) == "Couldn't read\u{00A0}· Yesterday")
+        #expect(viewModel.invoiceLine(for: older) == "Couldn't read\u{00A0}· Sep 28")
         #expect(
-            viewModel.invoiceLine(for: failed(at: nil)) == "Couldn't read · 5:26\u{202F}AM",
+            viewModel.invoiceLine(for: failed(at: nil)) == "Couldn't read\u{00A0}· 5:26\u{202F}AM",
             "Dated by the upload when no failure time came"
         )
     }
@@ -103,7 +103,7 @@ struct ReceiveViewModelTests {
         let viewModel = await make(repository)
         #expect(viewModel.invoices.map(\.status) == [.failed, .ready], "The failed reading first, newest upload first")
         let failed = try #require(viewModel.invoices.first)
-        #expect(viewModel.invoiceLine(for: failed) == "Couldn't read · 5:27\u{202F}AM")
+        #expect(viewModel.invoiceLine(for: failed) == "Couldn't read\u{00A0}· 5:27\u{202F}AM")
 
         viewModel.continueReviewing(failed)
         #expect(viewModel.pendingRoute == .invoice(failed.id), "Review invoice, which opens on the failure")

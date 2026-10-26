@@ -93,7 +93,7 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
         let change: Decimal
         if let batchID {
             guard let index = batches.firstIndex(where: { $0.id == batchID }) else {
-                throw AppError.validation(field: nil, message: "unknown batch")
+                throw AppError.refusal("unknown batch")
             }
             change = quantity - batches[index].quantity
             batches[index] = ProductBatch(id: batchID, expiryMonth: expiryMonth, lot: lot, quantity: quantity)
@@ -179,7 +179,7 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
     func openBottle(productID: UUID) async throws -> WriteOutcome {
         try await Task.sleep(for: .milliseconds(200))
         let current = try await detail(productID: productID)
-        guard current.unopened > 0 else { throw AppError.validation(field: nil, message: "Out of stock") }
+        guard current.unopened > 0 else { throw AppError.refusal("Out of stock") }
         lock.withLock {
             unopenedDeltas[productID, default: 0] -= 1
             openedBottles[productID, default: []].insert(
@@ -201,7 +201,7 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
         try await Task.sleep(for: .milliseconds(200))
         guard let productID = store.products.map(\.id).first(where: { id in
             bottleIDs(of: id).contains(openItemID)
-        }) else { throw AppError.validation(field: nil, message: "unknown open item") }
+        }) else { throw AppError.refusal("unknown open item") }
         let current = try await detail(productID: productID)
         lock.withLock {
             finishedBottleIDs.insert(openItemID)
@@ -231,7 +231,7 @@ final class DemoProductDetailRepository: ProductDetailRepository, @unchecked Sen
     func undoAdjustment(actionID: UUID) async throws {
         try await Task.sleep(for: .milliseconds(200))
         guard let adjustment = lock.withLock({ adjustments.removeValue(forKey: actionID) }) else {
-            throw AppError.validation(field: nil, message: "already undone")
+            throw AppError.refusal("already undone")
         }
         let current = try await detail(productID: adjustment.productID)
         lock.withLock {

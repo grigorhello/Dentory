@@ -31,7 +31,7 @@ struct ProductDetailExpiryCardTests {
         #expect(rows.first?.daysText == "in 90 days", "Days run to the last day of the expiry month (PRD)")
         #expect(rows.first?.daysTone == .warning)
         #expect(rows.map(\.quantityText) == ["20", "34"])
-        #expect(viewModel.expiryTotalLine == "54 of 54 tracked · 54 expire within 90 days")
+        #expect(viewModel.expiryTotalLine == "54 of 54 tracked\u{00A0}· 54 expire within 90 days")
         #expect(viewModel.unit == "cartridges")
     }
 
@@ -41,7 +41,7 @@ struct ProductDetailExpiryCardTests {
         let viewModel = make(repository: FakeProductDetailRepository(detailResult: .success(detail)))
         await viewModel.load()
         #expect(viewModel.batchRows.count == 2)
-        #expect(viewModel.expiryTotalLine == "54 of 58 tracked · 54 expire within 90 days")
+        #expect(viewModel.expiryTotalLine == "54 of 58 tracked\u{00A0}· 54 expire within 90 days")
     }
 
     @Test func batchesSortAcrossYearsAndAPastMonthReadsExpired() async {

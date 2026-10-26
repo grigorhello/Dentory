@@ -21,7 +21,7 @@ struct DemoManualReceiveRepository: ManualReceiveRepository {
     func receive(_ receipt: ManualReceipt) async throws -> WriteOutcome {
         try await Task.sleep(for: .milliseconds(200))
         guard store.receive(receipt.quantity, of: receipt.productID, dated: receipt.expiryMonth != nil) else {
-            throw AppError.validation(field: nil, message: "the product is archived")
+            throw AppError.refusal("the product is archived")
         }
         return .applied(actionID: UUID())
     }

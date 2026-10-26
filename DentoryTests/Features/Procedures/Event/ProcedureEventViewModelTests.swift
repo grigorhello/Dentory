@@ -35,7 +35,7 @@ struct ProcedureEventViewModelTests {
         #expect(viewModel.state == .loaded)
         #expect(viewModel.mode == .done)
         #expect(viewModel.title == "Root canal")
-        #expect(viewModel.summary == "10 items deducted · Oct 1 · 3:14\u{202F}PM · Sarah")
+        #expect(viewModel.summary == "10 items deducted\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Sarah")
         #expect(viewModel.cancelledText == nil)
         #expect(viewModel.usage(of: try item("Septocaine 4% 1:100,000")) == "2")
         #expect(viewModel.usage(of: try item("Surface disinfectant")) == "Used from open bottle")
@@ -90,7 +90,10 @@ struct ProcedureEventViewModelTests {
         #expect(edit.takeNew == [disinfectant])
         #expect(viewModel.message == .init(title: "Usage updated", detail: nil))
         #expect(viewModel.mode == .done)
-        #expect(viewModel.summary == "11 items deducted · Oct 1 · 3:14\u{202F}PM · Sarah", "Queued: shown as edited")
+        #expect(
+            viewModel.summary == "11 items deducted\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Sarah",
+            "Queued: shown as edited"
+        )
         #expect(analytics.events == [.procedureUsageEdited(items: 3)], "Two quantities and a bottle (MS-147)")
     }
 
@@ -197,10 +200,10 @@ struct ProcedureEventViewModelTests {
         func line(_ id: UUID) -> String? {
             viewModel.bottleLines.first { $0.id == id }?.line
         }
-        #expect(line(disinfectant.id) == "2 open · 1 in stock")
+        #expect(line(disinfectant.id) == "2 open\u{00A0}· 1 in stock")
         #expect(line(sealer.id) == "Opened a new bottle")
         viewModel.toggleTakeNew(disinfectant.id)
-        #expect(line(disinfectant.id) == "Will take 1 from stock · 0 unopened left")
+        #expect(line(disinfectant.id) == "Will take 1 from stock\u{00A0}· 0 unopened left")
         viewModel.toggleTakeNew(sealer.id)
         #expect(line(sealer.id) == "Goes back to stock")
         #expect(viewModel.message == nil, "A bottle opened for this procedure can go back with nothing unopened")
@@ -258,7 +261,7 @@ struct ProcedureEventViewModelTests {
         let cancelled = rootCanal.cancelled(at: Session.demoNow, by: "Sarah Mitchell", note: "Logged by mistake")
         let viewModel = await make(FakeProcedureEventRepository(event: cancelled))
         let when = formatters.dateTime(Session.demoNow)
-        #expect(viewModel.cancelledText == "Cancelled · \(when) · Sarah: Logged by mistake")
+        #expect(viewModel.cancelledText == "Cancelled\u{00A0}· \(when)\u{00A0}· Sarah: Logged by mistake")
         viewModel.startEditing()
         #expect(viewModel.mode == .done)
     }

@@ -24,9 +24,7 @@ final class DemoExpiringRepository: ExpiringRepository, @unchecked Sendable {
         try lock.withLock {
             guard let index = batches.firstIndex(where: { $0.id == batchID }) else { throw AppError.notFound }
             guard quantity > 0, quantity <= batches[index].quantity else {
-                throw AppError.validation(
-                    field: nil, message: "The disposed quantity must be between 0 and what the batch holds."
-                )
+                throw AppError.refusal("the disposed quantity must be between 0 and what the batch holds")
             }
             disposals[actionID] = (batches[index], quantity)
             batches[index] = batches[index].disposing(quantity)

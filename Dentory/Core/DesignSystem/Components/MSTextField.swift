@@ -94,7 +94,13 @@ struct MSTextField: View {
                 .textContentType(contentType)
                 .textInputAutocapitalization(contentType == .emailAddress ? .never : .sentences)
             if let suffix {
-                Text(suffix).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
+                // The unit keeps its width and one line ("cartridges" in Add expiry's How many on an iPhone SE); the
+                // input gives way instead (MS-136 audit V-17).
+                Text(suffix)
+                    .textStyle(.body14)
+                    .foregroundStyle(Color.ms.textSecondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
             if let trailingIcon, let trailingAction {
                 Button(action: trailingAction.perform) {

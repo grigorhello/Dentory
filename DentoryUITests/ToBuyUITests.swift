@@ -78,7 +78,7 @@ final class ToBuyUITests: XCTestCase {
         let toast = app.descendants(matching: .any)["toast"]
         XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast")
         XCTAssertTrue(toast.staticTexts["Added to To buy"].exists)
-        XCTAssertTrue(toast.staticTexts["Gauze · suggested 2 packs"].exists)
+        XCTAssertTrue(toast.staticTexts["Gauze\u{00A0}· suggested 2 packs"].exists)
         XCTAssertTrue(app.buttons["To buy · 4"].waitForExistence(timeout: 3), "Gauze was not added")
         app.buttons["toast.undo"].tap()
         XCTAssertTrue(app.buttons["To buy · 3"].waitForExistence(timeout: 3), "Undo did not take Gauze off")

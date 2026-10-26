@@ -16,7 +16,7 @@ struct DisposeBatchViewModelTests {
 
     @Test func theSheetOpensOnTheWholeBatch() {
         let viewModel = make()
-        #expect(viewModel.caption == "Septocaine 4% 1:100,000 · lot B441. Removed with reason Expired.")
+        #expect(viewModel.caption == "Septocaine 4% 1:100,000\u{00A0}· lot B441. Removed with reason Expired.")
         #expect(viewModel.quantityText == "34")
         #expect(viewModel.canDispose)
     }

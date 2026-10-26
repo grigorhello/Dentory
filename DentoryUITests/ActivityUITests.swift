@@ -55,7 +55,7 @@ final class ActivityUITests: XCTestCase {
 
         let rootCanal = row(0xe1, in: app)
         XCTAssertTrue(rootCanal.waitForExistence(timeout: 5), "No Root canal row")
-        for text in ["Root canal", "Procedure started", "Sarah · 3:14\u{202F}PM", "\u{2212}10"] {
+        for text in ["Root canal", "Procedure started", "Sarah\u{00A0}· 3:14\u{202F}PM", "\u{2212}10"] {
             XCTAssertTrue(rootCanal.label.contains(text), "The row reads \(rootCanal.label)")
         }
         let firstDay = app.descendants(matching: .any).matching(identifier: "activity.day").firstMatch

@@ -94,7 +94,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         try await Task.sleep(for: .milliseconds(200))
         try lock.withLock {
             if invoices[invoiceID]?.status == .confirmed {
-                throw AppError.validation(field: nil, message: Self.receivedRefusal)
+                throw AppError.refusal(Self.receivedRefusal)
             }
             discardedIDs.append(invoiceID)
             guard let invoice = invoices[invoiceID] else { return }
@@ -113,10 +113,10 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
             guard let invoice = invoices[invoiceID] else { throw AppError.forbidden }
             guard invoice.status == .ready else {
                 let refusal = invoice.status == .confirmed ? Self.receivedRefusal : Self.closedRefusal
-                throw AppError.validation(field: nil, message: refusal)
+                throw AppError.refusal(refusal)
             }
             guard invoice.lines.allSatisfy(\.isResolved) else {
-                throw AppError.validation(field: nil, message: "Resolve every line to continue.")
+                throw AppError.refusal("Resolve every line to continue.")
             }
             let lines = invoice.lines.filter(\.receivesStock)
             let received = Set(lines.compactMap(\.productID))
@@ -137,7 +137,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         try await Task.sleep(for: .milliseconds(200))
         try lock.withLock {
             guard let receipt = receipts.removeValue(forKey: actionID), let invoice = invoices[receipt.invoiceID] else {
-                throw AppError.validation(field: nil, message: "already undone")
+                throw AppError.refusal("already undone")
             }
             store?.restore(receipt.before)
             invoices[receipt.invoiceID] = Self.invoice(invoice, status: .ready)
@@ -203,14 +203,11 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
             guard let invoice = invoices.values.first(where: { $0.lines.contains { $0.id == lineID } }),
                   let index = invoice.lines.firstIndex(where: { $0.id == lineID })
             else { throw AppError.forbidden }
-            guard invoice.status == .ready else { throw AppError.validation(field: nil, message: Self.closedRefusal) }
+            guard invoice.status == .ready else { throw AppError.refusal(Self.closedRefusal) }
             let line = invoice.lines[index]
             let asRead = readState != nil && line.state == readState && line.readState == readState
             if let states, !states.contains(line.state), !asRead {
-                throw AppError.validation(
-                    field: nil,
-                    message: line.isResolved ? Self.resolvedRefusal : "This line cannot be resolved that way."
-                )
+                throw AppError.refusal(line.isResolved ? Self.resolvedRefusal : Self.wrongWayRefusal)
             }
             var updated = invoice
             updated.lines[index] = change(line)
@@ -220,6 +217,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     }
 
     private static let resolvedRefusal = "This line is already resolved."
+    private static let wrongWayRefusal = "This line cannot be resolved that way."
     private static let closedRefusal = "This invoice is no longer waiting for review."
     private static let receivedRefusal = "This delivery was already received"
 

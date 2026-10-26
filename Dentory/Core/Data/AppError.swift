@@ -7,7 +7,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case forbidden
     /// The clinic's trial ended without a payment method: reading works, writing does not (MS-100 G5).
     case readOnly
-    /// A rule the server refused, with the sentence it gave ("A note is required to cancel").
+    /// A rule the server refused, with the sentence to show ("A note is required to cancel.", `ServerRefusal`).
     case validation(field: String?, message: String)
     case unknown(String)
 

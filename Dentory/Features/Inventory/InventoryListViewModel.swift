@@ -115,10 +115,10 @@ final class InventoryListViewModel {
     func caption(for product: ProductSummary) -> String {
         let figures = switch product.tracking {
         case .countable: formatters.quantity(product.quantity, unit: product.unit)
-        case .multiUse: "\(formatters.number(product.unopened)) unopened · \(product.openCount) open"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened\u{00A0}· \(product.openCount) open"
         }
         guard let category = product.categoryName, !category.isEmpty else { return figures }
-        return "\(figures) · \(category)"
+        return "\(figures)\u{00A0}· \(category)"
     }
 
     func load() async {

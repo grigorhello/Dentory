@@ -27,6 +27,8 @@ Facts about building, testing and screenshotting Dentory on Grigor's Mac that ea
 - The tabs kept alive behind the selected one stay in the accessibility tree: query by ids unique to the screen (`inv.row[…]`), never by shared text. `.accessibilityIdentifier` on a non-element container renames its children.
 - iOS writes times as "3:14\u{202F}PM" (narrow no-break space).
 - `swipeLeft` on a small row moves too little: use `press(forDuration: 0.1, thenDragTo:)`. Confirmation-dialog buttons take `.accessibilityIdentifier`; a custom `ToggleStyle` switch is found with `descendants(matching: .any)[id]`.
+- iOS 26 offers "Save Password?" once a password field leaves the screen, and its sheet covers the next screen. `DentoryUITests/UITestInterruptions.swift`, the principal class of both UI test bundles, answers Not Now in every test; it acts when a tap finds the sheet in the way, so a flow that only checks for an element first may have to tap before the sheet goes.
+- Captions put a no-break space before each "·" (`"54 cartridges\u{00A0}· Anesthetic"`); a test that reads a caption writes it the same way. Buttons and segments keep the plain space ("Start procedure · 6 items").
 
 ## End-to-end flows (`make e2e`, MS-136)
 - `make e2e` resets the local database, loads the demo clinic and runs `DentoryE2ETests` through the `DentoryE2E` scheme: the real Debug app against the stack, seven flows in about five minutes on this Mac. Pass the same `SPM_DIR`, `SPM_FLAGS`, `DERIVED_DATA` and `SIM_ID` as for `make test`. The `Dentory` scheme builds the target but skips it, which also means `-only-testing:DentoryE2ETests` cannot reach it there.

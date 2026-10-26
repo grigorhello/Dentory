@@ -91,7 +91,8 @@ struct WriteCoordinatorTests {
     }
 
     @Test func aReplayRefusedByTheServerDropsTheWriteAndToasts() async throws {
-        let rpc = FakeRPCClient(results: [.failure(PostgrestError(code: "22023", message: "a note is required"))])
+        let refusal = PostgrestError(code: "22023", message: "a note is required to cancel")
+        let rpc = FakeRPCClient(results: [.failure(refusal)])
         let network = FixedNetworkMonitor(isConnected: false)
         let toasts = ToastCenter(duration: 60)
         let coordinator = makeCoordinator(rpc: rpc, network: network, toasts: toasts)
@@ -99,13 +100,13 @@ struct WriteCoordinatorTests {
         network.isConnected = true
         await coordinator.replay()
         #expect(coordinator.queue.isEmpty)
-        #expect(coordinator.lastReplayError == .validation(field: nil, message: "a note is required"))
+        #expect(coordinator.lastReplayError == .validation(field: nil, message: "A note is required to cancel."))
         #expect(toasts.current?.title == WriteCoordinator.saveFailedMessage)
     }
 
     @Test func aRefusedReplayDropsThatWriteAndCarriesOn() async throws {
         let rpc = FakeRPCClient(results: [
-            .failure(PostgrestError(code: "22023", message: "a note is required")), .success(Self.actionJSON)
+            .failure(PostgrestError(code: "22023", message: "a note is required to cancel")), .success(Self.actionJSON)
         ])
         let network = FixedNetworkMonitor(isConnected: false)
         let toasts = ToastCenter(duration: 60)
@@ -116,7 +117,7 @@ struct WriteCoordinatorTests {
         await coordinator.replay()
         #expect(rpc.calls.map(\.function) == ["stock_procedure_cancel", "bottle_open"])
         #expect(coordinator.queue.isEmpty)
-        #expect(coordinator.lastReplayError == .validation(field: nil, message: "a note is required"))
+        #expect(coordinator.lastReplayError == .validation(field: nil, message: "A note is required to cancel."))
         #expect(toasts.current?.title == WriteCoordinator.saveFailedMessage)
     }
 

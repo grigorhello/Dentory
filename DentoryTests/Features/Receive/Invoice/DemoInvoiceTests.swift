@@ -121,7 +121,7 @@ struct DemoInvoiceTests {
         let received = try await invoices.invoice(id: invoiceID)
         #expect(received.status == .confirmed && received.confirmedByName == "Sarah Mitchell")
         #expect(try await receive.overview(clinicID: clinicID).invoices.isEmpty, "No longer to continue reviewing")
-        await #expect(throws: AppError.validation(field: nil, message: "This delivery was already received")) {
+        await #expect(throws: AppError.validation(field: nil, message: "This delivery was already received.")) {
             try await invoices.discard(invoiceID: invoiceID, clinicID: clinicID)
         }
 

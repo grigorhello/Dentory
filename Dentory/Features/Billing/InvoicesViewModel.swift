@@ -71,7 +71,7 @@ final class InvoicesViewModel {
 
     var emptyCaption: String {
         guard let trialEndsAt, trialEndsAt > formatters.clock.now else {
-            return "Each invoice appears here once it is issued, and its receipt goes to your billing emails."
+            return "Each invoice appears here once it is issued."
         }
         return "Your first invoice is issued when the trial ends on \(formatters.longDate(trialEndsAt)). "
             + "Each one appears here, and its receipt goes to your billing emails."

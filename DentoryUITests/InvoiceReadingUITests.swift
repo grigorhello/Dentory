@@ -38,7 +38,9 @@ final class InvoiceReadingUITests: XCTestCase {
         let app = openReceive(demoInvoice: "reading")
         let row = app.buttons[beingRead]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "No invoice being read to continue")
-        XCTAssertTrue(row.label.contains("Invoice · "), "An invoice being read has no supplier yet: \(row.label)")
+        XCTAssertTrue(
+            row.label.contains("Invoice\u{00A0}· "), "An invoice being read has no supplier yet: \(row.label)"
+        )
         open(beingRead, in: app)
 
         XCTAssertTrue(app.staticTexts["invoice.reading.title"].waitForExistence(timeout: 5), "No reading state")
@@ -97,7 +99,7 @@ final class InvoiceReadingUITests: XCTestCase {
         open(read, in: app)
         let header = app.staticTexts["invoice.header"]
         XCTAssertTrue(header.waitForExistence(timeout: 5), "No header once read")
-        XCTAssertEqual(header.label, "Patterson · INV-10092 · $449.00")
+        XCTAssertEqual(header.label, "Patterson\u{00A0}· INV-10092\u{00A0}· $449.00")
         XCTAssertEqual(app.staticTexts["invoice.banner"].label, "AI read 4 lines. Check each one, then confirm.")
         XCTAssertFalse(app.buttons["invoice.reading"].exists, "No reading state once read")
     }

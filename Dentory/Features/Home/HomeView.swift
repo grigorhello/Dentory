@@ -46,6 +46,12 @@ struct HomeView: View {
                 }
             }
             .reloadOnReturn { await viewModel.load() }
+            // Like Inventory and To buy, Home reloads after any stock change and whenever its tab is chosen, so the
+            // procedure card shows the procedure just started on Procedures and its Edit usage opens that one.
+            .onChange(of: dependencies.writes.appliedWrites) { reload() }
+            .onChange(of: router.selectedTab) { _, tab in
+                if tab == .home { reload() }
+            }
             .navigationDestination(for: HomeRoute.self) { route in
                 switch route {
                 case .expiring(let window):
@@ -162,11 +168,11 @@ struct HomeView: View {
                     Text("Receive delivery").textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
                     Text("Photo, PDF or manual. You confirm every line.")
                         .textStyle(.body14)
-                        .foregroundStyle(Color.ms.textSecondary)
+                        .foregroundStyle(Color.ms.textBody)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: Spacing.sm)
-                IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.textSecondary)
+                IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.textBody)
             }
             .padding(Spacing.lg)
             .background(Color.ms.surfaceCard, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
@@ -176,6 +182,10 @@ struct HomeView: View {
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("home.receive")
         .adminOnly()
+    }
+
+    private func reload() {
+        Task { await viewModel.load() }
     }
 
     // MARK: - Debug hooks (catalog and shell demo)

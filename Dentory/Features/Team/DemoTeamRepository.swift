@@ -20,7 +20,7 @@ final class DemoTeamRepository: TeamRepository, @unchecked Sendable {
         let address = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         try lock.withLock {
             if team.contains(where: { $0.email == address && !$0.isPending }) {
-                throw AppError.validation(field: "email", message: "\(address) is already on the team")
+                throw AppError.refusal("\(address) is already on the team", field: "email")
             }
             let invited = TeamMember(
                 id: UUID(), userID: nil, fullName: fullName, email: address, role: role, status: .invited,
@@ -58,7 +58,7 @@ final class DemoTeamRepository: TeamRepository, @unchecked Sendable {
         let otherAdmins = team.filter { $0.role == .admin && !$0.isPending && $0.id != memberID }
         let isAdmin = team.contains { $0.id == memberID && $0.role == .admin && !$0.isPending }
         if isAdmin && otherAdmins.isEmpty {
-            throw AppError.validation(field: nil, message: "A clinic needs at least one admin.")
+            throw AppError.refusal("A clinic needs at least one admin.")
         }
     }
 

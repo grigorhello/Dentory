@@ -18,10 +18,11 @@ struct EmptyStateView: View {
                     .textStyle(.bodyStrong16)
                     .foregroundStyle(Color.ms.ink)
             }
-            // Under a title the caption is body size, as f35 draws it; alone it is the smaller caption.
+            // Under a title the caption is body size in body text, as f35 draws it; alone it is the smaller secondary
+            // caption ("Nothing expires in this window.").
             Text(caption)
                 .textStyle(title == nil ? .body14 : .body16)
-                .foregroundStyle(Color.ms.textSecondary)
+                .foregroundStyle(title == nil ? Color.ms.textSecondary : Color.ms.textBody)
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)

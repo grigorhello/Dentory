@@ -8,6 +8,7 @@ struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: OnboardingViewModel
     @State private var logoItem: PhotosPickerItem?
+    @FocusState private var focus: OnboardingAccountField?
     let onFinished: () -> Void
 
     init(viewModel: OnboardingViewModel, onFinished: @escaping () -> Void) {
@@ -16,23 +17,35 @@ struct OnboardingView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                header
-                OfflineBannerHost()
-                switch viewModel.step {
-                case .account: OnboardingAccountStep(viewModel: viewModel)
-                case .clinic: OnboardingClinicStep(viewModel: viewModel, logoItem: $logoItem)
-                case .invite: OnboardingInviteStep(viewModel: viewModel)
+        ScrollViewReader { scroller in
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    header
+                    OfflineBannerHost()
+                    switch viewModel.step {
+                    case .account: OnboardingAccountStep(viewModel: viewModel, focus: $focus)
+                    case .clinic: OnboardingClinicStep(viewModel: viewModel, logoItem: $logoItem)
+                    case .invite: OnboardingInviteStep(viewModel: viewModel)
+                    }
                 }
+                .padding(.horizontal, Spacing.page)
+                .padding(.bottom, Spacing.xl)
+                .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, Spacing.page)
-            .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .scrollDismissesKeyboard(.interactively)
+            // With the keyboard up the pinned Continue bar sits on it, so the focused field and the next one are scrolled
+            // clear of the bar as the focus moves and as the keyboard takes its room, which shortens the scroll view
+            // (MS-136 audit V-04).
+            .onChange(of: focus) { _, field in reveal(field, with: scroller) }
+            .onGeometryChange(for: CGFloat.self) { geometry in
+                geometry.size.height
+            } action: { _ in
+                reveal(focus, with: scroller)
+            }
         }
-        .scrollDismissesKeyboard(.interactively)
         .background(Color.ms.canvas)
+        .statusBarBackground()
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
         .pinnedPrimaryBar { primaryButton }
@@ -71,28 +84,41 @@ struct OnboardingView: View {
                 .accessibilityLabel("Back")
                 .accessibilityIdentifier("onboard.back")
             }
-            Eyebrow("Admin sign-up · Step \(viewModel.step.rawValue) of 3")
+            Eyebrow("Admin sign-up\u{00A0}· Step \(viewModel.step.rawValue) of 3")
                 .padding(.top, viewModel.step == .account ? 0 : Spacing.xxl)
-            Text(title)
-                .textStyle(.display32)
-                .foregroundStyle(Color.ms.ink)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier("onboard.title")
+            OnboardingTitle(lines: titleLines)
             if let caption {
-                Text(caption).textStyle(.body16).foregroundStyle(Color.ms.textSecondary)
+                Text(caption).textStyle(.body16).foregroundStyle(Color.ms.textBody)
             }
         }
         .padding(.top, Spacing.lg)
     }
 
-    private var title: String {
-        switch viewModel.step {
-        case .account: "Create your admin account"
-        case .clinic: "Create your clinic"
-        case .invite: "Invite your team"
+    /// How long the keyboard takes to slide in and iOS to scroll the focused field above it; the reveal comes after, or
+    /// iOS would put the field back just above the keyboard, under the bar.
+    private static let keyboardSettle = Duration.milliseconds(300)
+
+    /// Scrolls the field after `field` (the field itself when it is the last) to the bottom of the room above the bar,
+    /// so both stay in sight while typing; Return moves on to that field.
+    private func reveal(_ field: OnboardingAccountField?, with scroller: ScrollViewProxy) {
+        guard let field else { return }
+        Task {
+            try? await Task.sleep(for: Self.keyboardSettle)
+            withAnimation(Motion.baseAnimation) {
+                scroller.scrollTo(field.next ?? field, anchor: .bottom)
+            }
         }
     }
+
+    /// The title as the frames break it on a phone (f2, f3, f4).
+    private var titleLines: [String] {
+        switch viewModel.step {
+        case .account: ["Create your admin", "account"]
+        case .clinic: ["Create your clinic"]
+        case .invite: ["Invite your team"]
+        }
+    }
+
 
     private var caption: String? {
         switch viewModel.step {
@@ -131,25 +157,39 @@ struct OnboardingView: View {
     }
 }
 
-/// Step 1 · Account (f2).
+/// Step 1 · Account (f2). Return moves from the name to the email and the password, as on Sign in and Join, and on the
+/// password continues. The placeholder says the password's minimum, as f2 draws it, with no hint repeating it.
 private struct OnboardingAccountStep: View {
     @Bindable var viewModel: OnboardingViewModel
+    var focus: FocusState<OnboardingAccountField?>.Binding
 
     var body: some View {
         MSTextField(
             "Full name", text: $viewModel.fullName, identifier: "onboard.name",
             placeholder: "Dr. Sarah Mitchell", error: viewModel.nameError, contentType: .name
         )
+        .focused(focus, equals: .name)
+        .submitLabel(.next)
+        .onSubmit { focus.wrappedValue = .email }
+        .id(OnboardingAccountField.name)
         MSTextField(
             "Work email", text: $viewModel.email, identifier: "onboard.email",
             placeholder: "name@clinic.com", error: viewModel.emailError, keyboard: .emailAddress,
             contentType: .emailAddress
         )
+        .focused(focus, equals: .email)
+        .submitLabel(.next)
+        .onSubmit { focus.wrappedValue = .password }
+        .id(OnboardingAccountField.email)
         MSTextField(
             "Password", text: $viewModel.password, identifier: "onboard.password",
-            placeholder: "At least 8 characters", hint: "At least 8 characters", error: viewModel.passwordError,
+            placeholder: "At least 8 characters", error: viewModel.passwordError,
             isSecure: true, contentType: .newPassword
         )
+        .focused(focus, equals: .password)
+        .submitLabel(.go)
+        .onSubmit { Task { await viewModel.createAccount() } }
+        .id(OnboardingAccountField.password)
     }
 }
 
@@ -200,7 +240,7 @@ private struct OnboardingInviteStep: View {
                 MSPicker("Role", selection: roleBinding($row.role), options: [MembershipRole.staff, .admin]) {
                     $0.label
                 }
-                .frame(width: 140)
+                .frame(width: ControlWidth.shortSelect)
                 .accessibilityIdentifier("onboard.inviteRow[\(index)].role")
             }
         }

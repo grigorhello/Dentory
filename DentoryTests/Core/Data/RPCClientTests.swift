@@ -39,7 +39,7 @@ struct RPCClientTests {
         (PostgrestError(code: "42501", message: "the clinic is read-only until a payment method is added"),
          AppError.readOnly),
         (PostgrestError(code: "22023", message: "a note is required to cancel"),
-         AppError.validation(field: nil, message: "a note is required to cancel")),
+         AppError.validation(field: nil, message: "A note is required to cancel.")),
         (PostgrestError(hint: "name", code: "22023", message: "Another procedure is already called Filling."),
          AppError.validation(field: "name", message: "Another procedure is already called Filling.")),
         (PostgrestError(code: "PGRST116", message: "no rows"), AppError.notFound)

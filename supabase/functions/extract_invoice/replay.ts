@@ -2,7 +2,8 @@
 // get their recorded answers, the ones reading_test.ts replays, so a fixture PDF uploaded from the app is read end to
 // end without the Claude API, as the end-to-end flows (DentoryE2ETests) receive one. The request is the one the API
 // would get; only its answer comes from the recording, chosen by the pages it carries. Any other pages fail as every
-// reading did without a key. A hosted project never replays: its SUPABASE_URL is not the local stack's gateway.
+// reading did without a key. A hosted project never replays: its SUPABASE_URL is not the local stack's gateway, and
+// modelCallFor, which index.ts asks, decides it from the function's own environment alone.
 import harbourview from "./fixtures/harbourview-hv-2207.json" with { type: "json" };
 import lakeshore from "./fixtures/lakeshore-ls-58113.json" with { type: "json" };
 import northbridge from "./fixtures/northbridge-inv-10092.json" with { type: "json" };
@@ -24,6 +25,19 @@ export const recordings: Record<string, unknown> = {
 /** The CLI points the local functions' SUPABASE_URL at the stack's own gateway, kong; a hosted project's is its URL. */
 export function isLocalStack(supabaseURL = Deno.env.get("SUPABASE_URL") ?? ""): boolean {
   return URL.canParse(supabaseURL) && new URL(supabaseURL).hostname === "kong";
+}
+
+/** Who reads an invoice, from the function's environment: the Claude API whenever a key is set; without one, the
+ * recordings, on the local stack only; anywhere else nobody, and the reading fails with the reason error, as it did
+ * before MS-136. `claude` makes the API's call for a key (claude.ts's claudeCall). */
+export function modelCallFor(
+  apiKey: string | undefined,
+  supabaseURL: string | undefined,
+  claude: (apiKey: string) => ModelCall,
+): ModelCall {
+  if (apiKey) return claude(apiKey);
+  if (isLocalStack(supabaseURL ?? "")) return replayCall;
+  throw new ReadingFailure("error", "ANTHROPIC_API_KEY is not set");
 }
 
 export const replayCall: ModelCall = async (request) => {

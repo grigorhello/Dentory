@@ -43,15 +43,19 @@ struct ActivityViewModelTests {
             "Bonding agent expires in 59 days.",
             "Gutta percha F2 is missing expiry information."
         ])
-        #expect(viewModel.alerts.map(viewModel.whenText(for:)) == ["Today · 8:40\u{202F}AM", "Yesterday", "Yesterday"])
+        #expect(
+            viewModel.alerts.map(viewModel.whenText(for:)) == ["Today\u{00A0}· 8:40\u{202F}AM", "Yesterday", "Yesterday"]
+        )
         #expect(viewModel.alerts.map(viewModel.dotTone(for:)) == [.danger, .warning, .info])
     }
 
     @Test func lowSaysWhatIsLeftAgainstTheMinimum() async {
         let viewModel = await make()
-        #expect(viewModel.sentence(for: alert(.low)) == "Endo file kit #15-40 is low · 1 left, minimum 3.")
+        #expect(viewModel.sentence(for: alert(.low)) == "Endo file kit #15-40 is low\u{00A0}· 1 left, minimum 3.")
         let composite = alert(.low, name: "Composite A2", quantity: 3, unopened: 1, minimum: 2, tracking: .multiUse)
-        #expect(viewModel.sentence(for: composite) == "Composite A2 is low · 1 left, minimum 2.", "Unopened counts")
+        #expect(
+            viewModel.sentence(for: composite) == "Composite A2 is low\u{00A0}· 1 left, minimum 2.", "Unopened counts"
+        )
         #expect(viewModel.dotTone(for: composite) == .warning)
     }
 

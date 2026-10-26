@@ -26,19 +26,20 @@ final class ExpiringUITests: XCTestCase {
     func testAdminDisposesAWholeBatch() {
         let app = openExpiring()
         let summary = app.staticTexts["expiring.summary"]
-        XCTAssertEqual(summary.label, "2 products · $186 at risk within 90 days.")
+        XCTAssertEqual(summary.label, "2 products\u{00A0}· $186 at risk within 90 days.")
         XCTAssertTrue(app.descendants(matching: .any)[bonding].exists, "No Bonding agent card")
         XCTAssertTrue(app.descendants(matching: .any)[septocaine].exists, "No Septocaine card")
 
         app.buttons["60 days"].tap()
-        XCTAssertEqual(summary.label, "1 product · $82 at risk within 60 days.")
+        XCTAssertEqual(summary.label, "1 product\u{00A0}· $82 at risk within 60 days.")
         app.buttons["30 days"].tap()
         XCTAssertTrue(app.staticTexts["Nothing expires in this window."].waitForExistence(timeout: 3))
         app.buttons["90 days"].tap()
 
         app.buttons["\(septocaine).dispose"].tap()
         XCTAssertTrue(app.staticTexts["dispose.title"].waitForExistence(timeout: 3), "Mark disposed did not open")
-        XCTAssertTrue(app.staticTexts["Septocaine 4% 1:100,000 · lot B441. Removed with reason Expired."].exists)
+        let caption = "Septocaine 4% 1:100,000\u{00A0}· lot B441. Removed with reason Expired."
+        XCTAssertTrue(app.staticTexts[caption].exists)
         XCTAssertEqual(app.textFields["dispose.quantity"].value as? String, "34")
         app.buttons["dispose.confirm"].tap()
 
@@ -48,7 +49,7 @@ final class ExpiringUITests: XCTestCase {
         XCTAssertTrue(toast.staticTexts["34 cartridges Septocaine 4% 1:100,000"].exists)
         XCTAssertTrue(app.buttons["toast.undo"].exists, "No Undo")
         XCTAssertFalse(app.descendants(matching: .any)[septocaine].exists, "The disposed batch is still listed")
-        XCTAssertEqual(summary.label, "1 product · $82 at risk within 90 days.")
+        XCTAssertEqual(summary.label, "1 product\u{00A0}· $82 at risk within 90 days.")
 
         // Home's tile and value at risk follow once Home reloads.
         app.buttons["expiring.back"].tap()

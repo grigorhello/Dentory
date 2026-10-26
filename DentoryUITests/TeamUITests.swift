@@ -22,7 +22,8 @@ final class TeamUITests: XCTestCase {
         for id in [sarah, daniel, michael, priya] {
             XCTAssertTrue(app.buttons[id].exists, "Missing \(id)")
         }
-        XCTAssertTrue(app.buttons[priya].label.contains("Invited · Oct 1"), "Priya reads \(app.buttons[priya].label)")
+        let priyaRow = app.buttons[priya]
+        XCTAssertTrue(priyaRow.label.contains("Invited\u{00A0}· Oct 1"), "Priya reads \(priyaRow.label)")
         XCTAssertTrue(app.buttons[daniel].label.contains("Admin"))
 
         app.buttons["team.invite"].tap()
@@ -34,7 +35,7 @@ final class TeamUITests: XCTestCase {
         tapWhenReady(email)
         app.typeText("michael@smiledental.ca")
         tapWhenReady(app.buttons["invite.send"])
-        let duplicate = app.staticTexts["michael@smiledental.ca is already on the team"]
+        let duplicate = app.staticTexts["michael@smiledental.ca is already on the team."]
         XCTAssertTrue(duplicate.waitForExistence(timeout: 5), "An address on the team is not refused")
 
         tapWhenReady(email)

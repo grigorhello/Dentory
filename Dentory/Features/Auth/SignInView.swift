@@ -56,10 +56,11 @@ struct SignInView: View {
             }
             .padding(.top, Spacing.sm)
             .accessibilityIdentifier("signin.submit")
+            // The small text button f1 draws; its hit target is still 44 pt.
             NavigationLink(value: PasswordResetRoute(email: viewModel.email)) {
                 Text("Forgot password")
             }
-            .buttonStyle(.ms(.text, size: .medium, fullWidth: true))
+            .buttonStyle(.ms(.text, size: .small, fullWidth: true))
             .accessibilityIdentifier("signin.forgot")
             Spacer(minLength: Spacing.xxxl)
             footer
@@ -77,7 +78,7 @@ struct SignInView: View {
                 .textStyle(.display32)
                 .foregroundStyle(Color.ms.ink)
                 .accessibilityAddTraits(.isHeader)
-            Text("Sign in to your clinic.").textStyle(.body16).foregroundStyle(Color.ms.textSecondary)
+            Text("Sign in to your clinic.").textStyle(.body16).foregroundStyle(Color.ms.textBody)
         }
         .padding(.top, Spacing.xxxxl)
         .padding(.bottom, Spacing.xl)
@@ -120,7 +121,7 @@ struct SignInView: View {
     private var footer: some View {
         VStack(spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
-                Text("Setting up a new clinic?").textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
+                Text("Setting up a new clinic?").textStyle(.body14).foregroundStyle(Color.ms.textBody)
                 NavigationLink(value: OnboardingViewModel.Step.account) {
                     Text("Sign up as admin").textStyle(.bodyStrong14).foregroundStyle(Color.ms.primary)
                 }

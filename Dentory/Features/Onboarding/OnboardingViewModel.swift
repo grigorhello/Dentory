@@ -177,7 +177,7 @@ final class OnboardingViewModel {
             do {
                 _ = try await repository.invite(clinicID: clinicID, invites: filledInvites)
                 analytics.track(.onboardingFinished(invitations: filledInvites.count))
-                finish(message: "Invitations sent · They get a link by email.")
+                finish(message: "Invitations sent\u{00A0}· They get a link by email.")
             } catch {
                 let appError = AppError(error)
                 // A refusal of one address names it; it belongs under that row, not under step 1's email.

@@ -74,7 +74,7 @@ extension ProductDetailViewModel {
         let expiring = dated
             .filter { batch in batch.expiryMonth.map { formatters.daysToExpiry(month: $0) <= 90 } ?? false }
             .reduce(Decimal(0)) { $0 + $1.quantity }
-        return "\(formatters.number(tracked)) of \(formatters.number(total)) tracked · "
+        return "\(formatters.number(tracked)) of \(formatters.number(total)) tracked\u{00A0}· "
             + "\(formatters.number(expiring)) expire within 90 days"
     }
 
@@ -87,7 +87,7 @@ extension ProductDetailViewModel {
     /// "1 unopened · 2 open"
     var bottlesLine: String {
         guard let detail else { return "" }
-        return "\(formatters.number(detail.unopened)) unopened · \(detail.openCount) open"
+        return "\(formatters.number(detail.unopened)) unopened\u{00A0}· \(detail.openCount) open"
     }
 
     var canOpenNewBottle: Bool { (detail?.unopened ?? 0) > 0 }
@@ -116,7 +116,7 @@ extension ProductDetailViewModel {
             case 1: "opened yesterday"
             default: "opened \(days) days ago"
             }
-            let title = "Open · \(PersonName.first(of: bottle.openedByName))"
+            let title = "Open\u{00A0}· \(PersonName.first(of: bottle.openedByName))"
             return BottleRow(id: bottle.id, title: title, subtitle: when)
         }
     }
@@ -130,7 +130,7 @@ extension ProductDetailViewModel {
                 id: row.id,
                 deltaText: Self.deltaText(for: row, formatters: formatters),
                 deltaTone: row.type == .count || row.delta == 0 ? .neutral : (row.delta < 0 ? .danger : .success),
-                description: "\(Self.label(for: row)) · \(PersonName.first(of: row.byName))",
+                description: "\(Self.label(for: row))\u{00A0}· \(PersonName.first(of: row.byName))",
                 dateText: formatters.monthDay(row.at)
             )
         }
@@ -148,8 +148,13 @@ extension ProductDetailViewModel {
     }
 
     /// The reason ("Damaged", "Physical count"), else the reference (the procedure, the invoice), else the kind.
-    /// A reversal keeps its reason but reads "Undo · Damaged", as the engine labels it (MS-100 D10).
+    /// A reversal keeps its reason but reads "Undo · Damaged", as the engine labels it (MS-100 D10). The engine writes
+    /// its " · " with a plain space; here it gets the no-break space before the dot that every caption has.
     nonisolated static func label(for row: StockTransaction) -> String {
+        engineLabel(for: row).replacing(" · ", with: "\u{00A0}· ")
+    }
+
+    private nonisolated static func engineLabel(for row: StockTransaction) -> String {
         if let reference = row.referenceLabel, reference.hasPrefix(undoPrefix) { return reference }
         if let reason = row.reason, !reason.isEmpty { return reason }
         if let reference = row.referenceLabel, !reference.isEmpty { return reference }

@@ -43,7 +43,7 @@ struct ProcedureCard: View {
 
     private func supplies(_ latest: LatestProcedure) -> String {
         let count = "\(latest.supplyCount) \(latest.supplyCount == 1 ? "supply" : "supplies")"
-        return latest.startedByFirstName.isEmpty ? count : "\(count) · \(latest.startedByFirstName)"
+        return latest.startedByFirstName.isEmpty ? count : "\(count)\u{00A0}· \(latest.startedByFirstName)"
     }
 }
 

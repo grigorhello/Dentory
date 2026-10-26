@@ -33,4 +33,5 @@ Swift 6, SwiftUI, Observation, iOS 17+, iPhone and iPad; XcodeGen; Swift Package
 - `make project` after adding or removing files (the `.xcodeproj` is generated; only `Package.resolved` is committed).
 - `make lint` (strict SwiftLint), `make build`, `make test`, `make uitest`. CI builds with `WARNINGS_AS_ERRORS=YES`, so run `make test WARNINGS_AS_ERRORS=YES` before pushing.
 - Database: `make db-start`, then `make db-reset db-test`, then `make seed-demo db-test` (CI runs pgTAP after both). Every migration (`supabase migration new <name>`) gets a pgTAP test.
+- `make e2e`: the end-to-end flows (`DentoryE2ETests`) against the local stack, reset and seeded first, with the stack started from the same checkout; on the Mac only, CI just compiles them.
 - Edge Functions: `supabase/functions/<name>/index.ts`, shared code in `_shared/`, checked by `make functions-check`. They refuse with `{ "error": { "code", "message", "field" } }`, which the app maps with `AppError(functionError:)`.

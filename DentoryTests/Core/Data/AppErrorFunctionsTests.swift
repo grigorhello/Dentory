@@ -8,9 +8,11 @@ struct AppErrorFunctionsTests {
         AppError(functionError: FunctionsError.httpError(code: status, data: Data(json.utf8)))
     }
 
-    @Test func aRefusedFieldKeepsItsSentence() {
+    @Test func aRefusedFieldKeepsItsSentenceInHouseCopy() {
         let conflict = #"{"error":{"code":"conflict","message":"priya@x.ca is already on the team","field":"email"}}"#
-        #expect(failure(409, conflict) == .validation(field: "email", message: "priya@x.ca is already on the team"))
+        #expect(failure(409, conflict) == .validation(field: "email", message: "priya@x.ca is already on the team."))
+        let invalid = #"{"error":{"code":"validation","message":"Enter a valid email","field":"email"}}"#
+        #expect(failure(400, invalid) == .validation(field: "email", message: "Enter a valid email address."))
         #expect(failure(400, #"{"error":{"code":"validation","message":"At least 8 characters.","field":"password"}}"#)
             == .validation(field: "password", message: "At least 8 characters."))
     }

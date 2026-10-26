@@ -46,16 +46,18 @@ struct ToBuyViewModelTests {
 
     @Test func eachLineSaysWhereItStands() async throws {
         let viewModel = await make()
-        #expect(viewModel.line(for: try line("Endo file kit #15-40")) == "Current 1 · target 5 · Patterson")
-        #expect(viewModel.line(for: try line("Gauze")) == "5 ordered Oct 1 · Patterson")
-        #expect(viewModel.line(for: try line("Alginate impression")) == "Received Sep 26 · Patterson")
+        #expect(
+            viewModel.line(for: try line("Endo file kit #15-40")) == "Current 1\u{00A0}· target 5\u{00A0}· Patterson"
+        )
+        #expect(viewModel.line(for: try line("Gauze")) == "5 ordered Oct 1\u{00A0}· Patterson")
+        #expect(viewModel.line(for: try line("Alginate impression")) == "Received Sep 26\u{00A0}· Patterson")
         let endo = try line("Endo file kit #15-40")
         let noSupplier = ToBuyItem(
             id: UUID(), productID: endo.productID, name: endo.name, unit: endo.unit, supplier: nil,
             quantity: 1, target: 5, buyQuantity: 4, source: .manual, status: .toBuy, createdAt: Session.demoNow,
             orderedAt: nil, receivedAt: nil
         )
-        #expect(viewModel.line(for: noSupplier) == "Current 1 · target 5", "The supplier only when known")
+        #expect(viewModel.line(for: noSupplier) == "Current 1\u{00A0}· target 5", "The supplier only when known")
     }
 
     @Test func everyLineStartsSelectedAndClearUnticksThemAll() async throws {
@@ -189,7 +191,7 @@ struct ToBuyViewModelTests {
         #expect(!names.contains("Endo file kit #15-40") && !names.contains("Rubber dam latex-free"))
         #expect(names.contains("Gauze"), "An ordered product can be added again")
         #expect(viewModel.addCaption(for: try product("Gauze")) == "8 packs in stock")
-        #expect(viewModel.addCaption(for: try product("Bonding agent")) == "0 unopened · 1 open")
+        #expect(viewModel.addCaption(for: try product("Bonding agent")) == "0 unopened\u{00A0}· 1 open")
         viewModel.searchText = "gau"
         #expect(viewModel.addableProducts.map(\.name) == ["Gauze"])
     }
@@ -209,7 +211,7 @@ struct ToBuyViewModelTests {
         #expect(analytics.events == [.toBuyAdded])
         #expect(viewModel.segment == .toBuy)
         #expect(viewModel.message == .init(
-            title: "Added to To buy", detail: "Gauze · suggested 2 packs", undoItemID: added.id
+            title: "Added to To buy", detail: "Gauze\u{00A0}· suggested 2 packs", undoItemID: added.id
         ))
         await viewModel.undoAdd(added.id)
         #expect(repository.removals == [added.id])
@@ -222,7 +224,7 @@ struct ToBuyViewModelTests {
         let endo = try product("Endo file kit #15-40")
         await viewModel.add(endo)
         #expect(viewModel.message == .init(
-            title: "Already on To buy", detail: "Endo file kit #15-40 · 4 kits", undoItemID: nil
+            title: "Already on To buy", detail: "Endo file kit #15-40\u{00A0}· 4 kits", undoItemID: nil
         ))
     }
 
@@ -232,7 +234,7 @@ struct ToBuyViewModelTests {
         let viewModel = await make(repository)
         viewModel.openAddItem()
         await viewModel.loadProducts()
-        #expect(viewModel.addItemEmptyText == "Couldn't load products. Close and reopen Add item to try again.")
+        #expect(viewModel.addItemEmptyText == "Couldn't load products. Reopen Add item to try again.")
         #expect(viewModel.generalError == nil)
     }
 

@@ -71,7 +71,7 @@ struct ManualReceiveViewModelTests {
         let repository = FakeManualReceiveRepository()
         repository.productsResult = .failure(AppError.network)
         let failed = await make(repository)
-        #expect(failed.pickEmptyText == "Couldn't load products. Close and reopen Choose product to try again.")
+        #expect(failed.pickEmptyText == "Couldn't load products. Reopen Choose product to try again.")
 
         repository.productsResult = .success([])
         let empty = await make(repository)
@@ -157,10 +157,11 @@ struct ManualReceiveViewModelTests {
 
     @Test func eachProductShowsItsCategoryAndStock() async {
         let viewModel = await make()
-        #expect(viewModel.stockLine(for: .septocaine) == "Anesthetic · 54 cartridges in stock")
-        #expect(viewModel.stockLine(for: .endoKit) == "Endodontics · 1 kit in stock")
+        #expect(viewModel.stockLine(for: .septocaine) == "Anesthetic\u{00A0}· 54 cartridges in stock")
+        #expect(viewModel.stockLine(for: .endoKit) == "Endodontics\u{00A0}· 1 kit in stock")
         #expect(
-            viewModel.stockLine(for: .sealer) == "Endodontics · 0 unopened · 1 open", "Multi-use: unopened and open"
+            viewModel.stockLine(for: .sealer) == "Endodontics\u{00A0}· 0 unopened\u{00A0}· 1 open",
+            "Multi-use: unopened and open"
         )
         #expect(viewModel.stockLine(for: .gauze) == "8 packs in stock", "No category")
     }
@@ -170,9 +171,9 @@ struct ManualReceiveViewModelTests {
         let septocaine = await form(.septocaine)
         #expect(septocaine.effectLine == "1 box = 50 cartridges", "Before a quantity, the pack alone")
         septocaine.quantityText = "5"
-        #expect(septocaine.effectLine == "5 boxes = 250 cartridges · Current 54 → after 304")
+        #expect(septocaine.effectLine == "5 boxes = 250 cartridges\u{00A0}· Current 54 → after 304")
         septocaine.quantityText = "1"
-        #expect(septocaine.effectLine == "1 box = 50 cartridges · Current 54 → after 104")
+        #expect(septocaine.effectLine == "1 box = 50 cartridges\u{00A0}· Current 54 → after 104")
 
         let kit = await form(.endoKit)
         #expect(kit.effectLine == nil, "Received by the unit: nothing before a quantity")
@@ -191,7 +192,7 @@ struct ManualReceiveViewModelTests {
         sealer.quantityText = "1"
         #expect(sealer.effectLine == "Current 0 → after 1 unopened kit")
         let composite = await form(.composite, quantity: "2")
-        #expect(composite.effectLine == "2 boxes = 20 syringes · Current 2 → after 22 unopened")
+        #expect(composite.effectLine == "2 boxes = 20 syringes\u{00A0}· Current 2 → after 22 unopened")
     }
 
     // MARK: - Receive
