@@ -212,11 +212,17 @@ select is((select count(*)::integer from public.invoice_lines where invoice_id =
   2, 'its lines stay as read');
 select is((select count(*)::integer from public.alerts where invoice_id = '00000000-0000-4000-8000-000000129031'), 1, 'with one alert');
 
--- The admin resolving a line (MS-130) changes its state, never the state it was read in.
+-- The admin resolving a line (MS-130, through its function) changes its state, never the state it was read in, which
+-- no update changes.
 select pg_temp.act_as('00000000-0000-4000-8000-000000129001');
-update public.invoice_lines set state = 'skipped' where invoice_id = '00000000-0000-4000-8000-000000129031' and n = 2;
-update public.invoice_lines set read_state = 'matched' where invoice_id = '00000000-0000-4000-8000-000000129031' and n = 2;
+do $$
+begin
+  perform public.invoice_line_skip(id) from public.invoice_lines
+  where invoice_id = '00000000-0000-4000-8000-000000129031' and n = 2;
+end;
+$$;
 reset role;
+update public.invoice_lines set read_state = 'matched' where invoice_id = '00000000-0000-4000-8000-000000129031' and n = 2;
 select results_eq(
   $$ select state::text, read_state::text from public.invoice_lines where invoice_id = '00000000-0000-4000-8000-000000129031' and n = 2 $$,
   $$ values ('skipped', 'needs_review') $$, 'a resolved line keeps the state it was read in (MS-147''s matched share)');

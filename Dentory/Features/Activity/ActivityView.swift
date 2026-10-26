@@ -74,11 +74,19 @@ struct ActivityView: View {
         }
     }
 
+    /// A delivery opens on Review invoice for its invoice, over Receive delivery, where Back leads (MS-130); receiving
+    /// is a write, so in read-only mode the sheet says why instead (MS-142).
     private func open(_ alert: ActivityAlert) {
         switch viewModel.destination(for: alert) {
-        case .product(let productID): router.push(ActivityRoute.product(productID))
-        case .delivery: writeAccess.perform { router.push(HomeRoute.receive) }
-        case nil: break
+        case .product(let productID):
+            router.push(ActivityRoute.product(productID))
+        case .delivery(let invoiceID):
+            writeAccess.perform {
+                router.push(HomeRoute.receive)
+                if let invoiceID { router.push(ReceiveRoute.invoice(invoiceID)) }
+            }
+        case nil:
+            break
         }
     }
 }

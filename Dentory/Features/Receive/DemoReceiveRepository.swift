@@ -2,14 +2,19 @@ import Foundation
 
 /// Receive delivery without a server: the demo clinic as `supabase/seed-demo.sql` leaves it on the frames' October 2,
 /// the Patterson invoice read at 8:55 AM and waiting for review, and the five lines To buy marked ordered on Oct 1;
-/// with `-demoInvoice reading` or `-demoInvoice failed`, an invoice being read above it (`DemoInvoiceRepository`).
+/// with `-demoInvoice reading` or `-demoInvoice failed`, an invoice being read above it (`DemoInvoiceRepository`). An
+/// invoice the demo set aside (Receive manually instead, Discard invoice) is no longer listed.
 struct DemoReceiveRepository: ReceiveRepository {
     var now = Session.demoNow
     var withInvoiceBeingRead = DemoInvoiceRepository.Launched.current != nil
+    /// The invoices set aside in this launch.
+    var setAside: (@MainActor @Sendable () -> [UUID])?
 
     func overview(clinicID: UUID) async throws -> ReceiveOverview {
         try await Task.sleep(for: .milliseconds(200))
-        return .demo(now: now, withInvoiceBeingRead: withInvoiceBeingRead)
+        let overview = ReceiveOverview.demo(now: now, withInvoiceBeingRead: withInvoiceBeingRead)
+        let gone = Set(setAside?() ?? [])
+        return ReceiveOverview(invoices: overview.invoices.filter { !gone.contains($0.id) }, waiting: overview.waiting)
     }
 }
 

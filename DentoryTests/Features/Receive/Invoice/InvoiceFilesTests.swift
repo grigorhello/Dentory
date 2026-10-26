@@ -20,6 +20,16 @@ struct InvoiceFilesTests {
         #expect(InvoiceFiles.bucket == "invoices")
     }
 
+    @Test func discardingAnInvoiceDeletesEveryNameItsPagesCanHave() {
+        let paths = InvoiceFiles.allPaths(clinicID: clinicID, invoiceID: invoiceID)
+        let folder = "d0000000-0000-4000-8000-000000000001/6f1c2a3b-0000-4000-8000-0000000000ab/"
+        #expect(paths.count == 21)
+        #expect(paths.first == folder + "page-1.jpg")
+        #expect(paths.contains(folder + "page-20.jpg"))
+        #expect(paths.last == folder + "page-1.pdf")
+        #expect(!paths.contains(folder + "page-21.jpg"), "The bucket takes no 21st page")
+    }
+
     @Test func eachKindUploadsWithTheTypeTheBucketTakes() {
         #expect(InvoiceFiles.contentType(of: .jpeg) == "image/jpeg")
         #expect(InvoiceFiles.contentType(of: .pdf) == "application/pdf")

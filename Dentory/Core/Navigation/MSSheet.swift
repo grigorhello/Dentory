@@ -66,6 +66,8 @@ extension MSSheet where Primary == EmptyView {
 struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
     let title: String
     var identifier: String
+    /// A line under the title in the monospaced type, as the invoice line Which product is this? asks about (`match`).
+    var code: String?
     @Binding var searchText: String
     var placeholder = "Search products"
     var emptyText = "No products match."
@@ -78,6 +80,7 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
     init(
         _ title: String,
         identifier: String,
+        code: String? = nil,
         searchText: Binding<String>,
         placeholder: String = "Search products",
         emptyText: String = "No products match.",
@@ -87,6 +90,7 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
     ) {
         self.title = title
         self.identifier = identifier
+        self.code = code
         _searchText = searchText
         self.placeholder = placeholder
         self.emptyText = emptyText
@@ -105,6 +109,12 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
                     .accessibilityIdentifier("\(identifier).title")
                 Spacer(minLength: Spacing.sm)
                 action()
+            }
+            if let code {
+                Text(code)
+                    .textStyle(.mono)
+                    .foregroundStyle(Color.ms.textBody)
+                    .accessibilityIdentifier("\(identifier).code")
             }
             MSTextField(nil, text: $searchText, placeholder: placeholder, icon: .search)
                 .accessibilityIdentifier("\(identifier).search")
@@ -134,6 +144,7 @@ extension SheetList where Action == EmptyView {
     init(
         _ title: String,
         identifier: String,
+        code: String? = nil,
         searchText: Binding<String>,
         placeholder: String = "Search products",
         emptyText: String = "No products match.",
@@ -141,7 +152,7 @@ extension SheetList where Action == EmptyView {
         @ViewBuilder row: @escaping (Item) -> Row
     ) {
         self.init(
-            title, identifier: identifier, searchText: searchText, placeholder: placeholder,
+            title, identifier: identifier, code: code, searchText: searchText, placeholder: placeholder,
             emptyText: emptyText, items: items, row: row
         ) { EmptyView() }
     }

@@ -14,10 +14,11 @@ final class ActivityViewModel {
         case alerts, history
     }
 
-    /// What an alert opens: the product it is about, or the delivery waiting for review.
+    /// What an alert opens: the product it is about, or the delivery waiting for review, on Review invoice when the
+    /// alert names its invoice (MS-130).
     enum Destination: Equatable {
         case product(UUID)
-        case delivery
+        case delivery(invoiceID: UUID?)
     }
 
     private(set) var state: LoadState = .loading
@@ -66,7 +67,7 @@ final class ActivityViewModel {
         case .outOfStock, .low, .expiring, .missingExpiry:
             alert.productID.map(Destination.product)
         case .invoiceReady:
-            .delivery
+            .delivery(invoiceID: alert.invoiceID)
         }
     }
 }

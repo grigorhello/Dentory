@@ -46,6 +46,12 @@ struct CatalogButtonsSection: View {
                     CatalogCaption("\(String(describing: variant)) · medium, small, disabled")
                 }
             }
+            HStack(spacing: Spacing.sm) {
+                IconMenu(.ellipsis, label: "More", items: [
+                    IconMenu.Item(title: "Discard invoice", identifier: "catalog.menu.discard", isDestructive: true) {}
+                ])
+                CatalogCaption("menu · a screen's \"…\" (Review invoice)")
+            }
         }
         CatalogSection("Floating add") {
             FloatingAddButton(label: "Add item") {}
