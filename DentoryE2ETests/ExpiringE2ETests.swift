@@ -11,24 +11,23 @@ final class ExpiringE2ETests: XCTestCase {
     func testTheExpiringBondingAgentBottleIsDisposed() {
         let app = E2E.signedIn(E2E.admin)
         let tile = app.descendants(matching: .any)["home.tile.expiring"]
-        XCTAssertTrue(tile.waitForExistence(timeout: 10), "No Expiring soon tile")
+        tile.appears("No Expiring soon tile")
         tile.tap()
-        XCTAssertTrue(app.staticTexts["expiring.summary"].waitForExistence(timeout: 10), "Expiring soon did not open")
+        app.staticTexts["expiring.summary"].appears("Expiring soon did not open")
         // A card is named after its batch, whose id the seed leaves random.
         let card = E2E.element("expiring.card[", labelled: "Bonding agent", in: app)
-        XCTAssertTrue(card.waitForExistence(timeout: 10), "No Bonding agent card")
+        card.appears("No Bonding agent card")
         XCTAssertTrue(card.label.contains("1 bottle · lot BA7"), "The card reads \(card.label)")
         let cardID = card.identifier
 
         app.buttons["\(cardID).dispose"].tap()
-        XCTAssertTrue(
-            app.staticTexts["Bonding agent · lot BA7. Removed with reason Expired."].waitForExistence(timeout: 10),
-            "Mark disposed did not open for the batch"
-        )
+        let caption = app.staticTexts["Bonding agent · lot BA7. Removed with reason Expired."]
+        caption.appears("Mark disposed did not open for the batch")
         XCTAssertEqual(app.textFields["dispose.quantity"].value as? String, "1", "The whole batch is not the default")
         app.buttons["dispose.confirm"].tap()
         E2E.expectToast("Disposed", "1 bottle Bonding agent", in: app)
-        XCTAssertTrue(app.descendants(matching: .any)[cardID].waitForNonExistence(timeout: 10), "Still listed")
+        let disposed = app.descendants(matching: .any)[cardID]
+        XCTAssertTrue(disposed.waitForNonExistence(timeout: E2E.patience), "The batch disposed is still listed")
 
         app.buttons["expiring.back"].tap()
         app.buttons["tab.inventory"].tap()

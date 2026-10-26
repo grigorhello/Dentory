@@ -15,26 +15,26 @@ final class CountStockE2ETests: XCTestCase {
         let app = E2E.signedIn(E2E.admin)
         app.buttons["tab.inventory"].tap()
         let countStock = app.buttons["inv.countStock"]
-        XCTAssertTrue(countStock.waitForExistence(timeout: 10), "No Count stock button")
+        countStock.appears("No Count stock button")
         countStock.tap()
-        XCTAssertTrue(app.buttons["inv.count.cancel"].waitForExistence(timeout: 10), "Count mode did not open")
+        app.buttons["inv.count.cancel"].appears("Count mode did not open")
 
         E2E.searchInventory(for: "Matrix band", in: app)
         let fewerBands = app.buttons["inv.count.row[\(matrixBands)].dec"]
-        XCTAssertTrue(fewerBands.waitForExistence(timeout: 10), "Matrix band is not counted")
+        fewerBands.appears("Matrix band is not counted")
         fewerBands.tap()
         fewerBands.tap()
         XCTAssertEqual(app.staticTexts["inv.count.row[\(matrixBands)].value"].label, "33")
         E2E.searchInventory(for: "Paper points", in: app)
         let morePoints = app.buttons["inv.count.row[\(paperPoints)].inc"]
-        XCTAssertTrue(morePoints.waitForExistence(timeout: 10), "Paper points are not counted")
+        morePoints.appears("Paper points are not counted")
         morePoints.tap()
         XCTAssertEqual(app.staticTexts["inv.count.row[\(paperPoints)].value"].label, "6")
 
         let review = app.buttons["inv.count.review"]
         XCTAssertEqual(review.label, "Review · 2 corrections", "A count was lost while searching")
         review.tap()
-        XCTAssertTrue(app.staticTexts["reviewCount.title"].waitForExistence(timeout: 10), "Review did not open")
+        app.staticTexts["reviewCount.title"].appears("Review did not open")
         XCTAssertEqual(app.staticTexts["reviewCount.row[\(matrixBands)].change"].label, "35 → 33")
         XCTAssertEqual(app.staticTexts["reviewCount.row[\(paperPoints)].change"].label, "5 → 6")
         let apply = app.buttons["reviewCount.apply"]
@@ -42,7 +42,7 @@ final class CountStockE2ETests: XCTestCase {
         apply.tap()
 
         E2E.expectToast("Count applied", "2 products updated", in: app)
-        XCTAssertTrue(countStock.waitForExistence(timeout: 10), "Still in count mode")
+        countStock.appears("Still in count mode")
         let bands = E2E.inventoryRow(matrixBands, searching: "Matrix band", in: app)
         E2E.expect(bands, toRead: "33 bands", "Inventory does not show the count")
         let points = E2E.inventoryRow(paperPoints, searching: "Paper points", in: app)

@@ -11,6 +11,10 @@ enum E2E {
     static let staff = "michael@smiledental.ca"
     static let password = "smiledental"
 
+    /// How long a flow waits for a screen or the server's answer: a slower Mac, or a stack busy with another flow's
+    /// writes, takes longer than this one.
+    static let patience: TimeInterval = 20
+
     /// A product of the demo clinic by its number in the seed (`pg_temp.pid`).
     nonisolated static func product(_ number: Int) -> String {
         "d0000000-0000-4000-8000-0000000002" + twoDigits(number)
@@ -39,7 +43,7 @@ enum E2E {
         let app = XCUIApplication()
         app.launchArguments = ["-signedOut"] + arguments
         app.launch()
-        XCTAssertTrue(app.buttons["signin.submit"].waitForExistence(timeout: 15), "Sign in did not show")
+        app.buttons["signin.submit"].appears("Sign in did not show")
         return app
     }
 
@@ -59,7 +63,7 @@ enum E2E {
         app.secureTextFields["signin.password"].firstMatch.tap()
         app.typeText(password)
         app.buttons["signin.submit"].tap()
-        XCTAssertTrue(app.buttons["home.header.account"].waitForExistence(timeout: 15), "Home did not show")
+        app.buttons["home.header.account"].appears("Home did not show")
         dismissNotificationsExplainer(in: app)
     }
 
@@ -72,7 +76,9 @@ enum E2E {
     }
 
     /// Waits until `element`'s label contains `text`.
-    static func expect(_ element: XCUIElement, toRead text: String, _ message: String, timeout: TimeInterval = 10) {
+    static func expect(
+        _ element: XCUIElement, toRead text: String, _ message: String, timeout: TimeInterval = patience
+    ) {
         let label = NSPredicate(format: "label CONTAINS %@", text)
         let reads = XCTNSPredicateExpectation(predicate: label, object: element)
         let waited = XCTWaiter().wait(for: [reads], timeout: timeout)
@@ -89,7 +95,7 @@ enum E2E {
     /// Types `text` into the search of the Inventory on screen, in place of what it held.
     static func searchInventory(for text: String, in app: XCUIApplication) {
         let search = app.textFields["inv.search"].firstMatch
-        XCTAssertTrue(search.waitForExistence(timeout: 10), "Inventory did not open")
+        search.appears("Inventory did not open")
         search.tap()
         if let typed = search.value as? String, !typed.isEmpty, typed != search.placeholderValue {
             search.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: typed.count))
@@ -106,7 +112,7 @@ enum E2E {
     /// The toast once it shows, with its title and detail.
     static func expectToast(_ title: String, _ detail: String, in app: XCUIApplication) {
         let toast = app.descendants(matching: .any)["toast"]
-        XCTAssertTrue(toast.waitForExistence(timeout: 10), "No toast \"\(title)\"")
+        toast.appears("No toast \"\(title)\"")
         XCTAssertTrue(toast.staticTexts[title].exists, "The toast is not \"\(title)\"")
         XCTAssertTrue(toast.staticTexts[detail].exists, "The toast's detail is not \"\(detail)\"")
     }

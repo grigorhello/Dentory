@@ -16,7 +16,7 @@ final class ToBuyE2ETests: XCTestCase {
         app.buttons["tab.toBuy"].tap()
         // A toggle to XCUITest, not a button.
         let checkbox = app.descendants(matching: .any)["Select Rubber dam latex-free"]
-        XCTAssertTrue(checkbox.waitForExistence(timeout: 10), "Rubber dam is not on To buy")
+        checkbox.appears("Rubber dam is not on To buy")
         // The line's own id, which the seed leaves random, names its rows under Ordered and Received too.
         let lineID = String(checkbox.identifier.dropFirst("order.row[".count).dropLast("].select".count))
 
@@ -29,25 +29,25 @@ final class ToBuyE2ETests: XCTestCase {
         E2E.expectToast("Marked as ordered", "1 item", in: app)
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Ordered'")).firstMatch.tap()
         let ordered = app.descendants(matching: .any)["order.ordered[\(lineID)]"]
-        XCTAssertTrue(ordered.waitForExistence(timeout: 10), "Rubber dam is not under Ordered")
+        ordered.appears("Rubber dam is not under Ordered")
 
         app.buttons["tab.home"].tap()
         app.descendants(matching: .any)["home.receive"].tap()
         let waiting = app.descendants(matching: .any)["receive.waiting[\(lineID)]"]
-        XCTAssertTrue(waiting.waitForExistence(timeout: 10), "Rubber dam is not waiting for delivery")
+        waiting.appears("Rubber dam is not waiting for delivery")
         XCTAssertEqual(waiting.label, "Rubber dam latex-free")
 
         app.buttons["receive.manual"].tap()
         app.buttons["manual.product"].tap()
         let search = app.textFields["pickProduct.search"].firstMatch
-        XCTAssertTrue(search.waitForExistence(timeout: 10), "No Choose product sheet")
+        search.appears("No Choose product sheet")
         search.tap()
         search.typeText("rubber")
         let product = app.buttons["pickProduct.row[\(rubberDam)]"]
-        XCTAssertTrue(product.waitForExistence(timeout: 10), "Rubber dam is not on Choose product")
+        product.appears("Rubber dam is not on Choose product")
         product.tap()
         let quantity = app.textFields["manual.qty"]
-        XCTAssertTrue(quantity.waitForExistence(timeout: 10), "Choose product did not close")
+        quantity.appears("Choose product did not close")
         quantity.tap()
         quantity.typeText("36")
         XCTAssertEqual(app.staticTexts["manual.effect"].label, "Current 0 → after 36 sheets")
@@ -58,11 +58,8 @@ final class ToBuyE2ETests: XCTestCase {
 
         app.buttons["tab.toBuy"].tap()
         let received = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Received'")).firstMatch
-        XCTAssertTrue(received.waitForExistence(timeout: 10), "No Received segment")
+        received.appears("No Received segment")
         received.tap()
-        XCTAssertTrue(
-            app.descendants(matching: .any)["order.received[\(lineID)]"].waitForExistence(timeout: 10),
-            "The delivery did not move the line to Received"
-        )
+        app.descendants(matching: .any)["order.received[\(lineID)]"].appears("The line did not move to Received")
     }
 }

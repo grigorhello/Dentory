@@ -14,11 +14,11 @@ final class InvoiceE2ETests: XCTestCase {
         let app = E2E.signedIn(E2E.admin, arguments: ["-receiveFile", E2E.invoiceFixture])
         app.descendants(matching: .any)["home.receive"].tap()
         let upload = app.buttons["receive.upload"]
-        XCTAssertTrue(upload.waitForExistence(timeout: 10), "Receive delivery did not open")
+        upload.appears("Receive delivery did not open")
         upload.tap()
 
         let header = app.staticTexts["invoice.header"]
-        XCTAssertTrue(header.waitForExistence(timeout: 30), "The invoice was not read")
+        XCTAssertTrue(header.waitForExistence(timeout: 60), "The invoice was not read")
         XCTAssertEqual(header.label, "Northbridge Dental Supply · INV-10092 · $520.03")
         XCTAssertEqual(app.staticTexts["invoice.banner"].label, "AI read 4 lines. Check each one, then confirm.")
         let states = (1...4).map { app.descendants(matching: .any)["invoice.line[\($0)].state"].label }
@@ -32,7 +32,7 @@ final class InvoiceE2ETests: XCTestCase {
         E2E.expect(app.staticTexts["invoice.line[4].headline"], toRead: "Ignored", "Ignore")
         app.buttons["invoice.line[3].a"].tap()
         let create = app.buttons["newProduct.submit"]
-        XCTAssertTrue(create.waitForExistence(timeout: 10), "New product did not open from the line")
+        create.appears("New product did not open from the line")
         XCTAssertEqual(app.textFields["newProduct.name"].value as? String, "Tempbond NE")
         create.tap()
         E2E.expect(app.staticTexts["invoice.line[3].headline"], toRead: "Tempbond NE · new product", "Add new")
@@ -43,7 +43,7 @@ final class InvoiceE2ETests: XCTestCase {
         confirm.tap()
 
         E2E.expectToast("Delivery received", "Inventory increased for 3 products.", in: app)
-        XCTAssertTrue(app.staticTexts["inv.header.title"].waitForExistence(timeout: 10), "Inventory did not open")
+        app.staticTexts["inv.header.title"].appears("Inventory did not open")
         let septocaine = E2E.inventoryRow(E2E.product(1), searching: "Septocaine", in: app)
         E2E.expect(septocaine, toRead: "304 cartridges", "Septocaine did not get its 250 cartridges")
         let endoKits = E2E.inventoryRow(E2E.product(2), searching: "Endo file kit", in: app)

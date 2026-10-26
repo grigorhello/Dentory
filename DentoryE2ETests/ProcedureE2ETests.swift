@@ -19,10 +19,10 @@ final class ProcedureE2ETests: XCTestCase {
 
         app.buttons["tab.procedures"].tap()
         let cleaning = app.descendants(matching: .any)["proc.template[\(E2E.template(2))]"]
-        XCTAssertTrue(cleaning.waitForExistence(timeout: 10), "No Cleaning template")
+        cleaning.appears("No Cleaning template")
         cleaning.tap()
         let start = app.buttons["procDetail.start"]
-        XCTAssertTrue(start.waitForExistence(timeout: 10), "Adjust, then start did not open")
+        start.appears("Adjust, then start did not open")
         E2E.expect(start, toRead: "Start procedure · 5 items", "The Cleaning's supplies")
         let takeNew = app.buttons["procDetail.bottle[\(fluorideVarnish)].takeNew"]
         if !takeNew.isHittable { app.swipeUp() }
@@ -38,25 +38,25 @@ final class ProcedureE2ETests: XCTestCase {
             format: "identifier BEGINSWITH 'proc.history[' AND label BEGINSWITH 'Cleaning' AND label CONTAINS 'Sarah'"
         )
         let event = app.descendants(matching: .any).matching(started).firstMatch
-        XCTAssertTrue(event.waitForExistence(timeout: 10), "The Cleaning is not in the history")
+        event.appears("The Cleaning is not in the history")
         event.tap()
         let editUsage = app.buttons["procDetail.editUsage"]
-        XCTAssertTrue(editUsage.waitForExistence(timeout: 10), "The procedure did not open")
+        editUsage.appears("The procedure did not open")
         E2E.expect(app.staticTexts["procDetail.summary"], toRead: "6 items deducted", "The record of the start")
         editUsage.tap()
-        XCTAssertTrue(app.staticTexts["procDetail.editing"].waitForExistence(timeout: 10), "Editing did not open")
+        app.staticTexts["procDetail.editing"].appears("Editing did not open")
         app.buttons["procDetail.item[\(gloves)].inc"].tap()
         XCTAssertEqual(app.staticTexts["procDetail.item[\(gloves)].value"].label, "3")
         app.buttons["procDetail.save"].tap()
         let toast = app.descendants(matching: .any)["toast"]
-        XCTAssertTrue(toast.waitForExistence(timeout: 10), "No toast after Save changes")
+        toast.appears("No toast after Save changes")
         XCTAssertTrue(toast.staticTexts["Usage updated"].exists)
         let summary = app.staticTexts["procDetail.summary"]
         E2E.expect(summary, toRead: "7 items deducted", "The record does not show the extra box")
 
         app.buttons["procDetail.cancel"].tap()
         let note = app.textFields["cancelProcedure.note"]
-        XCTAssertTrue(note.waitForExistence(timeout: 10), "The cancel sheet did not open")
+        note.appears("The cancel sheet did not open")
         XCTAssertEqual(
             app.staticTexts["cancelProcedure.warning"].label,
             "7 items will be returned to inventory. Stock levels update immediately."

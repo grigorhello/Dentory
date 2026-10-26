@@ -18,7 +18,7 @@ final class SignUpE2ETests: XCTestCase {
 
         app.descendants(matching: .any)["signin.signUpAdmin"].tap()
         let continueButton = app.buttons["onboard.continue"]
-        XCTAssertTrue(continueButton.waitForExistence(timeout: 10), "Create your admin account did not open")
+        continueButton.appears("Create your admin account did not open")
         app.textFields["onboard.name"].firstMatch.tap()
         app.typeText("Dr. Lena Park")
         app.textFields["onboard.email"].firstMatch.tap()
@@ -28,7 +28,7 @@ final class SignUpE2ETests: XCTestCase {
         continueButton.tap()
 
         let clinicName = app.textFields["onboard.clinicName"].firstMatch
-        XCTAssertTrue(clinicName.waitForExistence(timeout: 15), "Create your clinic did not open")
+        clinicName.appears("Create your clinic did not open")
         clinicName.tap()
         app.typeText("Lakeview Dental \(run)")
         app.textFields["onboard.city"].firstMatch.tap()
@@ -36,19 +36,19 @@ final class SignUpE2ETests: XCTestCase {
         app.buttons["onboard.continue"].tap()
 
         let invite = app.textFields["onboard.inviteRow[0].email"].firstMatch
-        XCTAssertTrue(invite.waitForExistence(timeout: 15), "Invite your team did not open")
+        invite.appears("Invite your team did not open")
         invite.tap()
         app.typeText(teammate)
         app.buttons["onboard.sendInvites"].tap()
 
-        XCTAssertTrue(app.staticTexts["Lakeview Dental \(run)"].waitForExistence(timeout: 15), "Home did not open")
+        app.staticTexts["Lakeview Dental \(run)"].appears("Home did not open")
         E2E.dismissNotificationsExplainer(in: app)
         app.buttons["home.header.account"].tap()
         let team = app.buttons["more.team"]
-        XCTAssertTrue(team.waitForExistence(timeout: 10), "Account did not open")
+        team.appears("Account did not open")
         team.tap()
         let invited = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", teammate)).firstMatch
-        XCTAssertTrue(invited.waitForExistence(timeout: 10), "The teammate is not on Team")
+        invited.appears("The teammate is not on Team")
         XCTAssertTrue(invited.label.contains("Invited"), "The teammate reads \(invited.label)")
         let owner = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Dr. Lena Park")).firstMatch
         XCTAssertTrue(owner.label.contains("Admin"), "The new admin reads \(owner.label)")
