@@ -6,9 +6,12 @@ import SwiftUI
 struct ReceiveView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
+    @Environment(\.writeAccess) private var writeAccess
     @State private var viewModel: ReceiveViewModel
+    let session: Session
 
     init(session: Session, dependencies: AppDependencies) {
+        self.session = session
         _viewModel = State(initialValue: dependencies.makeReceiveViewModel(
             session: session, canScan: DocumentScanner.isAvailable
         ))
@@ -19,7 +22,12 @@ struct ReceiveView: View {
             .pushedScreen(title: "Receive delivery", identifier: "receive")
             .reloadOnReturn { await viewModel.load() }
             .navigationDestination(for: ReceiveRoute.self) { route in
-                ReceiveRoutePlaceholderView(route: route)
+                switch route {
+                case .manual(let productID):
+                    ManualReceiveView(productID: productID, session: session, dependencies: dependencies)
+                case .invoice, .newInvoice:
+                    ReceiveRoutePlaceholderView(route: route)
+                }
             }
             .receiveCapture(viewModel)
             .onChange(of: viewModel.message) { _, message in show(message) }
@@ -64,8 +72,10 @@ struct ReceiveView: View {
         viewModel.clearPendingRoute()
     }
 
+    /// Receiving is a write: in read-only mode the sheet says why instead (MS-142), should the trial end while this
+    /// screen is open.
     private func receiveManually() {
-        router.push(ReceiveRoute.manual)
+        writeAccess.perform { router.push(ReceiveRoute.manual()) }
     }
 
     private func continueReviewing(_ invoice: PendingInvoice) {

@@ -61,18 +61,6 @@ struct BatchSheet: View {
     }
 }
 
-private extension YearMonth {
-    init(day: CalendarDay) {
-        self.init(year: day.year, month: day.month)
-    }
-}
-
-private extension CalendarDay {
-    init(yearMonth: YearMonth) {
-        self.init(year: yearMonth.year, month: yearMonth.month, day: 1)
-    }
-}
-
 #Preview("Add expiry") {
     @Previewable @State var isPresented = true
     let dependencies = AppDependencies.preview()

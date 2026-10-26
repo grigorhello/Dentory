@@ -69,6 +69,9 @@ nonisolated struct AnalyticsEvent: Equatable, Sendable {
     /// A product added to To buy from its sheet.
     static let toBuyAdded = Self(name: .toBuyAdd, properties: [:])
 
+    /// A delivery received by hand on Receive manually (MS-127): one product a time, so `item_count` is 1.
+    static let manualReceived = Self(name: .manualReceive, properties: [.itemCount: .count(1)])
+
     static func teammateInvited(role: MembershipRole) -> Self {
         Self(name: .teamInvite, properties: [.role: .word(AnalyticsWord(role))])
     }
@@ -103,6 +106,7 @@ nonisolated enum AnalyticsEventName: String, CaseIterable, Sendable {
     case settingsSave = "settings.save"
     case productCreate = "inv.newProduct"
     case countReview = "inv.count.review"
+    case manualReceive = "manual.receive"
 }
 
 /// Every property key an event may carry.

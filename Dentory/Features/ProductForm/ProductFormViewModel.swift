@@ -9,6 +9,9 @@ import Observation
 final class ProductFormViewModel {
     enum Mode: Equatable {
         case create
+        /// New on Choose product (Receive manually, MS-127): the name starts as what was searched for, and the button
+        /// creates the product and chooses it on the receiving form.
+        case createAndSelect(name: String)
         case edit(ProductDetail)
     }
 
@@ -65,8 +68,8 @@ final class ProductFormViewModel {
         self.mode = mode
         self.analytics = analytics
         switch mode {
-        case .create:
-            name = ""
+        case .create, .createAndSelect:
+            name = Self.searchedName(in: mode)
             unit = ""
             packUnit = ""
             packSizeText = ""
@@ -91,7 +94,15 @@ final class ProductFormViewModel {
     var isSubmitting: Bool { submitGuard.isBusy }
     var isEditing: Bool { if case .edit = mode { return true } else { return false } }
     var title: String { isEditing ? "Edit product" : "New product" }
-    var submitTitle: String { isEditing ? "Save changes" : "Create product" }
+
+    var submitTitle: String {
+        switch mode {
+        case .create: "Create product"
+        case .createAndSelect: "Create and select"
+        case .edit: "Save changes"
+        }
+    }
+
     /// Create, Save changes: the ticket's "Disabled until a name and unit are entered".
     var canSubmit: Bool { !trimmed(name).isEmpty && !trimmed(unit).isEmpty && !isSubmitting }
     /// "Quantity, expiry and lot are entered on the receiving form." shows on a new product only.
@@ -120,7 +131,7 @@ final class ProductFormViewModel {
         guard !trimmed(packUnit).isEmpty else { return nil }
         guard let size = packSize, size >= 2 else { return "Stock is counted in the smaller unit." }
         let pack = trimmed(packUnit)
-        return "Receive in \(Self.plural(of: pack)), count and use in \(countedUnitWord). "
+        return "Receive in \(ClinicFormatters.plural(of: pack)), count and use in \(countedUnitWord). "
             + "1 \(pack) adds \(size) \(countedUnitWord)."
     }
 
@@ -166,7 +177,7 @@ final class ProductFormViewModel {
                     draft.categoryID = created.id
                 }
                 switch mode {
-                case .create:
+                case .create, .createAndSelect:
                     let id = try await repository.createProduct(clinicID: clinicID, draft: draft)
                     analytics.track(.productCreated)
                     outcome = .created(id)
@@ -247,15 +258,13 @@ final class ProductFormViewModel {
 
     private var countedUnitWord: String { trimmed(unit).isEmpty ? "units" : trimmed(unit) }
 
-    private func trimmed(_ text: String) -> String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// What Choose product's search held when New was tapped, so the name is not typed twice.
+    private static func searchedName(in mode: Mode) -> String {
+        guard case .createAndSelect(let name) = mode else { return "" }
+        return name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// "box" → "boxes", "bottle" → "bottles", "packs" stays: enough for the units a clinic types.
-    nonisolated static func plural(of word: String) -> String {
-        let lower = word.lowercased()
-        if lower.hasSuffix("s") { return word }
-        if ["x", "z", "ch", "sh"].contains(where: lower.hasSuffix) { return word + "es" }
-        return word + "s"
+    private func trimmed(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

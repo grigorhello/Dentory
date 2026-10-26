@@ -1,11 +1,13 @@
 import SwiftUI
 
 /// Bottom sheet content (PRD §7, Appendix C): grab handle, 24 pt title, one caption line, fields, the
-/// primary button last and full width. Present it with `.msSheet(item:)` or `.msSheet(isPresented:)`.
+/// primary button last and full width. Present it with `.msSheet(item:)` or `.msSheet(isPresented:)`. A sheet opened
+/// from another sheet's content (New product from Choose product) passes `onBack` for the chevron before its title.
 struct MSSheet<Content: View, Primary: View>: View {
     let title: String
     var caption: String?
     var identifier: String
+    var onBack: (() -> Void)?
     @ViewBuilder let content: () -> Content
     @ViewBuilder let primary: () -> Primary
 
@@ -13,12 +15,14 @@ struct MSSheet<Content: View, Primary: View>: View {
         _ title: String,
         caption: String? = nil,
         identifier: String,
+        onBack: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder primary: @escaping () -> Primary
     ) {
         self.title = title
         self.caption = caption
         self.identifier = identifier
+        self.onBack = onBack
         self.content = content
         self.primary = primary
     }
@@ -26,11 +30,18 @@ struct MSSheet<Content: View, Primary: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(title)
-                    .textStyle(.title24)
-                    .foregroundStyle(Color.ms.ink)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("\(identifier).title")
+                HStack(spacing: Spacing.xs) {
+                    if let onBack {
+                        IconButton(.chevronLeft, label: "Back", action: onBack)
+                            .padding(.leading, -Spacing.md)
+                            .accessibilityIdentifier("\(identifier).back")
+                    }
+                    Text(title)
+                        .textStyle(.title24)
+                        .foregroundStyle(Color.ms.ink)
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("\(identifier).title")
+                }
                 if let caption {
                     Text(caption).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
                 }
@@ -46,7 +57,7 @@ struct MSSheet<Content: View, Primary: View>: View {
 
 extension MSSheet where Primary == EmptyView {
     init(_ title: String, caption: String? = nil, identifier: String, @ViewBuilder content: @escaping () -> Content) {
-        self.init(title, caption: caption, identifier: identifier, content: content) { EmptyView() }
+        self.init(title, caption: caption, identifier: identifier, onBack: nil, content: content) { EmptyView() }
     }
 }
 

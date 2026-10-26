@@ -61,17 +61,10 @@ final class BatchViewModel {
     var title: String { editedBatch == nil ? "Add expiry" : "Edit batch" }
 
     /// The month the wheels open on when none is chosen: this month in the clinic's time zone.
-    var openingMonth: CalendarDay {
-        let today = CalendarDay(formatters.clock.now, in: formatters.timeZone)
-        return CalendarDay(year: today.year, month: today.month, day: 1)
-    }
+    var openingMonth: CalendarDay { formatters.thisMonth }
 
     /// Three years back (stock found already expired) to ten ahead, stretched to the batch's own year.
-    var years: ClosedRange<Int> {
-        let thisYear = openingMonth.year
-        let year = expiryMonth?.year ?? thisYear
-        return min(thisYear - 3, year)...max(thisYear + 10, year)
-    }
+    var years: ClosedRange<Int> { formatters.expiryYears(including: expiryMonth) }
 
     func monthTitle(_ month: CalendarDay) -> String { formatters.shortMonth(month) }
 

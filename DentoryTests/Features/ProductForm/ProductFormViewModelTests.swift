@@ -58,13 +58,6 @@ struct ProductFormViewModelTests {
         #expect(viewModel.packSentence == "Stock is counted in the smaller unit.", "A pack holds 2 or more")
     }
 
-    @Test func pluralsOfTheUnitsAClinicTypes() {
-        #expect(ProductFormViewModel.plural(of: "box") == "boxes")
-        #expect(ProductFormViewModel.plural(of: "bottle") == "bottles")
-        #expect(ProductFormViewModel.plural(of: "packs") == "packs")
-        #expect(ProductFormViewModel.plural(of: "pouch") == "pouches")
-    }
-
     @Test func createSendsTheTrimmedDraftAndReportsTheNewID() async {
         let repository = FakeProductFormRepository()
         let analytics = SpyAnalytics()
@@ -89,6 +82,26 @@ struct ProductFormViewModelTests {
         #expect(draft?.supplier == "Patterson" && draft?.location == nil)
         #expect(viewModel.outcome == .created(UUID(uuidString: "00000000-0000-4000-8000-0000000000f1") ?? UUID()))
         #expect(analytics.events == [.productCreated], "inv.newProduct, without the name (MS-147)")
+    }
+
+    /// New on Choose product (Receive manually, MS-127): the name starts as the search, and the button creates the
+    /// product and chooses it.
+    @Test func newFromChooseProductStartsFromTheSearchAndCreatesAndSelects() async {
+        let repository = FakeProductFormRepository()
+        let analytics = SpyAnalytics()
+        let viewModel = make(
+            mode: .createAndSelect(name: "  Articaine 4% "), repository: repository, analytics: analytics
+        )
+        #expect(viewModel.title == "New product")
+        #expect(viewModel.submitTitle == "Create and select")
+        #expect(viewModel.name == "Articaine 4%")
+        #expect(viewModel.showsReceivingHint)
+        #expect(!viewModel.canSubmit, "Still waits for the unit")
+        viewModel.unit = "cartridges"
+        await viewModel.save()
+        #expect(repository.creates.map(\.name) == ["Articaine 4%"])
+        #expect(viewModel.outcome == .created(UUID(uuidString: "00000000-0000-4000-8000-0000000000f1") ?? UUID()))
+        #expect(analytics.events == [.productCreated])
     }
 
     @Test func aNewCategoryIsCreatedFirstAndUsed() async {

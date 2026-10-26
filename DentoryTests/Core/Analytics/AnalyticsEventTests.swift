@@ -13,7 +13,7 @@ struct AnalyticsEventTests {
         .stockAdjusted(reason: .other, increase: true), .addedToBuy, .bottleOpened, .bottleFinished,
         .markedOrdered(items: 2), .toBuyAdded, .batchDisposed, .teammateInvited(role: .admin), .exportStarted,
         .settingsSaved(digest: true, expiryWarningDays: 30), .productCreated,
-        .countApplied(corrections: 3, seconds: 95)
+        .countApplied(corrections: 3, seconds: 95), .manualReceived
     ]
 
     @Test func everyEventIsAnAppendixBElementId() {
@@ -59,6 +59,12 @@ struct AnalyticsEventTests {
         let event = AnalyticsEvent.countApplied(corrections: 3, seconds: 95)
         #expect(event.name.rawValue == "inv.count.review")
         #expect(event.payload == ["item_count": .number(3), "duration_s": .number(95)])
+    }
+
+    /// One product a time (MS-127).
+    @Test func aManualReceiptCountsOneItem() {
+        #expect(AnalyticsEvent.manualReceived.name.rawValue == "manual.receive")
+        #expect(AnalyticsEvent.manualReceived.payload == ["item_count": .number(1)])
     }
 
     /// A build without a project token sends nothing (the test bundle has none, whatever the developer's Debug
