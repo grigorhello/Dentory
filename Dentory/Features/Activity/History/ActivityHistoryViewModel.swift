@@ -27,6 +27,8 @@ final class ActivityHistoryViewModel {
     private(set) var hasMore = false
     /// One product's history, from Product detail; nil for the clinic's.
     let productID: UUID?
+    /// An admin's History on Activity: a receipt opens the invoice it came from (MS-131).
+    let opensInvoices: Bool
     let formatters: ClinicFormatters
 
     private let repository: ActivityRepository
@@ -38,13 +40,14 @@ final class ActivityHistoryViewModel {
 
     init(
         repository: ActivityRepository, cache: ResponseCaching, formatters: ClinicFormatters, clinicID: UUID,
-        productID: UUID? = nil
+        productID: UUID? = nil, opensInvoices: Bool = false
     ) {
         self.repository = repository
         self.cache = cache
         self.formatters = formatters
         self.clinicID = clinicID
         self.productID = productID
+        self.opensInvoices = opensInvoices
         entries = cache.load(
             [ActivityHistoryEntry].self, for: Self.cacheKey(.all, productID: productID, clinicID: clinicID)
         ) ?? []
@@ -124,4 +127,10 @@ final class ActivityHistoryViewModel {
 
     /// Nothing to list once there is an answer to show.
     var isEmpty: Bool { entries.isEmpty && state == .loaded }
+
+    /// The invoice a row opens: a receipt's, on an admin's History. Invoices are an admin's (PRD §2), so Staff's rows
+    /// open nothing and show no chevron.
+    func invoiceID(for entry: ActivityHistoryEntry) -> UUID? {
+        opensInvoices ? entry.invoiceID : nil
+    }
 }

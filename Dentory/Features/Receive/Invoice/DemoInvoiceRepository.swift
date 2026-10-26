@@ -5,7 +5,8 @@ import Foundation
 /// `-demoInvoice failed` one whose reading fails once it is asked about (Receive delivery lists it,
 /// `ReceiveOverview.demo`). Captured pages upload in a moment and are read 1.5 seconds after they are asked for, as the
 /// prototype's 1.4, into the frames' invoice. Lines are settled as the server settles them (MS-130), against the shared
-/// demo products, and stay so for the launch.
+/// demo products, and stay so for the launch; Confirm & receive adds the delivery to those products and its Undo puts
+/// them back (MS-131).
 final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     /// What `-demoInvoice` asks for.
     enum Launched: String {
@@ -16,8 +17,11 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         }
     }
 
-    /// The Patterson invoice of `supabase/seed-demo.sql`, ready to review.
+    /// The Patterson invoice of `supabase/seed-demo.sql`, ready to review, uploaded at 8:55 AM on the frames' day.
     static let readyID = demoID(0x401)
+    static let readyUploadedAt = Date(timeIntervalSince1970: 1_790_945_700)
+    /// Who receives the demo's deliveries: its admin.
+    static let receivedBy = "Sarah Mitchell"
     /// The invoice `-demoInvoice` adds.
     static let readingID = demoID(0x402)
     static let readingTime: TimeInterval = 1.5
@@ -26,6 +30,8 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     private var invoices: [UUID: InvoiceSummary]
     private var requestedAt: [UUID: Date] = [:]
     private var discardedIDs: [UUID] = []
+    /// The deliveries received in this launch, by their action: the products as they were, for Undo.
+    private var receipts: [UUID: (invoiceID: UUID, before: [ProductSummary])] = [:]
     private let launched: Launched?
     /// Names the products lines are matched to or created as; the frames' products without it.
     private let store: DemoProductStore?
@@ -42,6 +48,11 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
 
     /// The invoices set aside, newest last.
     var discarded: [UUID] { lock.withLock { discardedIDs } }
+
+    /// The invoices set aside or received in this launch, which Receive delivery no longer lists.
+    var settled: [UUID] {
+        lock.withLock { discardedIDs + invoices.values.filter { $0.status == .confirmed }.map(\.id) }
+    }
 
     func upload(_ document: InvoiceDocument, clinicID: UUID) async throws {
         try await Task.sleep(for: .milliseconds(400))
@@ -78,17 +89,65 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         }
     }
 
+    /// A received invoice is refused, as `invoice_discard` refuses it (MS-131).
     func discard(invoiceID: UUID, clinicID: UUID) async throws {
         try await Task.sleep(for: .milliseconds(200))
-        lock.withLock {
+        try lock.withLock {
+            if invoices[invoiceID]?.status == .confirmed {
+                throw AppError.validation(field: nil, message: Self.receivedRefusal)
+            }
             discardedIDs.append(invoiceID)
-            guard let invoice = invoices[invoiceID], invoice.status != .confirmed else { return }
-            invoices[invoiceID] = InvoiceSummary(
-                id: invoiceID, status: .discarded, supplier: invoice.supplier, number: invoice.number,
-                total: invoice.total, currency: invoice.currency, readingStarted: invoice.readingStarted,
-                lineCount: invoice.lineCount, lines: invoice.lines
-            )
+            guard let invoice = invoices[invoiceID] else { return }
+            invoices[invoiceID] = Self.invoice(invoice, status: .discarded)
         }
+    }
+
+    // MARK: - Receiving (MS-131)
+
+    /// Confirm & receive as `invoice_confirm` does it, in short: every Matched or Created line with a quantity goes
+    /// into the shared demo products in counted units (a pack counts its size unless the line counts the product's own
+    /// unit).
+    func confirm(invoiceID: UUID) async throws -> WriteOutcome {
+        try await Task.sleep(for: .milliseconds(300))
+        return try lock.withLock {
+            guard let invoice = invoices[invoiceID] else { throw AppError.forbidden }
+            guard invoice.status == .ready else {
+                let refusal = invoice.status == .confirmed ? Self.receivedRefusal : Self.closedRefusal
+                throw AppError.validation(field: nil, message: refusal)
+            }
+            guard invoice.lines.allSatisfy(\.isResolved) else {
+                throw AppError.validation(field: nil, message: "Resolve every line to continue.")
+            }
+            let lines = invoice.lines.filter(\.receivesStock)
+            let received = Set(lines.compactMap(\.productID))
+            let actionID = UUID()
+            receipts[actionID] = (invoiceID, (store?.products ?? []).filter { received.contains($0.id) })
+            for line in lines {
+                guard let productID = line.productID, let qty = line.qty else { continue }
+                let counted = qty * Decimal(countedPerUnit(line, productID: productID))
+                _ = store?.receive(counted, of: productID, dated: line.expiryMonth != nil)
+            }
+            invoices[invoiceID] = Self.invoice(invoice, status: .confirmed, receivedAt: Session.demoNow)
+            return .applied(actionID: actionID)
+        }
+    }
+
+    /// Undo: the products are as they were before the delivery, and the invoice waits for review again.
+    func undoConfirm(actionID: UUID) async throws {
+        try await Task.sleep(for: .milliseconds(200))
+        try lock.withLock {
+            guard let receipt = receipts.removeValue(forKey: actionID), let invoice = invoices[receipt.invoiceID] else {
+                throw AppError.validation(field: nil, message: "already undone")
+            }
+            store?.restore(receipt.before)
+            invoices[receipt.invoiceID] = Self.invoice(invoice, status: .ready)
+        }
+    }
+
+    private func countedPerUnit(_ line: InvoiceLine, productID: UUID) -> Int {
+        guard let pack = store?.pack(of: productID), let unit = store?.summary(id: productID)?.unit else { return 1 }
+        let lineUnit = line.unit.map(ClinicFormatters.singular(of:))?.lowercased()
+        return lineUnit == ClinicFormatters.singular(of: unit).lowercased() ? 1 : pack.size
     }
 
     // MARK: - Lines
@@ -140,9 +199,7 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
             guard let invoice = invoices.values.first(where: { $0.lines.contains { $0.id == lineID } }),
                   let index = invoice.lines.firstIndex(where: { $0.id == lineID })
             else { throw AppError.forbidden }
-            guard invoice.status == .ready else {
-                throw AppError.validation(field: nil, message: "This invoice is no longer waiting for review.")
-            }
+            guard invoice.status == .ready else { throw AppError.validation(field: nil, message: Self.closedRefusal) }
             let line = invoice.lines[index]
             if let states, !states.contains(line.state) {
                 throw AppError.validation(
@@ -158,6 +215,8 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     }
 
     private static let resolvedRefusal = "This line is already resolved."
+    private static let closedRefusal = "This invoice is no longer waiting for review."
+    private static let receivedRefusal = "This delivery was already received"
 
     private func productName(_ id: UUID) -> String? {
         store?.summary(id: id)?.name ?? ProductSummary.demo.first { $0.id == id }?.name
@@ -177,7 +236,20 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         let lines = InvoiceLine.demo(numbered: id == readyID ? { demoID(0x410 + $0) } : { _ in UUID() })
         return InvoiceSummary(
             id: id, status: .ready, supplier: "Patterson", number: "INV-10092", total: 449, currency: nil,
-            readingStarted: true, lineCount: lines.count, lines: lines
+            readingStarted: true, lineCount: lines.count, lines: lines,
+            createdAt: id == readyID ? readyUploadedAt : .now
+        )
+    }
+
+    /// The invoice in another status: set aside, received by the demo's admin at `receivedAt`, or back in review.
+    private static func invoice(
+        _ invoice: InvoiceSummary, status: InvoiceSummary.Status, receivedAt: Date? = nil
+    ) -> InvoiceSummary {
+        InvoiceSummary(
+            id: invoice.id, status: status, supplier: invoice.supplier, number: invoice.number, total: invoice.total,
+            currency: invoice.currency, readingStarted: invoice.readingStarted, lineCount: invoice.lineCount,
+            lines: invoice.lines, createdAt: invoice.createdAt, confirmedAt: receivedAt,
+            confirmedByName: receivedAt == nil ? nil : receivedBy
         )
     }
 
@@ -191,50 +263,5 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     /// The demo ids, numbered as `ReceiveOverview.demo` numbers the invoice to continue.
     static func demoID(_ number: Int) -> UUID {
         UUID(uuidString: String(format: "00000000-0000-4000-8000-000000000%03x", number)) ?? UUID()
-    }
-}
-
-private extension InvoiceLine {
-    /// f23's lines: SEPTO matched to Septocaine through Patterson's alias, the endo kit a Possible match, Temp-Bond a
-    /// New product and the surcharge a fee; `id(n)` names the nth.
-    static func demo(numbered id: (Int) -> UUID) -> [InvoiceLine] {
-        let septocaine = ProductSummary.demo[0]
-        let endoKit = ProductSummary.demo[1]
-        return [
-            InvoiceLine(
-                id: id(1), number: 1, raw: "SEPTO 4% 1:100K 50/BX", qty: 5, unit: "boxes", unitPrice: 49.8,
-                lineTotal: 249, kind: .product, state: .matched, readState: .matched, productID: septocaine.id,
-                productName: septocaine.name, suggestedProductID: nil, suggestedProductName: nil,
-                suggestedName: "Septo 4% 1:100K", suggestedUnit: "boxes", lot: nil, expiryMonth: nil
-            ),
-            InvoiceLine(
-                id: id(2), number: 2, raw: "ENDO FILE KIT 15-40 21MM", qty: 4, unit: "boxes", unitPrice: 45,
-                lineTotal: 180, kind: .product, state: .possibleMatch, readState: .possibleMatch, productID: nil,
-                productName: nil, suggestedProductID: endoKit.id, suggestedProductName: endoKit.name,
-                suggestedName: "Endo file kit 15-40 21MM", suggestedUnit: "boxes", lot: nil, expiryMonth: nil
-            ),
-            InvoiceLine(
-                id: id(3), number: 3, raw: "TEMPBOND NE 1PK", qty: 1, unit: "pack", unitPrice: 26.4, lineTotal: 26.4,
-                kind: .product, state: .newProduct, readState: .newProduct, productID: nil, productName: nil,
-                suggestedProductID: nil, suggestedProductName: nil, suggestedName: "Tempbond NE",
-                suggestedUnit: "packs", lot: nil, expiryMonth: nil
-            ),
-            InvoiceLine(
-                id: id(4), number: 4, raw: "HANDLING / FUEL SURCHARGE", qty: 1, unit: nil, unitPrice: 4.8,
-                lineTotal: 4.8, kind: .fee, state: .needsReview, readState: .needsReview, productID: nil,
-                productName: nil, suggestedProductID: nil, suggestedProductName: nil,
-                suggestedName: "Handling / fuel surcharge", suggestedUnit: "units", lot: nil, expiryMonth: nil
-            )
-        ]
-    }
-
-    /// The line in another state, as a product or none.
-    func settled(_ state: State, productID: UUID?, productName: String?) -> InvoiceLine {
-        InvoiceLine(
-            id: id, number: number, raw: raw, qty: qty, unit: unit, unitPrice: unitPrice, lineTotal: lineTotal,
-            kind: kind, state: state, readState: readState, productID: productID, productName: productName,
-            suggestedProductID: suggestedProductID, suggestedProductName: suggestedProductName,
-            suggestedName: suggestedName, suggestedUnit: suggestedUnit, lot: lot, expiryMonth: expiryMonth
-        )
     }
 }

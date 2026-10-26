@@ -4,18 +4,18 @@ import Foundation
 /// the Patterson invoice read at 8:55 AM and waiting for review, and the five lines To buy marked ordered on Oct 1;
 /// with `-demoInvoice reading` an invoice being read above it, and with `-demoInvoice failed` one whose reading failed
 /// (`DemoInvoiceRepository`). An invoice the demo set aside (Receive manually instead, Discard invoice, and Try again
-/// or Receive manually after a failed reading) is no longer listed.
+/// or Receive manually after a failed reading) or received (Confirm & receive) is no longer listed.
 struct DemoReceiveRepository: ReceiveRepository {
     var now = Session.demoNow
     /// The invoice `-demoInvoice` adds above the Patterson one: being read, or one whose reading failed.
     var added = DemoInvoiceRepository.Launched.current.map { $0 == .failed ? PendingInvoice.Status.failed : .reading }
-    /// The invoices set aside in this launch.
-    var setAside: (@MainActor @Sendable () -> [UUID])?
+    /// The invoices set aside or received in this launch.
+    var settled: (@MainActor @Sendable () -> [UUID])?
 
     func overview(clinicID: UUID) async throws -> ReceiveOverview {
         try await Task.sleep(for: .milliseconds(200))
         let overview = ReceiveOverview.demo(now: now, added: added)
-        let gone = Set(setAside?() ?? [])
+        let gone = Set(settled?() ?? [])
         return ReceiveOverview(invoices: overview.invoices.filter { !gone.contains($0.id) }, waiting: overview.waiting)
     }
 }

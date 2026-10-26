@@ -3,8 +3,8 @@ import Testing
 @testable import Dentory
 
 /// The demo clinic behind previews and UI tests reviews its Patterson invoice the way the server does: f23's four
-/// lines, settled and reopened as the line functions settle them, kept for the launch, and gone from Receive delivery
-/// once discarded.
+/// lines, settled and reopened as the line functions settle them, kept for the launch, gone from Receive delivery once
+/// discarded or received, and received into the shared demo products until Undo (MS-131).
 @MainActor
 struct DemoInvoiceTests {
     private let clinicID = Session.demo.clinicID
@@ -54,7 +54,7 @@ struct DemoInvoiceTests {
 
     @Test func aDiscardedInvoiceLeavesReceiveDeliveryAndTakesNoChoice() async throws {
         let invoices = DemoInvoiceRepository(launched: nil)
-        let receive = DemoReceiveRepository(added: nil, setAside: { invoices.discarded })
+        let receive = DemoReceiveRepository(added: nil, settled: { invoices.settled })
         let lines = try await invoices.invoice(id: DemoInvoiceRepository.readyID).lines
         #expect(try await receive.overview(clinicID: clinicID).invoices.map(\.id) == [DemoInvoiceRepository.readyID])
 
@@ -64,5 +64,47 @@ struct DemoInvoiceTests {
         await #expect(throws: refusal) {
             try await invoices.skipLine(lines[3].id)
         }
+    }
+
+    @Test func confirmingTheFramesInvoiceAddsTheDeliveryAndUndoTakesItBack() async throws {
+        let store = DemoProductStore()
+        let invoices = DemoInvoiceRepository(launched: nil, store: store)
+        let receive = DemoReceiveRepository(added: nil, settled: { invoices.settled })
+        let invoiceID = DemoInvoiceRepository.readyID
+        let lines = try await invoices.invoice(id: invoiceID).lines
+        let septocaine = ProductSummary.demo[0].id
+        let endoKit = ProductSummary.demo[1].id
+        await #expect(throws: AppError.validation(field: nil, message: "Resolve every line to continue.")) {
+            try await invoices.confirm(invoiceID: invoiceID)
+        }
+        let draft = ProductDraft(
+            name: "Temp-Bond NE", categoryID: nil, unit: "packs", packUnit: nil, packSize: nil, tracking: .countable,
+            minimum: 0, target: 0, supplier: nil, location: nil
+        )
+        let tempBond = store.create(draft)
+        _ = try await invoices.matchLine(lines[1].id, to: endoKit)
+        _ = try await invoices.createLine(lines[2].id, as: tempBond)
+        _ = try await invoices.skipLine(lines[3].id)
+
+        let outcome = try await invoices.confirm(invoiceID: invoiceID)
+        #expect(store.summary(id: septocaine)?.quantity == 304, "5 boxes of 50 cartridges")
+        #expect(store.summary(id: endoKit)?.quantity == 5, "4 kits, which come one by one")
+        #expect(store.summary(id: tempBond)?.quantity == 1)
+        let received = try await invoices.invoice(id: invoiceID)
+        #expect(received.status == .confirmed && received.confirmedByName == "Sarah Mitchell")
+        #expect(try await receive.overview(clinicID: clinicID).invoices.isEmpty, "No longer to continue reviewing")
+        await #expect(throws: AppError.validation(field: nil, message: "This delivery was already received")) {
+            try await invoices.discard(invoiceID: invoiceID, clinicID: clinicID)
+        }
+
+        guard case .applied(let actionID?) = outcome else {
+            Issue.record("No action to undo")
+            return
+        }
+        try await invoices.undoConfirm(actionID: actionID)
+        #expect(store.summary(id: septocaine)?.quantity == 54)
+        #expect(store.summary(id: endoKit)?.quantity == 1)
+        #expect(try await invoices.invoice(id: invoiceID).status == .ready, "Back in review")
+        #expect(try await receive.overview(clinicID: clinicID).invoices.map(\.id) == [invoiceID])
     }
 }

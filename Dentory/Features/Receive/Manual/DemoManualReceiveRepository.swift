@@ -6,19 +6,10 @@ import Foundation
 struct DemoManualReceiveRepository: ManualReceiveRepository {
     let store: DemoProductStore
 
-    /// Septocaine in boxes of 50, Nitrile gloves in cases of 10 and Suction tips in cases of 4, as the seed has them.
-    private static let packs: [UUID: (unit: String, size: Int)] = [
-        ProductSummary.demo[0].id: ("box", 50),
-        ProductSummary.demo[4].id: ("case", 10),
-        ProductSummary.demo[10].id: ("case", 4)
-    ]
-
     func products(clinicID: UUID) async throws -> [ReceivableProduct] {
         try await Task.sleep(for: .milliseconds(200))
         return store.products.map { summary in
-            let pack = store.draft(for: summary.id).map { draft in
-                draft.packUnit.flatMap { unit in draft.packSize.map { (unit: unit, size: $0) } }
-            } ?? Self.packs[summary.id]
+            let pack = store.pack(of: summary.id)
             return ReceivableProduct(
                 id: summary.id, name: summary.name, categoryName: summary.categoryName, unit: summary.unit,
                 packUnit: pack?.unit, packSize: pack?.size, tracking: summary.tracking, quantity: summary.quantity,

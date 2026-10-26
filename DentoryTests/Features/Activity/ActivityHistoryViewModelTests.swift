@@ -2,7 +2,8 @@ import Foundation
 import Testing
 @testable import Dentory
 
-/// History (f9): days, each row's words, the chips, one product's history, the pages and the cache.
+/// History (f9): days, each row's words, the chips, one product's history, the pages and the cache, and the invoice a
+/// receipt opens on an admin's Activity (MS-131).
 @MainActor
 struct ActivityHistoryViewModelTests {
     private let formatters = ClinicFormatters(
@@ -13,11 +14,11 @@ struct ActivityHistoryViewModelTests {
     private func make(
         repository: FakeActivityRepository = FakeActivityRepository(),
         cache: ResponseCaching = InMemoryResponseCache(),
-        productID: UUID? = nil
+        productID: UUID? = nil, opensInvoices: Bool = false
     ) -> ActivityHistoryViewModel {
         ActivityHistoryViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            productID: productID
+            productID: productID, opensInvoices: opensInvoices
         )
     }
 
@@ -33,6 +34,23 @@ struct ActivityHistoryViewModelTests {
             productID: product, delta: delta, qtyBefore: before, qtyAfter: before.map { $0 + delta },
             refType: refType, refLabel: label, reason: reason, note: note, isEdit: isEdit, byName: name
         )
+    }
+
+    @Test func aReceiptOpensItsInvoiceOnlyOnAnAdminsActivity() {
+        var receipt = entry(.receiving, delta: 250, refType: "invoice", label: "Invoice INV-10092")
+        let invoiceID = UUID()
+        receipt.invoiceID = invoiceID
+        let count = entry(.count, before: 43)
+        #expect(make(opensInvoices: true).invoiceID(for: receipt) == invoiceID)
+        #expect(make(opensInvoices: true).invoiceID(for: count) == nil, "Only a receipt opens an invoice")
+        #expect(make().invoiceID(for: receipt) == nil, "Staff, and a product's history, open nothing")
+    }
+
+    @Test func theDependenciesLetOnlyAnAdminsActivityOpenInvoices() {
+        let dependencies = AppDependencies.preview()
+        #expect(dependencies.makeActivityHistoryViewModel(session: .demo, productID: nil).opensInvoices)
+        #expect(!dependencies.makeActivityHistoryViewModel(session: .demo(role: .staff), productID: nil).opensInvoices)
+        #expect(!dependencies.makeActivityHistoryViewModel(session: .demo, productID: UUID()).opensInvoices)
     }
 
     @Test func loadsTheFirstPageAndGroupsItByDay() async {

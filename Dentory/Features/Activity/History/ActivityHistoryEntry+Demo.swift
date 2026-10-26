@@ -27,9 +27,10 @@ extension ActivityHistoryEntry {
         label: "Physical count", by: "Michael Reyes"
     )
 
+    /// Received from Patterson's INV-10092, the demo's invoice (`DemoInvoiceRepository`), which an admin opens from it.
     private nonisolated static let septocaineDelivery = entry(
         0xf3, at: 1_790_791_500, .receiving, "Septocaine 4% 1:100,000", product: 0xd1, delta: 40,
-        refType: "invoice", label: "Invoice INV-10092", by: "Michael Reyes"
+        refType: "invoice", label: "Invoice INV-10092", by: "Michael Reyes", invoice: 0x401
     )
 
     private nonisolated static let clinic: [ActivityHistoryEntry] = [
@@ -59,13 +60,13 @@ extension ActivityHistoryEntry {
     private nonisolated static func entry(
         _ number: Int, at seconds: TimeInterval, _ type: TransactionType, _ subject: String, product: Int,
         delta: Decimal, before: Decimal? = nil, refType: String = "manual", label: String, reason: String? = nil,
-        by name: String
+        by name: String, invoice: Int? = nil
     ) -> ActivityHistoryEntry {
         ActivityHistoryEntry(
             id: demoID(number), at: Date(timeIntervalSince1970: seconds), type: type, subject: subject,
             productID: demoID(product), delta: delta, qtyBefore: before, qtyAfter: before.map { $0 + delta },
             refType: type == .count ? "count_session" : refType, refLabel: label, reason: reason, note: nil,
-            isEdit: false, byName: name
+            isEdit: false, byName: name, invoiceID: invoice.map(demoID)
         )
     }
 

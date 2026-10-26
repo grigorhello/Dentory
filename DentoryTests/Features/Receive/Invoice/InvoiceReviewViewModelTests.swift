@@ -5,7 +5,7 @@ import Testing
 /// Review invoice's lines (MS-130): what each state says and offers, every choice saved as it is made and answered by
 /// the server, a resolved line reopened in the state it was read in, the lot and expiry saved a moment after the last
 /// change and kept as typed, refusals and lost connections, read-only mode, and Confirm & receive waiting for every
-/// line.
+/// line (receiving itself is in `InvoiceReceiptViewModelTests`).
 @MainActor
 struct InvoiceReviewViewModelTests {
     private let formatters = ClinicFormatters(
@@ -22,7 +22,7 @@ struct InvoiceReviewViewModelTests {
         repository.lines = lines
         return InvoiceReviewViewModel(
             invoice: .ready(invoiceID, with: lines), repository: repository, formatters: formatters,
-            saveDelay: saveDelay, reload: { reloads.count += 1 }
+            analytics: NoopAnalytics(), saveDelay: saveDelay, reload: { reloads.count += 1 }
         )
     }
 
@@ -184,8 +184,8 @@ struct InvoiceReviewViewModelTests {
         #expect(viewModel.allResolved)
         #expect(viewModel.canConfirm)
         #expect(viewModel.summary == "3 of 4 lines will increase inventory.")
-        viewModel.confirm()
-        #expect(viewModel.message == .init(title: "Receiving the delivery arrives with its own ticket.", detail: nil))
+        await viewModel.confirm()
+        #expect(repository.calls.last == .confirm(invoiceID), "Confirm & receive receives the delivery (MS-131)")
     }
 
     @Test func oneLineReadsInTheSingular() {
@@ -274,6 +274,19 @@ struct InvoiceReviewViewModelTests {
         ])
         await viewModel.flushPendingSaves()
         #expect(repository.calls.count == 2, "Nothing saved twice")
+    }
+
+    /// Return saves the lot, and the field losing focus right after asks again: one save, and no toast.
+    @Test func returnThenLeavingTheFieldSavesTheLotOnceWithoutAToast() async throws {
+        let repository = FakeInvoiceRepository()
+        let viewModel = make(repository, saveDelay: .seconds(60))
+        viewModel[lotOf: InvoiceLine.septo.id] = "A112"
+        viewModel.saveBatchNow(of: InvoiceLine.septo.id)
+        viewModel.saveBatchNow(of: InvoiceLine.septo.id)
+        await eventually { !repository.calls.isEmpty }
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(repository.calls == [.batch(InvoiceLine.septo.id, lot: "A112", expiry: nil)])
+        #expect(viewModel.generalError == nil, "The save replaced before it ran says nothing")
     }
 
     @Test func aLotNotSavedYetStaysOverAFreshReading() throws {

@@ -1,8 +1,8 @@
 import Foundation
 
-/// What Review invoice says around its lines (f23, PRD §6.5 and §7, Appendix B `invoice`, the ticket's failure notice
-/// and Discard invoice); the lines' own words are in `InvoiceReviewViewModel+Copy.swift`. The state and the intents are
-/// in `InvoiceViewModel.swift`.
+/// What Review invoice says around its lines (f23, PRD §6.5 and §7, Appendix B `invoice`, the ticket's failure notice,
+/// Discard invoice and a received invoice's notice); the lines' own words are in `InvoiceReviewViewModel+Copy.swift`.
+/// The state and the intents are in `InvoiceViewModel.swift`.
 extension InvoiceViewModel {
     static let title = "Review invoice"
     static let readingTitle = "Reading invoice"
@@ -25,7 +25,7 @@ extension InvoiceViewModel {
     /// The header once read (`invoice.header`): "Patterson Dental · INV-10092 · $449.00", in the invoice's own currency
     /// when it names one; a part the invoice does not show is left out.
     var header: String? {
-        guard let invoice, state == .ready || state == .closed else { return nil }
+        guard let invoice, state == .ready || state == .received || state == .closed else { return nil }
         let total = invoice.total.map { formatters(for: invoice).money($0) }
         let parts = [invoice.supplier, invoice.number, total].compactMap { $0?.isEmpty == false ? $0 : nil }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
@@ -37,6 +37,17 @@ extension InvoiceViewModel {
             currency: invoice.currency ?? formatters.currency, timeZone: formatters.timeZone,
             locale: formatters.locale, clock: formatters.clock
         )
+    }
+
+    /// Over a received invoice's lines (MS-131): "Received · Oct 2 · 9:41 AM · Sarah", as a cancelled procedure says
+    /// when it was cancelled and by whom.
+    var receivedNotice: String? {
+        guard let invoice, state == .received else { return nil }
+        let parts = [
+            "Received", invoice.confirmedAt.map(formatters.dateTime),
+            invoice.confirmedByName.map(PersonName.first(of:))
+        ]
+        return parts.compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: " · ")
     }
 
     /// "AI read 4 lines. Check each one, then confirm." (`invoice.banner`).

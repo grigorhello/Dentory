@@ -72,6 +72,15 @@ nonisolated struct AnalyticsEvent: Equatable, Sendable {
     /// A delivery received by hand on Receive manually (MS-127): one product a time, so `item_count` is 1.
     static let manualReceived = Self(name: .manualReceive, properties: [.itemCount: .count(1)])
 
+    /// An invoice received (MS-131): its lines, those matched automatically when it was read, the products created for
+    /// it and the seconds from its upload to Confirm & receive, which the pilot dashboard reads.
+    static func invoiceConfirmed(lines: Int, matched: Int, created: Int, seconds: Int) -> Self {
+        Self(name: .invoiceConfirm, properties: [
+            .itemCount: .count(lines), .matchedCount: .count(matched), .createdCount: .count(created),
+            .durationSeconds: .count(seconds)
+        ])
+    }
+
     static func teammateInvited(role: MembershipRole) -> Self {
         Self(name: .teamInvite, properties: [.role: .word(AnalyticsWord(role))])
     }
@@ -107,6 +116,7 @@ nonisolated enum AnalyticsEventName: String, CaseIterable, Sendable {
     case productCreate = "inv.newProduct"
     case countReview = "inv.count.review"
     case manualReceive = "manual.receive"
+    case invoiceConfirm = "invoice.confirm"
 }
 
 /// Every property key an event may carry.
@@ -115,6 +125,8 @@ nonisolated enum AnalyticsProperty: String, CaseIterable, Sendable {
     case bottlesOpened = "bottles_opened"
     case shortageCount = "shortage_count"
     case durationSeconds = "duration_s"
+    case matchedCount = "matched_count"
+    case createdCount = "created_count"
     case isNew = "is_new"
     case digest
     case expiryWarningDays = "expiry_warning_days"

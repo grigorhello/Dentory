@@ -3,9 +3,11 @@ import SwiftUI
 /// History (f9): the chips, then the entries in one card per day under its eyebrow. A chip reloads the list. Days and
 /// rows are built as they scroll in, and the next page loads when the row after the last one, shown while more may
 /// follow, scrolls in. Its own stack keeps f9's gaps whether it sits under Activity's segments or fills a product's
-/// History alone.
+/// History alone. On an admin's Activity a receipt opens the invoice it came from (MS-131).
 struct ActivityHistoryList: View {
     @Bindable var viewModel: ActivityHistoryViewModel
+    /// Opens a receipt's invoice; only rows the view model names an invoice for call it.
+    var onOpenInvoice: (UUID) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
@@ -68,7 +70,8 @@ struct ActivityHistoryList: View {
     private func row(_ entry: ActivityHistoryEntry, isLastOfDay: Bool) -> some View {
         ActivityHistoryRow(
             subject: entry.subject, reason: viewModel.reasonText(for: entry), who: viewModel.whoText(for: entry),
-            delta: viewModel.deltaText(for: entry), tone: viewModel.deltaTone(for: entry), showsDivider: !isLastOfDay
+            delta: viewModel.deltaText(for: entry), tone: viewModel.deltaTone(for: entry), showsDivider: !isLastOfDay,
+            open: viewModel.invoiceID(for: entry).map { invoiceID in { onOpenInvoice(invoiceID) } }
         )
         .accessibilityIdentifier("activity.row[\(entry.id.uuidString.lowercased())]")
     }

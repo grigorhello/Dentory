@@ -2,7 +2,8 @@ import Foundation
 
 /// One invoice as Review invoice follows it (`invoice_detail`, `invoice_create`): its state and, once read, the
 /// header f23 shows ("Patterson Dental · INV-10092 · $449.00"), how many lines were read and, from `invoice_detail`,
-/// the lines themselves (MS-130). Decoded with the client's decoder (`JSONDecoder.supabase`, snake_case keys).
+/// the lines themselves (MS-130); once received, when and by whom (MS-131). Decoded with the client's decoder
+/// (`JSONDecoder.supabase`, snake_case keys).
 nonisolated struct InvoiceSummary: Codable, Equatable, Identifiable, Sendable {
     nonisolated enum Status: String, Codable, Sendable {
         /// Uploaded, and being read on the server.
@@ -29,11 +30,17 @@ nonisolated struct InvoiceSummary: Codable, Equatable, Identifiable, Sendable {
     let lineCount: Int
     /// The lines in reading order; `invoice_create` answers none.
     var lines: [InvoiceLine] = []
+    /// When the upload finished: where `invoice.confirm`'s `duration_s` starts (MS-147).
+    var createdAt: Date?
+    /// When the delivery was received, and the full name of the admin who received it (MS-131).
+    var confirmedAt: Date?
+    var confirmedByName: String?
 }
 
 nonisolated extension InvoiceSummary {
     private enum CodingKeys: String, CodingKey {
-        case id, status, supplier, number, total, currency, readingStarted, lineCount, lines
+        case id, status, supplier, number, total, currency, readingStarted, lineCount, lines, createdAt, confirmedAt
+        case confirmedByName
     }
 
     /// `invoice_create`, `invoice_discard` and a reading's answers carry no lines: they read as none.
@@ -48,5 +55,8 @@ nonisolated extension InvoiceSummary {
         readingStarted = try container.decode(Bool.self, forKey: .readingStarted)
         lineCount = try container.decode(Int.self, forKey: .lineCount)
         lines = try container.decodeIfPresent([InvoiceLine].self, forKey: .lines) ?? []
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+        confirmedAt = try container.decodeIfPresent(Date.self, forKey: .confirmedAt)
+        confirmedByName = try container.decodeIfPresent(String.self, forKey: .confirmedByName)
     }
 }

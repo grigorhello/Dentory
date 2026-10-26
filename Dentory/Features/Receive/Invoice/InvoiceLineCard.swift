@@ -21,7 +21,10 @@ struct InvoiceLineCard: View {
                         .foregroundStyle(Color.ms.textBody)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityIdentifier("\(identifier).raw")
-                    InvoiceLineBadge(line: line, identifier: "\(identifier).state", onReopen: reopen)
+                    InvoiceLineBadge(
+                        line: line, canReopen: viewModel.canReopen(line), identifier: "\(identifier).state",
+                        onReopen: reopen
+                    )
                 }
                 HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
                     Text(viewModel.headline(for: line))

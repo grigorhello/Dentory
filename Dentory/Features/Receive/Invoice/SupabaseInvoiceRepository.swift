@@ -3,9 +3,11 @@ import Supabase
 
 /// The pages go to Storage, the invoice through `invoice_create`, the reading through the `extract_invoice` Edge
 /// Function; `invoice_detail` and `invoice_create` decode straight into `InvoiceSummary`, and the line functions
-/// (MS-130) into `InvoiceLine`.
+/// (MS-130) into `InvoiceLine`. Receiving and its Undo go through `WriteCoordinator` (MS-131): online now with an
+/// idempotency key, queued offline (MS-108).
 struct SupabaseInvoiceRepository: InvoiceRepository {
     let client: SupabaseClient
+    let writes: WriteCoordinator
 
     func upload(_ document: InvoiceDocument, clinicID: UUID) async throws {
         let bucket = client.storage.from(InvoiceFiles.bucket)
@@ -59,19 +61,32 @@ struct SupabaseInvoiceRepository: InvoiceRepository {
         }
     }
 
-    /// The pages go first, so a discard that fails afterwards is tried again with nothing left to delete; the
-    /// invoices bucket lets an admin delete them, read-only or not, and `invoice_discard` refuses a read-only clinic.
+    /// `invoice_discard` first, so a delivery received meanwhile on another device is refused with the server's
+    /// sentence and keeps its pages (MS-131); then the pages go, whether the invoice was set aside or never created
+    /// (Receive manually instead during the upload, which `invoice_discard` answers with nothing). The invoices bucket
+    /// lets an admin delete them, read-only or not, but never a received invoice's; `invoice_discard` refuses a
+    /// read-only clinic.
     func discard(invoiceID: UUID, clinicID: UUID) async throws {
         do {
-            try await client.storage
-                .from(InvoiceFiles.bucket)
-                .remove(paths: InvoiceFiles.allPaths(clinicID: clinicID, invoiceID: invoiceID))
             try await client
                 .rpc("invoice_discard", params: ["p_invoice_id": invoiceID.uuidString.lowercased()])
                 .execute()
+            try await client.storage
+                .from(InvoiceFiles.bucket)
+                .remove(paths: InvoiceFiles.allPaths(clinicID: clinicID, invoiceID: invoiceID))
         } catch {
             throw AppError(error)
         }
+    }
+
+    // MARK: - Receiving (MS-131)
+
+    func confirm(invoiceID: UUID) async throws -> WriteOutcome {
+        try await writes.write("invoice_confirm", params: InvoiceConfirmParams(pInvoiceId: invoiceID))
+    }
+
+    func undoConfirm(actionID: UUID) async throws {
+        _ = try await writes.write("undo_action", params: UndoActionParams(pActionId: actionID))
     }
 
     // MARK: - Lines (MS-130)

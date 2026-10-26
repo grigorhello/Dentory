@@ -1,14 +1,16 @@
 import SwiftUI
 
 /// A line's state as a small badge (Appendix B `invoice.line[n].state`). On a line the admin resolved it is a button
-/// that reopens the line in the state it was read in; its target reaches 44 pt without growing the row.
+/// that reopens the line in the state it was read in, until the invoice is received (MS-131); its target reaches 44 pt
+/// without growing the row.
 struct InvoiceLineBadge: View {
     let line: InvoiceLine
+    let canReopen: Bool
     let identifier: String
     let onReopen: () -> Void
 
     var body: some View {
-        if line.canReopen {
+        if canReopen {
             Button(action: onReopen) {
                 badge
                     .padding(.vertical, Spacing.md)

@@ -34,12 +34,13 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `order.add` | A product was added from To buy's Add item | |
 | `order.markOrdered` | Lines were marked as ordered | `item_count` lines |
 | `manual.receive` | A delivery was received by hand on Receive manually (sent applied or queued offline) | `item_count` 1 (one product a receipt) |
+| `invoice.confirm` | An invoice was received with Confirm & receive on Review invoice (sent applied or queued offline; MS-131) | `item_count` the invoice's lines, `matched_count` the lines read as `matched`, `created_count` the lines Created as new products, `duration_s` from the upload to Confirm & receive |
 | `expiring.card.dispose` | A batch was disposed | |
 | `team.invite` | A teammate was invited | `role` (admin, staff) |
 | `more.export` | A CSV export was started | |
 | `settings.save` | Clinic settings were saved | `digest` (the weekly email stays on), `expiry_warning_days` (the first warning: 30, 60 or 90) |
 
-Coming with their tickets, which add the case to `AnalyticsEventName` and call `analytics.track`: the invoice flow (MS-129 to MS-131: `invoice.confirm` with `item_count` lines, `matched_count` lines auto-matched, `created_count`, and `duration_s` from upload to confirm). The tickets carry a comment saying so. MS-129 keeps what that event needs on the invoice: `invoices.created_at` is the moment the upload finished, and each line's `read_state` is the state matching gave it, which the admin's choices never change, so `matched_count` is the lines read as `matched`. A product created with New on Receive manually's Choose product, or for an invoice line on Review invoice (Add new, No, create new; MS-130), counts as `inv.newProduct`, the New product sheet's event.
+`invoice.confirm` (MS-131) reads what MS-129 keeps on the invoice: `invoices.created_at` is the moment the upload finished, and each line's `read_state` is the state matching gave it, which the admin's choices never change, so `matched_count` is the lines read as `matched`; an Undo within 10 seconds sends nothing. A product created with New on Receive manually's Choose product, or for an invoice line on Review invoice (Add new, No, create new; MS-130), counts as `inv.newProduct`, the New product sheet's event.
 
 ## The pilot dashboard
 
@@ -59,7 +60,7 @@ In PostHog (the EU project), Dashboards, New dashboard "Pilot", then one SQL ins
    where event = 'procDetail.start' and timestamp > now() - interval 12 week
    group by week, clinic order by week, clinic
    ```
-3. **Invoices confirmed** (once MS-131 sends `invoice.confirm`): the same query with `event = 'invoice.confirm'`.
+3. **Invoices confirmed** (`invoice.confirm`, MS-131): the same query with `event = 'invoice.confirm'`; an invoice received, undone and received again counts twice.
 4. **Share of invoice lines auto-matched**
    ```sql
    select toStartOfWeek(timestamp) as week,

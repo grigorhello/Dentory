@@ -57,6 +57,10 @@ nonisolated struct InvoiceLine: Codable, Equatable, Identifiable, Sendable {
     /// Matched and Created lines go into stock, with a lot and an expiry month.
     var increasesInventory: Bool { state == .matched || state == .created }
 
+    /// What Confirm & receive puts into stock (MS-131): a Matched or Created line with a quantity above 0; one whose
+    /// quantity the reading could not tell, or a credit, adds nothing.
+    var receivesStock: Bool { increasesInventory && (qty ?? 0) > 0 }
+
     /// The admin settled it: its badge (or Undo) takes it back to the state it was read in. A line read as Matched
     /// is already in that state.
     var canReopen: Bool { isResolved && state != readState }

@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// Review invoice (f23, f38), Admin only, pushed by Receive delivery for pages just captured or an invoice to continue
-/// reviewing: the reading state, then the read header with the banner and the lines to review over Confirm & receive
-/// (MS-130), or what went wrong with a way on. The header's "…" menu discards the invoice. Receive manually, Try again
-/// for an upload, the lines' choices and Discard invoice are writes, so in read-only mode the sheet says why instead
-/// (MS-142).
+/// reviewing, and by Activity's delivery alert: the reading state, then the read header with the banner and the lines
+/// to review over Confirm & receive (MS-130, MS-131), a received delivery's lines read-only under when and by whom it
+/// was received, or what went wrong with a way on. The header's "…" menu discards the invoice. Receive manually, Try
+/// again for an upload, the lines' choices, Confirm & receive and Discard invoice are writes, so in read-only mode the
+/// sheet says why instead (MS-142).
 struct InvoiceView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -66,9 +67,12 @@ struct InvoiceView: View {
                 text: InvoiceViewModel.readingFailure, identifier: "invoice.failed", onTryAgain: captureAgain,
                 onReceiveManually: receiveManually
             )
-        case .ready:
+        case .ready, .received:
             if let review = viewModel.review {
-                InvoiceReviewView(viewModel: review, banner: viewModel.banner, session: session)
+                InvoiceReviewView(
+                    viewModel: review, banner: viewModel.banner, receivedNotice: viewModel.receivedNotice,
+                    session: session
+                )
             }
         case .closed:
             EmptyStateView(InvoiceViewModel.closed)

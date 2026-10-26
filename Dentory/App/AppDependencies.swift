@@ -26,7 +26,7 @@ struct AppDependencies: Sendable {
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
     let receiveRepository: ReceiveRepository
-    /// Review invoice: the upload, the invoice, its reading (MS-129) and its lines (MS-130).
+    /// Review invoice: the upload, the invoice, its reading (MS-129), its lines (MS-130) and receiving it (MS-131).
     let invoiceRepository: InvoiceRepository
     let manualReceiveRepository: ManualReceiveRepository
     let clinicSettingsRepository: ClinicSettingsRepository
@@ -91,7 +91,7 @@ struct AppDependencies: Sendable {
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
             receiveRepository: SupabaseReceiveRepository(client: client),
-            invoiceRepository: SupabaseInvoiceRepository(client: client),
+            invoiceRepository: SupabaseInvoiceRepository(client: client, writes: writes),
             manualReceiveRepository: SupabaseManualReceiveRepository(client: client, writes: writes),
             clinicSettingsRepository: SupabaseClinicSettingsRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
@@ -154,7 +154,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(), toBuyRepository: DemoToBuyRepository(),
-            receiveRepository: DemoReceiveRepository(setAside: { invoices.discarded }), invoiceRepository: invoices,
+            receiveRepository: DemoReceiveRepository(settled: { invoices.settled }), invoiceRepository: invoices,
             manualReceiveRepository: DemoManualReceiveRepository(store: products),
             clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
             expiringRepository: expiring, activityRepository: activity,
@@ -231,12 +231,13 @@ struct AppDependencies: Sendable {
         )
     }
 
-    /// Activity's History of the signed-in clinic, or of one product from Product detail's Show all (MS-134).
+    /// Activity's History of the signed-in clinic, or of one product from Product detail's Show all (MS-134); an
+    /// admin's History on Activity opens the invoice a receipt came from (MS-131).
     @MainActor
     func makeActivityHistoryViewModel(session: Session, productID: UUID?) -> ActivityHistoryViewModel {
         ActivityHistoryViewModel(
             repository: activityRepository, cache: cache, formatters: formatters(for: session),
-            clinicID: session.clinicID, productID: productID
+            clinicID: session.clinicID, productID: productID, opensInvoices: session.isAdmin && productID == nil
         )
     }
 
