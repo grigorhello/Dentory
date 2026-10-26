@@ -47,7 +47,7 @@ nonisolated enum PushedHeaderStyle: Sendable {
 }
 
 /// Pushed screen header (f13): 44 pt back chevron, 24 pt title, optional subtitle and a right action: a text
-/// button ("Edit", f20) or a small primary one ("Save", f15).
+/// button ("Edit", f20) or a small primary one ("Save", f15); or a "…" menu (Review invoice's Discard invoice).
 struct PushedHeader: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
@@ -56,6 +56,8 @@ struct PushedHeader: View {
     /// The subtitle's own Appendix B id ("invoice.header"); `{identifier}.subtitle` otherwise.
     var subtitleIdentifier: String?
     var action: HeaderAction?
+    /// The "…" menu at the end of the row.
+    var menu: IconMenu?
     var style: PushedHeaderStyle = .title
     /// Runs on Back in place of leaving, for a screen that asks before discarding changes (Clinic settings).
     var onBack: (() -> Void)?
@@ -106,6 +108,9 @@ struct PushedHeader: View {
                     )
                     .accessibilityIdentifier(action.identifier)
                 }
+                if let menu {
+                    menu
+                }
             }
             .padding(.leading, -Spacing.sm)
             if let subtitle {
@@ -148,6 +153,7 @@ struct PushedScreenModifier: ViewModifier {
     let identifier: String
     var subtitleIdentifier: String?
     var action: PushedHeader.HeaderAction?
+    var menu: IconMenu?
     var style: PushedHeaderStyle = .title
     var onBack: (() -> Void)?
 
@@ -155,7 +161,7 @@ struct PushedScreenModifier: ViewModifier {
         ScreenScaffold {
             PushedHeader(
                 title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
-                action: action, style: style, onBack: onBack
+                action: action, menu: menu, style: style, onBack: onBack
             )
         } content: {
             content
@@ -222,19 +228,20 @@ extension View {
     /// Lays the view out as a pushed screen. Add `.pinnedPrimaryBar` for its primary action.
     /// `style: .context` reads the title as a secondary line when the content carries the real title (f20).
     /// `onBack` replaces leaving on Back, for a screen that asks before discarding changes. `subtitleIdentifier`
-    /// names the subtitle when Appendix B gives it an id of its own.
+    /// names the subtitle when Appendix B gives it an id of its own. `menu` ends the row with a "…" menu.
     func pushedScreen(
         title: String,
         subtitle: String? = nil,
         identifier: String,
         subtitleIdentifier: String? = nil,
         action: PushedHeader.HeaderAction? = nil,
+        menu: IconMenu? = nil,
         style: PushedHeaderStyle = .title,
         onBack: (() -> Void)? = nil
     ) -> some View {
         modifier(PushedScreenModifier(
             title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
-            action: action, style: style, onBack: onBack
+            action: action, menu: menu, style: style, onBack: onBack
         ))
     }
 }

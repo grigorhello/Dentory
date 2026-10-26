@@ -69,6 +69,8 @@ final class InvoiceReadingUITests: XCTestCase {
         XCTAssertTrue(
             app.buttons["receive.photo"].waitForExistence(timeout: 5), "Try again did not return to the options"
         )
+        XCTAssertTrue(app.buttons[beingRead].waitForNonExistence(timeout: 5), "The failed invoice is still listed")
+        XCTAssertTrue(app.buttons[read].exists, "The invoice ready to review is still listed")
     }
 
     @MainActor
@@ -83,6 +85,10 @@ final class InvoiceReadingUITests: XCTestCase {
         app.buttons["manual.back"].tap()
         let closed = app.staticTexts["This invoice is no longer waiting for review."]
         XCTAssertTrue(closed.waitForExistence(timeout: 5), "The failed invoice was not set aside")
+
+        app.buttons["invoice.back"].tap()
+        XCTAssertTrue(app.buttons["receive.photo"].waitForExistence(timeout: 5), "Back did not return to the options")
+        XCTAssertTrue(app.buttons[beingRead].waitForNonExistence(timeout: 5), "The failed invoice is still listed")
     }
 
     @MainActor

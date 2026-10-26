@@ -1,8 +1,8 @@
 import Foundation
 
 /// One invoice as Review invoice follows it (`invoice_detail`, `invoice_create`): its state and, once read, the
-/// header f23 shows ("Patterson Dental · INV-10092 · $449.00") and how many lines were read. Decoded with the client's
-/// decoder (`JSONDecoder.supabase`, snake_case keys).
+/// header f23 shows ("Patterson Dental · INV-10092 · $449.00"), how many lines were read and, from `invoice_detail`,
+/// the lines themselves (MS-130). Decoded with the client's decoder (`JSONDecoder.supabase`, snake_case keys).
 nonisolated struct InvoiceSummary: Codable, Equatable, Identifiable, Sendable {
     nonisolated enum Status: String, Codable, Sendable {
         /// Uploaded, and being read on the server.
@@ -13,7 +13,7 @@ nonisolated struct InvoiceSummary: Codable, Equatable, Identifiable, Sendable {
         case failed
         /// Received (MS-131).
         case confirmed
-        /// Set aside: Receive manually instead, or discarded (MS-130).
+        /// Set aside: Receive manually instead, or Discard invoice (MS-130).
         case discarded
     }
 
@@ -27,4 +27,26 @@ nonisolated struct InvoiceSummary: Codable, Equatable, Identifiable, Sendable {
     /// Whether extract_invoice claimed the reading; one that never started is asked again.
     let readingStarted: Bool
     let lineCount: Int
+    /// The lines in reading order; `invoice_create` answers none.
+    var lines: [InvoiceLine] = []
+}
+
+nonisolated extension InvoiceSummary {
+    private enum CodingKeys: String, CodingKey {
+        case id, status, supplier, number, total, currency, readingStarted, lineCount, lines
+    }
+
+    /// `invoice_create`, `invoice_discard` and a reading's answers carry no lines: they read as none.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        status = try container.decode(Status.self, forKey: .status)
+        supplier = try container.decodeIfPresent(String.self, forKey: .supplier)
+        number = try container.decodeIfPresent(String.self, forKey: .number)
+        total = try container.decodeIfPresent(Decimal.self, forKey: .total)
+        currency = try container.decodeIfPresent(String.self, forKey: .currency)
+        readingStarted = try container.decode(Bool.self, forKey: .readingStarted)
+        lineCount = try container.decode(Int.self, forKey: .lineCount)
+        lines = try container.decodeIfPresent([InvoiceLine].self, forKey: .lines) ?? []
+    }
 }

@@ -2,7 +2,8 @@ import SwiftUI
 
 /// New product / Edit product (PRD §6.4, Appendix C `newProduct`), Admin only: the fields, the live pack
 /// conversion sentence and one full-width button that reads Create product, Create and select (from Choose product,
-/// with the back chevron to it) or Save changes.
+/// with the back chevron to it), Create and use for this line (from an invoice line, under its notice) or Save
+/// changes.
 struct ProductFormSheet: View {
     @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: ProductFormViewModel
@@ -71,6 +72,17 @@ struct ProductFormSheet: View {
     Color.ms.canvas
         .msSheet(isPresented: .constant(true)) {
             ProductFormSheet(mode: .edit(.demoSeptocaine()), session: .demo, dependencies: .preview()) { _ in }
+        }
+        .environment(\.appDependencies, .preview())
+}
+
+#Preview("New product from an invoice line") {
+    Color.ms.canvas
+        .msSheet(isPresented: .constant(true)) {
+            ProductFormSheet(
+                mode: .invoiceLine(raw: "TEMPBOND NE 1PK", name: "Tempbond NE", unit: "packs"), session: .demo,
+                dependencies: .preview()
+            ) { _ in }
         }
         .environment(\.appDependencies, .preview())
 }

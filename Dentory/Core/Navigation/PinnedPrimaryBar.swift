@@ -5,6 +5,8 @@ import SwiftUI
 struct PinnedPrimaryBar<Button: View>: View {
     @Environment(\.appDependencies) private var dependencies
     var caption: String?
+    /// The caption's own Appendix B id (`invoice.summary`); `shell.pinned.caption` otherwise.
+    var captionIdentifier: String?
     /// Whether the bar tells `ToastCenter` its height so toasts float above it: off in the catalog specimen, and on a
     /// tab's root only while that tab is shown, since the tabs behind it stay alive.
     var reportsHeight = true
@@ -36,7 +38,7 @@ struct PinnedPrimaryBar<Button: View>: View {
                         .textStyle(.caption12)
                         .foregroundStyle(Color.ms.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .accessibilityIdentifier("shell.pinned.caption")
+                        .accessibilityIdentifier(captionIdentifier ?? "shell.pinned.caption")
                 }
                 button()
             }

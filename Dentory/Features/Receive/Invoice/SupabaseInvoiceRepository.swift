@@ -2,7 +2,8 @@ import Foundation
 import Supabase
 
 /// The pages go to Storage, the invoice through `invoice_create`, the reading through the `extract_invoice` Edge
-/// Function; `invoice_detail` and `invoice_create` decode straight into `InvoiceSummary`.
+/// Function; `invoice_detail` and `invoice_create` decode straight into `InvoiceSummary`, and the line functions
+/// (MS-130) into `InvoiceLine`.
 struct SupabaseInvoiceRepository: InvoiceRepository {
     let client: SupabaseClient
 
@@ -58,11 +59,54 @@ struct SupabaseInvoiceRepository: InvoiceRepository {
         }
     }
 
-    func discard(invoiceID: UUID) async throws {
+    /// The pages go first, so a discard that fails afterwards is tried again with nothing left to delete; the
+    /// invoices bucket lets an admin delete them, read-only or not, and `invoice_discard` refuses a read-only clinic.
+    func discard(invoiceID: UUID, clinicID: UUID) async throws {
         do {
+            try await client.storage
+                .from(InvoiceFiles.bucket)
+                .remove(paths: InvoiceFiles.allPaths(clinicID: clinicID, invoiceID: invoiceID))
             try await client
                 .rpc("invoice_discard", params: ["p_invoice_id": invoiceID.uuidString.lowercased()])
                 .execute()
+        } catch {
+            throw AppError(error)
+        }
+    }
+
+    // MARK: - Lines (MS-130)
+
+    func matchLine(_ lineID: UUID, to productID: UUID) async throws -> InvoiceLine {
+        try await line("invoice_line_match", lineID, ["p_product_id": .string(productID.uuidString.lowercased())])
+    }
+
+    func createLine(_ lineID: UUID, as productID: UUID) async throws -> InvoiceLine {
+        try await line("invoice_line_create", lineID, ["p_product_id": .string(productID.uuidString.lowercased())])
+    }
+
+    func skipLine(_ lineID: UUID) async throws -> InvoiceLine {
+        try await line("invoice_line_skip", lineID)
+    }
+
+    func reopenLine(_ lineID: UUID) async throws -> InvoiceLine {
+        try await line("invoice_line_reopen", lineID)
+    }
+
+    func setBatch(of lineID: UUID, lot: String?, expiryMonth: CalendarDay?) async throws -> InvoiceLine {
+        try await line("invoice_line_batch", lineID, [
+            "p_lot": lot.map(AnyJSON.string) ?? .null,
+            "p_expiry_month": expiryMonth.map { .string($0.isoString) } ?? .null
+        ])
+    }
+
+    /// One of the line functions, which answer the line as it now stands.
+    private func line(
+        _ function: String, _ lineID: UUID, _ params: [String: AnyJSON] = [:]
+    ) async throws -> InvoiceLine {
+        var params = params
+        params["p_line_id"] = .string(lineID.uuidString.lowercased())
+        do {
+            return try await client.rpc(function, params: params).execute().value
         } catch {
             throw AppError(error)
         }

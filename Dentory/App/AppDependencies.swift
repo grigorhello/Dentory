@@ -26,7 +26,7 @@ struct AppDependencies: Sendable {
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
     let receiveRepository: ReceiveRepository
-    /// Review invoice: the upload, the invoice and its reading (MS-129).
+    /// Review invoice: the upload, the invoice, its reading (MS-129) and its lines (MS-130).
     let invoiceRepository: InvoiceRepository
     let manualReceiveRepository: ManualReceiveRepository
     let clinicSettingsRepository: ClinicSettingsRepository
@@ -131,6 +131,7 @@ struct AppDependencies: Sendable {
         let expiring = DemoExpiringRepository()
         let activity = DemoActivityRepository(extraHistory: UserDefaults.standard.integer(forKey: "demoHistoryRows"))
         let products = DemoProductStore()
+        let invoices = DemoInvoiceRepository(store: products)
         let byName = Session.demo(role: role).fullName
         return AppDependencies(
             rpc: rpc,
@@ -153,15 +154,14 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(), toBuyRepository: DemoToBuyRepository(),
-            receiveRepository: DemoReceiveRepository(), invoiceRepository: DemoInvoiceRepository(),
+            receiveRepository: DemoReceiveRepository(setAside: { invoices.discarded }), invoiceRepository: invoices,
             manualReceiveRepository: DemoManualReceiveRepository(store: products),
             clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
             expiringRepository: expiring, activityRepository: activity,
             procedureEventRepository: DemoProcedureEventRepository(byName: byName),
             billingRepository: DemoBillingRepository.launched(),
             inventoryValueRepository: DemoInventoryValueRepository(), accountRepository: DemoAccountRepository(),
-            teamRepository: DemoTeamRepository(),
-            productFormRepository: DemoProductFormRepository(store: products),
+            teamRepository: DemoTeamRepository(), productFormRepository: DemoProductFormRepository(store: products),
             onboardingRepository: DemoOnboardingRepository(auth: auth),
             onboardingProgress: progress,
             invitationRepository: DemoInvitationRepository(auth: auth),
