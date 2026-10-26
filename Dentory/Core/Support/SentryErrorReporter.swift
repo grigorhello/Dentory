@@ -19,6 +19,10 @@ struct SentryErrorReporter: ErrorReporting {
             options.attachScreenshot = false
             options.attachViewHierarchy = false
             options.enableAutoBreadcrumbTracking = false
+            // On by default whatever the line above says: a breadcrumb with every request's address, and an event
+            // with the request for every 5xx answer (MS-151).
+            options.enableNetworkBreadcrumbs = false
+            options.enableCaptureFailedRequests = false
             #if DEBUG
             options.environment = "debug"
             #endif

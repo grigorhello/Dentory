@@ -33,7 +33,9 @@ $$;
 
 -- The admin of the read-only clinic.
 select pg_temp.act_as('00000000-0000-4000-8000-000000019401');
-select throws_ok($$update public.clinics set name = 'Renamed' where id = '00000000-0000-4000-8000-000000019411'$$,
+select throws_ok(
+  $$update public.clinics set logo_path = '00000000-0000-4000-8000-000000019411/logo.jpg'
+    where id = '00000000-0000-4000-8000-000000019411'$$,
   '42501', 'The clinic is read-only until a payment method is added', 'the clinic itself cannot change');
 select throws_ok($$insert into public.categories (clinic_id, name) values ('00000000-0000-4000-8000-000000019411', 'Gloves')$$,
   '42501', 'The clinic is read-only until a payment method is added', 'nothing is added');

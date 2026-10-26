@@ -2,7 +2,7 @@
 -- PRD §2 role table fails for Staff, stock tables take no direct writes, the last admin stays, and a
 -- clinic whose trial ended takes no writes.
 begin;
-select plan(59);
+select plan(60);
 
 -- Fixtures (as the owner) --------------------------------------------------------------------------
 insert into auth.users (id, instance_id, aud, role, email) values
@@ -117,15 +117,17 @@ select throws_ok($$ insert into public.transactions (clinic_id, product_id, type
   '42501', null, 'nor the ledger');
 select throws_ok($$ insert into public.procedure_events (clinic_id, name, started_by) values ('00000000-0000-4000-8000-0000000000c1', 'Root canal', '00000000-0000-4000-8000-0000000000a1') $$,
   '42501', null, 'nor procedure events');
--- Admin "yes" cells
-select lives_ok($$ insert into public.memberships (clinic_id, email, role, invited_by) values ('00000000-0000-4000-8000-0000000000c1', 'new@clinic.com', 'staff', '00000000-0000-4000-8000-0000000000a1') $$,
-  'admin invites');
+-- Admin "yes" cells. Inviting goes through invite_member and its token alone (MS-151, 09_invitations_test.sql).
+select throws_ok($$ insert into public.memberships (clinic_id, email, role, invited_by) values ('00000000-0000-4000-8000-0000000000c1', 'new@clinic.com', 'staff', '00000000-0000-4000-8000-0000000000a1') $$,
+  '42501', null, 'admin invites only through invite_member, never with a row of their own');
 select lives_ok($$ insert into public.products (clinic_id, name, unit) values ('00000000-0000-4000-8000-0000000000c1', 'Gloves', 'boxes') $$,
   'admin creates products');
 select lives_ok($$ update public.to_buy_items set status = 'ordered', ordered_at = now(), ordered_by = '00000000-0000-4000-8000-0000000000a1' where id = '00000000-0000-4000-8000-000000000011' $$,
   'admin marks as ordered');
-select lives_ok($$ update public.clinics set name = 'Smile Dental Group' where id = '00000000-0000-4000-8000-0000000000c1' $$,
-  'admin changes clinic settings');
+select throws_ok($$ update public.clinics set name = 'Smile Dental Group' where id = '00000000-0000-4000-8000-0000000000c1' $$,
+  '42501', null, 'admin changes clinic settings only through clinic_settings_save (MS-151, 28_clinic_settings_test.sql)');
+select lives_ok($$ update public.clinics set logo_path = '00000000-0000-4000-8000-0000000000c1/logo.jpg' where id = '00000000-0000-4000-8000-0000000000c1' $$,
+  'admin points the clinic at its logo');
 select throws_ok($$ update public.clinics set subscription_status = 'active' where id = '00000000-0000-4000-8000-0000000000c1' $$,
   '42501', null, 'admin cannot change the subscription');
 select throws_ok($$ update public.clinics set trial_ends_at = '2099-01-01' where id = '00000000-0000-4000-8000-0000000000c1' $$,
@@ -153,10 +155,10 @@ reset role;
 select pg_temp.act_as('00000000-0000-4000-8000-0000000000a1');
 select throws_ok($$ update public.memberships set role = 'staff' where user_id = '00000000-0000-4000-8000-0000000000a1' $$,
   '23001', null, 'the last admin cannot be demoted');
-select throws_ok($$ update public.memberships set status = 'revoked' where user_id = '00000000-0000-4000-8000-0000000000a1' $$,
-  '23001', null, 'the last admin cannot be revoked');
+select throws_ok($$ select public.team_remove((select id from public.memberships where user_id = '00000000-0000-4000-8000-0000000000a1')) $$,
+  '22023', 'A clinic needs at least one admin.', 'the last admin cannot be removed');
 select throws_ok($$ delete from public.memberships where user_id = '00000000-0000-4000-8000-0000000000a1' $$,
-  '23001', null, 'the last admin cannot be removed');
+  '42501', null, 'nor deleted: removing someone keeps their row, revoked (MS-151)');
 select lives_ok($$ update public.memberships set role = 'admin' where user_id = '00000000-0000-4000-8000-0000000000b1' $$,
   'a second admin can be made');
 select lives_ok($$ update public.memberships set role = 'staff' where user_id = '00000000-0000-4000-8000-0000000000a1' $$,
