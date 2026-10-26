@@ -33,12 +33,13 @@ final class ProcedureE2ETests: XCTestCase {
         E2E.expectToast("Cleaning started", "6 items deducted", in: app)
         expectStock("12 boxes", "1 unopened\u{00A0}· 2 open", "after the start", in: app)
 
-        // Home reloads as its tab is chosen: its card shows the Cleaning just started, and Edit usage opens it.
+        // Home reloads as its tab is chosen: its card shows the Cleaning just started, with its seven products (the
+        // toast counted the six items deducted), and Edit usage opens it.
         app.buttons["tab.home"].tap()
         let latest = app.descendants(matching: .any)["home.procedure.latest"]
         latest.appears("Home has no latest procedure")
         E2E.expect(latest, toRead: "Cleaning", "Home's card does not show the procedure just started")
-        E2E.expect(latest, toRead: "6 supplies\u{00A0}· Sarah", "Home's card does not count the start's supplies")
+        E2E.expect(latest, toRead: "7 supplies\u{00A0}· Sarah", "Home's card does not count the Cleaning's supplies")
         app.buttons["home.procedure.editUsage"].tap()
         app.staticTexts["procDetail.editing"].appears("Edit usage did not open the procedure")
         app.buttons["procDetail.item[\(gloves)].inc"].tap()
