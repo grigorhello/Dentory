@@ -82,6 +82,33 @@ struct InvoiceCaptureTests {
         }
     }
 
+    @Test func aPageLargerThanTheReaderSeesIsScaledDownToIt() async throws {
+        let photo = CGSize(width: 4_032, height: 3_024)
+        let scan = CGSize(width: 1_700, height: 2_200)
+        let edge = CGSize(width: 2_576, height: 900)
+        #expect(InvoiceCapture.encodedSize(of: photo) == CGSize(width: 2_576, height: 1_932))
+        #expect(InvoiceCapture.encodedSize(of: scan) == scan)
+        #expect(InvoiceCapture.encodedSize(of: edge) == edge)
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let size = CGSize(width: 3_000, height: 4_000)
+        let large = UIGraphicsImageRenderer(size: size, format: format).image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+        let document = try await InvoiceCapture.document(scanned: [large])
+        let page = try #require(UIImage(data: document.pages[0].data))
+        #expect(page.size.width * page.scale == 1_932)
+        #expect(page.size.height * page.scale == 2_576)
+    }
+
+    @Test func eachCaptureIsANewInvoice() async throws {
+        let first = try await InvoiceCapture.document(scanned: [image(.white)])
+        let second = try await InvoiceCapture.document(scanned: [image(.white)])
+        #expect(first.id != second.id)
+    }
+
     @Test func uploadOffersPDFJPGPNGAndHEIC() {
         let identifiers = InvoiceCapture.fileTypes.map(\.identifier)
         #expect(identifiers == ["com.adobe.pdf", "public.jpeg", "public.png", "public.heic"])

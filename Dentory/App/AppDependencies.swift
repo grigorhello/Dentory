@@ -26,6 +26,8 @@ struct AppDependencies: Sendable {
     let procedureEditRepository: ProcedureEditRepository
     let toBuyRepository: ToBuyRepository
     let receiveRepository: ReceiveRepository
+    /// Review invoice: the upload, the invoice and its reading (MS-129).
+    let invoiceRepository: InvoiceRepository
     let manualReceiveRepository: ManualReceiveRepository
     let clinicSettingsRepository: ClinicSettingsRepository
     let expiringRepository: ExpiringRepository
@@ -77,9 +79,7 @@ struct AppDependencies: Sendable {
         return AppDependencies(
             rpc: rpc,
             auth: SupabaseAuthService(client: client, passwordResetRedirect: PasswordResetLink.redirectURL()),
-            clock: clock,
-            networkMonitor: networkMonitor,
-            toasts: toasts,
+            clock: clock, networkMonitor: networkMonitor, toasts: toasts,
             cache: FileResponseCache(), writes: writes,
             reporter: reporter,
             homeRepository: SupabaseHomeRepository(client: client),
@@ -91,6 +91,7 @@ struct AppDependencies: Sendable {
             procedureEditRepository: SupabaseProcedureEditRepository(client: client),
             toBuyRepository: SupabaseToBuyRepository(client: client),
             receiveRepository: SupabaseReceiveRepository(client: client),
+            invoiceRepository: SupabaseInvoiceRepository(client: client),
             manualReceiveRepository: SupabaseManualReceiveRepository(client: client, writes: writes),
             clinicSettingsRepository: SupabaseClinicSettingsRepository(client: client),
             expiringRepository: SupabaseExpiringRepository(client: client, writes: writes),
@@ -152,7 +153,7 @@ struct AppDependencies: Sendable {
             proceduresRepository: DemoProceduresRepository(),
             procedureStartRepository: DemoProcedureStartRepository(),
             procedureEditRepository: DemoProcedureEditRepository(), toBuyRepository: DemoToBuyRepository(),
-            receiveRepository: DemoReceiveRepository(),
+            receiveRepository: DemoReceiveRepository(), invoiceRepository: DemoInvoiceRepository(),
             manualReceiveRepository: DemoManualReceiveRepository(store: products),
             clinicSettingsRepository: DemoClinicSettingsRepository(auth: auth),
             expiringRepository: expiring, activityRepository: activity,

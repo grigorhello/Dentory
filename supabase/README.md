@@ -16,6 +16,7 @@ Commands are in the root `Makefile` (`make db-start db-reset db-test seed-demo`;
 | `stripe_webhook` | Stripe (`verify_jwt = false`) | Checks the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET`, then reads the subscription or invoice back from Stripe, so late or out-of-order events do no harm: subscription events set the clinic's status, next payment and card (`billing_apply_subscription`, `billing_apply_card`); `customer.updated` changes the card; invoice events keep the invoices (`billing_record_invoice`; the $0 one that opens a trial is not kept, and a paid one never goes back to open); `checkout.session.completed` links a new subscription to its clinic. A card on file keeps the clinic writable through and after its trial (Stripe's `trialing` and `active` are `active`). An invoice whose charge failed (`invoice.payment_failed` while it is open) is marked (`billing_invoice_payment_failed`), so Invoices says Failed. Once an invoice is paid, every billing email but the one Stripe sent its receipt to gets Dentory's copy, once and in one Resend call (`billing_receipt_copy` claims it, `billing_receipt_finish` marks it sent; a failed send answers 500, and a delivery that finds the copy being sent answers 409, so Stripe tries the event again), MS-141: Stripe's API keeps one address per customer, the first billing email. |
 | `send_digest` | the database's hourly job (`engine.digest_dispatch`, `verify_jwt = false`, the service role key checked), and Grigor to try the email | `POST {}`: claims the weekly digests that are due (`digest_claim`: Monday 7 am to noon at each clinic with Email digest on, not a read-only clinic, the switch read again), emails each to the clinic's active admins (`_shared/digest-email.ts`) and records which went out (`digest_finish`); one that reached nobody is retried by the next hour, and one queued more than 6 hours ago is dropped (MS-145). `POST { clinic_id }` sends that clinic's digest as it reads now to its admins, whatever the day and the switch, and records nothing: how to see the email in Gmail or Apple Mail on a hosted project. |
 | `export_csv` | the app, as a signed-in admin (Account, Export CSV) | `POST { clinic_id }`: starts an export job (`export_job_start`: admins only, one per clinic every 10 minutes, a read-only clinic included) and answers `{ email }` at once; then, in the background, reads the clinic's rows in one snapshot (`export_data`), writes `products.csv`, `batches.csv` and `transactions.csv` (UTF-8 with a byte order mark, CRLF, dates at the clinic's time), zips them into the private `exports` bucket as `{clinic_id}/{job_id}.zip`, emails the admin a signed download link valid 7 days (or, if the export fails, an email saying so) and closes the job (`export_job_finish`). An admin whose colleague exported in the last 10 minutes is told whose export it was and where it went. Each export removes the clinic's zips whose links have expired (MS-143). |
+| `extract_invoice` | the app, as a signed-in admin, right after `invoice_create` (Review invoice) | `POST { invoice_id }`: claims the invoice's reading once (`invoice_reading_start`: an admin of its clinic, a clinic that may write, an invoice not read yet) and answers 202 at once; then, in the background, downloads its pages from the private `invoices` bucket (`{clinic_id}/{invoice_id}/page-n.jpg` or `page-1.pdf`), reads them with the Claude API (`claude-sonnet-5-5`, structured outputs to the extraction schema, `reading.ts`) and hands the result to `invoice_reading_finish`, which matches the lines against the clinic's products without AI, saves them and marks the invoice ready with its alert and the admins' push; a reading that fails, or runs past 60 seconds, is recorded with its reason (`invoice_reading_fail`). Invoice contents never reach the log (MS-129). |
 
 Every function answers refusals as `{ "error": { "code", "message", "field"? } }` with the HTTP status the app maps in `Core/Data/AppError+Functions.swift` (`supabase/functions/_shared/http.ts`).
 
@@ -25,6 +26,7 @@ The local runtime injects `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERV
 
 | Secret | Used by | Value |
 |---|---|---|
+| `ANTHROPIC_API_KEY` | `extract_invoice` | A Claude API key (Claude Console, API keys). Without it, as on the local stack, every reading fails at once with the reason error. |
 | `RESEND_API_KEY` | `invite_member`, `export_csv`, `stripe_webhook`, `send_digest` | A Resend API key for the `dentory.ca` sending domain (Resend, API keys). Without it the function sends nothing and writes the email, link included, to its log; that is how the local stack runs. |
 | `EMAIL_FROM` | `invite_member`, `export_csv`, `stripe_webhook`, `send_digest` | Optional. Defaults to `Dentory <invites@dentory.ca>`; the domain must be verified in Resend (SPF and DKIM records at the registrar). |
 | `APP_LINK_BASE` | `invite_member`, `send_digest` | Optional. Defaults to `https://app.dentory.ca`, the universal-link host (`applinks/README.md`). |
@@ -34,7 +36,25 @@ The local runtime injects `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERV
 | `STRIPE_WEBHOOK_SECRET` | `stripe_webhook` | The `whsec_…` signing secret of the webhook endpoint below. |
 | `BILLING_RETURN_URL` | the billing functions | Optional. Defaults to `https://app.dentory.ca/billing/done`, the page Checkout and the Customer Portal return to (`applinks/billing/done`). |
 
-Deploy with `supabase functions deploy invite_member`, `supabase functions deploy export_csv`, `supabase functions deploy accept_invitation --no-verify-jwt` and `supabase functions deploy send_digest --no-verify-jwt` (the setting also lives in `config.toml`).
+Deploy with `supabase functions deploy invite_member`, `supabase functions deploy export_csv`, `supabase functions deploy extract_invoice`, `supabase functions deploy accept_invitation --no-verify-jwt` and `supabase functions deploy send_digest --no-verify-jwt` (the setting also lives in `config.toml`).
+
+### Invoice reading (MS-129)
+
+`extract_invoice` reads with the project's `ANTHROPIC_API_KEY` (above); set it, push the migration and deploy the
+function. The ticket's target, half the readings under 20 seconds, can only be measured with a key:
+
+- `ANTHROPIC_API_KEY=… make invoice-reading-live` reads the five synthetic invoices in
+  `functions/extract_invoice/fixtures` with the real API (a few cents), checks what comes back against the recorded
+  answers and that no personal data came back, and prints each reading's time and the median, which must be under 20
+  seconds. `RECORD=1` writes the live answers over the recorded ones instead (`fixtures/README.md`).
+- On a hosted project, the median of real readings, from the upload to the result:
+  `select percentile_cont(0.5) within group (order by extract(epoch from read_at - created_at)) from invoices where read_at is not null;`
+
+The tests need no key: `make functions-check` replays the recorded answers (`reading_test.ts`), and
+`40_invoice_matching_test.sql` matches their lines against the demo catalog. Locally, without a key, every reading fails
+with the reason error; to read real invoices on the local stack, put the key in the git-ignored `supabase/functions/.env`
+and run `supabase functions serve --env-file supabase/functions/.env`. Each minute `engine.invoice_reading_timeout`
+fails a reading that never started or ran past its time, so no invoice stays "Reading invoice".
 
 ### Weekly digest (MS-145)
 

@@ -25,8 +25,10 @@ struct ReceiveView: View {
                 switch route {
                 case .manual(let productID):
                     ManualReceiveView(productID: productID, session: session, dependencies: dependencies)
-                case .invoice, .newInvoice:
-                    ReceiveRoutePlaceholderView(route: route)
+                case .invoice(let invoiceID):
+                    InvoiceView(invoiceID: invoiceID, session: session, dependencies: dependencies)
+                case .newInvoice(let document):
+                    InvoiceView(document: document, session: session, dependencies: dependencies)
                 }
             }
             .receiveCapture(viewModel)
@@ -38,12 +40,12 @@ struct ReceiveView: View {
         VStack(spacing: Spacing.md) {
             ReceiveOptionCard(
                 icon: .camera, title: "Take a photo", detail: "Invoice or packing slip.", isFeatured: true,
-                action: viewModel.takePhoto
+                action: takePhoto
             )
             .accessibilityIdentifier("receive.photo")
             ReceiveOptionCard(
                 icon: .upload, title: "Upload PDF or image", detail: "From files or email.",
-                action: viewModel.uploadFile
+                action: uploadFile
             )
             .accessibilityIdentifier("receive.upload")
             ReceiveOptionCard(
@@ -72,8 +74,16 @@ struct ReceiveView: View {
         viewModel.clearPendingRoute()
     }
 
-    /// Receiving is a write: in read-only mode the sheet says why instead (MS-142), should the trial end while this
-    /// screen is open.
+    /// Receiving is a write, and a captured invoice is uploaded at once (MS-129): in read-only mode the sheet says why
+    /// instead (MS-142), should the trial end while this screen is open.
+    private func takePhoto() {
+        writeAccess.perform(viewModel.takePhoto)
+    }
+
+    private func uploadFile() {
+        writeAccess.perform(viewModel.uploadFile)
+    }
+
     private func receiveManually() {
         writeAccess.perform { router.push(ReceiveRoute.manual()) }
     }

@@ -4,6 +4,8 @@ import Foundation
 nonisolated enum InvoiceCaptureError: Error, Equatable, Sendable {
     /// Over `InvoiceDocument.maxByteCount`.
     case tooLarge(InvoiceDocument.Source)
+    /// Over `InvoiceDocument.maxPageCount` pages.
+    case tooManyPages
     /// The photos or the file could not be read.
     case unreadable(InvoiceDocument.Source)
     /// The document scanner stopped, for one because the camera is not allowed; it has said why itself.

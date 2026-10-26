@@ -66,6 +66,7 @@ struct CatalogDisplaySection: View {
                 SkeletonRow()
                 SkeletonRow(showsDivider: false)
             }
+            DocumentPlaceholder()
         }
     }
 }

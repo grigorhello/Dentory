@@ -4,7 +4,9 @@ import VisionKit
 /// VisionKit's document camera for Take a photo (f22): several pages, each found and straightened by its automatic
 /// edge detection. It hands back the pages as images, or says it was cancelled or failed; the caller dismisses it.
 struct DocumentScanner: UIViewControllerRepresentable {
-    /// False on the simulator and on a device without the scanner, where Take a photo opens Photos instead.
+    /// False on a device without the scanner, where Take a photo opens Photos instead. A simulator may answer true
+    /// (iOS 18.4 with Xcode 27.1 does) and then fail with "Unable to capture media", which ends in the "Couldn't
+    /// scan" toast: on the simulator, Upload PDF or image is the way to try a capture.
     static var isAvailable: Bool {
         VNDocumentCameraViewController.isSupported
     }
