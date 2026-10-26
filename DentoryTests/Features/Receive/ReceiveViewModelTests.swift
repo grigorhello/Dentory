@@ -133,12 +133,11 @@ struct ReceiveViewModelTests {
 
     @Test func scannedPagesGoToReviewInvoiceAndCloseTheScanner() async {
         let viewModel = await make()
+        let scanned = document(.camera, bytes: [1_200_000, 900_000])
         viewModel.takePhoto()
-        await viewModel.capture { () async throws(InvoiceCaptureError) in
-            self.document(.camera, bytes: [1_200_000, 900_000])
-        }
+        await viewModel.capture { () async throws(InvoiceCaptureError) in scanned }
         #expect(!viewModel.isScannerPresented)
-        #expect(viewModel.pendingRoute == .newInvoice(source: .camera, pageCount: 2))
+        #expect(viewModel.pendingRoute == .newInvoice(scanned), "Review invoice gets the pages themselves (MS-129)")
         #expect(viewModel.message == nil)
         viewModel.clearPendingRoute()
         #expect(viewModel.pendingRoute == nil)
@@ -146,16 +145,16 @@ struct ReceiveViewModelTests {
 
     @Test func aFileGoesToReviewInvoiceAsOnePage() async {
         let viewModel = await make()
-        await viewModel.capture { () async throws(InvoiceCaptureError) in
-            InvoiceDocument(source: .file, pages: [InvoiceDocument.Page(kind: .pdf, data: Data(count: 10))])
-        }
-        #expect(viewModel.pendingRoute == .newInvoice(source: .file, pageCount: 1))
+        let file = InvoiceDocument(source: .file, pages: [InvoiceDocument.Page(kind: .pdf, data: Data(count: 10))])
+        await viewModel.capture { () async throws(InvoiceCaptureError) in file }
+        #expect(viewModel.pendingRoute == .newInvoice(file))
     }
 
     @Test func twentyMegabytesInAllPassAndOneByteMoreIsRefused() async {
         let viewModel = await make()
-        viewModel.captured(document(.camera, bytes: [12_000_000, 8_000_000]))
-        #expect(viewModel.pendingRoute == .newInvoice(source: .camera, pageCount: 2), "Exactly 20 MB")
+        let exactly = document(.camera, bytes: [12_000_000, 8_000_000])
+        viewModel.captured(exactly)
+        #expect(viewModel.pendingRoute == .newInvoice(exactly), "Exactly 20 MB")
         viewModel.clearPendingRoute()
 
         viewModel.captured(document(.camera, bytes: [12_000_000, 8_000_001]))
@@ -185,6 +184,18 @@ struct ReceiveViewModelTests {
         viewModel.failed(.scannerFailed)
         #expect(!viewModel.isScannerPresented)
         #expect(viewModel.message == .init(title: "Couldn't scan", detail: "Upload a PDF or image instead."))
+    }
+
+    @Test func twentyPagesPassAndOneMoreIsRefused() async {
+        let viewModel = await make()
+        let twenty = document(.camera, bytes: Array(repeating: 10, count: 20))
+        viewModel.captured(twenty)
+        #expect(viewModel.pendingRoute == .newInvoice(twenty))
+        viewModel.clearPendingRoute()
+
+        viewModel.captured(document(.camera, bytes: Array(repeating: 10, count: 21)))
+        #expect(viewModel.pendingRoute == nil)
+        #expect(viewModel.message == .init(title: "Up to 20 pages per invoice", detail: "Scan or choose fewer pages."))
     }
 
     @Test func noPagesGoNowhereAndSayNothing() async {

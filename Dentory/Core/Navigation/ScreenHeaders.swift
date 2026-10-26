@@ -53,6 +53,8 @@ struct PushedHeader: View {
     let title: String
     var subtitle: String?
     var identifier: String
+    /// The subtitle's own Appendix B id ("invoice.header"); `{identifier}.subtitle` otherwise.
+    var subtitleIdentifier: String?
     var action: HeaderAction?
     var style: PushedHeaderStyle = .title
     /// Runs on Back in place of leaving, for a screen that asks before discarding changes (Clinic settings).
@@ -111,7 +113,7 @@ struct PushedHeader: View {
                     .textStyle(.body14)
                     .foregroundStyle(Color.ms.textSecondary)
                     .padding(.leading, ControlHeight.md - Spacing.sm + Spacing.xs)
-                    .accessibilityIdentifier("\(identifier).subtitle")
+                    .accessibilityIdentifier(subtitleIdentifier ?? "\(identifier).subtitle")
             }
         }
         .padding(.top, Spacing.sm)
@@ -144,6 +146,7 @@ struct PushedScreenModifier: ViewModifier {
     let title: String
     var subtitle: String?
     let identifier: String
+    var subtitleIdentifier: String?
     var action: PushedHeader.HeaderAction?
     var style: PushedHeaderStyle = .title
     var onBack: (() -> Void)?
@@ -151,7 +154,8 @@ struct PushedScreenModifier: ViewModifier {
     func body(content: Content) -> some View {
         ScreenScaffold {
             PushedHeader(
-                title: title, subtitle: subtitle, identifier: identifier, action: action, style: style, onBack: onBack
+                title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
+                action: action, style: style, onBack: onBack
             )
         } content: {
             content
@@ -217,17 +221,20 @@ extension View {
 
     /// Lays the view out as a pushed screen. Add `.pinnedPrimaryBar` for its primary action.
     /// `style: .context` reads the title as a secondary line when the content carries the real title (f20).
-    /// `onBack` replaces leaving on Back, for a screen that asks before discarding changes.
+    /// `onBack` replaces leaving on Back, for a screen that asks before discarding changes. `subtitleIdentifier`
+    /// names the subtitle when Appendix B gives it an id of its own.
     func pushedScreen(
         title: String,
         subtitle: String? = nil,
         identifier: String,
+        subtitleIdentifier: String? = nil,
         action: PushedHeader.HeaderAction? = nil,
         style: PushedHeaderStyle = .title,
         onBack: (() -> Void)? = nil
     ) -> some View {
         modifier(PushedScreenModifier(
-            title: title, subtitle: subtitle, identifier: identifier, action: action, style: style, onBack: onBack
+            title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
+            action: action, style: style, onBack: onBack
         ))
     }
 }

@@ -91,7 +91,7 @@ select throws_ok($$ update public.clinics set name = 'Renamed' where id = '00000
   '42501', null, 'staff cannot change clinic settings');
 select throws_ok($$ insert into public.export_jobs (clinic_id, requested_by) values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000b1') $$,
   '42501', null, 'staff cannot export');
-select throws_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c1/inv.jpg') $$,
+select throws_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c1/00000000-0000-4000-8000-0000000000f2/page-1.jpg') $$,
   '42501', null, 'staff cannot upload invoices');
 -- and the "yes" cells work
 select lives_ok($$ update public.to_buy_items set qty = 8, qty_edited = true where id = '00000000-0000-4000-8000-000000000011' $$,
@@ -136,9 +136,9 @@ select lives_ok($$ insert into storage.objects (bucket_id, name) values ('logos'
   'admin uploads the logo');
 select throws_ok($$ insert into storage.objects (bucket_id, name) values ('logos', '00000000-0000-4000-8000-0000000000c2/logo.png') $$,
   '42501', null, 'but not another clinic''s logo');
-select lives_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c1/inv.jpg') $$,
+select lives_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c1/00000000-0000-4000-8000-0000000000f2/page-1.jpg') $$,
   'admin uploads invoices');
-select throws_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c2/inv.jpg') $$,
+select throws_ok($$ insert into storage.objects (bucket_id, name) values ('invoices', '00000000-0000-4000-8000-0000000000c2/00000000-0000-4000-8000-0000000000f2/page-1.jpg') $$,
   '42501', null, 'but not into another clinic''s folder');
 reset role;
 

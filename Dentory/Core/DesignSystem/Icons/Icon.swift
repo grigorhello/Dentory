@@ -15,6 +15,7 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case download
     case eye
     case eyeOff = "eye-off"
+    case fileText = "file-text"
     case fileUp = "file-up"
     case info
     case layoutGrid = "layout-grid"

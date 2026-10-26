@@ -21,7 +21,8 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
-.PHONY: project build test uitest lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check invite-links
+.PHONY: project build test uitest lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check invite-links \
+	invoice-reading-live
 
 project:
 	xcodegen generate
@@ -64,10 +65,18 @@ seed-demo:
 functions-serve:
 	supabase functions serve
 
-# Type-checks every Edge Function and runs their unit tests (`*_test.ts`; needs Deno: brew install deno).
+# Type-checks every Edge Function and runs their unit tests (`*_test.ts`; needs Deno: brew install deno). The tests read
+# their fixtures under supabase/ and nothing else.
 functions-check:
-	deno check supabase/functions/*/index.ts
-	deno test supabase/functions
+	deno check supabase/functions/*/index.ts supabase/functions/extract_invoice/live_check.ts
+	deno test --allow-read=supabase supabase/functions
+
+# Reads the five fixture invoices with the real Claude API and checks what comes back and how fast (MS-129). Needs
+# ANTHROPIC_API_KEY in the environment (it is ignored without one) and spends a few cents; RECORD=1 writes the answers
+# over the recorded ones in supabase/functions/extract_invoice/fixtures.
+invoice-reading-live:
+	deno test --allow-read=supabase --allow-env --allow-net=api.anthropic.com \
+		--allow-write=supabase/functions/extract_invoice/fixtures supabase/functions/extract_invoice/live_check.ts
 
 # The local stack has no Resend key, so invite_member writes each invitation email to the function log
 # instead of sending it. This prints the links of the last invitations; open one on the simulator with

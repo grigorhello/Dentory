@@ -21,7 +21,7 @@ final class ReceiveViewModel {
     private(set) var overview: ReceiveOverview?
     /// VisionKit's document scanner: Take a photo on a device that has it.
     var isScannerPresented = false
-    /// Photos: Take a photo where the device has no scanner (the simulator).
+    /// Photos: Take a photo where the device has no scanner.
     var isPhotoPickerPresented = false
     /// Files: Upload PDF or image.
     var isFileImporterPresented = false
@@ -103,7 +103,8 @@ final class ReceiveViewModel {
         }
     }
 
-    /// Pages over 20 MB in all are refused; otherwise they go to Review invoice, which reads them (MS-129).
+    /// Pages over 20 MB in all, or more than 20 of them, are refused; otherwise they go to Review invoice, which
+    /// uploads and reads them (MS-129).
     func captured(_ document: InvoiceDocument) {
         isScannerPresented = false
         guard !document.pages.isEmpty else { return }
@@ -111,7 +112,11 @@ final class ReceiveViewModel {
             failed(.tooLarge(document.source))
             return
         }
-        pendingRoute = .newInvoice(source: document.source, pageCount: document.pages.count)
+        guard !document.hasTooManyPages else {
+            failed(.tooManyPages)
+            return
+        }
+        pendingRoute = .newInvoice(document)
     }
 
     /// The scanner stopped, or the photos or the file could not be read or were too large: the screen says so.

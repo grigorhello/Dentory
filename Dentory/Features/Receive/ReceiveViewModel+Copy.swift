@@ -42,6 +42,8 @@ extension ReceiveViewModel {
             Message(title: "This file is over 20 MB", detail: "Choose a smaller PDF or image.")
         case .tooLarge(.camera):
             Message(title: "The pages are over 20 MB", detail: "Use fewer pages.")
+        case .tooManyPages:
+            Message(title: "Up to 20 pages per invoice", detail: "Scan or choose fewer pages.")
         case .unreadable(.file):
             Message(title: "Couldn't open this file", detail: "Try again, or choose another one.")
         case .unreadable(.camera):

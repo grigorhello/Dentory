@@ -299,18 +299,27 @@ where clinic_id = pg_temp.clinic() and status = 'to_buy'
   and product_id not in (pg_temp.pid(2), pg_temp.pid(3), pg_temp.pid(7));
 select pg_temp.backdate(pg_temp.ago(1, '16:40'));
 
+-- Patterson's own words for Septocaine, learned when Sarah confirmed an earlier Patterson delivery (MS-131): an
+-- invoice reading them again matches Septocaine at once (MS-129, supplier aliases).
+insert into public.supplier_aliases (clinic_id, supplier, raw_text_normalized, product_id, created_at)
+values (pg_temp.clinic(), engine.invoice_alias_key('Patterson'), engine.invoice_alias_key('SEPTO 4% 1:100K 50/BX'), pg_temp.pid(1),
+  pg_temp.ago(60, '10:00'));
+
 -- Today 8:55 AM: Patterson invoice INV-10092 has been read and waits for review (prototype lines, f23).
--- No file is uploaded to Storage; the path is where MS-129 would put it.
-insert into public.invoices (id, clinic_id, storage_path, source, status, supplier, number, invoice_date, total, currency, created_by, created_at)
+-- No file is uploaded to Storage; the folder is where MS-129 puts the pages ({clinic}/{invoice}/page-1.jpg).
+insert into public.invoices (id, clinic_id, storage_path, source, status, supplier, number, invoice_date, total, currency, created_by, created_at,
+  file_kind, file_count, read_started_at, read_at)
 values ('d0000000-0000-4000-8000-000000000401', pg_temp.clinic(),
-  pg_temp.clinic() || '/invoices/d0000000-0000-4000-8000-000000000401.jpg', 'camera', 'ready',
-  'Patterson', 'INV-10092', pg_temp.today() - 2, 449.00, 'CAD', pg_temp.sarah(), pg_temp.ago(0, '08:55'));
-insert into public.invoice_lines (clinic_id, invoice_id, n, raw, qty, unit, unit_price, line_total, state, suggested_product_id, product_id, created_at)
+  pg_temp.clinic() || '/d0000000-0000-4000-8000-000000000401', 'camera', 'ready',
+  'Patterson', 'INV-10092', pg_temp.today() - 2, 449.00, 'CAD', pg_temp.sarah(), pg_temp.ago(0, '08:55'),
+  'jpg', 1, pg_temp.ago(0, '08:55'), pg_temp.ago(0, '08:55'));
+insert into public.invoice_lines (clinic_id, invoice_id, n, raw, qty, unit, unit_price, line_total, state, suggested_product_id, product_id, kind,
+  suggested_name, suggested_unit, created_at)
 values
-  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 1, 'SEPTO 4% 1:100K 50/BX', 5, 'boxes', 49.80, 249.00, 'matched', null, pg_temp.pid(1), pg_temp.ago(0, '08:55')),
-  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 2, 'ENDO FILE KIT 15-40 21MM', 4, 'boxes', 45.00, 180.00, 'possible_match', pg_temp.pid(2), null, pg_temp.ago(0, '08:55')),
-  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 3, 'TEMPBOND NE 1PK', 1, 'pack', 26.40, 26.40, 'new_product', null, null, pg_temp.ago(0, '08:55')),
-  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 4, 'HANDLING / FUEL SURCHARGE', 1, null, 4.80, 4.80, 'needs_review', null, null, pg_temp.ago(0, '08:55'));
+  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 1, 'SEPTO 4% 1:100K 50/BX', 5, 'boxes', 49.80, 249.00, 'matched', null, pg_temp.pid(1), 'product', null, null, pg_temp.ago(0, '08:55')),
+  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 2, 'ENDO FILE KIT 15-40 21MM', 4, 'boxes', 45.00, 180.00, 'possible_match', pg_temp.pid(2), null, 'product', null, null, pg_temp.ago(0, '08:55')),
+  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 3, 'TEMPBOND NE 1PK', 1, 'pack', 26.40, 26.40, 'new_product', null, null, 'product', 'Tempbond NE', 'packs', pg_temp.ago(0, '08:55')),
+  (pg_temp.clinic(), 'd0000000-0000-4000-8000-000000000401', 4, 'HANDLING / FUEL SURCHARGE', 1, null, 4.80, 4.80, 'needs_review', null, null, 'fee', null, null, pg_temp.ago(0, '08:55'));
 insert into public.alerts (clinic_id, kind, invoice_id, opened_at, created_at)
 values (pg_temp.clinic(), 'invoice_ready', 'd0000000-0000-4000-8000-000000000401', pg_temp.ago(0, '08:56'), pg_temp.ago(0, '08:56'));
 

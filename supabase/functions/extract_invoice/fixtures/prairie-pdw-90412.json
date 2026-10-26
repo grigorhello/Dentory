@@ -1,0 +1,99 @@
+{
+  "supplier": "Prairie Dental Wholesale",
+  "invoice_number": "PDW-90412",
+  "invoice_date": "2026-10-20",
+  "currency": "USD",
+  "total": 384.75,
+  "lines": [
+    {
+      "raw": "FLUORIDE VARNISH 5% 50/BX",
+      "qty": 2,
+      "unit": "box",
+      "unit_price": 42,
+      "line_total": 84,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "TOPICAL ANESTHETIC GEL 20% BENZOCAINE 1OZ",
+      "qty": 3,
+      "unit": "jar",
+      "unit_price": 6.75,
+      "line_total": 20.25,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "ROOT CANAL SEALER KIT",
+      "qty": 1,
+      "unit": "kit",
+      "unit_price": 96.5,
+      "line_total": 96.5,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "PROPHY PASTE MINT MEDIUM 200/BX",
+      "qty": 2,
+      "unit": "box",
+      "unit_price": 24.8,
+      "line_total": 49.6,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "MICROBRUSH FINE 100/BX",
+      "qty": 3,
+      "unit": "box",
+      "unit_price": 7.2,
+      "line_total": 21.6,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "PATIENT BIBS 2-PLY 500/CS",
+      "qty": 1,
+      "unit": "case",
+      "unit_price": 39,
+      "line_total": 39,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "SUCTION TIPS HVE VENTED 100/BG",
+      "qty": 2,
+      "unit": "bag",
+      "unit_price": 11.4,
+      "line_total": 22.8,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "TEMPORARY CEMENT NON-EUGENOL KIT",
+      "qty": 1,
+      "unit": "kit",
+      "unit_price": 33,
+      "line_total": 33,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "FREIGHT",
+      "qty": 1,
+      "unit": null,
+      "unit_price": 18,
+      "line_total": 18,
+      "lot": null,
+      "expiry": null,
+      "kind": "fee"
+    }
+  ]
+}
