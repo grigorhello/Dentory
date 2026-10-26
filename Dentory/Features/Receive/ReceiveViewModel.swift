@@ -3,9 +3,9 @@ import Observation
 
 /// Receive delivery (f22; PRD §6.5; Appendix B `receive`), Admin only: Take a photo (the document scanner, or Photos
 /// where the device has none), Upload PDF or image, and Receive manually; above "Waiting for delivery", the invoices
-/// to continue reviewing; and the lines marked Ordered, for reference only. The last lists are served from the cache
-/// while fresh ones load or the network is gone (MS-108). Nothing here changes stock. The lines are in
-/// `ReceiveViewModel+Copy.swift`.
+/// to continue reviewing, a reading that failed among them; and the lines marked Ordered, for reference only. The
+/// last lists are served from the cache while fresh ones load or the network is gone (MS-108). Nothing here changes
+/// stock. The lines are in `ReceiveViewModel+Copy.swift`.
 @MainActor
 @Observable
 final class ReceiveViewModel {
@@ -28,7 +28,7 @@ final class ReceiveViewModel {
     /// While captured pages are being prepared, so a second capture waits for the first.
     private(set) var isPreparing = false
     private(set) var message: Message?
-    /// Where captured pages go next; the view pushes it and clears it.
+    /// Where the screen goes next (captured pages, or an invoice to continue); the view pushes it and clears it.
     private(set) var pendingRoute: ReceiveRoute?
 
     let formatters: ClinicFormatters
@@ -53,7 +53,7 @@ final class ReceiveViewModel {
         CacheKey(method: "ReceiveRepository.overview", clinicID: clinicID)
     }
 
-    /// Invoices being read or ready to review, newest first ("Continue reviewing").
+    /// Invoices being read, ready to review or whose reading failed, newest first ("Continue reviewing").
     var invoices: [PendingInvoice] { overview?.invoices ?? [] }
 
     /// Lines marked Ordered ("Waiting for delivery"); the section hides when there are none.
@@ -69,6 +69,12 @@ final class ReceiveViewModel {
         } catch {
             state = overview == nil ? .failed(AppError(error)) : .loaded
         }
+    }
+
+    /// Continue reviewing: Review invoice, which follows a reading under way, shows the invoice read, or says the
+    /// reading failed with Try again and Receive manually.
+    func continueReviewing(_ invoice: PendingInvoice) {
+        pendingRoute = .invoice(invoice.id)
     }
 
     // MARK: - Capture

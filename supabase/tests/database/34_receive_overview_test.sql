@@ -1,5 +1,6 @@
 -- MS-126 · receive_overview: Receive delivery's lists for an admin only (Staff and other clinics refused), the
--- invoices still being read or ready to review, newest first, and the lines marked Ordered, in To buy's Ordered order.
+-- invoices still being read, ready to review or whose reading failed (the MS-129 fix, 42_receive_overview_failed_test),
+-- newest first, and the lines marked Ordered, in To buy's Ordered order.
 begin;
 select plan(13);
 
@@ -69,13 +70,14 @@ reset role;
 select pg_temp.act_as('00000000-0000-4000-8000-000000034201');
 select is(
   (select array_agg(i ->> 'id' order by n) from jsonb_array_elements(public.receive_overview('00000000-0000-4000-8000-000000034211') -> 'invoices') with ordinality x(i, n)),
-  array['00000000-0000-4000-8000-000000034242', '00000000-0000-4000-8000-000000034241'],
-  'Continue reviewing lists the invoice being read and the one ready to review, newest first; failed, confirmed and discarded ones stay out');
+  array['00000000-0000-4000-8000-000000034243', '00000000-0000-4000-8000-000000034242', '00000000-0000-4000-8000-000000034241'],
+  'Continue reviewing lists the invoice whose reading failed, the one being read and the one ready to review, newest first; confirmed and discarded ones stay out');
 select results_eq(
   $$ select i ->> 'status', i ->> 'supplier', (i ->> 'created_at')::timestamptz
      from jsonb_array_elements(public.receive_overview('00000000-0000-4000-8000-000000034211') -> 'invoices') i $$,
   $$ select status::text, supplier, created_at from public.invoices
-     where id in ('00000000-0000-4000-8000-000000034242', '00000000-0000-4000-8000-000000034241') order by created_at desc $$,
+     where id in ('00000000-0000-4000-8000-000000034243', '00000000-0000-4000-8000-000000034242', '00000000-0000-4000-8000-000000034241')
+     order by created_at desc $$,
   'each invoice carries its state, its supplier once read (null while reading) and when it was added');
 select is(
   (select array_agg(w ->> 'name' order by n) from jsonb_array_elements(public.receive_overview('00000000-0000-4000-8000-000000034211') -> 'waiting') with ordinality x(w, n)),

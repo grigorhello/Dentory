@@ -2,22 +2,24 @@ import Foundation
 
 /// Receive delivery without a server: the demo clinic as `supabase/seed-demo.sql` leaves it on the frames' October 2,
 /// the Patterson invoice read at 8:55 AM and waiting for review, and the five lines To buy marked ordered on Oct 1;
-/// with `-demoInvoice reading` or `-demoInvoice failed`, an invoice being read above it (`DemoInvoiceRepository`).
+/// with `-demoInvoice reading` an invoice being read above it, and with `-demoInvoice failed` one whose reading failed
+/// (`DemoInvoiceRepository`).
 struct DemoReceiveRepository: ReceiveRepository {
     var now = Session.demoNow
-    var withInvoiceBeingRead = DemoInvoiceRepository.Launched.current != nil
+    /// The invoice `-demoInvoice` adds above the Patterson one: being read, or one whose reading failed.
+    var added = DemoInvoiceRepository.Launched.current.map { $0 == .failed ? PendingInvoice.Status.failed : .reading }
 
     func overview(clinicID: UUID) async throws -> ReceiveOverview {
         try await Task.sleep(for: .milliseconds(200))
-        return .demo(now: now, withInvoiceBeingRead: withInvoiceBeingRead)
+        return .demo(now: now, added: added)
     }
 }
 
 extension ReceiveOverview {
     /// The demo clinic at `now` (Thursday, October 2 in the frames): the lines were ordered the day before, as To buy's
-    /// demo has them, and the invoice was read at 8:55 AM in New York, a fixed time like the demo alerts'. An invoice
-    /// being read, uploaded a minute before `now`, comes first when asked for.
-    nonisolated static func demo(now: Date, withInvoiceBeingRead: Bool = false) -> ReceiveOverview {
+    /// demo has them, and the invoice was read at 8:55 AM in New York, a fixed time like the demo alerts'. The invoice
+    /// `added` asks for, uploaded a minute before `now`, comes first: being read, or failed half a minute later.
+    nonisolated static func demo(now: Date, added: PendingInvoice.Status? = nil) -> ReceiveOverview {
         let orderedAt = now.addingTimeInterval(-(24 - 7) * 3_600)
         let invoice = PendingInvoice(
             id: demoID(0x401), status: .ready, supplier: "Patterson",
@@ -37,8 +39,13 @@ extension ReceiveOverview {
                 supplier: line.supplier, quantity: line.quantity, orderedAt: orderedAt
             )
         }
-        let reading = PendingInvoice(id: demoID(0x402), status: .reading, supplier: nil, createdAt: now - 60)
-        return ReceiveOverview(invoices: withInvoiceBeingRead ? [reading, invoice] : [invoice], waiting: waiting)
+        let addedInvoice = added.map { status in
+            PendingInvoice(
+                id: demoID(0x402), status: status, supplier: nil, createdAt: now - 60,
+                failedAt: status == .failed ? now - 30 : nil
+            )
+        }
+        return ReceiveOverview(invoices: [addedInvoice, invoice].compactMap { $0 }, waiting: waiting)
     }
 
     /// The demo ids: To buy's lines from 0x501 and products as `ProductSummary.demo` numbers them.

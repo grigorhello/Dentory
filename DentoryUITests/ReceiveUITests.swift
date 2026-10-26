@@ -1,20 +1,23 @@
 import XCTest
 
 /// Receive delivery (f22, MS-126): Home's row opens it for an admin, with the three options, the invoice to continue
-/// and the lines waiting for delivery; the invoice and Receive manually lead on; Staff never reach it, not even from a
-/// delivery's notification link.
+/// and the lines waiting for delivery; the invoice and Receive manually lead on; a reading that failed is listed to
+/// continue too and opens its failure (the MS-129 fix); Staff never reach it, not even from a delivery's notification
+/// link.
 final class ReceiveUITests: XCTestCase {
     private let invoice = "receive.continue[00000000-0000-4000-8000-000000000401]"
+    private let failed = "receive.continue[00000000-0000-4000-8000-000000000402]"
     private let needles = "receive.waiting[00000000-0000-4000-8000-000000000505]"
 
     override func setUp() {
         continueAfterFailure = false
     }
 
+    /// Receive delivery from Home's row, with `-demoInvoice` adding an invoice being read or failed when given.
     @MainActor
-    private func openReceive() -> XCUIApplication {
+    private func openReceive(demoInvoice: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting"]
+        app.launchArguments = ["-uiTesting"] + (demoInvoice.map { ["-demoInvoice", $0] } ?? [])
         app.launch()
         let row = app.descendants(matching: .any)["home.receive"]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "No Receive delivery row on Home")
@@ -65,6 +68,25 @@ final class ReceiveUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["manual.title"].waitForExistence(timeout: 5), "Receive manually did not open")
         app.buttons["manual.back"].tap()
         XCTAssertTrue(app.staticTexts["receive.title"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testAReadingThatFailedIsListedToContinueAndOpensItsFailure() {
+        let app = openReceive(demoInvoice: "failed")
+        let row = app.buttons[failed]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "No failed reading to continue")
+        XCTAssertTrue(row.label.contains("Continue reviewing"), "The failed row reads \(row.label)")
+        XCTAssertTrue(row.label.contains("Couldn't read · 5:27\u{202F}AM"), "The failed row reads \(row.label)")
+        let ready = app.buttons[invoice]
+        XCTAssertTrue(ready.exists, "The invoice ready to review is still listed")
+        XCTAssertLessThan(row.frame.minY, ready.frame.minY, "The newest upload comes first")
+
+        row.tap()
+        let notice = app.staticTexts["invoice.failed.notice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 5), "The failed reading did not open its failure")
+        XCTAssertEqual(notice.label, "We couldn't read this invoice. Try a clearer photo or receive manually.")
+        XCTAssertEqual(app.buttons["invoice.failed.retry"].label, "Try again")
+        XCTAssertEqual(app.buttons["invoice.failed.manual"].label, "Receive manually")
     }
 
     @MainActor

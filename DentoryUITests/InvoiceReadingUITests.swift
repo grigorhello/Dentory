@@ -2,7 +2,8 @@ import XCTest
 
 /// Review invoice up to its review (f23, MS-129), on the demo clinic: an invoice being read shows the reading state,
 /// whose Receive manually instead sets it aside and opens Receive manually; a reading that failed offers a clearer
-/// photo or receiving by hand; and the invoice read shows its header and how many lines were read.
+/// photo or receiving by hand, either of which sets it aside; and the invoice read shows its header and how many lines
+/// were read.
 final class InvoiceReadingUITests: XCTestCase {
     private let beingRead = "receive.continue[00000000-0000-4000-8000-000000000402]"
     private let read = "receive.continue[00000000-0000-4000-8000-000000000401]"
@@ -55,26 +56,33 @@ final class InvoiceReadingUITests: XCTestCase {
     }
 
     @MainActor
-    func testAFailedReadingOffersAClearerPhotoOrReceivingByHand() {
+    func testAFailedReadingOffersAClearerPhotoWhichReturnsToTheOptions() {
         let app = openReceive(demoInvoice: "failed")
         open(beingRead, in: app)
         let notice = app.staticTexts["invoice.failed.notice"]
         XCTAssertTrue(notice.waitForExistence(timeout: 5), "No failure notice")
         XCTAssertEqual(notice.label, "We couldn't read this invoice. Try a clearer photo or receive manually.")
 
-        let manual = app.buttons["invoice.failed.manual"]
-        XCTAssertEqual(manual.label, "Receive manually")
-        manual.tap()
-        XCTAssertTrue(app.staticTexts["manual.title"].waitForExistence(timeout: 5), "Receive manually did not open")
-        app.buttons["manual.back"].tap()
-
         let retry = app.buttons["invoice.failed.retry"]
-        XCTAssertTrue(retry.waitForExistence(timeout: 5))
         XCTAssertEqual(retry.label, "Try again")
         retry.tap()
         XCTAssertTrue(
             app.buttons["receive.photo"].waitForExistence(timeout: 5), "Try again did not return to the options"
         )
+    }
+
+    @MainActor
+    func testAFailedReadingReceivedByHandIsSetAside() {
+        let app = openReceive(demoInvoice: "failed")
+        open(beingRead, in: app)
+        let manual = app.buttons["invoice.failed.manual"]
+        XCTAssertTrue(manual.waitForExistence(timeout: 5), "No failure to receive by hand")
+        XCTAssertEqual(manual.label, "Receive manually")
+        manual.tap()
+        XCTAssertTrue(app.staticTexts["manual.title"].waitForExistence(timeout: 5), "Receive manually did not open")
+        app.buttons["manual.back"].tap()
+        let closed = app.staticTexts["This invoice is no longer waiting for review."]
+        XCTAssertTrue(closed.waitForExistence(timeout: 5), "The failed invoice was not set aside")
     }
 
     @MainActor

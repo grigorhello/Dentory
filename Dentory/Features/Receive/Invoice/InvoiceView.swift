@@ -63,9 +63,10 @@ struct InvoiceView: View {
         }
     }
 
-    /// After a failed reading the invoice is failed already; the delivery is received by hand.
+    /// After a failed reading the invoice is set aside too, as by Receive manually instead, so Continue reviewing lists
+    /// it no more; the delivery is received by hand.
     private func receiveManually() {
-        writeAccess.perform { router.push(ReceiveRoute.manual()) }
+        receiveManuallyInstead()
     }
 
     /// The same pages again, under the same invoice.
@@ -73,9 +74,17 @@ struct InvoiceView: View {
         writeAccess.perform(viewModel.retry)
     }
 
-    /// A clearer photo or another file: back to Receive delivery's options.
+    /// A clearer photo or another file: the invoice that could not be read is set aside, then Receive delivery's
+    /// options are back, without it in their list. Only if this screen is still the one shown once the server has
+    /// answered: not after Back, or Receive manually, meanwhile.
     private func captureAgain() {
-        router.pop()
+        let tab = router.selectedTab
+        let path = router.path(for: tab)
+        Task {
+            await viewModel.setAsideToCaptureAgain()
+            guard router.path(for: tab) == path else { return }
+            router.pop(on: tab)
+        }
     }
 }
 
