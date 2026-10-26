@@ -54,7 +54,7 @@ struct DemoInvoiceTests {
 
     @Test func aDiscardedInvoiceLeavesReceiveDeliveryAndTakesNoChoice() async throws {
         let invoices = DemoInvoiceRepository(launched: nil)
-        let receive = DemoReceiveRepository(withInvoiceBeingRead: false, setAside: { invoices.discarded })
+        let receive = DemoReceiveRepository(added: nil, setAside: { invoices.discarded })
         let lines = try await invoices.invoice(id: DemoInvoiceRepository.readyID).lines
         #expect(try await receive.overview(clinicID: clinicID).invoices.map(\.id) == [DemoInvoiceRepository.readyID])
 
