@@ -116,6 +116,17 @@ final class DemoProductStore: @unchecked Sendable {
         lock.withLock { countRecords[id] ?? [] }
     }
 
+    /// A delivery received by hand (MS-127), in counted units: it joins the unopened stock, undated unless it came
+    /// with an expiry, and the status follows as `stock_receive` leaves it. False when the product is unknown (or
+    /// archived).
+    func receive(_ quantity: Decimal, of id: UUID, dated: Bool) -> Bool {
+        lock.withLock {
+            guard let index = summaries.firstIndex(where: { $0.id == id }) else { return false }
+            summaries[index] = summaries[index].afterReceiving(quantity, dated: dated)
+            return true
+        }
+    }
+
     /// False when the product is unknown (or already archived).
     func archive(id: UUID) -> Bool {
         lock.withLock {
@@ -164,6 +175,22 @@ private extension ProductSummary {
         return ProductSummary(
             id: id, name: name, categoryName: categoryName, unit: unit, tracking: tracking, location: location,
             quantity: row.quantity, unopened: unopened, openCount: openCount, minimum: minimum, status: status
+        )
+    }
+
+    /// The row after a delivery: the quantity joins the unopened stock, undated (Missing expiry) unless it came with
+    /// an expiry; an expiring product keeps its expiring batch.
+    nonisolated func afterReceiving(_ received: Decimal, dated: Bool) -> ProductSummary {
+        let newUnopened = unopened + received
+        let newQuantity = quantity + received
+        let undated = (status == .missingExpiry ? max(unopened, 0) : 0) + (dated ? 0 : received)
+        let newStatus = ProductStatus.evaluate(ProductStatus.Figures(
+            tracking: tracking, quantity: newQuantity, unopened: newUnopened, minimum: minimum,
+            missingExpiryQuantity: undated, daysToSoonestExpiry: status == .expiring ? 0 : nil, largestThreshold: 90
+        ))
+        return ProductSummary(
+            id: id, name: name, categoryName: categoryName, unit: unit, tracking: tracking, location: location,
+            quantity: newQuantity, unopened: newUnopened, openCount: openCount, minimum: minimum, status: newStatus
         )
     }
 }

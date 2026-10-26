@@ -69,3 +69,17 @@ nonisolated struct CalendarDay: Hashable, Sendable, Codable, Comparable {
         (lhs.year, lhs.month, lhs.day) < (rhs.year, rhs.month, rhs.day)
     }
 }
+
+extension CalendarDay {
+    /// The month picked on `MSMonthField` as an expiry month is stored: its first day.
+    nonisolated init(yearMonth: YearMonth) {
+        self.init(year: yearMonth.year, month: yearMonth.month, day: 1)
+    }
+}
+
+extension YearMonth {
+    /// The month a day falls in, for `MSMonthField`.
+    nonisolated init(day: CalendarDay) {
+        self.init(year: day.year, month: day.month)
+    }
+}
