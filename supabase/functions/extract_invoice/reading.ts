@@ -103,8 +103,8 @@ export const extractionSchema = {
 };
 
 /** The system prompt: what to read and how, and the personal data to leave out (the ticket's Privacy section). */
-export const instructions = `You read supplier invoices for a dental clinic's inventory app. The user message holds one \
-invoice for a delivery the clinic received: a PDF, or photos or scans of its pages in order.
+export const instructions = `You read supplier invoices for a dental clinic's inventory app. The user message holds \
+one invoice for a delivery the clinic received: a PDF, or photos or scans of its pages in order.
 
 Return the invoice in the JSON schema you are given:
 - supplier: the company that issued the invoice, as printed in its header.

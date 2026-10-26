@@ -1,11 +1,11 @@
 // POST /functions/v1/extract_invoice { invoice_id } as a signed-in admin, right after invoice_create (MS-129, PRD §6.5
 // Reading state, §9 Invoice reading). Claims the reading (invoice_reading_start: the caller is an admin of the
-// invoice's clinic, the clinic may write, and the invoice was not read yet) and answers 202 at once, so the admin may
-// leave the screen. Then, in the background: downloads the pages from the invoices bucket, reads them with the Claude
-// API (reading.ts, claude.ts) and hands the result to invoice_reading_finish, which matches the lines without AI and
-// marks the invoice ready, opening its alert and the admins' push; or marks it failed with the reason
-// (invoice_reading_fail). The reading gives up 60 seconds after its claim (reason timeout). Calling it again for an
-// invoice already claimed or read changes nothing.
+// invoice's clinic, the clinic may write, and the invoice was not read yet) and answers 202 at once with `{ started }`,
+// whether this call started the reading, so the admin may leave the screen. Then, in the background: downloads the
+// pages from the invoices bucket, reads them with the Claude API (reading.ts, claude.ts) and hands the result to
+// invoice_reading_finish, which matches the lines without AI and marks the invoice ready, opening its alert and the
+// admins' push; or marks it failed with the reason (invoice_reading_fail). The reading gives up 60 seconds after its
+// claim (reason timeout). Calling it again for an invoice already claimed or read changes nothing.
 //
 // Needs ANTHROPIC_API_KEY (`supabase secrets set`); without it, as on the local stack, every reading fails with the
 // reason error. Invoice contents are never logged: only ids, page counts, sizes, timings, tokens and reasons.
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
       else await work;
     }
-    return json({ status: "reading" }, 202);
+    return json({ started: Boolean(claim) }, 202);
   } catch (error) {
     return errorResponse(error);
   }
@@ -81,7 +81,8 @@ async function read(db: SupabaseClient, invoiceID: string, claim: Claim) {
 async function download(db: SupabaseClient, claim: Claim): Promise<InvoicePage[]> {
   const pages: InvoicePage[] = [];
   for (let n = 1; n <= claim.file_count; n++) {
-    const { data, error } = await db.storage.from("invoices").download(`${claim.storage_path}/page-${n}.${claim.file_kind}`);
+    const path = `${claim.storage_path}/page-${n}.${claim.file_kind}`;
+    const { data, error } = await db.storage.from("invoices").download(path);
     if (error || !data) throw new ReadingFailure("error", `page ${n} could not be downloaded`);
     pages.push({ kind: claim.file_kind, data: new Uint8Array(await data.arrayBuffer()) });
   }

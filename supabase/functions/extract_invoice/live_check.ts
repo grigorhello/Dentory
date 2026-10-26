@@ -29,7 +29,8 @@ function sameReading(live: Extraction, recorded: Extraction, name: string) {
     assertEquals([line.qty, line.unit, line.unit_price, line.line_total], [
       expected.qty, expected.unit, expected.unit_price, expected.line_total,
     ], `${where}: quantity, unit and prices`);
-    assertEquals([line.lot, line.expiry, line.kind], [expected.lot, expected.expiry, expected.kind], `${where}: lot, expiry, kind`);
+    const lotExpiryKind = [expected.lot, expected.expiry, expected.kind];
+    assertEquals([line.lot, line.expiry, line.kind], lotExpiryKind, `${where}: lot, expiry, kind`);
   });
 }
 
