@@ -13,7 +13,8 @@ struct AnalyticsEventTests {
         .stockAdjusted(reason: .other, increase: true), .addedToBuy, .bottleOpened, .bottleFinished,
         .markedOrdered(items: 2), .toBuyAdded, .batchDisposed, .teammateInvited(role: .admin), .exportStarted,
         .settingsSaved(digest: true, expiryWarningDays: 30), .productCreated,
-        .countApplied(corrections: 3, seconds: 95), .manualReceived
+        .countApplied(corrections: 3, seconds: 95), .manualReceived,
+        .invoiceConfirmed(lines: 4, matched: 1, created: 1, seconds: 300)
     ]
 
     @Test func everyEventIsAnAppendixBElementId() {
@@ -65,6 +66,16 @@ struct AnalyticsEventTests {
     @Test func aManualReceiptCountsOneItem() {
         #expect(AnalyticsEvent.manualReceived.name.rawValue == "manual.receive")
         #expect(AnalyticsEvent.manualReceived.payload == ["item_count": .number(1)])
+    }
+
+    /// The pilot dashboard's invoices confirmed, share auto-matched and time to confirm read it (MS-131).
+    @Test func aConfirmedInvoiceCarriesItsLinesMatchesCreationsAndSeconds() {
+        let event = AnalyticsEvent.invoiceConfirmed(lines: 4, matched: 1, created: 1, seconds: 300)
+        #expect(event.name.rawValue == "invoice.confirm")
+        #expect(event.payload == [
+            "item_count": .number(4), "matched_count": .number(1), "created_count": .number(1),
+            "duration_s": .number(300)
+        ])
     }
 
     /// A build without a project token sends nothing (the test bundle has none, whatever the developer's Debug

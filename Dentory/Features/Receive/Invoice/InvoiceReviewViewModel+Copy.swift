@@ -1,8 +1,9 @@
 import Foundation
 
 /// What Review invoice's lines say (f23, PRD §6.5, Appendix B `invoice`, the ticket's wording): each state's line and
-/// question, the amounts as read, the two choices a line waits for, the Lot and Expiry inputs, and the summary over
-/// Confirm & receive. The state and the intents are in `InvoiceReviewViewModel.swift`.
+/// question, the amounts as read, the two choices a line waits for, the Lot and Expiry inputs (as text once the
+/// invoice is received, MS-131), and the summary over Confirm & receive. The state and the intents are in
+/// `InvoiceReviewViewModel.swift`.
 extension InvoiceReviewViewModel {
     static let expiryLabel = "Expiry"
     /// Short enough for half a line on an iPhone, as the frame's empty month input.
@@ -12,8 +13,6 @@ extension InvoiceReviewViewModel {
     static let noExpiryHint = "No expiry → listed under Missing expiry."
     static let confirmTitle = "Confirm & receive"
     static let undoTitle = "Undo"
-    /// Until MS-131 receives the delivery.
-    static let confirmArrivesLater = "Receiving the delivery arrives with its own ticket."
     /// What a lot keeps (`invoice_line_batch`).
     static let lotLength = 60
 
@@ -79,11 +78,18 @@ extension InvoiceReviewViewModel {
         choice == .yesMatch || choice == .addNew
     }
 
-    /// "3 of 4 lines will increase inventory." once every line is resolved, else "Resolve every line to continue."
+    /// "3 of 4 lines will increase inventory." once every line is resolved (a line without a quantity increases
+    /// nothing), else "Resolve every line to continue."
     var summary: String {
         guard allResolved else { return "Resolve every line to continue." }
-        let receiving = lines.filter(\.increasesInventory).count
+        let receiving = lines.filter(\.receivesStock).count
         return "\(receiving) of \(lines.count) \(lines.count == 1 ? "line" : "lines") will increase inventory."
+    }
+
+    /// A received line's lot and expiry, read-only (MS-131): "Expiry Mar 2028 · Lot B441", "No expiry".
+    func receivedBatch(for line: InvoiceLine) -> String {
+        let expiry = line.expiryMonth.map { "Expiry \(formatters.shortMonth($0))" } ?? "No expiry"
+        return ([expiry] + [line.lot.map { "Lot \($0)" }].compactMap(\.self)).joined(separator: " · ")
     }
 
     /// The month the wheels open on while none is chosen: this month in the clinic's time zone.

@@ -2,8 +2,8 @@ import Foundation
 @testable import Dentory
 
 /// Review invoice's server: answers the readings it is given in turn, settles lines as the line functions do (the
-/// states a choice may leave, the server's sentences), records every call, and fails the way
-/// `SupabaseInvoiceRepository` does when told to.
+/// states a choice may leave, the server's sentences), receives the invoice as told (MS-131), records every call, and
+/// fails the way `SupabaseInvoiceRepository` does when told to.
 final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     enum Call: Equatable {
         case upload(UUID, pages: Int)
@@ -16,7 +16,12 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         case skip(UUID)
         case reopen(UUID)
         case batch(UUID, lot: String?, expiry: CalendarDay?)
+        case confirm(UUID)
+        case undoConfirm(UUID)
     }
+
+    /// The action a confirmation applied answers.
+    static let actionID = UUID(uuidString: "00000000-0000-4000-8000-000000000a01") ?? UUID()
 
     private let lock = NSLock()
     private var recorded: [Call] = []
@@ -36,6 +41,11 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     var duringCreate: (@Sendable () async -> Void)?
     /// Runs inside a line function, before it answers.
     var duringLine: (@Sendable () async -> Void)?
+    /// What `confirm` answers: applied with `actionID`, queued offline, or a refusal.
+    var confirmOutcome: Result<WriteOutcome, Error> = .success(.applied(actionID: FakeInvoiceRepository.actionID))
+    /// Runs inside `confirm`, before it answers.
+    var duringConfirm: (@Sendable () async -> Void)?
+    var undoError: Error?
 
     var calls: [Call] { lock.withLock { recorded } }
 
@@ -71,6 +81,19 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     func discard(invoiceID: UUID, clinicID: UUID) async throws {
         record(.discard(invoiceID))
         if let discardError { throw discardError }
+    }
+
+    // MARK: - Receiving
+
+    func confirm(invoiceID: UUID) async throws -> WriteOutcome {
+        record(.confirm(invoiceID))
+        await duringConfirm?()
+        return try confirmOutcome.get()
+    }
+
+    func undoConfirm(actionID: UUID) async throws {
+        record(.undoConfirm(actionID))
+        if let undoError { throw undoError }
     }
 
     // MARK: - Lines

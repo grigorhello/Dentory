@@ -1,7 +1,7 @@
 import Foundation
 
-/// Receive delivery's, Receive manually's and Review invoice's view models (MS-126, MS-127, MS-129, MS-130), kept apart
-/// from the composition root's body.
+/// Receive delivery's, Receive manually's and Review invoice's view models (MS-126, MS-127, MS-129 to MS-131), kept
+/// apart from the composition root's body.
 extension AppDependencies {
     /// Receive delivery of the signed-in clinic, for its admin (MS-126). `canScan` says whether Take a photo opens the
     /// document scanner or, on a device without one, Photos.
@@ -29,16 +29,16 @@ extension AppDependencies {
     func makeInvoiceViewModel(document: InvoiceDocument, session: Session) -> InvoiceViewModel {
         InvoiceViewModel(
             document: document, repository: invoiceRepository, formatters: formatters(for: session),
-            clinicID: session.clinicID
+            clinicID: session.clinicID, analytics: analytics
         )
     }
 
-    /// Review invoice for an invoice being read or ready to review (MS-129, MS-130).
+    /// Review invoice for an invoice being read, ready to review or received (MS-129 to MS-131).
     @MainActor
     func makeInvoiceViewModel(invoiceID: UUID, session: Session) -> InvoiceViewModel {
         InvoiceViewModel(
             invoiceID: invoiceID, repository: invoiceRepository, formatters: formatters(for: session),
-            clinicID: session.clinicID
+            clinicID: session.clinicID, analytics: analytics
         )
     }
 

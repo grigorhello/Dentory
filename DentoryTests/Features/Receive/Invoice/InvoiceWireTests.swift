@@ -75,8 +75,27 @@ struct InvoiceWireTests {
         #expect(invoice == InvoiceSummary(
             id: UUID(uuidString: "377fac63-f4f5-4acd-b32b-a7c6980ec6b0") ?? UUID(), status: .ready,
             supplier: "Northbridge Dental Supply", number: "INV-10092", total: Decimal(string: "520.03"),
-            currency: "CAD", readingStarted: true, lineCount: 4
+            currency: "CAD", readingStarted: true, lineCount: 4, createdAt: invoice.createdAt
         ))
+        let uploaded = try #require(invoice.createdAt)
+        #expect(abs(uploaded.timeIntervalSince1970 - 1_792_980_989.602) < 0.001, "The upload's time (MS-147)")
+    }
+
+    /// `invoice_detail` of a received invoice (MS-131): when it was received and the full name of who received it.
+    @Test func aReceivedInvoiceDecodesWithWhenAndWhoReceivedIt() throws {
+        let json = #"""
+        {"id": "d0000000-0000-4000-8000-000000000401", "total": 449.00, "number": "INV-10092", "source": "camera",
+         "status": "confirmed", "read_at": "2026-10-26T05:10:04+00:00", "currency": "CAD", "supplier": "Patterson",
+         "created_at": "2026-10-26T05:10:04+00:00", "line_count": 0, "invoice_date": "2026-10-24",
+         "failure_reason": null, "reading_started": true, "confirmed_at": "2026-10-26T05:20:04.5+00:00",
+         "confirmed_by_name": "Sarah Mitchell", "lines": []}
+        """#
+        let invoice = try JSONDecoder.supabase.decode(InvoiceSummary.self, from: Data(json.utf8))
+        #expect(invoice.status == .confirmed)
+        #expect(invoice.confirmedByName == "Sarah Mitchell")
+        let received = try #require(invoice.confirmedAt)
+        let uploaded = try #require(invoice.createdAt)
+        #expect(abs(received.timeIntervalSince(uploaded) - 600.5) < 0.001)
     }
 
     @Test func anInvoiceBeingReadDecodesWithNothingReadYet() throws {

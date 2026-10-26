@@ -31,6 +31,21 @@ final class DemoProductStore: @unchecked Sendable {
         lock.withLock { drafts[id] }
     }
 
+    /// The pack a product is received in (MS-127, MS-131): the one its New product or Edit sheet gave it in this
+    /// launch, or the seed's (Septocaine in boxes of 50, Nitrile gloves in cases of 10, Suction tips in cases of 4).
+    func pack(of id: UUID) -> (unit: String, size: Int)? {
+        if let draft = draft(for: id) {
+            return draft.packUnit.flatMap { unit in draft.packSize.map { (unit: unit, size: $0) } }
+        }
+        return Self.seedPacks[id]
+    }
+
+    private static let seedPacks: [UUID: (unit: String, size: Int)] = [
+        ProductSummary.demo[0].id: ("box", 50),
+        ProductSummary.demo[4].id: ("case", 10),
+        ProductSummary.demo[10].id: ("case", 4)
+    ]
+
     func categoryName(for id: UUID?) -> String? {
         guard let id else { return nil }
         return lock.withLock { categoryList.first { $0.id == id }?.name }
@@ -124,6 +139,13 @@ final class DemoProductStore: @unchecked Sendable {
             guard let index = summaries.firstIndex(where: { $0.id == id }) else { return false }
             summaries[index] = summaries[index].afterReceiving(quantity, dated: dated)
             return true
+        }
+    }
+
+    /// Undo of an invoice's delivery (MS-131): the products it received are as they were before it.
+    func restore(_ before: [ProductSummary]) {
+        lock.withLock {
+            summaries = summaries.map { current in before.first { $0.id == current.id } ?? current }
         }
     }
 

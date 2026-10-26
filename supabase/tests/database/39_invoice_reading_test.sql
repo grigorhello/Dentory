@@ -124,7 +124,7 @@ select throws_ok($$ insert into public.invoices (clinic_id, source, created_by, 
 select is(public.invoice_create('00000000-0000-4000-8000-000000129011', '00000000-0000-4000-8000-000000129031', 'camera', 'jpg', 2) - 'created_at',
   jsonb_build_object('id', '00000000-0000-4000-8000-000000129031', 'status', 'reading', 'source', 'camera', 'supplier', null,
     'number', null, 'invoice_date', null, 'total', null, 'currency', null, 'reading_started', false, 'read_at', null,
-    'failure_reason', null, 'line_count', 0),
+    'failure_reason', null, 'line_count', 0, 'confirmed_at', null, 'confirmed_by_name', null),
   'an admin creates the invoice for the pages, being read');
 select lives_ok($$ select public.invoice_create('00000000-0000-4000-8000-000000129011', '00000000-0000-4000-8000-000000129031', 'camera', 'jpg', 2) $$,
   'a retry after a lost answer finds the same invoice');

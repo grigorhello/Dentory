@@ -1,51 +1,22 @@
 import Foundation
 import Observation
 
-/// Review invoice (f23, f38; PRD §6.5 Reading state and Review invoice; Appendix B `invoice`), Admin only. For pages
-/// just captured it uploads them, creates the invoice and asks the server to read it (flow step 1, MS-129); for an
-/// invoice opened from Receive delivery it follows the reading already under way. Then the read header with the lines
-/// to review (`review`, MS-130), or the failure with a clearer photo or receiving by hand. The admin may leave at any
-/// point: the upload carries on, the server reads on, and the bell and a push say when the delivery is ready (MS-144).
-/// The header's menu discards the invoice (`InvoiceViewModel+Discard.swift`). The lines it shows are in
-/// `InvoiceViewModel+Copy.swift`.
+/// Review invoice (f23, f38; PRD §6.5 Reading state, Review invoice and Confirm; Appendix B `invoice`), Admin only. For
+/// pages just captured it uploads them, creates the invoice and asks the server to read it (flow step 1, MS-129); for
+/// an invoice opened from Receive delivery or Activity it follows the reading already under way. Then the read header
+/// with the lines to review and Confirm & receive (`review`, MS-130, MS-131), the lines of a delivery received already,
+/// read-only, or the failure with a clearer photo or receiving by hand. The admin may leave at any point: the upload
+/// carries on, the server reads on, and the bell and a push say when the delivery is ready (MS-144). The header's menu
+/// discards the invoice (`InvoiceViewModel+Discard.swift`). The states are in `InvoiceViewModel+State.swift`, the lines
+/// it shows in `InvoiceViewModel+Copy.swift`.
 @MainActor
 @Observable
 final class InvoiceViewModel {
-    enum State: Equatable {
-        /// Opening an invoice: waiting for its first answer.
-        case loading
-        /// The invoice could not be opened.
-        case loadFailed(AppError)
-        /// The captured pages are going up.
-        case uploading
-        /// The pages could not be uploaded, or the invoice created.
-        case uploadFailed(AppError)
-        /// Being read on the server.
-        case reading
-        /// Read and waiting for review.
-        case ready
-        /// The reading failed.
-        case failed
-        /// Received or set aside since it was opened.
-        case closed
-    }
-
-    /// How often the screen asks how the reading goes.
-    static let pollInterval: Duration = .seconds(2)
-    /// How many times a reading that has not started is asked for (a request lost on the way).
-    static let maxReadingRequests = 3
-
-    /// A toast the screen shows.
-    struct Message: Equatable {
-        let title: String
-        let detail: String?
-    }
-
     let invoiceID: UUID
     let formatters: ClinicFormatters
     private(set) var state: State
     private(set) var invoice: InvoiceSummary?
-    /// The lines to review, once the invoice is read (MS-130).
+    /// The lines to review once the invoice is read (MS-130), or a received delivery's, read-only (MS-131).
     private(set) var review: InvoiceReviewViewModel?
     /// Grows with each Try again, so the screen's task runs `load()` again.
     private(set) var attempt = 0
@@ -60,6 +31,7 @@ final class InvoiceViewModel {
     private let document: InvoiceDocument?
     private let repository: InvoiceRepository
     private let clinicID: UUID
+    private let analytics: Analytics
     private let pause: @Sendable (Duration) async throws -> Void
     /// The upload and the invoice's creation, which carry on when the admin leaves the screen.
     private var submission: Task<Void, Never>?
@@ -75,34 +47,37 @@ final class InvoiceViewModel {
     /// Pages just captured (`ReceiveRoute.newInvoice`): they become the invoice `document.id`.
     convenience init(
         document: InvoiceDocument, repository: InvoiceRepository, formatters: ClinicFormatters, clinicID: UUID,
+        analytics: Analytics = NoopAnalytics(),
         pause: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
     ) {
         self.init(
             invoiceID: document.id, document: document, repository: repository, formatters: formatters,
-            clinicID: clinicID, pause: pause
+            clinicID: clinicID, analytics: analytics, pause: pause
         )
     }
 
     /// An invoice already uploaded (`ReceiveRoute.invoice`).
     convenience init(
         invoiceID: UUID, repository: InvoiceRepository, formatters: ClinicFormatters, clinicID: UUID,
+        analytics: Analytics = NoopAnalytics(),
         pause: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
     ) {
         self.init(
             invoiceID: invoiceID, document: nil, repository: repository, formatters: formatters, clinicID: clinicID,
-            pause: pause
+            analytics: analytics, pause: pause
         )
     }
 
     private init(
         invoiceID: UUID, document: InvoiceDocument?, repository: InvoiceRepository, formatters: ClinicFormatters,
-        clinicID: UUID, pause: @escaping @Sendable (Duration) async throws -> Void
+        clinicID: UUID, analytics: Analytics, pause: @escaping @Sendable (Duration) async throws -> Void
     ) {
         self.invoiceID = invoiceID
         self.document = document
         self.repository = repository
         self.formatters = formatters
         self.clinicID = clinicID
+        self.analytics = analytics
         self.pause = pause
         needsUpload = document != nil
         isCreated = document == nil
@@ -119,10 +94,11 @@ final class InvoiceViewModel {
         await follow()
     }
 
-    /// Reads the invoice again (back in the foreground, pull to refresh, a choice the server refused): its lines as
-    /// they are now, or the news that it was received or set aside meanwhile. A read that fails keeps what is shown.
+    /// Reads the invoice again (back in the foreground, a choice or a discard the server refused): its lines as they
+    /// are now, or the news that it was received, set aside or (by Undo) put back meanwhile. A read that fails keeps
+    /// what is shown.
     func refresh() async {
-        guard state == .ready || state == .failed else { return }
+        guard state == .ready || state == .received || state == .failed else { return }
         guard let current = try? await repository.invoice(id: invoiceID) else { return }
         show(current)
     }
@@ -229,26 +205,29 @@ final class InvoiceViewModel {
         try? await repository.startReading(invoiceID: invoiceID)
     }
 
+    /// The invoice as the server has it: lines to review, or a delivery received, whose lines are shown read-only.
     private func show(_ invoice: InvoiceSummary) {
         self.invoice = invoice
         state = switch invoice.status {
         case .reading: .reading
         case .ready: .ready
         case .failed: .failed
-        case .confirmed, .discarded: .closed
+        case .confirmed: .received
+        case .discarded: .closed
         }
-        guard invoice.status == .ready else { return }
-        if let review {
+        guard invoice.status == .ready || invoice.status == .confirmed else { return }
+        if let review, review.isReceived == (invoice.status == .confirmed) {
             review.update(with: invoice.lines)
         } else {
             review = InvoiceReviewViewModel(
-                invoice: invoice, repository: repository, formatters: formatters(for: invoice),
+                invoice: invoice, repository: repository, formatters: formatters(for: invoice), analytics: analytics,
                 reload: { [weak self] in await self?.refresh() }
             )
         }
     }
 
-    /// Discard invoice: the pages are deleted and the invoice set aside; the screen leaves with the toast.
+    /// Discard invoice: the invoice is set aside and its pages deleted; the screen leaves with the toast. One received
+    /// meanwhile on another device is refused with the server's sentence, and shows as received.
     func discard() async {
         await discardGuard.run {
             review?.dropPendingSaves()
@@ -261,6 +240,9 @@ final class InvoiceViewModel {
                 // Not queued offline: a lost connection reads "Couldn't save. Try again."
                 let error = AppError(error)
                 generalError = error == .network ? .unknown("No connection") : error
+                guard case .validation = error else { return }
+                isConfirmingDiscard = false
+                await refresh()
             }
         }
     }

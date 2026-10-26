@@ -153,14 +153,19 @@ struct InvoiceViewModelTests {
         #expect(viewModel.banner == nil)
     }
 
-    @Test func anInvoiceReceivedOrSetAsideSinceIsClosed() async {
-        for status in [InvoiceSummary.Status.confirmed, .discarded] {
-            let repository = FakeInvoiceRepository()
-            repository.readings = [.success(.ended(invoiceID, status))]
-            let viewModel = opened(repository)
-            await viewModel.load()
-            #expect(viewModel.state == .closed)
-        }
+    @Test func anInvoiceSetAsideSinceIsClosedAndOneReceivedShowsItsLines() async {
+        let repository = FakeInvoiceRepository()
+        repository.readings = [.success(.ended(invoiceID, .discarded))]
+        let setAside = opened(repository)
+        await setAside.load()
+        #expect(setAside.state == .closed)
+
+        let received = FakeInvoiceRepository()
+        received.readings = [.success(.ended(invoiceID, .confirmed))]
+        let viewModel = opened(received)
+        await viewModel.load()
+        #expect(viewModel.state == .received, "Read-only, as MS-131 shows a received invoice")
+        #expect(viewModel.review?.isReceived == true)
     }
 
     @Test func aFirstLoadThatFailsSaysSoAndTryAgainLoadsAgain() async {
