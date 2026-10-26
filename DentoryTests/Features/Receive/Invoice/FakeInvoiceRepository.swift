@@ -138,6 +138,8 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         _ lineID: UUID, from states: Set<InvoiceLine.State>?, change: (InvoiceLine) -> InvoiceLine
     ) async throws -> InvoiceLine {
         await duringLine?()
+        // A request the app cancelled fails, as URLSession fails it.
+        try Task.checkCancellation()
         return try lock.withLock {
             if !lineErrors.isEmpty { throw lineErrors.removeFirst() }
             guard let index = lines.firstIndex(where: { $0.id == lineID }) else { throw AppError.forbidden }

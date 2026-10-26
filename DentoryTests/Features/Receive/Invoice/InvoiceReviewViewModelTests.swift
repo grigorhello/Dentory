@@ -276,6 +276,19 @@ struct InvoiceReviewViewModelTests {
         #expect(repository.calls.count == 2, "Nothing saved twice")
     }
 
+    /// Return saves the lot, and the field losing focus right after asks again: one save, and no toast.
+    @Test func returnThenLeavingTheFieldSavesTheLotOnceWithoutAToast() async throws {
+        let repository = FakeInvoiceRepository()
+        let viewModel = make(repository, saveDelay: .seconds(60))
+        viewModel[lotOf: InvoiceLine.septo.id] = "A112"
+        viewModel.saveBatchNow(of: InvoiceLine.septo.id)
+        viewModel.saveBatchNow(of: InvoiceLine.septo.id)
+        await eventually { !repository.calls.isEmpty }
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(repository.calls == [.batch(InvoiceLine.septo.id, lot: "A112", expiry: nil)])
+        #expect(viewModel.generalError == nil, "The save replaced before it ran says nothing")
+    }
+
     @Test func aLotNotSavedYetStaysOverAFreshReading() throws {
         let viewModel = make(FakeInvoiceRepository(), saveDelay: .seconds(60))
         viewModel[lotOf: InvoiceLine.septo.id] = "A112"

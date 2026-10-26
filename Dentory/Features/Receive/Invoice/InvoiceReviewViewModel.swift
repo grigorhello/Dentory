@@ -199,7 +199,10 @@ final class InvoiceReviewViewModel {
 
     /// Sends the line's lot (trimmed, none when empty) and expiry month. What was typed stays on screen whatever the
     /// answer: a failure shows as a toast and the next change, Return or leaving the screen tries again.
+    /// A save replaced before it ran (Return, then the field losing focus) does nothing and says nothing: the newer save
+    /// sends the same lot.
     func saveBatch(of id: UUID) async {
+        guard !Task.isCancelled else { return }
         batchSaves[id] = nil
         guard unsavedBatchIDs.contains(id), let line = lines.first(where: { $0.id == id }) else { return }
         let lot = line.lot?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -210,6 +213,7 @@ final class InvoiceReviewViewModel {
                 unsavedBatchIDs.remove(id)
             }
         } catch {
+            guard !Task.isCancelled else { return }
             let error = AppError(error)
             generalError = Self.shown(error)
             if case .validation = error { await reload() }
