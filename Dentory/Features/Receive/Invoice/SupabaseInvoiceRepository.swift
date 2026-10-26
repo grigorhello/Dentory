@@ -4,7 +4,7 @@ import Supabase
 /// The pages go to Storage, the invoice through `invoice_create`, the reading through the `extract_invoice` Edge
 /// Function; `invoice_detail` and `invoice_create` decode straight into `InvoiceSummary`, and the line functions
 /// (MS-130) into `InvoiceLine`. Receiving and its Undo go through `WriteCoordinator` (MS-131): online now with an
-/// idempotency key, queued offline (MS-108).
+/// idempotency key, queued offline (MS-108). A received invoice's file is deleted online only (MS-146).
 struct SupabaseInvoiceRepository: InvoiceRepository {
     let client: SupabaseClient
     let writes: WriteCoordinator
@@ -77,6 +77,26 @@ struct SupabaseInvoiceRepository: InvoiceRepository {
         } catch {
             throw AppError(error)
         }
+    }
+
+    // MARK: - The file (MS-146)
+
+    /// `invoice_file_delete` first: the received invoice lets go of its folder, which the invoices bucket protects
+    /// while a received invoice holds it, then every name its pages can have is deleted (Storage passes over the
+    /// missing ones), and the invoice is read again. A deletion cut short leaves a page, which the answer shows
+    /// (`hasFile`), so it is offered again; asked again, `invoice_file_delete` changes nothing and the pages left go.
+    func deleteFile(invoiceID: UUID, clinicID: UUID) async throws -> InvoiceSummary {
+        do {
+            try await client
+                .rpc("invoice_file_delete", params: ["p_invoice_id": invoiceID.uuidString.lowercased()])
+                .execute()
+            try await client.storage
+                .from(InvoiceFiles.bucket)
+                .remove(paths: InvoiceFiles.allPaths(clinicID: clinicID, invoiceID: invoiceID))
+        } catch {
+            throw AppError(error)
+        }
+        return try await invoice(id: invoiceID)
     }
 
     // MARK: - Receiving (MS-131)

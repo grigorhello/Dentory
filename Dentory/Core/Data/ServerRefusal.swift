@@ -64,11 +64,12 @@ nonisolated enum ServerRefusal {
         "Not a device token": saveFailed,
         "No clinic with this id": saveFailed,
         "Supplies must be a list": saveFailed,
-        // Invoices (MS-129, MS-131).
+        // Invoices (MS-129, MS-131, MS-146).
         "An invoice has 1 to 20 JPEG pages, or one PDF": "An invoice has 1 to 20 photos, or one PDF.",
         "An invoice is a photo or a file": "An invoice is a photo or a file.",
         "The pages are over 20 MB": "The pages are over 20 MB.",
         "This delivery was already received": "This delivery was already received.",
+        "Only a received invoice's file can be deleted": "Only a received invoice's file can be deleted.",
         "A reading needs at least one line": saveFailed
     ]
 }

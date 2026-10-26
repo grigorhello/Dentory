@@ -1,9 +1,10 @@
 import Foundation
 
-/// Review invoice (MS-129, MS-130, MS-131): the upload, the invoice row, the reading and its progress, setting the
-/// invoice aside, its lines (`InvoiceLinesRepository`) and receiving it (`InvoiceReceivingRepository`). Admin only; the
-/// server refuses anyone else, and a read-only clinic's writes.
-protocol InvoiceRepository: InvoiceLinesRepository, InvoiceReceivingRepository {
+/// Review invoice (MS-129, MS-130, MS-131, MS-146): the upload, the invoice row, the reading and its progress, setting
+/// the invoice aside, its lines (`InvoiceLinesRepository`), receiving it (`InvoiceReceivingRepository`) and deleting a
+/// received invoice's file (`InvoiceFileRepository`). Admin only; the server refuses anyone else, and a read-only
+/// clinic's writes.
+protocol InvoiceRepository: InvoiceLinesRepository, InvoiceReceivingRepository, InvoiceFileRepository {
     /// Flow step 1: the pages to `invoices/{clinic_id}/{invoice_id}/page-n.(jpg|pdf)`, replacing any of a try before.
     func upload(_ document: InvoiceDocument, clinicID: UUID) async throws
     /// `invoice_create`: the invoice for the uploaded pages, being read; the same invoice when it was created already.

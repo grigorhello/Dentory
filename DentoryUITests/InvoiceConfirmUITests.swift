@@ -3,7 +3,8 @@ import XCTest
 /// Confirm & receive (f23, MS-131) on the demo clinic's Patterson invoice: with every line resolved, the delivery is
 /// received and Inventory opens with "Delivery received · Inventory increased for 3 products." over Septocaine's 250
 /// more cartridges; Receive delivery no longer lists the invoice; the toast's Undo takes the delivery back out and
-/// puts the invoice back in review; and Activity's History opens the received invoice read-only.
+/// puts the invoice back in review; Activity's History opens the received invoice read-only; and there its "…" menu
+/// deletes the invoice's file, its lines kept (MS-146).
 final class InvoiceConfirmUITests: XCTestCase {
     private let invoice = "receive.continue[00000000-0000-4000-8000-000000000401]"
     private let septocaineID = "00000000-0000-4000-8000-0000000000d1"
@@ -111,9 +112,9 @@ final class InvoiceConfirmUITests: XCTestCase {
         XCTAssertTrue(app.buttons[invoice].waitForNonExistence(timeout: 5), "The received invoice is still listed")
     }
 
-    /// The ticket: opening a confirmed invoice later, from Activity, shows it read-only.
+    /// The invoice received, then opened again from Activity's History, read-only.
     @MainActor
-    func testAReceivedInvoiceOpensReadOnlyFromActivity() {
+    private func openReceivedFromActivity() -> XCUIApplication {
         let app = openInvoice()
         resolveEveryLine(in: app)
         app.buttons["invoice.confirm"].tap()
@@ -131,15 +132,67 @@ final class InvoiceConfirmUITests: XCTestCase {
         }
         XCTAssertTrue(receipt.waitForExistence(timeout: 5), "The receipt does not open its invoice")
         receipt.tap()
+        XCTAssertTrue(app.staticTexts["invoice.received"].waitForExistence(timeout: 5), "It did not open as received")
+        return app
+    }
 
+    /// The ticket: opening a confirmed invoice later, from Activity, shows it read-only.
+    @MainActor
+    func testAReceivedInvoiceOpensReadOnlyFromActivity() {
+        let app = openReceivedFromActivity()
         let notice = app.staticTexts["invoice.received"]
-        XCTAssertTrue(notice.waitForExistence(timeout: 5), "The invoice did not open as received")
         XCTAssertTrue(notice.label.hasPrefix("Received\u{00A0}· Oct 2\u{00A0}· "), "The notice reads \(notice.label)")
         XCTAssertTrue(notice.label.hasSuffix("\u{00A0}· Sarah"), "The notice reads \(notice.label)")
         XCTAssertEqual(app.staticTexts["invoice.line[1].batch"].label, "No expiry")
         XCTAssertFalse(app.textFields["invoice.line[1].lot"].exists, "A received line takes a lot")
         XCTAssertFalse(app.buttons["invoice.line[4].undo"].exists, "A received line reopens")
         XCTAssertFalse(app.buttons["invoice.confirm"].exists, "A received invoice is confirmed again")
-        XCTAssertFalse(app.buttons["invoice.menu"].exists, "A received invoice can be discarded")
+        XCTAssertFalse(app.staticTexts["invoice.fileDeleted"].exists, "The file is still there")
+    }
+
+    /// MS-146: the received invoice's "…" menu deletes its file, after the question; Keep keeps it. The lines stay, and
+    /// the screen says when the file was deleted and by whom, with nothing left in the menu.
+    @MainActor
+    func testAnAdminDeletesAReceivedInvoicesFile() {
+        let app = openReceivedFromActivity()
+        let menu = app.buttons["invoice.menu"]
+        XCTAssertTrue(menu.exists, "No menu on the received invoice")
+        menu.tap()
+        let deleteFile = app.buttons["invoice.menu.deleteFile"]
+        XCTAssertTrue(deleteFile.waitForExistence(timeout: 5), "The menu did not open")
+        XCTAssertEqual(deleteFile.label, "Delete invoice file")
+        XCTAssertFalse(app.buttons["invoice.menu.discard"].exists, "A received invoice can be discarded")
+        deleteFile.tap()
+
+        let question = app.staticTexts["invoice.deleteFile.title"]
+        XCTAssertTrue(question.waitForExistence(timeout: 5), "Delete invoice file did not ask first")
+        XCTAssertEqual(question.label, "Delete the invoice file?")
+        XCTAssertEqual(
+            app.staticTexts["invoice.deleteFile.message"].label,
+            "Received stock and history stay. Only the image or PDF is removed."
+        )
+        XCTAssertEqual(app.buttons["invoice.deleteFile.confirm"].label, "Delete file")
+        app.buttons["invoice.deleteFile.keep"].tap()
+        XCTAssertTrue(question.waitForNonExistence(timeout: 5), "Keep did not close the question")
+        XCTAssertTrue(menu.exists, "Keep deleted the file")
+
+        menu.tap()
+        app.buttons["invoice.menu.deleteFile"].tap()
+        let confirm = app.buttons["invoice.deleteFile.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        let toast = app.descendants(matching: .any)["toast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 5), "No toast after Delete file")
+        XCTAssertTrue(toast.staticTexts["Invoice file deleted"].exists)
+        let notice = app.staticTexts["invoice.fileDeleted"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 5), "The invoice does not say its file was deleted")
+        XCTAssertTrue(
+            notice.label.hasPrefix("Invoice file deleted\u{00A0}· Oct 2\u{00A0}· "), "The notice reads \(notice.label)"
+        )
+        XCTAssertTrue(notice.label.hasSuffix("\u{00A0}· Sarah"), "The notice reads \(notice.label)")
+        XCTAssertTrue(menu.waitForNonExistence(timeout: 5), "The menu still offers to delete the file")
+        XCTAssertTrue(app.staticTexts["invoice.received"].exists, "The invoice is no longer shown as received")
+        XCTAssertTrue(app.staticTexts["invoice.line[1].raw"].exists, "The lines did not stay")
+        XCTAssertEqual(app.staticTexts["invoice.line[1].batch"].label, "No expiry")
     }
 }

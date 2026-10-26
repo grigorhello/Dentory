@@ -1,7 +1,7 @@
 import Foundation
 
-/// Receive delivery's, Receive manually's and Review invoice's view models (MS-126, MS-127, MS-129 to MS-131), kept
-/// apart from the composition root's body.
+/// Receive delivery's, Receive manually's and Review invoice's view models (MS-126, MS-127, MS-129 to MS-131, MS-146),
+/// kept apart from the composition root's body.
 extension AppDependencies {
     /// Receive delivery of the signed-in clinic, for its admin (MS-126). `canScan` says whether Take a photo opens the
     /// document scanner or, on a device without one, Photos.
@@ -40,6 +40,12 @@ extension AppDependencies {
             invoiceID: invoiceID, repository: invoiceRepository, formatters: formatters(for: session),
             clinicID: session.clinicID, analytics: analytics
         )
+    }
+
+    /// Delete the invoice file? for a received invoice of the signed-in clinic (MS-146).
+    @MainActor
+    func makeDeleteInvoiceFileViewModel(invoiceID: UUID, session: Session) -> DeleteInvoiceFileViewModel {
+        DeleteInvoiceFileViewModel(invoiceID: invoiceID, clinicID: session.clinicID, repository: invoiceRepository)
     }
 
     /// Which product is this? for an invoice line (MS-130): the products Receive manually lists too.

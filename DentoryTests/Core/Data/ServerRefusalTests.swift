@@ -17,6 +17,7 @@ struct ServerRefusalTests {
         ("Enter a valid email", "Enter a valid email address."),
         ("Keep the clinic name to 120 characters", "Use 120 characters or fewer for the clinic name."),
         ("This delivery was already received", "This delivery was already received."),
+        ("Only a received invoice's file can be deleted", "Only a received invoice's file can be deleted."),
         ("an idempotency key is required", "Couldn't save. Try again.")
     ])
     func aListedSentenceReadsAsHouseCopy(_ server: String, _ shown: String) {
@@ -80,8 +81,10 @@ struct ServerRefusalTests {
             #expect(shown.first?.isUppercase == true || shown.hasPrefix("%"), "\(sentence) reads \(shown)")
             #expect(shown.hasSuffix("."), "\(sentence) reads \(shown)")
         }
+        // A sentence's apostrophe is doubled in its SQL literal ("invoice''s").
+        let unquoted = sql.replacing("''", with: "'")
         for key in ServerRefusal.houseCopy.keys {
-            #expect(sql.contains(key) || functions.contains(key), "No migration or function sends \(key)")
+            #expect(unquoted.contains(key) || functions.contains(key), "No migration or function sends \(key)")
         }
     }
 
