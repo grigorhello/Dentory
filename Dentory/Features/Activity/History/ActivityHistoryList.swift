@@ -1,28 +1,15 @@
 import SwiftUI
 
-/// History (f9): the chips, then the entries in one card per day under its eyebrow. A chip reloads the list. Days and
-/// rows are built as they scroll in, and the next page loads when the row after the last one, shown while more may
-/// follow, scrolls in. Its own stack keeps f9's gaps whether it sits under Activity's segments or fills a product's
-/// History alone. On an admin's Activity a receipt opens the invoice it came from (MS-131).
+/// History (f9): the entries in one card per day under its eyebrow, scrolling under the chips
+/// (`ActivityHistoryFilters`), which load it. Days and rows are built as they scroll in, and the next page loads when
+/// the row after the last one, shown while more may follow, scrolls in. On an admin's Activity a receipt opens the
+/// invoice it came from (MS-131).
 struct ActivityHistoryList: View {
-    @Bindable var viewModel: ActivityHistoryViewModel
+    let viewModel: ActivityHistoryViewModel
     /// Opens a receipt's invoice; only rows the view model names an invoice for call it.
     var onOpenInvoice: (UUID) -> Void = { _ in }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            FilterChipRow(
-                selection: $viewModel.filter,
-                options: ActivityHistoryFilter.allCases.map { SegmentOption($0, label: $0.rawValue) }
-            )
-            .padding(.horizontal, -Spacing.page)
-            .accessibilityIdentifier("activity.filter")
-            .task(id: viewModel.filter) { await viewModel.load() }
-            content
-        }
-    }
-
-    @ViewBuilder private var content: some View {
         if case .failed(let error) = viewModel.state, viewModel.entries.isEmpty {
             Notice(error.userMessage, tone: .danger)
         } else if viewModel.entries.isEmpty && viewModel.state == .loading {

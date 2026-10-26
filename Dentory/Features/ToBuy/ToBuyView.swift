@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// To buy (f25 Admin, f26 Staff): the segments, the selection bar and Mark N as ordered for Admin, the lines with
-/// their steppers, and Add item. A shopping list: nothing here places an order. The list reloads whenever a tab is
-/// chosen and after any stock change, so the tab's badge keeps the count of lines still to buy.
+/// To buy (f25 Admin, f26 Staff): the segments, pinned under the title while the lines scroll, the selection bar and
+/// Mark N as ordered for Admin, the lines with their steppers, and Add item. A shopping list: nothing here places an
+/// order. The list reloads whenever a tab is chosen and after any stock change, so the tab's badge keeps the count of
+/// lines still to buy.
 struct ToBuyView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -15,7 +16,12 @@ struct ToBuyView: View {
 
     var body: some View {
         content
-            .rootScreen(title: "To buy", identifier: "order.header")
+            .rootScreen(title: "To buy", identifier: "order.header") {
+                EmptyView()
+            } pinned: {
+                SegmentedControl(selection: $viewModel.segment, options: viewModel.segmentOptions)
+                    .accessibilityIdentifier("order.seg")
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if viewModel.showsMarkOrdered {
                     // The tab stays alive behind the others: toasts on them float above this bar only while it shows.
@@ -56,8 +62,6 @@ struct ToBuyView: View {
     }
 
     @ViewBuilder private var content: some View {
-        SegmentedControl(selection: $viewModel.segment, options: viewModel.segmentOptions)
-            .accessibilityIdentifier("order.seg")
         if case .failed(let error) = viewModel.state {
             Notice(error.userMessage, tone: .danger)
         } else if viewModel.state == .loading && viewModel.items.isEmpty {

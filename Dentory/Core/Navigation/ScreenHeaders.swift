@@ -126,15 +126,18 @@ struct PushedHeader: View {
 }
 
 /// A root screen: cream page, custom header, offline banner, 720 pt column. The system
-/// navigation bar is hidden; the header is drawn (PRD §7) and stays pinned while the content scrolls under it.
-struct RootScreenModifier<Trailing: View>: ViewModifier {
+/// navigation bar is hidden; the header is drawn (PRD §7) and stays pinned while the content scrolls under it, with
+/// the screen's `pinned` controls under it, such as Inventory's search field and chips (f16-2).
+struct RootScreenModifier<Trailing: View, Pinned: View>: ViewModifier {
     var eyebrow: String?
     let title: String
     let identifier: String
     let trailing: () -> Trailing
+    /// The controls that stay under the header while the content scrolls; none when nil.
+    var pinned: Pinned?
 
     func body(content: Content) -> some View {
-        ScreenScaffold {
+        ScreenScaffold(pinned: pinned) {
             RootHeader(eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing)
         } content: {
             content
@@ -145,9 +148,10 @@ struct RootScreenModifier<Trailing: View>: ViewModifier {
 }
 
 /// A pushed screen: back chevron header, cream page, 720 pt column. The header stays pinned while the content
-/// scrolls under it (f13-2, f15-2, f20-2), so a header action such as Save is always in reach. The tab bar hides
-/// because the tab's path is no longer empty (`AppTabsView`).
-struct PushedScreenModifier: ViewModifier {
+/// scrolls under it (f13-2, f15-2, f20-2), so a header action such as Save is always in reach, and so do the screen's
+/// `pinned` controls, such as Activity's segments and chips (f09-2). The tab bar hides because the tab's path is no
+/// longer empty (`AppTabsView`).
+struct PushedScreenModifier<Pinned: View>: ViewModifier {
     let title: String
     var subtitle: String?
     let identifier: String
@@ -156,9 +160,11 @@ struct PushedScreenModifier: ViewModifier {
     var menu: IconMenu?
     var style: PushedHeaderStyle = .title
     var onBack: (() -> Void)?
+    /// The controls that stay under the header while the content scrolls; none when nil.
+    var pinned: Pinned?
 
     func body(content: Content) -> some View {
-        ScreenScaffold {
+        ScreenScaffold(pinned: pinned) {
             PushedHeader(
                 title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
                 action: action, menu: menu, style: style, onBack: onBack
@@ -172,10 +178,11 @@ struct PushedScreenModifier: ViewModifier {
     }
 }
 
-/// The page both screen kinds share: the header and the offline banner pinned at the top, the content in a
-/// scroll view under them, both in the 720 pt column on the cream page. The 16 pt gap under the header is split
-/// so scrolled content clips 8 pt below the pinned block, where the frames cut it (f13-2, f20-2).
-private struct ScreenScaffold<Header: View, Content: View>: View {
+/// The page both screen kinds share: the header, the offline banner and the screen's pinned controls at the top,
+/// the content in a scroll view under them, both in the 720 pt column on the cream page. At rest the content starts
+/// 16 pt under the pinned block, as before anything was pinned; scrolled, it is cut where the frames cut it.
+private struct ScreenScaffold<Header: View, Pinned: View, Content: View>: View {
+    let pinned: Pinned?
     @ViewBuilder let header: () -> Header
     @ViewBuilder let content: () -> Content
 
@@ -184,20 +191,30 @@ private struct ScreenScaffold<Header: View, Content: View>: View {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 header()
                 OfflineBannerHost()
+                if let pinned {
+                    pinned
+                }
             }
-            .padding(.bottom, Spacing.sm)
+            .padding(.bottom, cut)
             .column()
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     content()
                 }
-                .padding(.top, Spacing.sm)
+                .padding(.top, Spacing.lg - cut)
                 .padding(.bottom, Spacing.xl)
                 .column()
             }
             .scrollDismissesKeyboard(.interactively)
         }
         .background(Color.ms.canvas)
+    }
+
+    /// How far under the pinned block scrolled content is cut: 8 pt under the header row (f13-2, f20-2), and 4 pt under
+    /// pinned controls, as under the chips of f16-2 and f09-2, which keeps a strip of page between a segmented control
+    /// and a card of the same colour scrolling under it.
+    private var cut: CGFloat {
+        pinned == nil ? Spacing.sm : Spacing.xs
     }
 }
 
@@ -218,11 +235,27 @@ extension View {
         identifier: String,
         @ViewBuilder trailing: @escaping () -> Trailing
     ) -> some View {
-        modifier(RootScreenModifier(eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing))
+        modifier(RootScreenModifier<Trailing, EmptyView>(
+            eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing
+        ))
+    }
+
+    /// Lays the view out as a root screen whose `pinned` controls stay under the header while the content scrolls
+    /// (f16-2: Inventory's search field and chips). A header without a control of its own passes `{ EmptyView() }`.
+    func rootScreen<Trailing: View, Pinned: View>(
+        eyebrow: String? = nil,
+        title: String,
+        identifier: String,
+        @ViewBuilder trailing: @escaping () -> Trailing,
+        @ViewBuilder pinned: () -> Pinned
+    ) -> some View {
+        modifier(RootScreenModifier(
+            eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing, pinned: pinned()
+        ))
     }
 
     func rootScreen(eyebrow: String? = nil, title: String, identifier: String) -> some View {
-        modifier(RootScreenModifier(eyebrow: eyebrow, title: title, identifier: identifier) { EmptyView() })
+        rootScreen(eyebrow: eyebrow, title: title, identifier: identifier) { EmptyView() }
     }
 
     /// Lays the view out as a pushed screen. Add `.pinnedPrimaryBar` for its primary action.
@@ -239,9 +272,29 @@ extension View {
         style: PushedHeaderStyle = .title,
         onBack: (() -> Void)? = nil
     ) -> some View {
-        modifier(PushedScreenModifier(
+        modifier(PushedScreenModifier<EmptyView>(
             title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
             action: action, menu: menu, style: style, onBack: onBack
+        ))
+    }
+
+    /// Lays the view out as a pushed screen whose `pinned` controls stay under the header while the content scrolls
+    /// (f09-2: Activity's segments and History's chips). Pass `pinned:` by its label: a bare trailing closure would
+    /// also read as `onBack`.
+    func pushedScreen<Pinned: View>(
+        title: String,
+        subtitle: String? = nil,
+        identifier: String,
+        subtitleIdentifier: String? = nil,
+        action: PushedHeader.HeaderAction? = nil,
+        menu: IconMenu? = nil,
+        style: PushedHeaderStyle = .title,
+        onBack: (() -> Void)? = nil,
+        @ViewBuilder pinned: () -> Pinned
+    ) -> some View {
+        modifier(PushedScreenModifier(
+            title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
+            action: action, menu: menu, style: style, onBack: onBack, pinned: pinned()
         ))
     }
 }
@@ -251,6 +304,18 @@ extension View {
         Text("Content").rootScreen(eyebrow: "Thursday, October 2", title: "Smile Dental", identifier: "home.header") {
             IconButton(.bell, label: "Alerts") {}
         }
+    }
+}
+
+#Preview("Root with pinned controls") {
+    @Previewable @State var search = ""
+    NavigationStack {
+        ForEach(1...30, id: \.self) { Text("Row \($0)") }
+            .rootScreen(title: "Inventory", identifier: "inv.header") {
+                EmptyView()
+            } pinned: {
+                MSTextField(nil, text: $search, placeholder: "Search products", icon: .search)
+            }
     }
 }
 
