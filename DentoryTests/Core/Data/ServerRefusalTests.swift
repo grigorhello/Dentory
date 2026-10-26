@@ -81,8 +81,10 @@ struct ServerRefusalTests {
             #expect(shown.first?.isUppercase == true || shown.hasPrefix("%"), "\(sentence) reads \(shown)")
             #expect(shown.hasSuffix("."), "\(sentence) reads \(shown)")
         }
+        // A sentence's apostrophe is doubled in its SQL literal ("invoice''s").
+        let unquoted = sql.replacing("''", with: "'")
         for key in ServerRefusal.houseCopy.keys {
-            #expect(sql.contains(key) || functions.contains(key), "No migration or function sends \(key)")
+            #expect(unquoted.contains(key) || functions.contains(key), "No migration or function sends \(key)")
         }
     }
 
