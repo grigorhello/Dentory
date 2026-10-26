@@ -155,7 +155,7 @@ select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 30::numeric, 'the
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3'), 5::numeric, 'through the undated batch it was added to');
 select is((select count(*) from public.transactions where reverses_id = (select id from public.transactions where action_id = (select id from public.stock_actions where idempotency_key = pg_temp.k(40)))), 1::bigint, 'with a reversal row pointing at it');
 select lives_ok($$ select public.stock_receive('00000000-0000-4000-8000-0000000000c1', '[{"product_id":"00000000-0000-4000-8000-0000000000d3","qty":4}]', pg_temp.k(42)) $$, 'receive gloves while their To buy line was never ordered');
-select is((select status from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' order by created_at limit 1), 'received', 'the To buy line is received');
+select is((select count(*) from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' and status = 'received'), 1::bigint, 'the To buy line is received');
 select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 2::numeric, 'the shortfall is covered');
 select lives_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(42)), pg_temp.k(43)) $$, 'a receiving can be undone');
 select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), -2::numeric, 'and the stock goes back');
