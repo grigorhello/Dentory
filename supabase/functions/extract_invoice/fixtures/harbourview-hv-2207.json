@@ -1,0 +1,169 @@
+{
+  "supplier": "Harbourview Dental Co.",
+  "invoice_number": "HV-2207",
+  "invoice_date": "2026-10-02",
+  "currency": "CAD",
+  "total": 744.5,
+  "lines": [
+    {
+      "raw": "SEPTOCAINE 4% 1:100,000 CARTRIDGES 50/BX",
+      "qty": 2,
+      "unit": "box",
+      "unit_price": 52.4,
+      "line_total": 104.8,
+      "lot": "B552",
+      "expiry": "2028-03",
+      "kind": "product"
+    },
+    {
+      "raw": "COMPOSITE A2 SYRINGE 4G",
+      "qty": 3,
+      "unit": "each",
+      "unit_price": 38.9,
+      "line_total": 116.7,
+      "lot": "7731A",
+      "expiry": "2027-11",
+      "kind": "product"
+    },
+    {
+      "raw": "ETCH GEL 37% 3ML SYRINGE 2PK",
+      "qty": 2,
+      "unit": "pack",
+      "unit_price": 14.25,
+      "line_total": 28.5,
+      "lot": "EG2210",
+      "expiry": "2027-06",
+      "kind": "product"
+    },
+    {
+      "raw": "PAPER POINTS #30 120/BX",
+      "qty": 2,
+      "unit": "box",
+      "unit_price": 9.8,
+      "line_total": 19.6,
+      "lot": "PP3091",
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "RETRACTION CORD #1 KNITTED",
+      "qty": 1,
+      "unit": "each",
+      "unit_price": 21.4,
+      "line_total": 21.4,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "MATRIX BANDS UNIVERSAL 144/PK",
+      "qty": 1,
+      "unit": "pack",
+      "unit_price": 17.6,
+      "line_total": 17.6,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "GUTTA PERCHA POINTS F2 60/BX",
+      "qty": 3,
+      "unit": "box",
+      "unit_price": 11.2,
+      "line_total": 33.6,
+      "lot": "GP552",
+      "expiry": "2029-09",
+      "kind": "product"
+    },
+    {
+      "raw": "NITRILE GLOVES MEDIUM 100/BX",
+      "qty": 10,
+      "unit": "box",
+      "unit_price": 8.95,
+      "line_total": 89.5,
+      "lot": "N0915",
+      "expiry": "2030-08",
+      "kind": "product"
+    },
+    {
+      "raw": "HEMOSTATIC GEL 1.2ML SYRINGE",
+      "qty": 4,
+      "unit": "each",
+      "unit_price": 12.4,
+      "line_total": 49.6,
+      "lot": "HG118",
+      "expiry": "2028-01",
+      "kind": "product"
+    },
+    {
+      "raw": "BONDING AGENT 5ML",
+      "qty": 1,
+      "unit": "bottle",
+      "unit_price": 64,
+      "line_total": 64,
+      "lot": "BA9012",
+      "expiry": "2027-12",
+      "kind": "product"
+    },
+    {
+      "raw": "COTTON ROLLS #2 MEDIUM 2000/BX",
+      "qty": 1,
+      "unit": "box",
+      "unit_price": 15.9,
+      "line_total": 15.9,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "ARTICULATING PAPER 40 MICRON 144/BX",
+      "qty": 1,
+      "unit": "box",
+      "unit_price": 11.75,
+      "line_total": 11.75,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "SALIVA EJECTORS CLEAR 100/BG",
+      "qty": 3,
+      "unit": "bag",
+      "unit_price": 6.4,
+      "line_total": 19.2,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "ALGINATE IMPRESSION MATERIAL 1LB",
+      "qty": 2,
+      "unit": "bag",
+      "unit_price": 18.3,
+      "line_total": 36.6,
+      "lot": "AL7710",
+      "expiry": "2028-02",
+      "kind": "product"
+    },
+    {
+      "raw": "SURFACE DISINFECTANT SPRAY 24OZ",
+      "qty": 2,
+      "unit": "each",
+      "unit_price": 13.8,
+      "line_total": 27.6,
+      "lot": "SD4471",
+      "expiry": "2028-10",
+      "kind": "product"
+    },
+    {
+      "raw": "ENVIRONMENTAL FEE",
+      "qty": 1,
+      "unit": "each",
+      "unit_price": 2.5,
+      "line_total": 2.5,
+      "lot": null,
+      "expiry": null,
+      "kind": "fee"
+    }
+  ]
+}

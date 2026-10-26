@@ -1,0 +1,49 @@
+{
+  "supplier": "Fournitures dentaires Rive-Sud",
+  "invoice_number": "F-3381",
+  "invoice_date": "2026-10-09",
+  "currency": "CAD",
+  "total": 100.31,
+  "lines": [
+    {
+      "raw": "Gants nitrile moyens 100/bte",
+      "qty": 4,
+      "unit": "box",
+      "unit_price": 9.25,
+      "line_total": 37,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "Pâte prophylactique menthe 200 g",
+      "qty": 2,
+      "unit": "jar",
+      "unit_price": 16.4,
+      "line_total": 32.8,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "Hypochlorite de sodium 5,25 % 1 L",
+      "qty": 1,
+      "unit": "bottle",
+      "unit_price": 7.95,
+      "line_total": 7.95,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "Frais de livraison",
+      "qty": 1,
+      "unit": null,
+      "unit_price": 9.5,
+      "line_total": 9.5,
+      "lot": null,
+      "expiry": null,
+      "kind": "fee"
+    }
+  ]
+}

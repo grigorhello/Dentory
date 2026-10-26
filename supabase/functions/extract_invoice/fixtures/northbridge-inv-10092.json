@@ -1,0 +1,49 @@
+{
+  "supplier": "Northbridge Dental Supply",
+  "invoice_number": "INV-10092",
+  "invoice_date": "2026-09-30",
+  "currency": "CAD",
+  "total": 520.03,
+  "lines": [
+    {
+      "raw": "SEPTO 4% 1:100K 50/BX",
+      "qty": 5,
+      "unit": "box",
+      "unit_price": 49.8,
+      "line_total": 249,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "ENDO FILE KIT 15-40 21MM",
+      "qty": 4,
+      "unit": "box",
+      "unit_price": 45,
+      "line_total": 180,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "TEMPBOND NE 1PK",
+      "qty": 1,
+      "unit": "pack",
+      "unit_price": 26.4,
+      "line_total": 26.4,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "HANDLING / FUEL SURCHARGE",
+      "qty": 1,
+      "unit": "each",
+      "unit_price": 4.8,
+      "line_total": 4.8,
+      "lot": null,
+      "expiry": null,
+      "kind": "fee"
+    }
+  ]
+}

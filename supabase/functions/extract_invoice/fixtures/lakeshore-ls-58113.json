@@ -1,0 +1,49 @@
+{
+  "supplier": "Lakeshore Dental Distributors",
+  "invoice_number": "LS-58113",
+  "invoice_date": "2026-10-14",
+  "currency": "CAD",
+  "total": 113.85,
+  "lines": [
+    {
+      "raw": "NEEDLE 27G SHORT 100/BX",
+      "qty": 2,
+      "unit": "box",
+      "unit_price": 18.5,
+      "line_total": 37,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "PROPHY ANGLE DISPOSABLE 100/BX",
+      "qty": 1,
+      "unit": "box",
+      "unit_price": 32,
+      "line_total": 32,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "GAUZE SPONGES 2X2 8-PLY 200/PK",
+      "qty": 5,
+      "unit": "pack",
+      "unit_price": 3.95,
+      "line_total": 19.75,
+      "lot": null,
+      "expiry": null,
+      "kind": "product"
+    },
+    {
+      "raw": "SHIPPING",
+      "qty": 1,
+      "unit": null,
+      "unit_price": 12,
+      "line_total": 12,
+      "lot": null,
+      "expiry": null,
+      "kind": "fee"
+    }
+  ]
+}
