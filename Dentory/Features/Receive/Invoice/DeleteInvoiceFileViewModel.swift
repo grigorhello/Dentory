@@ -2,8 +2,8 @@ import Foundation
 import Observation
 
 /// "Delete the invoice file?" (MS-146, the ticket's sheet; PRD §9 Privacy): over a received invoice opened read-only,
-/// Delete file lets the server go of the invoice's photo or PDF and deletes its pages from Storage, one deletion at a
-/// time; the stock received and History stay. It is done once no page is left. What went wrong shows above the
+/// Delete file has the server let go of the invoice's photo or PDF, then deletes its pages from Storage, one deletion
+/// at a time; the stock received and History stay. It is done once no page is left. What went wrong shows above the
 /// buttons and the question stays for another try: a deletion is not queued offline.
 @MainActor
 @Observable

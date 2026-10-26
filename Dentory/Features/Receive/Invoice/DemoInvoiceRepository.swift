@@ -147,8 +147,8 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     // MARK: - The file (MS-146)
 
     /// Delete invoice file as `invoice_file_delete` and the invoices bucket do it: a received invoice's photo goes, by
-    /// the demo's admin at the demo's moment, kept as the first deletion said when asked again; any other invoice is
-    /// refused with the server's sentence.
+    /// the demo's admin at the demo's moment, and asked again it keeps that who and when; any other invoice is refused
+    /// with the server's sentence.
     func deleteFile(invoiceID: UUID, clinicID: UUID) async throws -> InvoiceSummary {
         try await Task.sleep(for: .milliseconds(300))
         return try lock.withLock {
