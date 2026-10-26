@@ -68,7 +68,8 @@ struct ProceduresViewModelTests {
             cancelledAt: Session.demoNow
         )
         #expect(
-            viewModel.historyLine(for: cancelled) == "Cancelled\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Michael"
+            viewModel.historyLine(for: cancelled)
+                == "Cancelled\u{00A0}· Oct 1\u{00A0}· 3:14\u{202F}PM\u{00A0}· Michael"
         )
         let bySomeoneGone = ProcedureEventSummary(
             id: UUID(), name: "Crown", startedAt: rootCanal.startedAt, startedByName: "", itemCount: 10,

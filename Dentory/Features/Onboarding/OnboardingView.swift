@@ -119,7 +119,6 @@ struct OnboardingView: View {
         }
     }
 
-
     private var caption: String? {
         switch viewModel.step {
         case .account: "You will own the clinic workspace and invite the team."

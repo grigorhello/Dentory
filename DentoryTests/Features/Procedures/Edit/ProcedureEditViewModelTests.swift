@@ -155,7 +155,8 @@ struct ProcedureEditViewModelTests {
         #expect(request.lines.map(\.productID) == viewModel.items.map(\.id))
         #expect(request.lines.map(\.defaultQuantity) == [3, 1, 2, 1, 1, 1, 1, 0, 0, 0, 0, 1])
         #expect(
-            viewModel.outcome == .init(title: "Procedure saved", detail: "Root canal, molar\u{00A0}· 12 default supplies")
+            viewModel.outcome
+                == .init(title: "Procedure saved", detail: "Root canal, molar\u{00A0}· 12 default supplies")
         )
         #expect(analytics.events == [.templateSaved(items: 12, isNew: false)], "The count, never the name (MS-147)")
     }
@@ -169,7 +170,8 @@ struct ProcedureEditViewModelTests {
         #expect(repository.saves.first?.templateID == nil)
         #expect(repository.saves.first?.name == "")
         #expect(
-            viewModel.outcome == .init(title: "Procedure saved", detail: "Untitled procedure\u{00A0}· 1 default supply")
+            viewModel.outcome
+                == .init(title: "Procedure saved", detail: "Untitled procedure\u{00A0}· 1 default supply")
         )
     }
 

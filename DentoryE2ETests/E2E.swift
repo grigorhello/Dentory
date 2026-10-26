@@ -64,6 +64,7 @@ enum E2E {
         app.typeText(password)
         app.buttons["signin.submit"].tap()
         app.buttons["home.header.account"].appears("Home did not show")
+        app.declineSavingPassword()
         dismissNotificationsExplainer(in: app)
     }
 

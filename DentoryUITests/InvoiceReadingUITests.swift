@@ -7,6 +7,10 @@ import XCTest
 final class InvoiceReadingUITests: XCTestCase {
     private let beingRead = "receive.continue[00000000-0000-4000-8000-000000000402]"
     private let read = "receive.continue[00000000-0000-4000-8000-000000000401]"
+    /// Back on Receive delivery, its lists are read again as it shows. Under load (several suites on one Mac) that read
+    /// has taken longer than the 5 seconds a screen gets, so an invoice set aside is given this long to leave the list;
+    /// the wait ends as soon as it does.
+    private let listReload: TimeInterval = 20
 
     override func setUp() {
         continueAfterFailure = false
@@ -71,7 +75,9 @@ final class InvoiceReadingUITests: XCTestCase {
         XCTAssertTrue(
             app.buttons["receive.photo"].waitForExistence(timeout: 5), "Try again did not return to the options"
         )
-        XCTAssertTrue(app.buttons[beingRead].waitForNonExistence(timeout: 5), "The failed invoice is still listed")
+        XCTAssertTrue(
+            app.buttons[beingRead].waitForNonExistence(timeout: listReload), "The failed invoice is still listed"
+        )
         XCTAssertTrue(app.buttons[read].exists, "The invoice ready to review is still listed")
     }
 
@@ -90,7 +96,9 @@ final class InvoiceReadingUITests: XCTestCase {
 
         app.buttons["invoice.back"].tap()
         XCTAssertTrue(app.buttons["receive.photo"].waitForExistence(timeout: 5), "Back did not return to the options")
-        XCTAssertTrue(app.buttons[beingRead].waitForNonExistence(timeout: 5), "The failed invoice is still listed")
+        XCTAssertTrue(
+            app.buttons[beingRead].waitForNonExistence(timeout: listReload), "The failed invoice is still listed"
+        )
     }
 
     @MainActor

@@ -120,7 +120,7 @@ Status: fixed in fixes 1: "If you did not ask for this, you can ignore this emai
 
 ## Cross-checks (not counted)
 
-- iOS 26.3: custom-drawn screens identical to iOS 18.4; system sheets float as inset cards. A system "Save Password?" sheet appears when a password field leaves the screen and blocked XCUITest taps (`OnboardingUITests.testAdminSignUpLandsOnHome` failed at step 2 until "Not Now"). Status: fixed in fixes 1; the UI test bundles' principal class (`DentoryUITests/UITestInterruptions.swift`) answers it with Not Now in every test.
+- iOS 26.3: custom-drawn screens identical to iOS 18.4; system sheets float as inset cards. A system "Save Password?" sheet appears when a password field leaves the screen and blocked XCUITest taps (`OnboardingUITests.testAdminSignUpLandsOnHome` failed at step 2 until "Not Now"). Status: fixed in fixes 1. XCTest's interruption monitors pass this sheet by, since it is the app's own; the flows that go on after a password answer it with Not Now (`DentoryUITests/XCUIApplication+SavePassword.swift`, shared with the end-to-end flows), and on iOS 18 that returns at once.
 - Large text (XXXL, beyond the PRD's Large promise): To buy's segment labels run together ("Ordered · 5Received · 1"), the pinned bar label truncates ("Start procedure · 10 ite…"), Product detail's context line truncates, tab labels nearly touch (`cmp/xxxl-f25-tobuy-admin.png`, `xxxl-f13-adjust.png`, `xxxl-f20-product-admin.png`, `xxxl-f06-home-admin.png`). Status: open.
 - The Debug-only "Shell demo" row on Home (`#if DEBUG` in `HomeView.swift`) must be absent from Release. It is compiled only in Debug.
 

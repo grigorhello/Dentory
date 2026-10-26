@@ -74,6 +74,7 @@ final class OnboardingUITests: XCTestCase {
         app.typeText("smiledental")
         XCTAssertTrue(continueButton.isEnabled)
         continueButton.tap()
+        app.declineSavingPassword()
 
         XCTAssertTrue(app.staticTexts["Create your clinic"].waitForExistence(timeout: 5), "Step 2 did not appear")
         app.textFields["onboard.clinicName"].firstMatch.tap()

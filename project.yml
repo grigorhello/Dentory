@@ -113,8 +113,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ca.dentory.app.uitests
         GENERATE_INFOPLIST_FILE: YES
-        # Handles what iOS puts over the app uninvited, such as iOS 26's Save Password? (UITestInterruptions.swift).
-        INFOPLIST_KEY_NSPrincipalClass: DentoryUITestInterruptions
         TEST_TARGET_NAME: Dentory
 
   # The end-to-end flows on the local stack seeded with the demo clinic (MS-136): `make e2e`, never `make uitest`.
@@ -123,15 +121,14 @@ targets:
     platform: iOS
     sources:
       - DentoryE2ETests
-      # The same handlers as the UI flows (iOS 26's Save Password? after a sign-in).
-      - DentoryUITests/UITestInterruptions.swift
+      # Not Now on iOS 26's Save Password? after a sign-in, as in the UI flows.
+      - DentoryUITests/XCUIApplication+SavePassword.swift
     dependencies:
       - target: Dentory
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ca.dentory.app.e2etests
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_NSPrincipalClass: DentoryUITestInterruptions
         TEST_TARGET_NAME: Dentory
 
 schemes:

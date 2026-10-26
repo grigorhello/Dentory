@@ -43,9 +43,8 @@ struct ActivityViewModelTests {
             "Bonding agent expires in 59 days.",
             "Gutta percha F2 is missing expiry information."
         ])
-        #expect(
-            viewModel.alerts.map(viewModel.whenText(for:)) == ["Today\u{00A0}· 8:40\u{202F}AM", "Yesterday", "Yesterday"]
-        )
+        let when = viewModel.alerts.map(viewModel.whenText(for:))
+        #expect(when == ["Today\u{00A0}· 8:40\u{202F}AM", "Yesterday", "Yesterday"])
         #expect(viewModel.alerts.map(viewModel.dotTone(for:)) == [.danger, .warning, .info])
     }
 
