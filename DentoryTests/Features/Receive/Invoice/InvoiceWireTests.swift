@@ -121,6 +121,38 @@ struct InvoiceWireTests {
         #expect(abs(received.timeIntervalSince(uploaded) - 600.5) < 0.001)
     }
 
+    /// `invoice_detail` once the received invoice's file is deleted (MS-146): no page left, when and who deleted it.
+    @Test func aReceivedInvoiceWhoseFileWasDeletedDecodesWithWhenAndWho() throws {
+        let json = #"""
+        {"id": "d0000000-0000-4000-8000-000000000401", "total": 449.00, "number": "INV-10092", "source": "camera",
+         "status": "confirmed", "read_at": "2026-10-26T12:55:00+00:00", "currency": "CAD", "has_file": false,
+         "supplier": "Patterson", "created_at": "2026-10-26T12:55:00+00:00", "line_count": 4,
+         "confirmed_at": "2026-10-26T19:54:38.609672+00:00", "invoice_date": "2026-10-24", "failure_reason": null,
+         "file_deleted_at": "2026-10-26T20:54:38.609672+00:00", "reading_started": true,
+         "confirmed_by_name": "Sarah Mitchell", "file_deleted_by_name": "Sarah Mitchell"}
+        """#
+        let invoice = try JSONDecoder.supabase.decode(InvoiceSummary.self, from: Data(json.utf8))
+        #expect(!invoice.hasFile)
+        #expect(invoice.fileDeletedByName == "Sarah Mitchell")
+        let deleted = try #require(invoice.fileDeletedAt)
+        let received = try #require(invoice.confirmedAt)
+        #expect(abs(deleted.timeIntervalSince(received) - 3_600) < 0.001)
+    }
+
+    /// An invoice with its pages says so; a server without MS-146, which says nothing of them, reads as none.
+    @Test func whetherAnInvoiceHasItsFileDecodes() throws {
+        let json = #"""
+        {"id": "620f5ce8-d5d0-4a3d-81cb-3bce0d0dd5ab", "status": "confirmed", "reading_started": true,
+         "line_count": 0, "has_file": true, "file_deleted_at": null, "file_deleted_by_name": null}
+        """#
+        let invoice = try JSONDecoder.supabase.decode(InvoiceSummary.self, from: Data(json.utf8))
+        #expect(invoice.hasFile && invoice.fileDeletedAt == nil && invoice.fileDeletedByName == nil)
+        let older = #"""
+        {"id": "620f5ce8-d5d0-4a3d-81cb-3bce0d0dd5ab", "status": "confirmed", "reading_started": true, "line_count": 0}
+        """#
+        #expect(try !JSONDecoder.supabase.decode(InvoiceSummary.self, from: Data(older.utf8)).hasFile)
+    }
+
     @Test func anInvoiceBeingReadDecodesWithNothingReadYet() throws {
         let json = #"""
         {"id": "620f5ce8-d5d0-4a3d-81cb-3bce0d0dd5ab", "total": null, "number": null, "source": "camera",

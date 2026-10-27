@@ -3,13 +3,14 @@ import SwiftUI
 /// Review invoice once read (f23, f38): the banner saying how many lines the reading found, then a card per line with
 /// its state and the choice it waits for. Every choice is a write, so in read-only mode the sheet says why instead
 /// (MS-142); its sheets are Which product is this? and New product. A received invoice (MS-131) shows when and by whom
-/// it was received over its lines, read-only.
+/// it was received over its lines, read-only, and once its file is deleted, when and by whom that was (MS-146).
 struct InvoiceReviewView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(\.writeAccess) private var writeAccess
     @Bindable var viewModel: InvoiceReviewViewModel
     let banner: String?
     let receivedNotice: String?
+    let fileNotice: String?
     let session: Session
 
     var body: some View {
@@ -18,6 +19,9 @@ struct InvoiceReviewView: View {
                 Notice(receivedNotice, tone: .success, identifier: "invoice.received")
             } else if let banner {
                 Notice(banner, identifier: "invoice.banner")
+            }
+            if let fileNotice {
+                Notice(fileNotice, identifier: "invoice.fileDeleted")
             }
             ForEach(viewModel.lines) { line in
                 InvoiceLineCard(viewModel: viewModel, line: line)

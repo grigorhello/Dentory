@@ -7,8 +7,8 @@ import Observation
 /// with the lines to review and Confirm & receive (`review`, MS-130, MS-131), the lines of a delivery received already,
 /// read-only, or the failure with a clearer photo or receiving by hand. The admin may leave at any point: the upload
 /// carries on, the server reads on, and the bell and a push say when the delivery is ready (MS-144). The header's menu
-/// discards the invoice (`InvoiceViewModel+Discard.swift`). The states are in `InvoiceViewModel+State.swift`, the lines
-/// it shows in `InvoiceViewModel+Copy.swift`.
+/// discards the invoice, or deletes a received one's file (`+Discard.swift`, `+File.swift`, MS-146). The states are in
+/// `InvoiceViewModel+State.swift`, the lines it shows in `InvoiceViewModel+Copy.swift`.
 @MainActor
 @Observable
 final class InvoiceViewModel {
@@ -22,6 +22,8 @@ final class InvoiceViewModel {
     private(set) var attempt = 0
     /// The question Discard invoice asks, from the header's "…" menu.
     var isConfirmingDiscard = false
+    /// The question Delete invoice file asks, from the "…" menu of a received invoice that has its file (MS-146).
+    var isConfirmingFileDeletion = false
     /// Set once the invoice is discarded: the screen goes back to Receive delivery with the toast.
     private(set) var discarded: Message?
     /// A discard that failed; the screen shows it as a toast.
@@ -246,5 +248,11 @@ final class InvoiceViewModel {
 
     func clearGeneralError() {
         generalError = nil
+    }
+
+    /// Delete invoice file's answer (MS-146): the question closes, and the invoice shows without its file.
+    func fileDeleted(_ invoice: InvoiceSummary) {
+        isConfirmingFileDeletion = false
+        show(invoice)
     }
 }
