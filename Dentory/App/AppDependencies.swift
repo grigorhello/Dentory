@@ -63,11 +63,11 @@ struct AppDependencies: Sendable {
     @MainActor
     static func live() -> AppDependencies {
         let client = SupabaseClientProvider.makeClient()
-        let rpc = SupabaseRPCClient(transport: SupabaseRPCTransport(client: client))
+        let reporter = SentryErrorReporter()
+        let rpc = SupabaseRPCClient(transport: SupabaseRPCTransport(client: client), reporter: reporter)
         let clock = SystemClock()
         let networkMonitor = NetworkMonitor()
         let toasts = ToastCenter()
-        let reporter = SentryErrorReporter()
         let writes = WriteCoordinator(
             rpc: rpc,
             queue: PendingWriteQueue(store: FilePendingWriteStore()),

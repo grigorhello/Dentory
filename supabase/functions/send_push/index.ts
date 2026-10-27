@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     if (finish.error) throw new Error(`push_finish: ${finish.error.message}`);
     return json({ ok: true, claimed: due.length, sent: sent.length, delivered, dead: dead.length, logged: !config });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "send_push");
   }
 });
 

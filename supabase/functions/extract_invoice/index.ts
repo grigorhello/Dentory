@@ -5,13 +5,15 @@
 // pages from the invoices bucket, reads them with the Claude API (reading.ts, claude.ts) and hands the result to
 // invoice_reading_finish, which matches the lines without AI and marks the invoice ready, opening its alert and the
 // admins' push; or marks it failed with the reason (invoice_reading_fail). The reading gives up 60 seconds after its
-// claim (reason timeout). Calling it again for an invoice already claimed or read changes nothing.
+// claim (reason timeout). Calling it again for an invoice already claimed or read changes nothing. A reading that ran
+// out of time or failed on an error, rather than on the pages, also goes to Sentry when SENTRY_DSN is set (MS-150).
 //
 // Needs ANTHROPIC_API_KEY (`supabase secrets set`); without it every reading fails with the reason error, except on the
 // local stack, where the fixture invoices are read from their recorded answers (replay.ts, MS-136). Invoice contents are
 // never logged: only ids, page counts, sizes, timings, tokens and reasons.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, isUUID, json, readJSON, text } from "../_shared/http.ts";
+import { report } from "../_shared/sentry.ts";
 import { caller, rpcError, serviceClient } from "../_shared/supabase.ts";
 import { claudeCall } from "./claude.ts";
 import { errorName, type InvoicePage, type PageKind, readInvoice, ReadingFailure } from "./reading.ts";
@@ -47,7 +49,7 @@ Deno.serve(async (req) => {
     }
     return json({ started: Boolean(claim) }, 202);
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "extract_invoice");
   }
 });
 
@@ -74,6 +76,11 @@ async function read(db: SupabaseClient, invoiceID: string, claim: Claim) {
     log({ ...facts, outcome: "failed", reason, detail, ms: Date.now() - started });
     const { error } = await db.rpc("invoice_reading_fail", { p_invoice_id: invoiceID, p_reason: reason });
     if (error) console.error(JSON.stringify({ function: "extract_invoice", invoice: invoiceID, fail: error.code }));
+    // Unreadable or refused pages are the photo's doing; a timeout or an error is the reading's.
+    if (reason === "timeout" || reason === "error") {
+      const tags = { detail, pages: String(claim.file_count) };
+      await report({ fn: "extract_invoice", kind: reason, error: failure, tags });
+    }
   }
 }
 

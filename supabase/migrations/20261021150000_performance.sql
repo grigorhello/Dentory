@@ -2,7 +2,7 @@
 -- load-test clinic (`make seed-load`: 500 products, about 5,500 ledger rows over six months, read as its admin) and
 -- what `make perf-concurrency` (eight clients starting procedures and opening bottles of the same products at once)
 -- broke, fixed in the database. Function signatures, the view's columns and every answer stay as they were;
--- 48_performance_test.sql checks the rewritten view and policies against the definitions they replace.
+-- 49_performance_test.sql checks the rewritten view and policies against the definitions they replace.
 
 -- Row level security in one pass per query ------------------------------------------------------------------------
 -- Every read policy asked is_member(clinic_id) of each row it met: a security definer function, which Postgres does

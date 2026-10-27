@@ -1,4 +1,4 @@
--- MS-150 · The performance migration (20261021140000_performance.sql) changes how fast, not what: the indexes are
+-- MS-150 · The performance migration (20261021150000_performance.sql) changes how fast, not what: the indexes are
 -- there; every read policy lets each caller read the rows is_member or is_admin let them read before, and no read
 -- policy asks either of each row again; product_stock answers as MS-104's view did; every stock change takes its
 -- clinic's lock, and only that one.
@@ -129,7 +129,7 @@ select public.stock_receive('00000000-0000-4000-8000-0000000048c2', jsonb_build_
 select public.bottle_open('00000000-0000-4000-8000-000000004805', gen_random_uuid());
 select public.stock_procedure_start('00000000-0000-4000-8000-0000000048c2', '00000000-0000-4000-8000-000000004812',
   'Cleaning', jsonb_build_array(jsonb_build_object('product_id', '00000000-0000-4000-8000-000000004806', 'qty', 1)),
-  '{}', gen_random_uuid());
+  array['00000000-0000-4000-8000-000000004805']::uuid[], gen_random_uuid());
 reset role;
 
 -- Indexes -----------------------------------------------------------------------------------------------------------
@@ -190,6 +190,18 @@ insert into callers values
   (1, '00000000-0000-4000-8000-0000000048a1'), (2, '00000000-0000-4000-8000-0000000048a2'),
   (3, '00000000-0000-4000-8000-0000000048b1'), (4, '00000000-0000-4000-8000-0000000048d1'),
   (5, '00000000-0000-4000-8000-0000000048e1'), (6, '00000000-0000-4000-8000-0000000048f1');
+create function pg_temp.admin_clinics_of(p_user uuid) returns text language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object('sub', p_user, 'role', 'authenticated')::text, true);
+  return (select coalesce(string_agg(x::text, ',' order by x::text), '') from public.current_admin_clinic_ids() x);
+end;
+$$;
+select is(
+  array(select pg_temp.admin_clinics_of(c.user_id) from callers c order by c.n),
+  array['00000000-0000-4000-8000-0000000048c1', '', '00000000-0000-4000-8000-0000000048c2', '', '', ''],
+  'the admin policies'' clinics are those the caller is an active admin of: no staff, invited or revoked seat'
+);
+
 create temp table guarded (name text primary key, key text not null, rule text not null);
 insert into guarded values
   ('clinics', 'id', 'is_member'), ('memberships', 'id', 'is_member'), ('categories', 'id', 'is_member'),

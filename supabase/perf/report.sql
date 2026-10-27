@@ -22,6 +22,18 @@ begin
 end;
 $$;
 
+-- Fresh planner statistics first: straight after seed-load, autovacuum may not have counted the new rows yet, and the
+-- plans would be the ones a hosted project, analysed as it grows, never makes.
+do $$
+declare
+  v_table text;
+begin
+  for v_table in select tablename from pg_catalog.pg_tables where schemaname = 'public' order by 1 loop
+    execute format('analyze public.%I', v_table);
+  end loop;
+end;
+$$;
+
 -- What is measured: each call's name, the screen that makes it and the SQL, with the clinic's ids filled in.
 create temp table perf_calls (
   position serial primary key,

@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true, email: invitation.email, clinic_id: accepted.data });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "accept_invitation");
   }
 });
 

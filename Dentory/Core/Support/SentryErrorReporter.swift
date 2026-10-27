@@ -2,7 +2,8 @@ import Foundation
 import Sentry
 
 /// Sentry Cocoa, started with the DSN from Info.plist (`SENTRY_DSN`, set in `Config/Secrets*.xcconfig`).
-/// With no DSN it stays off. Breadcrumbs carry the function name and the error kind only.
+/// With no DSN it stays off. Breadcrumbs carry the function name and the error kind only, and so does the
+/// transaction each call through `SupabaseRPCClient` sends (MS-150, `docs/runbooks/monitoring.md`).
 struct SentryErrorReporter: ErrorReporting {
     let dsn: String?
 
@@ -23,6 +24,14 @@ struct SentryErrorReporter: ErrorReporting {
             // with the request for every 5xx answer (MS-151).
             options.enableNetworkBreadcrumbs = false
             options.enableCaptureFailedRequests = false
+            // Sessions give the crash-free rate the first alert watches; on by default, kept on.
+            options.enableAutoSessionTracking = true
+            // Every call's transaction is kept, and they are the only ones: no screen, app start, tap or request is
+            // traced on its own, and no Sentry header goes with the requests to Supabase.
+            options.tracesSampleRate = 1.0
+            options.enableAutoPerformanceTracing = false
+            options.enableNetworkTracking = false
+            options.tracePropagationTargets = []
             #if DEBUG
             options.environment = "debug"
             #endif
@@ -35,5 +44,38 @@ struct SentryErrorReporter: ErrorReporting {
         crumb.message = function
         crumb.data = ["kind": error.reportingKind]
         SentrySDK.addBreadcrumb(crumb)
+    }
+
+    func startCall(_ function: String) -> CallTiming {
+        guard dsn != nil else { return NoopCallTiming() }
+        return SentryCallTiming(
+            transaction: SentrySDK.startTransaction(name: function, operation: "rpc", bindToScope: false)
+        )
+    }
+}
+
+/// A call's transaction: `ok`, or a failed status with the error's kind as its `kind` tag.
+private struct SentryCallTiming: CallTiming {
+    let transaction: Span
+
+    func finish(with error: AppError?) {
+        guard let error else {
+            transaction.finish(status: .ok)
+            return
+        }
+        transaction.setTag(value: error.reportingKind, key: "kind")
+        transaction.finish(status: Self.status(of: error))
+    }
+
+    /// Statuses Sentry counts as failures, so the failure rate of a function is its share of refused or lost calls.
+    private static func status(of error: AppError) -> SentrySpanStatus {
+        switch error {
+        case .network: .unavailable
+        case .notFound: .notFound
+        case .forbidden: .permissionDenied
+        case .readOnly: .failedPrecondition
+        case .validation: .invalidArgument
+        case .unknown: .internalError
+        }
     }
 }

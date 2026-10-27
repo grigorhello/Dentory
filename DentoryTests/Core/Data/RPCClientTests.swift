@@ -59,6 +59,34 @@ struct RPCClientTests {
         }
     }
 
+    /// MS-150: every call is timed once under its function's name and ends `ok` or with the error's kind, so Sentry
+    /// can count the failures and chart the durations per function.
+    @Test func timesEachCallUnderItsFunctionsName() async throws {
+        let reporter = SpyErrorReporter()
+        let transport = FakeRPCTransport()
+        let client = SupabaseRPCClient(transport: transport, reporter: reporter)
+        let _: Nothing = try await client.call("bottle_open", params: ["p_product_id": "x"])
+        transport.response = .failure(PostgrestError(code: "22023", message: "Out of stock"))
+        await #expect(throws: AppError.self) {
+            let _: Nothing = try await client.call("stock_procedure_start", params: ["p": "x"])
+        }
+        transport.response = .failure(URLError(.notConnectedToInternet))
+        await #expect(throws: AppError.network) {
+            let _: Nothing = try await client.call("stock_count_apply", params: ["p": "x"])
+        }
+        transport.response = .success(Data("[1]".utf8))
+        await #expect(throws: AppError.self) {
+            let _: Nothing = try await client.call("stock_adjust", params: ["p": "x"])
+        }
+        #expect(reporter.started == ["bottle_open", "stock_procedure_start", "stock_count_apply", "stock_adjust"])
+        #expect(reporter.finished == [
+            SpyErrorReporter.Call(function: "bottle_open", outcome: "ok"),
+            SpyErrorReporter.Call(function: "stock_procedure_start", outcome: "validation"),
+            SpyErrorReporter.Call(function: "stock_count_apply", outcome: "network"),
+            SpyErrorReporter.Call(function: "stock_adjust", outcome: "unknown")
+        ])
+    }
+
     @Test func userMessagesFollowThePRDCopy() {
         #expect(AppError.unknown("x").userMessage == "Couldn't save. Try again.")
         #expect(AppError.readOnly.userMessage

@@ -6,6 +6,7 @@
 // goes to the log, and its link names the stack's internal host (kong:8000) rather than 127.0.0.1:54321.
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { errorResponse, HttpError, isUUID, json, readJSON, text } from "../_shared/http.ts";
+import { report } from "../_shared/sentry.ts";
 import { caller, rpcError, serviceClient } from "../_shared/supabase.ts";
 import { sendEmail } from "../_shared/email.ts";
 import { exportEmail, exportFailedEmail } from "../_shared/export-email.ts";
@@ -42,7 +43,7 @@ Deno.serve(async (req) => {
     else await work;
     return json({ email: data.email });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "export_csv");
   }
 });
 
@@ -65,6 +66,7 @@ async function run(db: SupabaseClient, clinicID: string, job: StartedExport) {
     await removeExpired(db, clinicID);
   } catch (error) {
     console.error("export failed", error);
+    await report({ fn: "export_csv", kind: "export_failed", error });
     await sendEmail(exportFailedEmail({ to: job.email, clinicName: job.clinic_name }))
       .catch((failure) => console.error("export failure email", failure));
   } finally {

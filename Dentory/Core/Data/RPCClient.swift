@@ -26,10 +26,12 @@ protocol RPCTransport: Sendable {
     func execute(function: String, params: [String: AnyJSON]) async throws -> Data
 }
 
-/// Adds the key, sends, decodes and maps errors to `AppError`.
+/// Adds the key, sends, decodes and maps errors to `AppError`. Each call is timed for the reporter, named after its
+/// function and ended `ok` or with the error's kind, so Sentry counts the failures and charts the durations (MS-150).
 struct SupabaseRPCClient: RPCCalling {
     let transport: RPCTransport
     var makeKey: @Sendable () -> UUID = { UUID() }
+    var reporter: ErrorReporting = NoopErrorReporter()
 
     static let idempotencyParameter = "p_idempotency_key"
 
@@ -40,9 +42,26 @@ struct SupabaseRPCClient: RPCCalling {
     ) async throws -> Result {
         var object = try Self.jsonObject(from: params)
         object[Self.idempotencyParameter] = .string((idempotencyKey ?? makeKey()).uuidString.lowercased())
+        let timing = reporter.startCall(function)
+        do {
+            let result: Result = try await send(function, params: object)
+            timing.finish(with: nil)
+            return result
+        } catch {
+            let appError = AppError(error)
+            timing.finish(with: appError)
+            throw appError
+        }
+    }
+
+    /// Sends and decodes; an answer that does not decode is `unknown`.
+    private func send<Result: Decodable & Sendable>(
+        _ function: String,
+        params: [String: AnyJSON]
+    ) async throws -> Result {
         let data: Data
         do {
-            data = try await transport.execute(function: function, params: object)
+            data = try await transport.execute(function: function, params: params)
         } catch {
             throw AppError(error)
         }

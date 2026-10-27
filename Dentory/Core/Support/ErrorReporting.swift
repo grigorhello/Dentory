@@ -6,12 +6,28 @@ protocol ErrorReporting: Sendable {
     func start()
     /// A failed RPC: the function name and the error's kind, as a breadcrumb for the next crash report.
     func record(_ error: AppError, function: String)
+    /// Starts timing one call through `SupabaseRPCClient`, which finishes it once with how it ended (MS-150).
+    func startCall(_ function: String) -> CallTiming
+}
+
+/// One timed call: Sentry gets a transaction named after the function, `ok` or failed with the error's kind, so
+/// failures can be counted and durations charted per function. Nothing of the call's parameters or answer goes.
+@MainActor
+protocol CallTiming {
+    /// nil when the call succeeded.
+    func finish(with error: AppError?)
 }
 
 /// Reports nothing; for previews, tests and builds without a DSN.
 struct NoopErrorReporter: ErrorReporting {
     func start() {}
     func record(_ error: AppError, function: String) {}
+    func startCall(_ function: String) -> CallTiming { NoopCallTiming() }
+}
+
+/// Times nothing.
+struct NoopCallTiming: CallTiming {
+    func finish(with error: AppError?) {}
 }
 
 extension AppError {

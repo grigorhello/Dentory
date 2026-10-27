@@ -1,0 +1,30 @@
+-- MS-150 · One procedure start in the load-test clinic, as `make perf-concurrency` runs it (concurrency.sh): a random
+-- member starts a random template as Adjust, then start sends it, every supply at its default and a new bottle of
+-- each multi-use one, in a transaction of its own with the member's claims, as PostgREST runs it.
+\set member random(1, 5)
+\set template random(1, 20)
+begin;
+select set_config('request.jwt.claims', json_build_object(
+  'sub', ('10ad0000-0000-4000-8000-0001' || lpad(:member::text, 8, '0'))::uuid, 'role', 'authenticated'
+)::text, true);
+select set_config('role', 'authenticated', true);
+select public.stock_procedure_start(
+  t.clinic_id,
+  t.id,
+  t.name,
+  (
+    select jsonb_agg(jsonb_build_object('product_id', i.product_id, 'qty', i.default_qty) order by i.position)
+    from public.procedure_template_items i
+    where i.template_id = t.id
+  ),
+  (
+    select coalesce(array_agg(i.product_id order by i.position), '{}')
+    from public.procedure_template_items i
+    join public.products p on p.id = i.product_id
+    where i.template_id = t.id and p.tracking = 'multi_use'
+  ),
+  gen_random_uuid()
+)
+from public.procedure_templates t
+where t.id = ('10ad0000-0000-4000-8000-0003' || lpad(:template::text, 8, '0'))::uuid;
+commit;

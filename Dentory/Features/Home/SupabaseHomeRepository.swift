@@ -5,7 +5,7 @@ import Supabase
 /// (snake_case keys); `SupabaseRowDecodingTests` decodes sample PostgREST payloads with it.
 ///
 /// One row of `clinic_attention`, the latest `procedure_events` row with its item count and starter,
-/// and `alerts_unseen` for the bell's dot.
+/// and `alerts_unseen` for the bell's dot, all asked for at once.
 struct SupabaseHomeRepository: HomeRepository {
     let client: SupabaseClient
 
@@ -38,7 +38,17 @@ struct SupabaseHomeRepository: HomeRepository {
             .value
     }
 
+    /// The procedure and the clinic's members come together, the starter being one of the members, so Home waits for
+    /// one round trip rather than a second one after the procedure (MS-150).
     private func latestProcedure(clinicID: UUID) async throws -> LatestProcedure? {
+        async let latest = latestEvent(clinicID: clinicID)
+        async let members = memberNames(clinicID: clinicID)
+        guard let event = try await latest else { return nil }
+        let names = try await members
+        return LatestProcedure(event: event, members: names)
+    }
+
+    private func latestEvent(clinicID: UUID) async throws -> HomeEventRow? {
         let events: [HomeEventRow] = try await client.from("procedure_events")
             .select("id, name, started_at, started_by, procedure_event_items(count)")
             .eq("clinic_id", value: clinicID.uuidString)
@@ -47,21 +57,16 @@ struct SupabaseHomeRepository: HomeRepository {
             .limit(1)
             .execute()
             .value
-        guard let event = events.first else { return nil }
-        let members: [HomeMemberRow] = try await client.from("memberships")
-            .select("full_name")
+        return events.first
+    }
+
+    /// Every membership of the clinic, a handful of rows, invited and removed ones included.
+    private func memberNames(clinicID: UUID) async throws -> [HomeMemberRow] {
+        try await client.from("memberships")
+            .select("user_id, full_name")
             .eq("clinic_id", value: clinicID.uuidString)
-            .eq("user_id", value: event.startedBy.uuidString)
-            .limit(1)
             .execute()
             .value
-        return LatestProcedure(
-            id: event.id,
-            name: event.name,
-            startedAt: event.startedAt,
-            supplyCount: event.procedureEventItems.first?.count ?? 0,
-            startedByFirstName: PersonName.first(of: members.first?.fullName ?? "")
-        )
     }
 
     /// An alert on the member's Alerts list that opened after their last visit to it (or any, when they never
@@ -97,5 +102,22 @@ nonisolated struct HomeCountRow: Decodable {
 }
 
 nonisolated struct HomeMemberRow: Decodable {
+    /// Null while the invitation is not accepted.
+    let userId: UUID?
     let fullName: String
+}
+
+extension LatestProcedure {
+    /// Home's procedure from its row and the clinic's members: the starter's first name, empty when their membership
+    /// is gone.
+    init(event: HomeEventRow, members: [HomeMemberRow]) {
+        let starter = members.first { $0.userId == event.startedBy }
+        self.init(
+            id: event.id,
+            name: event.name,
+            startedAt: event.startedAt,
+            supplyCount: event.procedureEventItems.first?.count ?? 0,
+            startedByFirstName: PersonName.first(of: starter?.fullName ?? "")
+        )
+    }
 }

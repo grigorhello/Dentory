@@ -150,6 +150,35 @@ struct InventoryCountTests {
         #expect(cached == [52, 2], "The next visit reads the counted figures from the cache")
     }
 
+    /// MS-150: the stock change of the count itself (`WriteCoordinator.appliedWrites`) arrives while the count is being
+    /// written and is left to the reload after the write, so Apply count reads the list once, not twice.
+    @Test func applyingACountReadsTheListOnce() async {
+        let repository = FakeInventoryRepository()
+        let viewModel = await make(repository: repository)
+        countThreeInDifferentFilters(viewModel)
+        repository.onApply = { await viewModel.stockChanged() }
+        await viewModel.applyCount()
+        #expect(repository.applies.count == 1)
+        #expect(repository.calls.count == 2, "The first load, then one for the server's status")
+        await viewModel.stockChanged()
+        #expect(repository.calls.count == 3, "A later stock change reloads")
+    }
+
+    /// A count queued offline is not followed by a reload, which would show the figures from before it: its replay is
+    /// a stock change of its own, which reloads.
+    @Test func aQueuedCountReloadsOnceReplayed() async {
+        let repository = FakeInventoryRepository()
+        let viewModel = await make(repository: repository)
+        countThreeInDifferentFilters(viewModel)
+        repository.applyResult = .success(.queued)
+        await viewModel.applyCount()
+        #expect(repository.calls.count == 1)
+        #expect(viewModel.products.first { $0.id == septocaine.id }?.quantity == 52)
+        #expect(viewModel.visibleProducts.first?.name == "Rubber dam latex-free", "Still in list order")
+        await viewModel.stockChanged()
+        #expect(repository.calls.count == 2)
+    }
+
     /// MS-147: `inv.count.review` with the corrections applied and the seconds from Count stock to Apply count, the
     /// start kept in the draft across a relaunch.
     @Test func anAppliedCountIsCountedWithItsCorrectionsAndSeconds() async {
