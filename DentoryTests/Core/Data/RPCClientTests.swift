@@ -74,7 +74,7 @@ struct RPCClientTests {
         await #expect(throws: AppError.network) {
             let _: Nothing = try await client.call("stock_count_apply", params: ["p": "x"])
         }
-        transport.response = .success(Data("[1]".utf8))
+        transport.response = .success(Data("not json".utf8))
         await #expect(throws: AppError.self) {
             let _: Nothing = try await client.call("stock_adjust", params: ["p": "x"])
         }
