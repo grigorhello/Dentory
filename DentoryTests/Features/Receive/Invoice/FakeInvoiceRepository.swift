@@ -2,8 +2,9 @@ import Foundation
 @testable import Dentory
 
 /// Review invoice's server: answers the readings it is given in turn, settles lines as the line functions do (the
-/// states a choice may leave, the server's sentences), receives the invoice as told (MS-131), records every call, and
-/// fails the way `SupabaseInvoiceRepository` does when told to.
+/// states a choice may leave, the server's sentences), receives the invoice as told (MS-131), deletes a received
+/// invoice's file as told (MS-146), records every call, and fails the way `SupabaseInvoiceRepository` does when told
+/// to.
 final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     enum Call: Equatable {
         case upload(UUID, pages: Int)
@@ -18,6 +19,7 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
         case batch(UUID, lot: String?, expiry: CalendarDay?)
         case confirm(UUID)
         case undoConfirm(UUID)
+        case deleteFile(UUID, clinic: UUID)
     }
 
     /// The action a confirmation applied answers.
@@ -46,6 +48,10 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     /// Runs inside `confirm`, before it answers.
     var duringConfirm: (@Sendable () async -> Void)?
     var undoError: Error?
+    /// What `deleteFile` answers: the invoice as the server then has it, or a failure.
+    var fileDeletion: Result<InvoiceSummary, Error> = .failure(AppError.notFound)
+    /// Runs inside `deleteFile`, before it answers.
+    var duringFileDeletion: (@Sendable () async -> Void)?
 
     var calls: [Call] { lock.withLock { recorded } }
 
@@ -94,6 +100,14 @@ final class FakeInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     func undoConfirm(actionID: UUID) async throws {
         record(.undoConfirm(actionID))
         if let undoError { throw undoError }
+    }
+
+    // MARK: - The file
+
+    func deleteFile(invoiceID: UUID, clinicID: UUID) async throws -> InvoiceSummary {
+        record(.deleteFile(invoiceID, clinic: clinicID))
+        await duringFileDeletion?()
+        return try fileDeletion.get()
     }
 
     // MARK: - Lines

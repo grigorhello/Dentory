@@ -2,6 +2,8 @@
 
 Ticket MS-151 (#122), run on 2026-10-26 against the default branch at `ef1fd7c` (everything merged up to MS-136's audit fixes, #207). Line numbers below are those of `ef1fd7c` unless a line says it points at this PR's code. The fixes are in the same pull request as this report.
 
+MS-146 (#208) merged during the review. Its `20261021120000_invoice_file_delete.sql` was read against the same rules: `invoice_file_delete` is security definer on an empty search path, revoked from public and anon, and it checks for an admin of a clinic that may write and a received invoice. `46_…` passes with it.
+
 ## Result
 
 One high finding: an admin could forge an invitation token and use it to set the password of another person's account. It is fixed, with tests. One medium finding, the direct writes to a clinic's settings that #122's note describes, is fixed too. Of the eleven low findings, six are fixed, four are accepted with their reasons, and one is a recommended app follow-up. The hosted projects' settings that no code can set are listed under "Open items for Grigor".
@@ -13,7 +15,7 @@ One high finding: an admin could forge an invitation token and use it to set the
 | F3 | Low | Without `RESEND_API_KEY`, a hosted project's function log would hold invitation links, export download links and addresses | Fixed |
 | F4 | Low | A password reset link replaces the session on the device as soon as it opens, and Set a new password names no account | Open, follow-up recommended |
 | F5 | Low | Staff could read their clinic's billing columns (Stripe ids, promotion, billing emails) | Fixed |
-| F6 | Low | Invitations had no limit: any admin, so anyone who signs up, could send unlimited emails from dentory.ca | Fixed |
+| F6 | Low | Invitations had no limit: any admin, so anyone who signs up, could send unlimited emails from dentory.ca | Fixed (30 an hour per clinic, 3 per clinic to one address) |
 | F7 | Low | Sentry recorded every request's address and each 5xx request, whatever the app's own breadcrumb rule said | Fixed |
 | F8 | Low | The anon key could execute six functions it never needs | Fixed |
 | F9 | Low | Auth settings: the hosted projects' password length, password change and email limits are dashboard settings | Local fixed, hosted open |
@@ -28,7 +30,12 @@ One high finding: an admin could forge an invitation token and use it to set the
   - the database (all 38 migrations, each object judged by its last definition, the seed files and `config.toml`);
   - the Edge Functions, the email templates, `applinks/` and `site/`;
   - the app, `project.yml`, `Config/`, the CI workflows, the `Makefile` and the git history, for secrets.
-- **A false-positive pass per candidate**, with the skill's exclusions and precedents. Only F1 scored 8 or more out of 10 and so counts as a confirmed vulnerability under the skill's rules (10/10). The others scored 2 to 5, as hardening or as conditions an attacker cannot bring about. They are kept here because the ticket asks for each item it lists, or because the fix is cheap.
+- **A false-positive pass per candidate**, with the skill's exclusions and precedents. Only F1 scored 8 or more out of 10, so it alone counts as a confirmed vulnerability under the skill's rules (10/10). F3, F4, F5, F10 and F11 scored 2 to 5, as hardening or as conditions an attacker cannot bring about.
+- **Where the rest came from.**
+  - F2 is #122's note, and running it on the database found the second way in.
+  - F6 to F9, F12 and F13 came from the passes' notes and from checking the ticket's items one by one.
+
+  They are kept here because the ticket asks for each item it lists, or because the fix is cheap.
 - **The ticket's checklist**, verified item by item (below), with the note on #122 from the MS-139 review.
 - **The database checks ran on a local database.** MS-146's builder held the shared stack, so this ran as a database of its own (the same `supabase db start`, `db reset` and `test db` as `make db-reset db-test`, with another project id and ports), then again after `seed-demo.sql`. It covered the pgTAP suite, the time zone case of F2, and the grants and functions the checklist cites.
 
@@ -79,6 +86,7 @@ One high finding: an admin could forge an invitation token and use it to set the
   - a clinic made on an unknown zone keeps UTC, and the nightly refresh runs beside it, its out-of-stock product included.
 
   `05_access_test.sql` and `30_read_only_test.sql` use the logo path where they renamed the clinic directly.
+- **Still true.** `refresh_all_products()` refreshes every clinic in one transaction with no exception handling per product. F2 closes the time zone ways in, but any other row a refresh cannot evaluate would still stop it for everyone. Running each clinic on its own is worth a later ticket.
 
 ### F3 · Links in a hosted project's function log (Low, fixed)
 
@@ -118,7 +126,8 @@ One high finding: an admin could forge an invitation token and use it to set the
 
 - **Where.** `invitation_create` (`20261019020000_invitations.sql:34-117`) had no limit. Each call is an email from dentory.ca carrying the clinic's and the inviter's names, and anyone can open a clinic.
 - **Fix** (F6).
-  - At most 30 invitations an hour per clinic, resends included, and 3 an hour to one address, recorded in `public.invitation_sends`. The table has row level security and no grants; the function forgets each row after the hour.
+  - At most 30 invitations an hour per clinic, resends included, and 3 an hour per clinic to one address, recorded in `public.invitation_sends`. The table has row level security and no grants; the function forgets each row after the hour.
+  - Counting one address across clinics would tell one clinic that another had just invited that person, so several clinics can each send it 3. Sign-up's own rate limit bounds how many clinics one person opens.
   - The refusals are "Your clinic sent 30 invitations in the last hour. Try again in an hour." and "This address got 3 invitations in the last hour. Try again in an hour." They show under the email field in the invite sheet and in sign-up's third step.
 - **Tests.** `47_security_review_test.sql`: the 31st and the 4th refused, a refusal leaving no record, other addresses still invited, and an hour later the clinic invites again.
 
@@ -146,7 +155,7 @@ One high finding: an admin could forge an invitation token and use it to set the
 
   The hosted projects keep their own values, set in the dashboard.
 - **Fix.** The local stack asks for 8 characters too. The hosted settings are open items below.
-- **Accepted.** Without email confirmation, sign-up says when an address already has an account, and anyone can register an address they do not own. The owner of the address takes the account back with a password reset.
+- **Accepted.** Without email confirmation, sign-up says when an address already has an account, and anyone can register an address they do not own. The owner of the address takes the account back with a password reset. But if the squatter opened a clinic with it, the account is active there: the real owner's invitation to their own clinic is refused ("This account belongs to another clinic"), and a reset does not free the address. Support then removes that membership by hand.
 
 ### F10 · Tokens over the `dentory://` scheme (Low, accepted for now)
 
@@ -194,7 +203,7 @@ One high finding: an admin could forge an invitation token and use it to set the
 | No PII in analytics | Yes | Events are Appendix B ids with counts, yes or no, and words from closed lists (`Dentory/Core/Analytics/AnalyticsEvent.swift`). `AnalyticsEventTests.noPayloadCarriesFreeText` fails the build otherwise. `identify` sends the user's UUID, role and clinic UUID (`PostHogAnalytics.swift:47-61`). Autocapture, screen views, replay, surveys and GeoIP are off (`:26-45`). As `docs/handoff/analytics.md` says. |
 | Edge Functions' auth checks | Each function checks its caller | `invite_member`, `export_csv` and `extract_invoice`: the gateway verifies the JWT, then `caller()` (`_shared/supabase.ts:33-43`), and the SQL function checks the caller is an admin of the clinic or invoice. `billing_checkout` and `billing_portal` (`_shared/billing.ts:26`), `send_push` (`index.ts:25`) and `send_digest` (`index.ts:24`): the bearer must be the service role key, compared in constant time (`_shared/supabase.ts:20-25`, `_shared/http.ts:58-63`). `stripe_webhook`: the Stripe signature. `accept_invitation`: the invitation token, which F1 makes trustworthy. `health`: answers `{ ok: true }` only. |
 | `extract_invoice` replay seam | Never on a hosted project | `modelCallFor` (`extract_invoice/replay.ts:33-41`) replays only without `ANTHROPIC_API_KEY`, and only when `SUPABASE_URL`'s host is the local gateway `kong` (`isLocalStack`, now `_shared/environment.ts`). Neither comes from the request, and Supabase keeps `SUPABASE_` names to itself. `replay_test.ts` holds the 11 cases. |
-| Security definer functions: `search_path` and grants | All on an empty search path; each callable one checks its caller | All 77 security definer functions in `public` and `engine` set `search_path = ''` and name their objects with their schema; `46_…` fails CI otherwise. Of the 35 that `authenticated` may call, 33 check membership or the admin role of the clinic they touch (the `stock_*`, `bottle_*`, `batch_upsert` and `undo_action` functions through `engine.assert_member`, the invoice lines through `engine.invoice_line_for_review`). The other two are `clinic_can_write`, a yes or no about a clinic id, and `invitation_lookup`, which needs the token. The service-role ones (invitations, billing, push, digest, export, reading) are revoked from public, anon and authenticated. The `engine` schema is out of reach of the API roles, and so is Vault, which holds the service role key for the cron jobs (`46_…`). Supabase's own schemas (`net`, `realtime`, `supabase_functions`, `extensions`) give the API roles rights on some tables and views without RLS. The Data API serves only `public` and `graphql_public`, so no request reaches them, and the platform keeps them. |
+| Security definer functions: `search_path` and grants | All on an empty search path; each callable one checks its caller | All 77 security definer functions in `public` and `engine` set `search_path = ''` and name their objects with their schema; `46_…` fails CI otherwise. Of the 35 that `authenticated` may call (before MS-146's `invoice_file_delete`, which checks an admin too), 26 check membership or the admin role of the clinic they touch (the `stock_*`, `bottle_*`, `batch_upsert` and `undo_action` functions through `engine.assert_member`, the invoice lines through `engine.invoice_line_for_review`); 7 work on the caller alone, through `auth.uid()` (`clinic_create`, `membership_state`, `push_token_register`, `current_clinic_ids`, `current_role_in`, `is_member`, `is_admin`); and 2 need neither: `clinic_can_write`, a yes or no about a clinic id, and `invitation_lookup`, which needs the token. The service-role ones (invitations, billing, push, digest, export, reading) are revoked from public, anon and authenticated. The `engine` schema is out of reach of the API roles, and so is Vault, which holds the service role key for the cron jobs (`46_…`). Supabase's own schemas (`net`, `realtime`, `supabase_functions`, `extensions`) give the API roles rights on some tables and views without RLS. The Data API serves only `public` and `graphql_public`, so no request reaches them, and the platform keeps them. |
 
 ## Open items for Grigor
 
@@ -212,11 +221,11 @@ Settings no repository change can make, on staging now and on prod when it exist
    - `supabase db push`;
    - deploy again every function this PR touches: `invite_member`, `export_csv`, `extract_invoice`, `stripe_webhook --no-verify-jwt` and `send_digest --no-verify-jwt`.
 
-   This PR's migration sorts after every merged one. If MS-146's `20261021120000_invoice_file_delete.sql` merges after it, staging takes that one with `--include-all`.
+   MS-146's `20261021120000_invoice_file_delete.sql` merged first and sorts before this PR's `20261021130000`, so staging takes both with a plain `supabase db push`.
 
 ## Not covered
 
 - The hosted projects themselves: their dashboard settings, the API keys in use, and the network restrictions.
 - Supabase's own services and the third-party SDKs' code, beyond the options the app sets.
 - The App Store binary, and the marketing site's future sign-up form endpoint (`site/index.html` still posts to a placeholder).
-- Load and denial of service, which the skill excludes.
+- Load testing, and denial of service beyond F2's time zone case, which the skill excludes.

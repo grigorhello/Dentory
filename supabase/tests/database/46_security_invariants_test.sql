@@ -28,7 +28,8 @@ $$;
 -- This project's own schemas that the API roles may use. Postgres's (pg_catalog, information_schema, the temporary
 -- ones), Supabase's (owned by supabase_admin: auth, storage, realtime, net, graphql, graphql_public, supabase_functions,
 -- vault) and the extensions' are left out, since the platform keeps them; of those the Data API serves graphql_public
--- alone, checked with public above, and Storage's tables are checked below.
+-- alone, checked with public above, and Storage's tables are checked below. The schemas the API serves are always
+-- checked, even one an extension was installed into.
 create function pg_temp.reachable(p_schema oid) returns boolean language sql as $$
   select (has_schema_privilege('anon', p_schema, 'usage') or has_schema_privilege('authenticated', p_schema, 'usage'))
     and n.nspname !~ '^pg_' and n.nspname <> 'information_schema'
@@ -55,7 +56,8 @@ select is(
     select format('%I.%I', n.nspname, c.relname)
     from pg_catalog.pg_class c
     join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-    where c.relkind in ('r', 'p') and pg_temp.reachable(n.oid)
+    where c.relkind in ('r', 'p')
+      and (n.nspname in (select a.schema_name from api_schemas a) or pg_temp.reachable(n.oid))
       and (pg_temp.holds_any('anon', c.oid) or pg_temp.holds_any('authenticated', c.oid))
       and not c.relrowsecurity
     order by 1
@@ -68,7 +70,8 @@ select is(
     select format('%I.%I', n.nspname, c.relname)
     from pg_catalog.pg_class c
     join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-    where c.relkind in ('v', 'm') and pg_temp.reachable(n.oid)
+    where c.relkind in ('v', 'm')
+      and (n.nspname in (select a.schema_name from api_schemas a) or pg_temp.reachable(n.oid))
       and (pg_temp.holds_any('anon', c.oid) or pg_temp.holds_any('authenticated', c.oid))
       and not exists (select 1 from unnest(c.reloptions) o where o ~* '^security_invoker=(true|on|yes|1)$')
     order by 1

@@ -3,9 +3,9 @@ import SwiftUI
 /// Review invoice (f23, f38), Admin only, pushed by Receive delivery for pages just captured or an invoice to continue
 /// reviewing, and by Activity's delivery alert: the reading state, then the read header with the banner and the lines
 /// to review over Confirm & receive (MS-130, MS-131), a received delivery's lines read-only under when and by whom it
-/// was received, or what went wrong with a way on. The header's "…" menu discards the invoice. Receive manually, Try
-/// again for an upload, the lines' choices, Confirm & receive and Discard invoice are writes, so in read-only mode the
-/// sheet says why instead (MS-142).
+/// was received, or what went wrong with a way on. The header's "…" menu discards the invoice, or deletes a received
+/// invoice's file (MS-146). Receive manually, Try again for an upload, the lines' choices, Confirm & receive, Discard
+/// invoice and Delete invoice file are writes, so in read-only mode the sheet says why instead (MS-142).
 struct InvoiceView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -39,6 +39,7 @@ struct InvoiceView: View {
             .msSheet(isPresented: $viewModel.isConfirmingDiscard) {
                 DiscardInvoiceSheet(viewModel: viewModel)
             }
+            .invoiceFileDeletion(viewModel, session: session)
             .onChange(of: viewModel.discarded) { _, discarded in leave(after: discarded) }
             .onChange(of: viewModel.generalError) { _, error in show(error) }
     }
@@ -71,7 +72,7 @@ struct InvoiceView: View {
             if let review = viewModel.review {
                 InvoiceReviewView(
                     viewModel: review, banner: viewModel.banner, receivedNotice: viewModel.receivedNotice,
-                    session: session
+                    fileNotice: viewModel.fileNotice, session: session
                 )
             }
         case .closed:
@@ -79,15 +80,26 @@ struct InvoiceView: View {
         }
     }
 
-    /// The "…" menu with Discard invoice, once there is an invoice to discard.
+    /// The "…" menu, once it has something to do.
     private var menu: IconMenu? {
-        guard viewModel.canDiscard else { return nil }
-        return IconMenu(.ellipsis, label: InvoiceViewModel.menuLabel, identifier: "invoice.menu", items: [
-            IconMenu.Item(
+        guard let menuItem else { return nil }
+        return IconMenu(.ellipsis, label: InvoiceViewModel.menuLabel, identifier: "invoice.menu", items: [menuItem])
+    }
+
+    /// Discard invoice once there is an invoice to discard; Delete invoice file on a received invoice that still has
+    /// its file (MS-146).
+    private var menuItem: IconMenu.Item? {
+        if viewModel.canDiscard {
+            return IconMenu.Item(
                 title: InvoiceViewModel.discardTitle, identifier: "invoice.menu.discard", isDestructive: true,
                 perform: askToDiscard
             )
-        ])
+        }
+        guard viewModel.canDeleteFile else { return nil }
+        return IconMenu.Item(
+            title: InvoiceViewModel.deleteFileTitle, identifier: "invoice.menu.deleteFile", isDestructive: true,
+            perform: askToDeleteFile
+        )
     }
 
     /// The reading state's link: the invoice is set aside, then Receive manually opens (PRD §6.5).
@@ -125,6 +137,11 @@ struct InvoiceView: View {
     /// Discard invoice in the menu is a write: in read-only mode the sheet says why instead (MS-142).
     private func askToDiscard() {
         writeAccess.perform(viewModel.askToDiscard)
+    }
+
+    /// So is Delete invoice file (MS-146).
+    private func askToDeleteFile() {
+        writeAccess.perform(viewModel.askToDeleteFile)
     }
 
     /// A discard that failed, as a toast; the question stays for another try.
