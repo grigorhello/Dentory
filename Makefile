@@ -21,8 +21,8 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
-.PHONY: project build test uitest e2e lint db-start db-stop db-reset db-test seed-demo functions-serve functions-check \
-	invite-links invoice-reading-live
+.PHONY: project build test uitest e2e lint db-start db-stop db-reset db-test seed-demo seed-load perf-report \
+	perf-concurrency functions-serve functions-check invite-links invoice-reading-live
 
 project:
 	xcodegen generate
@@ -77,6 +77,11 @@ db-test:
 DB_CONTAINER ?= supabase_db_Dentory
 seed-demo:
 	docker exec -i $(DB_CONTAINER) psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -o /dev/null < supabase/seed-demo.sql
+
+# The load-test clinic of MS-150 (500 products, about 5,000 ledger rows over six months) beside the demo clinic or on its
+# own; run it right after db-reset (or after seed-demo). Local stack only.
+seed-load:
+	docker exec -i $(DB_CONTAINER) psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -o /dev/null < supabase/seed-load.sql
 
 functions-serve:
 	supabase functions serve
