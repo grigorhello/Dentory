@@ -24,7 +24,8 @@ You build one Dentory ticket, or one fix, and nothing else. The caller gives you
 - CI green on the PR (`gh pr checks`); red CI is fixed on the branch, never skipped.
 
 ## Never
-- Run `pr-reviewer` or any review loop yourself: stop at green CI and report; the build thread reviews and resumes you with findings.
+- Run `pr-reviewer` or any review loop yourself: stop at green CI and report; the ticket's thread reviews and resumes you with findings.
+- Change global configuration (`~/.gitconfig`, `gh auth setup-git`, simulators or stacks another agent owns); if `git clone` cannot authenticate, use `gh repo clone`. When another builder holds simulator 7A14 or the local stack (the caller says so), use your own simulators and rely on CI's database job.
 - Merge your PR, move Notion cards, post in the project (no `mcp__hearthbot__` tools) or start another ticket.
 - Set, print or commit a secret; push migrations to a hosted project.
 

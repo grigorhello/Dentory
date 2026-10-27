@@ -3,17 +3,17 @@
 Dental inventory app for small clinics: iPhone and iPad, two roles (Admin, Staff). Spec: `design/PRD-v1.1.md` and `design/frames/`. Process, build state and product knowledge: `docs/handoff/` (start with its README); the reasons behind the rules below are in `docs/handoff/engineering-process.md`.
 
 ## Tickets
-- Each ticket runs in a fresh context: the build thread starts a `ticket-builder` agent (`.claude/agents/ticket-builder.md`) per ticket or fix and keeps only the coordination itself.
+- One project thread per ticket or fix (Grigor, 2026-10-27): the coordinator opens it; the ticket's thread starts a `ticket-builder` agent (`.claude/agents/ticket-builder.md`), runs the review loop and the after-merge steps, records the result in `docs/handoff/build-state.md` and resolves. The next ticket starts in a new thread, from `build-state.md`'s "Next".
 - Follow the `dentory-ios` skill for every ticket; `swiftui-pro` reviews SwiftUI code, `swift-concurrency` fixes concurrency errors.
 - Tickets are GitHub issues `MS-1NN · …`, built in [`docs/BUILD-ORDER.md`](docs/BUILD-ORDER.md) order. Never start one while a blocker is open.
 - Read the ticket's frames (`design/frames/fNN.png`), prototype screen key and PRD section before coding. MS-100 (#71) overrides the PRD; where it is silent, layout and copy follow the frame and business rules follow the PRD.
 - PRD Appendix B element ids (`procDetail.start`) are used verbatim as `.accessibilityIdentifier` and analytics event names.
 - One branch and one PR per ticket; the body says `Closes #N` (`Refs #N` for a fix to a closed ticket).
-- The build thread runs the review loop, never the builder: once CI has finished it runs the `pr-reviewer` agent, which squash-merges when nothing blocks. On `CHANGES_REQUESTED` it resumes the ticket's builder, which fixes every finding on the same branch, pushes and waits for CI, and then runs the reviewer again. After 2 rounds without a merge, or on `NEEDS_OWNER`, stop and ask Grigor. A re-run only because another PR merged first does not count as a round.
+- The ticket's thread runs the review loop, never the builder: once CI has finished it runs the `pr-reviewer` agent, which squash-merges when nothing blocks. On `CHANGES_REQUESTED` it resumes the ticket's builder, which fixes every finding on the same branch, pushes and waits for CI, and then runs the reviewer again. After 2 rounds without a merge, or on `NEEDS_OWNER`, stop and ask Grigor. A re-run only because another PR merged first does not count as a round.
 - After a merge: move the ticket's Notion card to Feature QA, fast-forward the Mac checkout (`/usr/bin/git -C /Users/grigorgrigoryan/Documents/Personal/Dentory merge --ff-only origin/claude/project-thread-ocu7tf` after a fetch; nothing is built or edited there), and delete the builder's scratch directory. `docs/handoff/build-state.md` gets the merged row in the next PR.
 
 ## Models
-- Opus 5.5 (`claude-opus-5-5`) builds: the build thread and `ticket-builder`. Sonnet 5.5 (`claude-sonnet-5-5`) reviews: `pr-reviewer`.
+- Opus 5.5 (`claude-opus-5-5`) builds: the ticket threads and `ticket-builder`. Sonnet 5.5 (`claude-sonnet-5-5`) reviews: `pr-reviewer`.
 - Fable 5.1 (`claude-fable-5-1`) only for a product decision the PRD and MS-100 leave open, or a ticket judged too hard for Opus: say so in the thread, then run that work as an Agent call with `model: "fable"`. The thread itself switches model only when Grigor asks.
 - Pass the model on every Agent call too (`"opus"` for `ticket-builder`, `"sonnet"` for `pr-reviewer`), so a definition the session loaded before a change still runs on the right model.
 
