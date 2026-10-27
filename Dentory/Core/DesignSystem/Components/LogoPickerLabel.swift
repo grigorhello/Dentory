@@ -2,11 +2,16 @@ import SwiftUI
 import UIKit
 
 /// The clinic logo's picker label: the 72 pt tap-to-upload placeholder of f3 with its picture icon, or the chosen
-/// image, beside "Clinic logo" and a hint (sign-up's, or Clinic settings' "Tap to replace.").
+/// image, beside "Clinic logo" and a hint (sign-up's, or Clinic settings' "Tap to replace."). The picker that holds it
+/// is labelled "Clinic logo" and gives VoiceOver the same hint (MS-149).
 struct LogoPickerLabel: View {
+    /// Sign-up's hint (f3). Nonisolated, so the default below keeps the initializer callable from the picker's
+    /// Sendable label closure.
+    nonisolated static let uploadHint = "Tap to upload. Optional, square works best."
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let logoData: Data?
-    var hint = "Tap to upload. Optional, square works best."
+    var hint = LogoPickerLabel.uploadHint
 
     var body: some View {
         HStack(spacing: Spacing.lg) {

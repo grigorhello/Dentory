@@ -69,7 +69,7 @@ struct MSPicker<Value: Hashable & Sendable>: View {
                 .contentShape(Rectangle())
             }
             .accessibilityLabel(label ?? placeholder)
-            .accessibilityValue(selection.map(title) ?? "")
+            .accessibilityValue(spokenValue)
             .accessibilityIdentifier(identifier ?? "")
             if let error {
                 Text(error).textStyle(.caption12).foregroundStyle(Color.ms.danger)
@@ -77,6 +77,13 @@ struct MSPicker<Value: Hashable & Sendable>: View {
                 Text(hint).textStyle(.caption12).foregroundStyle(Color.ms.textSecondary)
             }
         }
+    }
+
+    /// The choice, or while there is none the placeholder the box shows ("Select a reason"), as `MSSelectField` and
+    /// `MSMonthField` say theirs (MS-149). Without a label the placeholder is already the label.
+    private var spokenValue: String {
+        if let selection { return title(selection) }
+        return label == nil ? "" : placeholder
     }
 
     private var borderColor: Color {

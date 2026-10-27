@@ -64,6 +64,7 @@ struct ClinicSettingsView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Clinic logo")
+        .accessibilityHint(logoHint)
         .accessibilityIdentifier("settings.logo")
         MSTextField(
             "Clinic name", text: $viewModel.name, identifier: "settings.clinicName", placeholder: "Smile Dental",

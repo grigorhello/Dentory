@@ -195,6 +195,7 @@ private struct OnboardingClinicStep: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Clinic logo")
+        .accessibilityHint(LogoPickerLabel.uploadHint)
         .accessibilityIdentifier("onboard.logo")
         MSTextField(
             "Clinic name", text: $viewModel.clinicName, identifier: "onboard.clinicName",
