@@ -44,10 +44,8 @@ struct AcceptInvitationView: View {
                     .accessibilityIdentifier("invite.retry")
                 }
             }
-            .padding(.horizontal, Spacing.page)
             .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .contentColumn()
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.ms.canvas)
@@ -122,7 +120,7 @@ private struct InvitationFields: View {
         MSReadOnlyField("Email", value: invitation.email, identifier: "invite.email")
         MSTextField(
             "Password", text: $viewModel.password, identifier: "invite.password",
-            placeholder: "At least 8 characters", error: viewModel.passwordError,
+            placeholder: NewPassword.requirement, hint: viewModel.passwordHint, error: viewModel.passwordError,
             isSecure: true, contentType: .newPassword
         )
         .focused($focus, equals: .password)

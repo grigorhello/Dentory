@@ -42,11 +42,9 @@ struct PinnedPrimaryBar<Button: View>: View {
                 }
                 button()
             }
-            .padding(.horizontal, Spacing.page)
             .padding(.top, Spacing.md)
             .padding(.bottom, Spacing.sm)
-            .frame(maxWidth: PageLayout.contentMaxWidth)
-            .frame(maxWidth: .infinity)
+            .contentColumn()
         }
         .background(Color.ms.surfacePage)
     }

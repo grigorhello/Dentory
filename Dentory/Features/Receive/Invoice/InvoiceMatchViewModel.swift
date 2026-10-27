@@ -61,9 +61,8 @@ final class InvoiceMatchViewModel {
     func caption(for product: ReceivableProduct) -> String {
         let stock = switch product.tracking {
         case .countable: formatters.quantity(product.quantity, unit: product.unit)
-        case .multiUse: "\(formatters.number(product.unopened)) unopened\u{00A0}· \(product.openCount) open"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened\(Caption.separator)\(product.openCount) open"
         }
-        guard let category = product.categoryName, !category.isEmpty else { return stock }
-        return "\(category)\u{00A0}· \(stock)"
+        return Caption.joined(product.categoryName, stock)
     }
 }

@@ -23,10 +23,8 @@ struct SetPasswordView: View {
                 OfflineBannerHost()
                 content
             }
-            .padding(.horizontal, Spacing.page)
             .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .contentColumn()
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.ms.canvas)
@@ -114,7 +112,8 @@ private struct SetPasswordFields: View {
             "New password",
             text: $viewModel.password,
             identifier: "setPassword.password",
-            placeholder: "At least 8 characters",
+            placeholder: NewPassword.requirement,
+            hint: viewModel.passwordHint,
             error: viewModel.passwordError,
             trailingIcon: viewModel.isPasswordShown ? .eyeOff : .eye,
             trailingAction: .init(

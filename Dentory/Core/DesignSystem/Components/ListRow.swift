@@ -97,7 +97,7 @@ struct ListRowValue: View {
 }
 
 extension ListRow where Trailing == StatusBadge {
-    /// A row whose right side is a status badge.
+    /// A row whose right side is a status badge, the small one the Inventory rows draw (f16, f17, f19).
     init(
         _ title: String,
         caption: String? = nil,
@@ -107,7 +107,7 @@ extension ListRow where Trailing == StatusBadge {
         showsDivider: Bool = true
     ) {
         self.init(title, caption: caption, captionTone: captionTone, navigates: navigates, showsDivider: showsDivider) {
-            StatusBadge(badge)
+            StatusBadge(badge, size: .small)
         }
     }
 }

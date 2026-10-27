@@ -28,10 +28,9 @@ extension ManualReceiveViewModel {
     func stockLine(for product: ReceivableProduct) -> String {
         let stock = switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
-        case .multiUse: "\(formatters.number(product.unopened)) unopened\u{00A0}· \(product.openCount) open"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened\(Caption.separator)\(product.openCount) open"
         }
-        guard let category = product.categoryName, !category.isEmpty else { return stock }
-        return "\(category)\u{00A0}· \(stock)"
+        return Caption.joined(product.categoryName, stock)
     }
 
     /// What the quantity does (f24, PRD §6.5): "Current 1 → after 5 kits"; with a pack, the conversion first,
@@ -52,7 +51,7 @@ extension ManualReceiveViewModel {
         }
         let change = "Current \(formatters.number(product.currentStock)) → after \(afterText)"
         guard product.pack != nil else { return change }
-        return "\(conversion(of: quantity, for: product))\u{00A0}· \(change)"
+        return "\(conversion(of: quantity, for: product))\(Caption.separator)\(change)"
     }
 
     /// What Choose product says over an empty list: nothing matches the search, the clinic has no products yet, or they

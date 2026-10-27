@@ -1,19 +1,11 @@
 import SwiftUI
 
-/// Caps content at 720 pt and centres it (PRD §7, iPad f36). Every screen's content sits in one.
-struct ContentColumn<Content: View>: View {
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        content()
-            .frame(maxWidth: PageLayout.contentMaxWidth)
-            .frame(maxWidth: .infinity)
-    }
-}
-
 extension View {
-    /// Wraps the view in a `ContentColumn`.
-    func contentColumn() -> some View {
-        ContentColumn { self }
+    /// The content column of every screen (PRD §7): 720 pt at most inside the 20 pt page gutter, centred on a wide
+    /// screen, as f36 to f38 draw it on an iPad. On a phone the gutter alone sets the width.
+    func contentColumn(alignment: Alignment = .leading) -> some View {
+        frame(maxWidth: PageLayout.contentMaxWidth, alignment: alignment)
+            .padding(.horizontal, Spacing.page)
+            .frame(maxWidth: .infinity)
     }
 }

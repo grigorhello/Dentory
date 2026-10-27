@@ -28,7 +28,7 @@ struct ProcedureTakenNewRow: View {
                     .foregroundStyle(Color.ms.primary)
                     .frame(width: ControlHeight.hitTarget * 3)
                     .accessibilityIdentifier("\(identifier).value")
-                IconButton(.x, label: "Remove \(name)", variant: .quiet, action: onRemove)
+                IconButton(.x, label: "Remove \(name)", variant: .quiet, size: .row, action: onRemove)
                     .accessibilityIdentifier("\(identifier).remove")
             }
             .padding(.vertical, Spacing.md)

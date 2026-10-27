@@ -37,7 +37,7 @@ struct ProcedureTemplateRow: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier(identifier)
-                IconButton(.pencil, label: "Edit \(template.name)", variant: .quiet, action: onEdit)
+                IconButton(.pencil, label: "Edit \(template.name)", variant: .quiet, size: .row, action: onEdit)
                     .accessibilityIdentifier("\(identifier).edit")
                     .adminOnly()
             }

@@ -12,7 +12,7 @@ struct ReviewCountRow: View {
     private var identifier: String { "reviewCount.row[\(product.id.uuidString.lowercased())]" }
 
     var body: some View {
-        ListRow(product.name, caption: product.location, showsDivider: showsDivider) {
+        ListRow(product.name, caption: product.location.map(Caption.attached), showsDivider: showsDivider) {
             Text(change)
                 .textStyle(.bodyStrong14)
                 .monospacedDigit()

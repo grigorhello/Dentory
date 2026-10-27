@@ -43,7 +43,7 @@ final class CountStockUITests: XCTestCase {
         let gap = app.descendants(matching: .any)["tabBar"].frame.minY - review.frame.maxY
         XCTAssertGreaterThanOrEqual(gap, 0, "The tab bar covers Review")
         XCTAssertLessThan(gap, 40, "Review floats \(gap) pt above the tab bar")
-        let subLine = app.staticTexts["est. 54 cartridges\u{00A0}· Operatory 1 · Drawer A"]
+        let subLine = app.staticTexts["est. 54 cartridges\u{00A0}· Operatory 1\u{00A0}· Drawer A"]
         XCTAssertTrue(subLine.exists, "The sub-line is not f18's")
 
         app.buttons["Low"].tap()
@@ -59,7 +59,7 @@ final class CountStockUITests: XCTestCase {
         XCTAssertEqual(stepper("value", of: septocaine, in: app).label, "52")
 
         app.buttons["Expiring"].tap()
-        let bondingLine = app.staticTexts["Count unopened only\u{00A0}· Operatory 1 · Drawer C"]
+        let bondingLine = app.staticTexts["Count unopened only\u{00A0}· Operatory 1\u{00A0}· Drawer C"]
         XCTAssertTrue(bondingLine.waitForExistence(timeout: 3))
         stepper("inc", of: bonding, in: app).tap()
         XCTAssertEqual(stepper("value", of: bonding, in: app).label, "1")

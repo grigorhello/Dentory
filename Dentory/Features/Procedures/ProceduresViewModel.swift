@@ -108,7 +108,7 @@ final class ProceduresViewModel {
     func historyLine(for event: ProcedureEventSummary) -> String {
         let firstName = PersonName.first(of: event.startedByName)
         let parts = [event.cancelledAt == nil ? nil : "Cancelled", formatters.dateTime(event.startedAt), firstName]
-        return parts.compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: "\u{00A0}· ")
+        return Caption.joined(parts)
     }
 
     /// The note under the templates (f11, f12): what Start does, and who edits the templates.

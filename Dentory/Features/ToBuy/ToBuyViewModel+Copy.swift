@@ -28,14 +28,13 @@ extension ToBuyViewModel {
     func line(for item: ToBuyItem) -> String {
         let main = switch item.status {
         case .toBuy:
-            "Current \(formatters.number(item.quantity))\u{00A0}· target \(formatters.number(item.target))"
+            "Current \(formatters.number(item.quantity))\(Caption.separator)target \(formatters.number(item.target))"
         case .ordered:
             "\(formatters.number(item.buyQuantity)) ordered \(item.orderedAt.map(formatters.monthDay) ?? "")"
         case .received:
             "Received \(item.receivedAt.map(formatters.monthDay) ?? "")"
         }
-        guard let supplier = item.supplier, !supplier.isEmpty else { return main }
-        return "\(main)\u{00A0}· \(supplier)"
+        return Caption.joined(main, item.supplier)
     }
 
     /// "3 of 3 selected".
@@ -58,10 +57,11 @@ extension ToBuyViewModel {
     func addedMessage(_ added: AddedToBuy, product: ProductSummary) -> Message {
         let quantity = formatters.quantity(added.qty, unit: product.unit)
         guard added.created else {
-            return Message(title: "Already on To buy", detail: "\(product.name)\u{00A0}· \(quantity)", undoItemID: nil)
+            return Message(title: "Already on To buy", detail: Caption.joined(product.name, quantity), undoItemID: nil)
         }
         return Message(
-            title: "Added to To buy", detail: "\(product.name)\u{00A0}· suggested \(quantity)", undoItemID: added.id
+            title: "Added to To buy", detail: Caption.joined(product.name, "suggested \(quantity)"),
+            undoItemID: added.id
         )
     }
 
@@ -69,7 +69,7 @@ extension ToBuyViewModel {
     func addCaption(for product: ProductSummary) -> String {
         switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
-        case .multiUse: "\(formatters.number(product.unopened)) unopened\u{00A0}· \(product.openCount) open"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened\(Caption.separator)\(product.openCount) open"
         }
     }
 

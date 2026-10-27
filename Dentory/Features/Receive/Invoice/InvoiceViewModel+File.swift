@@ -30,6 +30,6 @@ extension InvoiceViewModel {
         let parts = [
             Self.fileDeletedTitle, formatters.dateTime(deletedAt), invoice.fileDeletedByName.map(PersonName.first(of:))
         ]
-        return parts.compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: "\u{00A0}· ")
+        return Caption.joined(parts)
     }
 }

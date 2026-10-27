@@ -54,8 +54,8 @@ struct CatalogTypeSection: View {
         switch style {
         case .display48: "$12,420"
         case .display32: "Smile Dental"
-        case .title24: "Review invoice"
-        case .title20: "Septocaine 4% 1:100,000"
+        case .title24: "Adjust inventory"
+        case .title20: "Review invoice"
         case .eyebrow14: "Needs attention"
         case .mono: "SEPTO 4% 1:100K 50/BX"
         case .button18: "Start procedure · 6 items"

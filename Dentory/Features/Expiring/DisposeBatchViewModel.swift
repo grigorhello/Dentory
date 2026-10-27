@@ -35,7 +35,7 @@ final class DisposeBatchViewModel {
 
     /// "Bonding agent · lot BA7. Removed with reason Expired."
     var caption: String {
-        let name = batch.lot.map { "\(batch.name)\u{00A0}· lot \($0)" } ?? batch.name
+        let name = Caption.joined(batch.name, batch.lot.map { "lot \($0)" })
         return "\(name). Removed with reason Expired."
     }
 

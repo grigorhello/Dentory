@@ -41,11 +41,14 @@ struct SegmentedControl<Value: Hashable & Sendable>: View {
         return Button {
             selection = option.value
         } label: {
+            // A label keeps a gap from its neighbours and shrinks to fit at the largest text sizes, where "Ordered · 5"
+            // and "Received · 1" would otherwise run together.
             Text(option.text)
                 .textStyle(isSelected ? .bodyStrong16 : .body16)
                 .foregroundStyle(isSelected ? Color.ms.ink : Color.ms.textBody)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.6)
+                .padding(.horizontal, Spacing.xs)
                 .frame(maxWidth: .infinity)
                 .frame(height: 40)
                 .background {

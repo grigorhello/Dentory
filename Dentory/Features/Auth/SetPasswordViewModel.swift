@@ -23,8 +23,6 @@ final class SetPasswordViewModel {
     /// Set once the password is saved and the session reloaded: the root drops the link and shows Home.
     private(set) var isFinished = false
 
-    static let minimumPasswordLength = 8
-
     private let tokenHash: String
     private let auth: AuthServicing
     private let sessionStore: SessionStore
@@ -41,8 +39,11 @@ final class SetPasswordViewModel {
     var isSubmitting: Bool { submitGuard.isBusy }
 
     var canSave: Bool {
-        state == .ready && password.count >= Self.minimumPasswordLength && !isSubmitting
+        state == .ready && NewPassword.isLongEnough(password) && !isSubmitting
     }
+
+    /// "At least 8 characters" under the password while it is too short, so a disabled Save password says why.
+    var passwordHint: String? { NewPassword.hint(for: password) }
 
     /// Checks the link the first time the screen appears.
     func verifyIfNeeded() async {

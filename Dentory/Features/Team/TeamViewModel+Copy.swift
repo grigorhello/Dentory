@@ -9,7 +9,7 @@ extension TeamViewModel {
 
     /// The address under a name; "Invited · Oct 1" under an invitation.
     func subtitle(for member: TeamMember) -> String {
-        member.isPending ? "Invited\u{00A0}· \(formatters.monthDay(member.invitedAt))" : member.email
+        member.isPending ? "Invited\(Caption.separator)\(formatters.monthDay(member.invitedAt))" : member.email
     }
 
     /// "SM", "DK"; "—" for an invitation (f31).

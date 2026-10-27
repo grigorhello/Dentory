@@ -65,10 +65,8 @@ struct SignInView: View {
             Spacer(minLength: Spacing.xxxl)
             footer
         }
-        .padding(.horizontal, Spacing.page)
         .padding(.bottom, Spacing.xl)
-        .frame(maxWidth: PageLayout.contentMaxWidth)
-        .frame(maxWidth: .infinity)
+        .contentColumn(alignment: .center)
         .frame(minHeight: minHeight)
     }
 

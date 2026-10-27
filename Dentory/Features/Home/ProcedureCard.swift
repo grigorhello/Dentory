@@ -22,7 +22,7 @@ struct ProcedureCard: View {
                     }
                     HStack(alignment: .center, spacing: Spacing.md) {
                         VStack(alignment: .leading, spacing: Spacing.xxs) {
-                            Text(latest.name).textStyle(.title20).foregroundStyle(Color.ms.textOnDark)
+                            Text(latest.name).textStyle(.bodyStrong16).foregroundStyle(Color.ms.textOnDark)
                             Text(supplies(latest)).textStyle(.body14).foregroundStyle(Color.ms.mute)
                         }
                         .accessibilityElement(children: .combine)
@@ -43,7 +43,7 @@ struct ProcedureCard: View {
 
     private func supplies(_ latest: LatestProcedure) -> String {
         let count = "\(latest.supplyCount) \(latest.supplyCount == 1 ? "supply" : "supplies")"
-        return latest.startedByFirstName.isEmpty ? count : "\(count)\u{00A0}· \(latest.startedByFirstName)"
+        return Caption.joined(count, latest.startedByFirstName)
     }
 }
 

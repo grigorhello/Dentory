@@ -64,8 +64,9 @@ struct InventoryCountTests {
         let repository = FakeInventoryRepository(result: .success(ProductSummary.demo + [unplaced]))
         let viewModel = await make(repository: repository)
         viewModel.startCount()
-        #expect(viewModel.countLine(for: septocaine) == "est. 54 cartridges\u{00A0}· Operatory 1 · Drawer A")
-        #expect(viewModel.countLine(for: bonding) == "Count unopened only\u{00A0}· Operatory 1 · Drawer C")
+        // The location's own dot keeps its line too, as every caption's does (#207 review).
+        #expect(viewModel.countLine(for: septocaine) == "est. 54 cartridges\u{00A0}· Operatory 1\u{00A0}· Drawer A")
+        #expect(viewModel.countLine(for: bonding) == "Count unopened only\u{00A0}· Operatory 1\u{00A0}· Drawer C")
         #expect(viewModel.countLine(for: unplaced) == "est. 6 packs")
     }
 

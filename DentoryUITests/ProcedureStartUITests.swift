@@ -48,6 +48,20 @@ final class ProcedureStartUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["proc.header.title"].waitForExistence(timeout: 5), "Start did not return")
     }
 
+    /// The (i) beside "Opened a new one?", drawn at 24 pt beside the eyebrow (f13-2), explains Take new.
+    @MainActor
+    func testTheInfoBesideOpenedANewOneExplainsTakeNew() {
+        let app = XCUIApplication()
+        openRootCanal(app)
+        app.swipeUp()
+        let info = app.buttons["procDetail.bottles.info"]
+        XCTAssertTrue(info.waitForExistence(timeout: 3), "No (i) beside Opened a new one?")
+        info.tap()
+        let toast = app.descendants(matching: .any)["toast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 3), "The (i) did not explain Take new")
+        XCTAssertTrue(toast.staticTexts["Opened a new one?"].exists)
+    }
+
     /// Take new, Out of stock, Add item and the X.
     @MainActor
     func testTakeNewAddItemAndRemove() {

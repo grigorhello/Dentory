@@ -24,7 +24,7 @@ struct ReceiveOptionCard: View {
                 }
                 .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: Spacing.sm)
-                IconView(.chevronRight, size: 20).foregroundStyle(foreground)
+                IconView(.chevronRight, size: 24).foregroundStyle(foreground)
             }
             .padding(.horizontal, Spacing.lg)
             .padding(.vertical, Spacing.lg + Spacing.xxs)

@@ -8,9 +8,19 @@ nonisolated enum IconButtonVariant: CaseIterable, Sendable {
 
 nonisolated enum IconButtonSize: CaseIterable, Sendable {
     case small, medium
+    /// A row's own action as the frames draw it (the template pencil of f11, a supply's remove X of f13 and f15): a
+    /// 24 pt icon in the medium box.
+    case row
 
     var box: CGFloat { self == .small ? 32 : 40 }
-    var iconSize: CGFloat { self == .small ? 16 : 20 }
+
+    var iconSize: CGFloat {
+        switch self {
+        case .small: 16
+        case .medium: 20
+        case .row: 24
+        }
+    }
 }
 
 /// Square icon-only button. Always give it a label: it is what VoiceOver reads.

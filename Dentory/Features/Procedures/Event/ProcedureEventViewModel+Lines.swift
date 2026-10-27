@@ -15,15 +15,15 @@ extension ProcedureEventViewModel {
             Self.items(detail.itemsDeducted) + " deducted", formatters.dateTime(detail.startedAt),
             PersonName.first(of: detail.startedByName)
         ]
-        return parts.filter { !$0.isEmpty }.joined(separator: "\u{00A0}· ")
+        return Caption.joined(parts)
     }
 
     /// "Cancelled · Oct 2 · 9:41 AM · Sarah: Logged by mistake".
     var cancelledText: String? {
         guard let detail, let cancelledAt = detail.cancelledAt else { return nil }
-        let head = ["Cancelled", formatters.dateTime(cancelledAt), PersonName.first(of: detail.cancelledByName)]
-            .filter { !$0.isEmpty }
-            .joined(separator: "\u{00A0}· ")
+        let head = Caption.joined(
+            "Cancelled", formatters.dateTime(cancelledAt), PersonName.first(of: detail.cancelledByName)
+        )
         guard let note = detail.cancelNote, !note.isEmpty else { return head }
         return "\(head): \(note)"
     }
@@ -58,11 +58,13 @@ extension ProcedureEventViewModel {
         case (true, true):
             "Opened a new bottle"
         case (true, false):
-            "Will take 1 from stock\u{00A0}· \(formatters.number(max(bottle.item.unopened - 1, 0))) unopened left"
+            Caption.joined(
+                "Will take 1 from stock", "\(formatters.number(max(bottle.item.unopened - 1, 0))) unopened left"
+            )
         case (false, true):
             "Goes back to stock"
         case (false, false):
-            "\(bottle.item.openCount) open\u{00A0}· \(formatters.number(bottle.item.unopened)) in stock"
+            "\(bottle.item.openCount) open\(Caption.separator)\(formatters.number(bottle.item.unopened)) in stock"
         }
     }
 
@@ -82,7 +84,7 @@ extension ProcedureEventViewModel {
         if product.id == outOfStockProductID { return "Out of stock" }
         return switch product.tracking {
         case .countable: "\(formatters.quantity(product.quantity, unit: product.unit)) in stock"
-        case .multiUse: "\(formatters.number(product.unopened)) unopened\u{00A0}· \(product.openCount) open"
+        case .multiUse: "\(formatters.number(product.unopened)) unopened\(Caption.separator)\(product.openCount) open"
         }
     }
 

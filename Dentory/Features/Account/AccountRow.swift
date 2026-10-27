@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A row of Account's groups (f29): the icon, the title, an optional value on the right and the chevron, all in ink,
-/// or all in danger for Sign out.
+/// or all in danger for Sign out. Its 24 pt icons set the 53 pt pitch f29 to f32 draw.
 struct AccountRow: View {
     let icon: Icon
     let title: String
@@ -12,7 +12,7 @@ struct AccountRow: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: Spacing.md) {
-                IconView(icon, size: 20)
+                IconView(icon, size: 24)
                 Text(title)
                     .textStyle(.body16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -21,7 +21,7 @@ struct AccountRow: View {
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.textSecondary)
                 }
-                IconView(.chevronRight, size: 20)
+                IconView(.chevronRight, size: 24)
             }
             .foregroundStyle(isDestructive ? Color.ms.danger : Color.ms.ink)
             .padding(.vertical, Spacing.md + Spacing.xxs)
