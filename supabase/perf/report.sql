@@ -95,9 +95,8 @@ begin
         || 'from public.procedure_event_items i where i.event_id = e.id) x), ''[]'') as procedure_event_items '
         || 'from public.procedure_events e where e.clinic_id = %L and e.cancelled_at is null '
         || 'order by e.started_at desc limit 1', c))),
-    ('memberships (starter)', 'Home', format(v_limited, format(
-      'select m.full_name from public.memberships m where m.clinic_id = %L and m.user_id = %L limit 1',
-      c, '10ad0000-0000-4000-8000-000100000002'))),
+    ('memberships (members)', 'Home', format(v_limited, format(
+      'select m.user_id, m.full_name from public.memberships m where m.clinic_id = %L', c))),
     ('alerts_unseen', 'Home', format(v_value, format('public.alerts_unseen(%L)', c))),
     ('inventory_list', 'Inventory', format(v_rows, format('select * from public.inventory_list(%L)', c))),
     ('product_detail', 'Product detail', format(v_value, format('public.product_detail(%L)', v_gloves))),
