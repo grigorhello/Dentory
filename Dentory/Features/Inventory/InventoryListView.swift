@@ -48,7 +48,7 @@ struct InventoryListView: View {
             .onChange(of: router.selectedTab) { _, tab in
                 if tab == .inventory { reload() }
             }
-            .navigationDestination(for: InventoryRoute.self) { route in
+            .tabDestination(for: InventoryRoute.self) { route in
                 switch route {
                 case .product(let id):
                     ProductDetailView(productID: id, session: session, dependencies: dependencies)

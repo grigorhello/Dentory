@@ -200,7 +200,7 @@ private struct OnboardingClinicStep: View {
             "Clinic name", text: $viewModel.clinicName, identifier: "onboard.clinicName",
             placeholder: "Smile Dental", error: viewModel.clinicNameError, contentType: .organizationName
         )
-        HStack(alignment: .top, spacing: Spacing.md) {
+        FieldRow {
             MSTextField(
                 "City", text: $viewModel.city, identifier: "onboard.city",
                 placeholder: "Toronto", error: viewModel.cityError, contentType: .addressCity
@@ -221,7 +221,7 @@ private struct OnboardingInviteStep: View {
     var body: some View {
         ForEach($viewModel.invites) { $row in
             let index = viewModel.invites.firstIndex { $0.id == row.id } ?? 0
-            HStack(alignment: .top, spacing: Spacing.md) {
+            FieldRow {
                 MSTextField(
                     "Email", text: $row.email, identifier: "onboard.inviteRow[\(index)].email",
                     placeholder: "name@clinic.com", error: row.error, keyboard: .emailAddress,

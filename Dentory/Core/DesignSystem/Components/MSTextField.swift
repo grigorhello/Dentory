@@ -21,6 +21,9 @@ struct MSTextField: View {
     var prefix: String?
     var suffix: String?
     var isSecure = false
+    /// A note, such as why a procedure is cancelled: the text and the placeholder wrap onto more lines, up to four,
+    /// rather than run past the box (MS-149).
+    var isMultiline = false
     var keyboard: UIKeyboardType = .default
     var contentType: UITextContentType?
     /// What VoiceOver calls a field whose label is drawn outside it (Billing emails' "Add email"); else the label, else
@@ -40,6 +43,7 @@ struct MSTextField: View {
         prefix: String? = nil,
         suffix: String? = nil,
         isSecure: Bool = false,
+        isMultiline: Bool = false,
         keyboard: UIKeyboardType = .default,
         contentType: UITextContentType? = nil,
         accessibilityText: String? = nil
@@ -56,6 +60,7 @@ struct MSTextField: View {
         self.prefix = prefix
         self.suffix = suffix
         self.isSecure = isSecure
+        self.isMultiline = isMultiline
         self.keyboard = keyboard
         self.contentType = contentType
         self.accessibilityText = accessibilityText
@@ -136,10 +141,16 @@ struct MSTextField: View {
     @ViewBuilder private var input: some View {
         if isSecure {
             SecureField(placeholder, text: $text, prompt: prompt)
+        } else if isMultiline {
+            TextField(placeholder, text: $text, prompt: prompt, axis: .vertical)
+                .lineLimit(1...Self.multilineLineLimit)
         } else {
             TextField(placeholder, text: $text, prompt: prompt)
         }
     }
+
+    /// The most lines a multiline field shows before it scrolls.
+    private static let multilineLineLimit = 4
 
     /// A tappable trailing icon: its VoiceOver label, Appendix B id and action.
     struct TrailingAction {
@@ -173,6 +184,10 @@ struct MSTextField: View {
         )
         MSTextField("Minimum", text: .constant("20"), suffix: "cartridges", keyboard: .numberPad)
         MSTextField("Cost per box", text: .constant(""), placeholder: "0.00", prefix: "$", keyboard: .decimalPad)
+        MSTextField(
+            "Why is it cancelled?", text: .constant(""), placeholder: "e.g. Logged by mistake, patient cancelled",
+            isMultiline: true
+        )
         MSTextField("Disabled", text: .constant("Read only")).disabled(true)
     }
     .padding(Spacing.page)

@@ -12,8 +12,7 @@ final class CountStockUITests: XCTestCase {
 
     @MainActor
     private func stepper(_ part: String, of productID: String, in app: XCUIApplication) -> XCUIElement {
-        let identifier = "inv.count.row[\(productID)].\(part)"
-        return part == "value" ? app.staticTexts[identifier] : app.buttons[identifier]
+        app.buttons["inv.count.row[\(productID)].\(part)"]
     }
 
     @MainActor
@@ -50,19 +49,19 @@ final class CountStockUITests: XCTestCase {
         XCTAssertTrue(stepper("inc", of: endoKit, in: app).waitForExistence(timeout: 3))
         stepper("inc", of: endoKit, in: app).tap()
         stepper("inc", of: endoKit, in: app).tap()
-        XCTAssertEqual(stepper("value", of: endoKit, in: app).label, "3")
+        XCTAssertEqual(app.stepperNumber("inv.count.row[\(endoKit)]"), "3")
 
         app.buttons["Healthy"].tap()
         XCTAssertTrue(stepper("dec", of: septocaine, in: app).waitForExistence(timeout: 3))
         stepper("dec", of: septocaine, in: app).tap()
         stepper("dec", of: septocaine, in: app).tap()
-        XCTAssertEqual(stepper("value", of: septocaine, in: app).label, "52")
+        XCTAssertEqual(app.stepperNumber("inv.count.row[\(septocaine)]"), "52")
 
         app.buttons["Expiring"].tap()
         let bondingLine = app.staticTexts["Count unopened only\u{00A0}· Operatory 1\u{00A0}· Drawer C"]
         XCTAssertTrue(bondingLine.waitForExistence(timeout: 3))
         stepper("inc", of: bonding, in: app).tap()
-        XCTAssertEqual(stepper("value", of: bonding, in: app).label, "1")
+        XCTAssertEqual(app.stepperNumber("inv.count.row[\(bonding)]"), "1")
 
         XCTAssertEqual(review.label, "Review · 3 corrections", "A count was lost while filtering")
         review.tap()
@@ -117,7 +116,7 @@ final class CountStockUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["cancelCount.title"].waitForExistence(timeout: 3), "Cancel did not ask")
         XCTAssertEqual(app.staticTexts["cancelCount.message"].label, "1 change. Inventory stays as it is.")
         app.buttons["cancelCount.keep"].tap()
-        XCTAssertEqual(stepper("value", of: septocaine, in: app).label, "53", "Keep counting lost the count")
+        XCTAssertEqual(app.stepperNumber("inv.count.row[\(septocaine)]"), "53", "Keep counting lost the count")
 
         app.buttons["inv.count.cancel"].tap()
         XCTAssertTrue(app.buttons["cancelCount.discard"].waitForExistence(timeout: 3))

@@ -22,7 +22,7 @@ struct ExpiringView: View {
                     .accessibilityIdentifier("expiring.seg")
             })
             .reloadOnReturn { await viewModel.load() }
-            .navigationDestination(for: ExpiringRoute.self) { route in
+            .tabDestination(for: ExpiringRoute.self) { route in
                 switch route {
                 case .product(let productID):
                     ProductDetailView(productID: productID, session: session, dependencies: dependencies)

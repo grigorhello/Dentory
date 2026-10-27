@@ -24,6 +24,25 @@ final class TabNavigationUITests: XCTestCase {
         }
     }
 
+    /// The other tabs stay alive under the chosen one, hidden from VoiceOver (MS-149).
+    @MainActor
+    func testOnlyTheChosenTabReachesVoiceOver() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
+        app.launch()
+
+        XCTAssertTrue(app.buttons["home.header.account"].waitForExistence(timeout: 5), "Home did not load")
+        XCTAssertFalse(app.buttons["inv.countStock"].exists, "VoiceOver reaches Inventory from Home")
+        XCTAssertFalse(app.staticTexts["proc.header.title"].exists, "VoiceOver reaches Procedures from Home")
+        XCTAssertFalse(app.staticTexts["order.header.title"].exists, "VoiceOver reaches To buy from Home")
+
+        app.buttons["tab.inventory"].tap()
+        XCTAssertTrue(app.buttons["inv.countStock"].waitForExistence(timeout: 5), "Inventory did not open")
+        XCTAssertTrue(
+            app.buttons["home.header.account"].waitForNonExistence(timeout: 2), "VoiceOver reaches Home from Inventory"
+        )
+    }
+
     @MainActor
     func testPushedScreenHidesTheTabBarAndOpensASheet() {
         let app = XCUIApplication()

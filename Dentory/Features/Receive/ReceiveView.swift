@@ -21,7 +21,7 @@ struct ReceiveView: View {
         content
             .pushedScreen(title: "Receive delivery", identifier: "receive")
             .reloadOnReturn { await viewModel.load() }
-            .navigationDestination(for: ReceiveRoute.self) { route in
+            .tabDestination(for: ReceiveRoute.self) { route in
                 switch route {
                 case .manual(let productID):
                     ManualReceiveView(productID: productID, session: session, dependencies: dependencies)

@@ -27,6 +27,9 @@ struct ProcedureTakenNewRow: View {
                     .monospacedDigit()
                     .foregroundStyle(Color.ms.primary)
                     .frame(width: ControlHeight.hitTarget * 3)
+                    // Read as a stepper's number is: the product, then how many (MS-149).
+                    .accessibilityLabel(name)
+                    .accessibilityValue("1")
                     .accessibilityIdentifier("\(identifier).value")
                 IconButton(.x, label: "Remove \(name)", variant: .quiet, size: .row, action: onRemove)
                     .accessibilityIdentifier("\(identifier).remove")

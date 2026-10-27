@@ -118,12 +118,19 @@ struct SignInView: View {
 
     private var footer: some View {
         VStack(spacing: Spacing.xs) {
-            HStack(spacing: Spacing.xs) {
-                Text("Setting up a new clinic?").textStyle(.body14).foregroundStyle(Color.ms.textBody)
-                NavigationLink(value: OnboardingViewModel.Step.account) {
-                    Text("Sign up as admin").textStyle(.bodyStrong14).foregroundStyle(Color.ms.primary)
+            // On one line where it fits (f1); at a large text size the link goes under the question rather than
+            // squeeze it onto two lines (MS-149).
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .lastTextBaseline, spacing: Spacing.xs) {
+                    signUpQuestion
+                    // The 44 pt target reaches up into the free space above the footer, so the line stays where f1
+                    // draws it.
+                    signUpLink(alignment: .bottom)
                 }
-                .accessibilityIdentifier("signin.signUpAdmin")
+                VStack(spacing: 0) {
+                    signUpQuestion
+                    signUpLink(alignment: .center)
+                }
             }
             Text("Staff join through the invitation email.")
                 .textStyle(.body14)
@@ -131,6 +138,26 @@ struct SignInView: View {
                 .accessibilityIdentifier("signin.staffNote")
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private var signUpQuestion: some View {
+        Text("Setting up a new clinic?")
+            .textStyle(.body14)
+            .foregroundStyle(Color.ms.textBody)
+            .multilineTextAlignment(.center)
+    }
+
+    /// Sign up as admin, its text placed in a target at least 44 pt high.
+    private func signUpLink(alignment: Alignment) -> some View {
+        NavigationLink(value: OnboardingViewModel.Step.account) {
+            Text("Sign up as admin")
+                .textStyle(.bodyStrong14)
+                .foregroundStyle(Color.ms.primary)
+                .multilineTextAlignment(.center)
+                .frame(minHeight: ControlHeight.hitTarget, alignment: alignment)
+                .contentShape(Rectangle())
+        }
+        .accessibilityIdentifier("signin.signUpAdmin")
     }
 }
 

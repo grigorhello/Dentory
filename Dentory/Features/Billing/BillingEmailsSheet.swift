@@ -47,9 +47,10 @@ struct BillingEmailsSheet: View {
                 }
             }
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                // The field reads its label to VoiceOver itself; the Add button stays level with the field.
+                // The field reads its label to VoiceOver itself; the Add button stays level with the field, or under
+                // it at the large text sizes.
                 Text("Add email").textStyle(.bodyStrong14).foregroundStyle(Color.ms.ink).accessibilityHidden(true)
-                HStack(alignment: .top, spacing: Spacing.sm) {
+                FieldRow(spacing: Spacing.sm) {
                     MSTextField(
                         nil, text: $viewModel.newEmail, identifier: "billingEmails.email",
                         placeholder: "accounting@clinic.com", error: viewModel.emailError, keyboard: .emailAddress,

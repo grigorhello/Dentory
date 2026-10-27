@@ -14,7 +14,7 @@ struct InvoiceLineBatchRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             ListDivider()
-            HStack(alignment: .top, spacing: Spacing.sm) {
+            FieldRow(spacing: Spacing.sm) {
                 MSMonthField(
                     InvoiceReviewViewModel.expiryLabel, selection: $viewModel[expiryOf: line.id],
                     years: viewModel.expiryYears(for: line), opening: viewModel.openingMonth,

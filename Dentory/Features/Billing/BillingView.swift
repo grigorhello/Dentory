@@ -18,7 +18,7 @@ struct BillingView: View {
         content
             .pushedScreen(title: "Billing", identifier: "billing")
             .reloadOnReturn { await viewModel.load() }
-            .navigationDestination(for: BillingRoute.self) { route in
+            .tabDestination(for: BillingRoute.self) { route in
                 switch route {
                 case .invoices:
                     InvoicesView(

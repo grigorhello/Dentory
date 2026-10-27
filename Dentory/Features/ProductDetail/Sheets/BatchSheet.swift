@@ -18,7 +18,7 @@ struct BatchSheet: View {
                 opening: YearMonth(day: viewModel.openingMonth), identifier: "batch.expires"
             ) { viewModel.monthTitle(CalendarDay(yearMonth: $0)) }
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack(alignment: .top, spacing: Spacing.md) {
+                FieldRow {
                     MSTextField(
                         "How many", text: $viewModel.quantityText, identifier: "batch.quantity",
                         error: viewModel.quantityError, suffix: viewModel.unit, keyboard: .decimalPad

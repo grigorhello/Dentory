@@ -16,24 +16,47 @@ struct RootHeader<Trailing: View>: View {
     }
 
     var body: some View {
+        if eyebrow == nil {
+            // A title alone is one word or two of the app's own (Inventory, Procedures): where it does not fit on one
+            // line beside its control at a large text size, the control moves under it rather than break the word
+            // (MS-149).
+            ViewThatFits(in: .horizontal) {
+                row
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    titleStack
+                    trailing()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            // Home's clinic name wraps between its words beside the buttons.
+            row
+        }
+    }
+
+    private var row: some View {
         // Home's buttons sit level with the bottom of its eyebrow and title (f6); a title alone is centred on its
         // control, Count stock or + Procedure (f11, f16).
         HStack(alignment: eyebrow == nil ? .center : .bottom, spacing: Spacing.md) {
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                if let eyebrow {
-                    Eyebrow(eyebrow).accessibilityIdentifier("\(identifier).eyebrow")
-                }
-                Text(title)
-                    .textStyle(.display32)
-                    .foregroundStyle(Color.ms.ink)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("\(identifier).title")
-            }
+            titleStack
             Spacer(minLength: Spacing.sm)
             // Beside a title alone the control is a small button: its 44 pt frame reaches past the title's line
             // instead of lowering it (f11 and f16 centre the 36 pt button on the title).
             trailing()
                 .padding(.vertical, eyebrow == nil ? -(ControlHeight.hitTarget - ControlHeight.sm) / 2 : 0)
+        }
+    }
+
+    private var titleStack: some View {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
+            if let eyebrow {
+                Eyebrow(eyebrow).accessibilityIdentifier("\(identifier).eyebrow")
+            }
+            Text(title)
+                .textStyle(.display32)
+                .foregroundStyle(Color.ms.ink)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("\(identifier).title")
         }
     }
 }

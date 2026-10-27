@@ -11,7 +11,7 @@ struct CancelProcedureSheet: View {
                 .accessibilityIdentifier("cancelProcedure.warning")
             MSTextField(
                 "Why is it cancelled?", text: $viewModel.cancelNote, identifier: "cancelProcedure.note",
-                placeholder: "e.g. Logged by mistake, patient cancelled"
+                placeholder: "e.g. Logged by mistake, patient cancelled", isMultiline: true
             )
             Text("Recorded in Activity with your name.")
                 .textStyle(.caption12)

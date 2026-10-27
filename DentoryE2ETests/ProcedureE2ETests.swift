@@ -52,7 +52,8 @@ final class ProcedureE2ETests: XCTestCase {
         E2E.expect(summary, toRead: "7 items deducted", "The record does not show the extra box")
 
         app.buttons["procDetail.cancel"].tap()
-        let note = app.textFields["cancelProcedure.note"]
+        // A note wraps, so its field is a text view.
+        let note = app.textViews["cancelProcedure.note"]
         note.appears("The cancel sheet did not open")
         XCTAssertEqual(
             app.staticTexts["cancelProcedure.warning"].label,
