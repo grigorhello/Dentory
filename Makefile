@@ -83,6 +83,23 @@ seed-demo:
 seed-load:
 	docker exec -i $(DB_CONTAINER) psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -o /dev/null < supabase/seed-load.sql
 
+# How long each of the app's calls takes in the database for the load-test clinic's admin: p50, p95 and the slowest
+# of PERF_RUNS runs, in milliseconds (supabase/perf/report.sql). Run it after db-reset and seed-load, before
+# perf-concurrency adds to the clinic.
+PERF_RUNS ?= 30
+perf-report:
+	docker exec -i $(DB_CONTAINER) psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -v runs=$(PERF_RUNS) \
+		< supabase/perf/report.sql
+
+# PERF_CLIENTS clients start procedures and open bottles of the same products in the load-test clinic at once,
+# PERF_TRANSACTIONS changes each (pgbench in the database container), then the ledger is checked against the stock;
+# fails on a deadlock or a lost change (supabase/perf/concurrency.sh). Run it after seed-load.
+PERF_CLIENTS ?= 8
+PERF_TRANSACTIONS ?= 20
+perf-concurrency:
+	DB_CONTAINER=$(DB_CONTAINER) PERF_CLIENTS=$(PERF_CLIENTS) PERF_TRANSACTIONS=$(PERF_TRANSACTIONS) \
+		sh supabase/perf/concurrency.sh
+
 functions-serve:
 	supabase functions serve
 
