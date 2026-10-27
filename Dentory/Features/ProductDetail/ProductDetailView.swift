@@ -28,7 +28,7 @@ struct ProductDetailView: View {
                 style: .context
             )
             .reloadOnReturn { await viewModel.load() }
-            .tabDestination(for: ProductDetailRoute.self) { route in
+            .navigationDestination(for: ProductDetailRoute.self) { route in
                 switch route {
                 case .history(let productID, let name):
                     ActivityHistoryView(

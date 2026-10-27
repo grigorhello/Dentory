@@ -24,7 +24,7 @@ struct ProceduresView: View {
                     .adminOnly()
             }
             .reloadOnReturn { await viewModel.load() }
-            .tabDestination(for: ProcedureRoute.self) { route in
+            .navigationDestination(for: ProcedureRoute.self) { route in
                 switch route {
                 case .start(let templateID):
                     ProcedureStartView(templateID: templateID, session: session, dependencies: dependencies)

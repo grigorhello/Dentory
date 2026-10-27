@@ -85,7 +85,7 @@ struct MSTextField: View {
     private var field: some View {
         HStack(spacing: Spacing.sm) {
             if let icon {
-                IconView(icon, size: 16).foregroundStyle(Color.ms.textSecondary)
+                leadingIcon(icon)
             }
             if let prefix {
                 Text(prefix).textStyle(.body16).foregroundStyle(Color.ms.textSecondary).accessibilityHidden(true)
@@ -151,6 +151,19 @@ struct MSTextField: View {
 
     /// The most lines a multiline field shows before it scrolls.
     private static let multilineLineLimit = 4
+
+    /// The leading icon (the search glyph), drawn as a shape in its outline rather than as an image: beside a text
+    /// field an image stayed in VoiceOver's reach, an unlabeled stop before the field, though hidden and decorative
+    /// (MS-149).
+    private func leadingIcon(_ icon: Icon) -> some View {
+        Rectangle()
+            .fill(Color.ms.textSecondary)
+            .frame(width: Self.leadingIconSize, height: Self.leadingIconSize)
+            .mask { icon.image.resizable().scaledToFit() }
+            .accessibilityHidden(true)
+    }
+
+    private static let leadingIconSize: CGFloat = 16
 
     /// A tappable trailing icon: its VoiceOver label, Appendix B id and action.
     struct TrailingAction {

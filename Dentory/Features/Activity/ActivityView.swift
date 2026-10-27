@@ -28,7 +28,7 @@ struct ActivityView: View {
                 }
             })
             .reloadOnReturn { await reload() }
-            .tabDestination(for: ActivityRoute.self) { route in
+            .navigationDestination(for: ActivityRoute.self) { route in
                 switch route {
                 case .product(let productID):
                     ProductDetailView(productID: productID, session: session, dependencies: dependencies)

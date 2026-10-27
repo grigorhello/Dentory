@@ -17,7 +17,7 @@ struct InventoryValueView: View {
         content
             .pushedScreen(title: "Inventory value", identifier: "value")
             .reloadOnReturn { await viewModel.load() }
-            .tabDestination(for: InventoryValueRoute.self) { route in
+            .navigationDestination(for: InventoryValueRoute.self) { route in
                 switch route {
                 case .product(let productID):
                     ProductDetailView(productID: productID, session: session, dependencies: dependencies)

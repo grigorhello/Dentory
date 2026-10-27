@@ -53,7 +53,7 @@ struct HomeView: View {
             .onChange(of: router.selectedTab) { _, tab in
                 if tab == .home { reload() }
             }
-            .tabDestination(for: HomeRoute.self) { route in
+            .navigationDestination(for: HomeRoute.self) { route in
                 switch route {
                 case .expiring(let window):
                     ExpiringView(window: window, session: session, dependencies: dependencies)
@@ -225,7 +225,7 @@ struct HomeView: View {
             .accessibilityIdentifier("shell.demo.push")
             .simultaneousGesture(LongPressGesture(minimumDuration: 0.8).onEnded { _ in isCatalogPresented = true })
         }
-        .tabDestination(for: ShellDemoRoute.self) { route in
+        .navigationDestination(for: ShellDemoRoute.self) { route in
             ShellDemoPushedView(route: route)
         }
     }

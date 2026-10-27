@@ -22,7 +22,7 @@ struct AccountView: View {
         content
             .pushedScreen(title: "Account", identifier: "more")
             .reloadOnReturn { await viewModel.load() }
-            .tabDestination(for: AccountRoute.self) { route in
+            .navigationDestination(for: AccountRoute.self) { route in
                 switch route {
                 case .team:
                     TeamView(session: session, sessionStore: sessionStore, dependencies: dependencies)

@@ -208,13 +208,10 @@ struct AppTabsView: View {
                         // root gets it here: the last row scrolls clear of the bar, and pinned bars and the
                         // round + sit above it.
                         .safeAreaPadding(.bottom, tabBarHeight)
-                        .tabPage()
                 }
-                // VoiceOver skips the tabs under the chosen one: `accessibilityHidden` here would not reach the
-                // screens the stack hosts, so its root (`tabPage()`) and pushed screens (`tabDestination`) read this.
-                .environment(\.isTabSelected, isSelected)
                 .opacity(isSelected ? 1 : 0)
                 .allowsHitTesting(isSelected)
+                .accessibilityHidden(!isSelected)
                 .zIndex(isSelected ? 1 : 0)
             }
         }
