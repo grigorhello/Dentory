@@ -37,7 +37,9 @@ One high finding: an admin could forge an invitation token and use it to set the
 
   They are kept here because the ticket asks for each item it lists, or because the fix is cheap.
 - **The ticket's checklist**, verified item by item (below), with the note on #122 from the MS-139 review.
-- **The database checks ran on a local database.** MS-146's builder held the shared stack, so this ran as a database of its own (the same `supabase db start`, `db reset` and `test db` as `make db-reset db-test`, with another project id and ports), then again after `seed-demo.sql`. It covered the pgTAP suite, the time zone case of F2, and the grants and functions the checklist cites.
+- **The database checks ran on the local stack.**
+  - First, while MS-146's builder held the shared stack, on a database of its own (the same `supabase db start`, `db reset` and `test db`, with another project id and ports). That covered the pgTAP suite, the time zone case of F2, and the grants and functions the checklist cites.
+  - Then on the shared stack, started from this branch after MS-146 merged: `make db-reset db-test` and `make seed-demo db-test`, the HTTP requests under F1 and F5, and `make e2e`.
 
 ## Findings
 
@@ -68,6 +70,9 @@ One high finding: an admin could forge an invitation token and use it to set the
     - delete a member.
     It also checks that the role stays writable, and that `invitation_check` reads a made-up token as expired, so `accept_invitation` sets no password with it.
   - `05_access_test.sql` now expects these refusals where it used to expect a direct invite or delete to pass.
+- **Run over HTTP on the local stack, with the demo clinic.** The demo admin (sarah@smiledental.ca) patched her Staff colleague's membership to an invitation with the hash of a token she made up, called `accept_invitation` with it and a password of her own, then signed in as the colleague (michael@smiledental.ca).
+  - Without this PR's migration: 204, 200, 200. The colleague's account was hers.
+  - With it: 403, 410, 400.
 
 ### F2 · Clinic settings written directly, and unknown time zones (Medium, fixed)
 
@@ -121,6 +126,10 @@ One high finding: an admin could forge an invitation token and use it to set the
 - **Where.** `20261016130000_access.sql:126-131` granted select on `public.clinics` with no column list, so every member read `stripe_customer_id`, `stripe_subscription_id`, `promo_lifetime_50` and `billing_emails`. Billing is admin-only everywhere else (PRD §2; `billing_summary`, `billing_emails_list`, `clinic_billing`, `billing_invoices`).
 - **Fix** (F5). Members read the clinic's other columns only, everything the session, Clinic settings and the `security_invoker` views use. `ClinicLogoStorage` updates the logo's path with `returning: .minimal`, since a row sent back would need every column. Admins keep reading billing through the admin-checked functions.
 - **Tests.** `47_security_review_test.sql`: each billing column refused to Staff, the rest readable, and `billing_summary` still answering an admin.
+- **Over HTTP on the local stack.**
+  - The admin's update of `logo_path`: 403 with `Prefer: return=representation`, 204 with `return=minimal`, which is why `ClinicLogoStorage` changed.
+  - Her direct update of `time_zone`: 403.
+  - Staff reading `billing_emails` or `stripe_customer_id`: 403. Reading the name, time zone, status and trial end: 200.
 
 ### F6 · No limit on invitations (Low, fixed)
 
@@ -195,7 +204,7 @@ One high finding: an admin could forge an invitation token and use it to set the
 | Storage policies | Clinic-scoped, admin-only writes, private buckets | `invoices`: admin read, insert, update and delete in the clinic's folder; insert and update only as `page-N.jpg` or `page-1.pdf`, at most 20 MB, while the clinic may write; a received invoice's pages cannot be deleted or replaced (`20261021070000_invoice_reading.sql:91-114`, `20261021100000_invoice_confirm.sql:451-478`). `logos`: members read their clinic's; admins write while the clinic may write (`20261016130000_access.sql:302-310`, `20261021000000_read_only_access.sql:35-49`). `exports`: no policy at all, so service role only, reached through 7-day signed links. `46_…` checks that no bucket is public and no Storage policy admits anon. |
 | Stripe webhook signature | Checked before anything is read | `stripe_webhook/index.ts:41-45` verifies the raw body. `_shared/stripe.ts:63-86` checks the v1 HMAC-SHA256 of `t.payload` in constant time, refuses a timestamp more than 300 s away, and refuses a missing header or secret. Events are read back from Stripe rather than trusted (`supabase/README.md`, Stripe). |
 | Invitation token hashing and expiry | 32 random bytes, only the SHA-256 stored, 7 days, single use | `20261019020000_invitations.sql:88-96` (random token, stored hash), `:119-149` (lookup by hash, length 20-200, not expired), `:240-246` (accept clears the hash). `team_remove` clears it on revoke (`20261021000000_read_only_access.sql:25-27`). The raw token travels only in the email, never back to the app (`invite_member/index.ts:56-61`). |
-| Rate limit on invite | Added (F6) | `20261021130000_security_review.sql`, `47_security_review_test.sql` |
+| Rate limit on invite | Added (F6): 30 an hour per clinic, and 3 an hour per clinic to one address | `20261021130000_security_review.sql`, `47_security_review_test.sql` |
 | Rate limit on export | One export per clinic every 10 minutes, serialised | `20261020180000_export_csv.sql:36-57` (advisory lock per clinic, the refusal naming whose export it was); the function is service role only and checks the caller is an admin of the clinic. |
 | Rate limit on password reset | Supabase Auth's | Locally `max_frequency` and `email_sent` (`config.toml:205, 236`). On the hosted projects, the dashboard's email rate limits and the per-address interval (open items). The app's Reset password sends through Supabase Auth only. |
 | No patient or appointment fields | None | No table, column, Swift model, analytics property or function field carries patient or appointment data. A search for patient, appointment, birth date, diagnosis and health card finds only the product "Patient bib" and the PRD's cancel-note placeholder ("e.g. Logged by mistake, patient cancelled", PRD §6.3). The invoice reader is told to leave personal data out (`extract_invoice/reading.ts:135-136`). |

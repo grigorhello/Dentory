@@ -1,8 +1,8 @@
 -- MS-151 · The security review's fixes in the database (20261021130000_security_review.sql): an admin writes no
 -- membership but its role, so a token the admin made up opens nothing (F1); clinic settings and billing emails change
 -- only through their functions, and a new clinic keeps only a time zone Postgres knows (F2); Staff read no billing
--- column (F5); invitations stop at 30 an hour per clinic and 3 to one address (F6); the functions closed to anon stay
--- open to members (F8).
+-- column (F5); invitations stop at 30 an hour per clinic and 3 per clinic to one address (F6); the functions closed
+-- to anon stay open to members (F8).
 begin;
 select plan(43);
 
@@ -124,7 +124,7 @@ select is(
   'an admin reads billing through billing_summary');
 reset role;
 
--- F6 · 30 invitations an hour per clinic, 3 to one address ----------------------------------------------------------
+-- F6 · 30 invitations an hour per clinic, 3 from it to one address --------------------------------------------------
 select is(
   (select count(*)::integer
    from generate_series(1, 30) g,

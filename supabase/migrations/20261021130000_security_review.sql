@@ -102,10 +102,12 @@ grant select (
   trial_ends_at, subscription_status
 ) on public.clinics to authenticated;
 
--- F6 · At most 30 invitations an hour per clinic, and 3 an hour to one address -------------------------------------
+-- F6 · At most 30 invitations an hour per clinic, and 3 an hour from it to one address ---------------------------
 -- Every invitation, a resend included, is an email from dentory.ca with the clinic's and the inviter's names in it,
--- and anyone can open a clinic. A clinic sends at most 30 in an hour, its whole team twice over, and one address gets
--- 3. invitation_create records each invitation it makes and forgets it after the hour; nothing else reads the record.
+-- and anyone can open a clinic. A clinic sends at most 30 in an hour, its whole team twice over, and 3 to one address;
+-- an address is counted per clinic, since counting it across clinics would tell one clinic that another had just
+-- invited that person. invitation_create records each invitation it makes and forgets it after the hour; nothing else
+-- reads the record.
 create table public.invitation_sends (
   id uuid primary key default gen_random_uuid(),
   clinic_id uuid not null references public.clinics (id) on delete cascade,
