@@ -2,29 +2,34 @@ import SwiftUI
 
 /// Available, Minimum and Target in three columns, then the system estimate and the last count (f20), in the frame's
 /// sizes: 14 pt labels and lines, a 12 pt unit; a warning notice with the recommended addition when the product is
-/// Low or Out of stock.
+/// Low or Out of stock. At the accessibility text sizes the figures go one under the other, and the last count under
+/// the estimate, where side by side their words would break ("Avail / able", MS-149).
 struct ProductQuantityCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let viewModel: ProductDetailViewModel
 
     var body: some View {
+        let isStacked = dynamicTypeSize.isAccessibilitySize
         CardView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                HStack(alignment: .top, spacing: Spacing.md) {
+                AnyLayout.row(stacked: isStacked, alignment: .top, stackedSpacing: Spacing.md) {
                     column("Available", value: viewModel.availableText, unit: viewModel.unit)
                     column("Minimum", value: viewModel.minimumText, unit: nil)
                     column("Target", value: viewModel.targetText, unit: nil)
                 }
                 ListDivider()
-                HStack(alignment: .top, spacing: Spacing.md) {
+                AnyLayout.row(stacked: isStacked, alignment: .top) {
                     Text(viewModel.estimateLine)
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.textBody)
                         .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: Spacing.sm)
+                    if !isStacked {
+                        Spacer(minLength: Spacing.sm)
+                    }
                     Text(viewModel.countedLine)
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.textBody)
-                        .multilineTextAlignment(.trailing)
+                        .multilineTextAlignment(isStacked ? .leading : .trailing)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let recommendation = viewModel.recommendationLine {

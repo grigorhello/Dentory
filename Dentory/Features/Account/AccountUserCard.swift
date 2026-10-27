@@ -1,7 +1,10 @@
 import SwiftUI
 
-/// Who is signed in (f29, f30): the initials in an ink circle, the name and "Admin · Smile Dental".
+/// Who is signed in (f29, f30): the initials in an ink circle, the name and "Admin · Smile Dental". At the
+/// accessibility text sizes the name goes under the circle, which grows with the text, so it keeps its words whole
+/// ("Mitche / ll" beside it, MS-149).
 struct AccountUserCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let initials: String
     let name: String
     let roleLine: String
@@ -10,7 +13,7 @@ struct AccountUserCard: View {
 
     var body: some View {
         CardView {
-            HStack(spacing: Spacing.md) {
+            AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize) {
                 Text(initials)
                     .textStyle(.bodyStrong14)
                     .foregroundStyle(Color.ms.textOnDark)

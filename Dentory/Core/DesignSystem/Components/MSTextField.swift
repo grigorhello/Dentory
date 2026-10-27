@@ -85,23 +85,19 @@ struct MSTextField: View {
     private var field: some View {
         HStack(spacing: Spacing.sm) {
             if let icon {
-                leadingIcon(icon)
+                IconView(icon, size: 16).foregroundStyle(Color.ms.textSecondary)
             }
             if let prefix {
                 Text(prefix).textStyle(.body16).foregroundStyle(Color.ms.textSecondary).accessibilityHidden(true)
             }
-            input
-                .textStyle(.body16)
-                .foregroundStyle(Color.ms.ink)
-                .accessibilityLabel(accessibilityText ?? label ?? placeholder)
-                .accessibilityIdentifier(identifier ?? "")
-                .focused($isFocused)
-                .keyboardType(keyboard)
-                .textContentType(contentType)
-                .textInputAutocapitalization(contentType == .emailAddress ? .never : .sentences)
-                // Room above and below the text, so the box grows with it at the accessibility text sizes rather than
-                // cut it (MS-149); at the standard sizes the box stays 44 pt.
-                .padding(.vertical, Spacing.sm)
+            if isMultiline {
+                ZStack(alignment: .topLeading) {
+                    multilinePlaceholder
+                    styledInput
+                }
+            } else {
+                styledInput
+            }
             if let suffix {
                 // The unit keeps its width and one line ("cartridges" in Add expiry's How many on an iPhone SE); the
                 // input gives way instead (MS-136 audit V-17).
@@ -138,11 +134,27 @@ struct MSTextField: View {
         .msFocusRing(isFocused)
     }
 
+    private var styledInput: some View {
+        input
+            .textStyle(.body16)
+            .foregroundStyle(Color.ms.ink)
+            .accessibilityLabel(accessibilityText ?? label ?? placeholder)
+            .accessibilityIdentifier(identifier ?? "")
+            .focused($isFocused)
+            .keyboardType(keyboard)
+            .textContentType(contentType)
+            .textInputAutocapitalization(contentType == .emailAddress ? .never : .sentences)
+            // Room above and below the text, so the box grows with it at the accessibility text sizes rather than
+            // cut it (MS-149); at the standard sizes the box stays 44 pt.
+            .padding(.vertical, Spacing.sm)
+    }
+
     @ViewBuilder private var input: some View {
         if isSecure {
             SecureField(placeholder, text: $text, prompt: prompt)
         } else if isMultiline {
-            TextField(placeholder, text: $text, prompt: prompt, axis: .vertical)
+            // The prompt stays for VoiceOver, unseen: the example is drawn under the field instead.
+            TextField(placeholder, text: $text, prompt: Text(placeholder).foregroundStyle(Color.clear), axis: .vertical)
                 .lineLimit(1...Self.multilineLineLimit)
         } else {
             TextField(placeholder, text: $text, prompt: prompt)
@@ -152,18 +164,17 @@ struct MSTextField: View {
     /// The most lines a multiline field shows before it scrolls.
     private static let multilineLineLimit = 4
 
-    /// The leading icon (the search glyph), drawn as a shape in its outline rather than as an image: beside a text
-    /// field an image stayed in VoiceOver's reach, an unlabeled stop before the field, though hidden and decorative
-    /// (MS-149).
-    private func leadingIcon(_ icon: Icon) -> some View {
-        Rectangle()
-            .fill(Color.ms.textSecondary)
-            .frame(width: Self.leadingIconSize, height: Self.leadingIconSize)
-            .mask { icon.image.resizable().scaledToFit() }
+    /// A note's example, drawn under the field as text that wraps: a field's own prompt keeps one line and loses its
+    /// end ("e.g. Logged by mistake, patient cancell…" at Large on an iPhone SE). It keeps its room once typing
+    /// starts, so the box does not shrink under the first letter (MS-149).
+    private var multilinePlaceholder: some View {
+        Text(placeholder)
+            .textStyle(.body16)
+            .foregroundStyle(Color.ms.textSecondary)
+            .opacity(text.isEmpty ? 1 : 0)
+            .padding(.vertical, Spacing.sm)
             .accessibilityHidden(true)
     }
-
-    private static let leadingIconSize: CGFloat = 16
 
     /// A tappable trailing icon: its VoiceOver label, Appendix B id and action.
     struct TrailingAction {

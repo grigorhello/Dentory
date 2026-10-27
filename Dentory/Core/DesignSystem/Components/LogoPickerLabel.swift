@@ -4,6 +4,7 @@ import UIKit
 /// The clinic logo's picker label: the 72 pt tap-to-upload placeholder of f3 with its picture icon, or the chosen
 /// image, beside "Clinic logo" and a hint (sign-up's, or Clinic settings' "Tap to replace.").
 struct LogoPickerLabel: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let logoData: Data?
     var hint = "Tap to upload. Optional, square works best."
 
@@ -26,7 +27,11 @@ struct LogoPickerLabel: View {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {
                 IconView(.image, size: 24).foregroundStyle(Color.ms.textSecondary)
-                Text("Logo").textStyle(.caption12).foregroundStyle(Color.ms.textSecondary)
+                // At the accessibility text sizes the word no longer fits the square ("L…"); "Clinic logo" beside it
+                // says the same (MS-149).
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Text("Logo").textStyle(.caption12).foregroundStyle(Color.ms.textSecondary)
+                }
             }
         }
         .frame(width: 72, height: 72)
