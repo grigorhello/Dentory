@@ -31,10 +31,8 @@ struct OnboardingView: View {
                     case .invite: OnboardingInviteStep(viewModel: viewModel)
                     }
                 }
-                .padding(.horizontal, Spacing.page)
                 .padding(.bottom, Spacing.xl)
-                .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-                .frame(maxWidth: .infinity)
+                .contentColumn()
             }
             .scrollDismissesKeyboard(.interactively)
             // With the keyboard up the pinned Continue bar sits on it: step 1's fields are scrolled clear of it.

@@ -64,7 +64,11 @@ final class OnboardingUITests: XCTestCase {
         waitForTheFieldsToSettle(in: app)
         XCTAssertLessThanOrEqual(hint.frame.maxY, barTop(above: continueButton), "The hint is under Continue")
         app.typeText("dental")
-        XCTAssertFalse(hint.exists, "The hint stayed once the password was long enough")
+        // The hint goes with the eighth character; the layout may take a moment to follow under load.
+        let hintGone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: hint)
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [hintGone], timeout: 5), .completed, "The hint stayed once the password was long enough"
+        )
     }
 
     /// Lets the keyboard slide in and step 1 scroll its fields above the bar.

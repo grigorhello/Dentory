@@ -80,7 +80,7 @@ private struct ExpiryHeaderRow: View {
     }
 }
 
-/// Date in bold with the days-left badge under it, the quantity, the lot in mono.
+/// Date in bold with the days-left badge under it, the quantity in Inter 700 20 as f20 draws it, the lot in mono.
 private struct ProductBatchRow: View {
     let row: ProductDetailViewModel.BatchRow
 
@@ -92,7 +92,7 @@ private struct ProductBatchRow: View {
                     StatusBadge(row.daysText, tone: row.daysTone, size: .small)
                 }
                 Spacer(minLength: Spacing.sm)
-                Text(row.quantityText).textStyle(.title24).foregroundStyle(Color.ms.ink).monospacedDigit()
+                Text(row.quantityText).textStyle(.title20).foregroundStyle(Color.ms.ink).monospacedDigit()
                 Spacer(minLength: Spacing.sm)
                 Text(row.lot)
                     .textStyle(.mono)

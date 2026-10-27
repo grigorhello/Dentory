@@ -23,10 +23,8 @@ struct SetPasswordView: View {
                 OfflineBannerHost()
                 content
             }
-            .padding(.horizontal, Spacing.page)
             .padding(.bottom, Spacing.xl)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
+            .contentColumn()
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.ms.canvas)
