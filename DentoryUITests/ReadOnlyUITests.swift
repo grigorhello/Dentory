@@ -216,13 +216,13 @@ final class ReadOnlyUITests: XCTestCase {
         let app = launch(["-staff", "-tab", "toBuy"])
         let plus = app.buttons["\(endo).inc"]
         XCTAssertTrue(plus.waitForExistence(timeout: 5), "To buy did not load")
-        let value = app.staticTexts["\(endo).value"].label
+        let value = app.stepperNumber(endo)
         plus.tap()
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "No read-only sheet")
         XCTAssertFalse(app.buttons["readOnly.billing"].exists, "Billing is the admin's")
         app.buttons["readOnly.ok"].tap()
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5), "OK did not close it")
-        XCTAssertEqual(app.staticTexts["\(endo).value"].label, value, "The quantity did not change")
+        XCTAssertEqual(app.stepperNumber(endo), value, "The quantity did not change")
 
         app.buttons["tab.home"].tap()
         let notice = app.staticTexts["home.notice"]

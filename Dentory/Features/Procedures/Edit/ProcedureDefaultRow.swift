@@ -28,7 +28,7 @@ struct ProcedureDefaultRow: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if item.tracking == .countable {
-                    QuantityStepper(value: $quantity, minimum: 1, identifier: identifier)
+                    QuantityStepper(value: $quantity, minimum: 1, name: item.name, identifier: identifier)
                 }
                 IconButton(.x, label: "Remove \(item.name)", variant: .quiet, size: .row, action: onRemove)
                     .accessibilityIdentifier("\(identifier).remove")

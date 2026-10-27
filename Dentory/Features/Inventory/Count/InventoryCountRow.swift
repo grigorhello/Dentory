@@ -25,6 +25,7 @@ struct InventoryCountRow: View {
                 QuantityStepper(
                     value: $value,
                     isHighlighted: isCorrected,
+                    name: product.name,
                     identifier: "inv.count.row[\(product.id.uuidString.lowercased())]"
                 )
             }

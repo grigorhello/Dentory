@@ -32,7 +32,7 @@ struct ToBuyRow: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityElement(children: .combine)
-                    QuantityStepper(value: $quantity, minimum: 1, identifier: identifier)
+                    QuantityStepper(value: $quantity, minimum: 1, name: item.name, identifier: identifier)
                 }
                 .padding(.vertical, Spacing.md)
                 if showsDivider {

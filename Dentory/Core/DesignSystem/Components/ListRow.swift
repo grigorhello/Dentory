@@ -117,7 +117,7 @@ extension ListRow where Trailing == StatusBadge {
         ListRow("Septocaine 4% 1:100,000", caption: "Anesthetic · 54 cartridges", badge: .healthy, navigates: true)
         ListRow("Composite A2", caption: "Current 2 · target 6 · Patterson", value: "4")
         ListRow("Alginate impression", caption: "Lab · Shelf 1", showsDivider: false) {
-            QuantityStepper(value: .constant(3), reference: 4, identifier: "preview.row[3]")
+            QuantityStepper(value: .constant(3), reference: 4, name: "Endo file kit", identifier: "preview.row[3]")
         }
     }
     .padding(Spacing.page)

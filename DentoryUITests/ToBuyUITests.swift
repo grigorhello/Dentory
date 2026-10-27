@@ -39,10 +39,10 @@ final class ToBuyUITests: XCTestCase {
             markOrdered.frame.maxY, app.descendants(matching: .any)["tabBar"].frame.minY,
             "Mark as ordered sits under the tab bar"
         )
-        XCTAssertEqual(app.staticTexts["\(endo).value"].label, "4")
+        XCTAssertEqual(app.stepperNumber(endo), "4")
 
         app.buttons["\(endo).inc"].tap()
-        XCTAssertEqual(app.staticTexts["\(endo).value"].label, "5")
+        XCTAssertEqual(app.stepperNumber(endo), "5")
 
         app.buttons["order.selectionBar.toggle"].tap()
         XCTAssertEqual(app.staticTexts["order.selectionBar.summary"].label, "0 of 3 selected")
@@ -84,7 +84,7 @@ final class ToBuyUITests: XCTestCase {
         XCTAssertTrue(app.buttons["To buy · 3"].waitForExistence(timeout: 3), "Undo did not take Gauze off")
 
         // A drag across the row: XCUITest's swipeLeft on a small element moves too little to open it.
-        let start = app.staticTexts["\(composite).value"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let start = app.stepperValue(composite).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: -220, dy: 0)))
         let remove = app.buttons["\(composite).remove"]
         let revealed = expectation(for: NSPredicate(format: "isHittable == true"), evaluatedWith: remove)
@@ -136,7 +136,7 @@ final class ToBuyUITests: XCTestCase {
         XCTAssertFalse(element("order.selectionBar", in: app).exists, "Staff see the selection bar")
         XCTAssertFalse(app.buttons["order.markOrdered"].exists, "Staff see Mark as ordered")
         app.buttons["\(endo).inc"].tap()
-        XCTAssertEqual(app.staticTexts["\(endo).value"].label, "5")
+        XCTAssertEqual(app.stepperNumber(endo), "5")
         XCTAssertTrue(app.buttons["order.add"].exists)
     }
 }

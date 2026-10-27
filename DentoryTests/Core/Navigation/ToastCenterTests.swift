@@ -48,4 +48,21 @@ struct ToastCenterTests {
         center.dismiss()
         #expect(center.current == nil)
     }
+
+    @Test func voiceOverAnnouncesEachToastWithItsUndo() {
+        var announced: [String] = []
+        let center = ToastCenter(duration: 60, announce: { announced.append($0) })
+        center.show("Adjustment saved", detail: "54 → 52", undo: {})
+        center.show("Out of stock")
+        #expect(announced == ["Adjustment saved. 54 → 52. Undo available", "Out of stock"])
+    }
+
+    @Test func aToastStaysLongerWhileVoiceOverRuns() async throws {
+        let center = ToastCenter(
+            duration: 0.05, voiceOverDuration: 60, isVoiceOverRunning: { true }, announce: { _ in }
+        )
+        center.show("Added to To buy", undo: {})
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(center.current?.title == "Added to To buy", "Long enough to reach Undo")
+    }
 }

@@ -51,6 +51,7 @@ struct MSSheet<Content: View, Primary: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
+        .modifier(SheetEscape(onBack: onBack))
         .accessibilityIdentifier(identifier)
     }
 }
@@ -136,6 +137,7 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
             .accessibilityIdentifier("\(identifier).list")
         }
         .accessibilityElement(children: .contain)
+        .modifier(SheetEscape())
         .accessibilityIdentifier(identifier)
     }
 }
@@ -194,7 +196,44 @@ struct MSSheetContainer<Content: View>: View {
     }
 }
 
+/// VoiceOver's escape, a two-finger Z, on a sheet's content (MS-149): back one step where the sheet has a Back chevron,
+/// otherwise closed, as a swipe down closes it; nothing while `sheetCloseDisabled(_:)` holds the sheet open. The sheet
+/// itself keeps VoiceOver inside it while it is up.
+private struct SheetEscape: ViewModifier {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.isSheetCloseDisabled) private var isCloseDisabled
+    var onBack: (() -> Void)?
+
+    func body(content: Content) -> some View {
+        content.accessibilityAction(.escape) {
+            guard !isCloseDisabled else { return }
+            if let onBack {
+                onBack()
+            } else {
+                dismiss()
+            }
+        }
+    }
+}
+
+private struct SheetCloseDisabledKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// Set by `sheetCloseDisabled(_:)`.
+    var isSheetCloseDisabled: Bool {
+        get { self[SheetCloseDisabledKey.self] }
+        set { self[SheetCloseDisabledKey.self] = newValue }
+    }
+}
+
 extension View {
+    /// Keeps the sheet open while `isDisabled`, against a swipe down and VoiceOver's escape alike (a delete in flight).
+    func sheetCloseDisabled(_ isDisabled: Bool) -> some View {
+        interactiveDismissDisabled(isDisabled).environment(\.isSheetCloseDisabled, isDisabled)
+    }
+
     /// Presents `content` for the item as a Dentory bottom sheet.
     func msSheet<Item: Identifiable, Content: View>(
         item: Binding<Item?>,

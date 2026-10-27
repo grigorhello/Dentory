@@ -27,7 +27,7 @@ struct ProcedureSupplyRow: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                QuantityStepper(value: $quantity, reference: reference, identifier: identifier)
+                QuantityStepper(value: $quantity, reference: reference, name: name, identifier: identifier)
                 IconButton(.x, label: "Remove \(name)", variant: .quiet, size: .row, action: onRemove)
                     .accessibilityIdentifier("\(identifier).remove")
             }

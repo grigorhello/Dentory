@@ -43,7 +43,7 @@ final class ProcedureE2ETests: XCTestCase {
         app.buttons["home.procedure.editUsage"].tap()
         app.staticTexts["procDetail.editing"].appears("Edit usage did not open the procedure")
         app.buttons["procDetail.item[\(gloves)].inc"].tap()
-        XCTAssertEqual(app.staticTexts["procDetail.item[\(gloves)].value"].label, "3")
+        XCTAssertEqual(app.stepperNumber("procDetail.item[\(gloves)]"), "3")
         app.buttons["procDetail.save"].tap()
         let toast = app.descendants(matching: .any)["toast"]
         toast.appears("No toast after Save changes")

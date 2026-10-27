@@ -50,4 +50,12 @@ struct QuantityStepperModelTests {
         #expect(counted.isHighlighted)
         #expect(QuantityStepperModel(value: 3, reference: 2).isHighlighted, "Without a highlight the reference decides")
     }
+
+    @Test func voiceOverHearsTheNumberAndWhetherItChanged() {
+        var model = QuantityStepperModel(value: 2, reference: 2)
+        #expect(model.spokenValue == "2")
+        model.increment()
+        #expect(model.spokenValue == "3, changed")
+        #expect(QuantityStepperModel(value: 1000).spokenValue == "1000", "No grouping comma to read as a pause")
+    }
 }

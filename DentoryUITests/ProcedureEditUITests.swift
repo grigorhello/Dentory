@@ -47,12 +47,12 @@ final class ProcedureEditUITests: XCTestCase {
         XCTAssertEqual(app.textFields["procEdit.name"].value as? String, "Root canal")
         XCTAssertTrue(app.buttons["procEdit.save"].exists, "No Save in the header")
 
-        XCTAssertEqual(app.staticTexts["\(septocaine).value"].label, "2")
+        XCTAssertEqual(app.stepperNumber(septocaine), "2")
         app.buttons["\(septocaine).inc"].tap()
-        XCTAssertEqual(app.staticTexts["\(septocaine).value"].label, "3")
+        XCTAssertEqual(app.stepperNumber(septocaine), "3")
         app.buttons["\(septocaine).dec"].tap()
         app.buttons["\(septocaine).dec"].tap()
-        XCTAssertEqual(app.staticTexts["\(septocaine).value"].label, "1")
+        XCTAssertEqual(app.stepperNumber(septocaine), "1")
         XCTAssertFalse(app.buttons["\(septocaine).dec"].isEnabled, "A default can go under 1")
 
         app.buttons["\(rubberDam).remove"].tap()
@@ -72,7 +72,7 @@ final class ProcedureEditUITests: XCTestCase {
         )
         app.buttons[gauze].tap()
         XCTAssertFalse(app.staticTexts["addItem.title"].waitForExistence(timeout: 2), "The sheet did not close")
-        XCTAssertEqual(app.staticTexts["procEdit.item[00000000-0000-4000-8000-000000000208].value"].label, "1")
+        XCTAssertEqual(app.stepperNumber("procEdit.item[00000000-0000-4000-8000-000000000208]"), "1")
 
         app.buttons["procEdit.save"].tap()
         expectToast("Procedure saved", "Root canal\u{00A0}· 12 default supplies", in: app)

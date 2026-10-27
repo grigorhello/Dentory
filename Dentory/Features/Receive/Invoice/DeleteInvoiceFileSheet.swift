@@ -41,7 +41,7 @@ struct DeleteInvoiceFileSheet: View {
                 .accessibilityIdentifier("invoice.deleteFile.keep")
             }
         }
-        .interactiveDismissDisabled(viewModel.isDeleting)
+        .sheetCloseDisabled(viewModel.isDeleting)
         .onChange(of: viewModel.deleted) { _, deleted in
             guard let deleted else { return }
             onDeleted(deleted)

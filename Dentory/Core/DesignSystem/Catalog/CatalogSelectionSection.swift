@@ -43,15 +43,15 @@ struct CatalogSelectionSection: View {
         }
         CatalogSection("Steppers") {
             HStack(spacing: Spacing.lg) {
-                QuantityStepper(value: $quantity, reference: 2, identifier: "catalog.stepper[1]")
+                QuantityStepper(value: $quantity, reference: 2, name: "Septocaine 4%", identifier: "catalog.stepper[1]")
                 CatalogCaption("at its reference of 2")
             }
             HStack(spacing: Spacing.lg) {
-                QuantityStepper(value: $changed, reference: 2, identifier: "catalog.stepper[2]")
+                QuantityStepper(value: $changed, reference: 2, name: "Gauze 2x2", identifier: "catalog.stepper[2]")
                 CatalogCaption("differs from its reference of 2")
             }
             HStack(spacing: Spacing.lg) {
-                QuantityStepper(value: $count, identifier: "catalog.stepper[3]")
+                QuantityStepper(value: $count, name: "Endo file kit", identifier: "catalog.stepper[3]")
                 CatalogCaption("at the minimum of 0")
             }
         }
