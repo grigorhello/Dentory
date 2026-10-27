@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// One way to receive on Receive delivery (f22): an icon in a circle, the title over one line saying what it takes,
-/// and a chevron. Take a photo is the screen's dark featured card; the others sit on cream.
+/// and a chevron. Take a photo is the screen's dark featured card; the others sit on cream. The icon goes over the text
+/// at the accessibility text sizes, where beside it "manually" broke (MS-149).
 struct ReceiveOptionCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let icon: Icon
     let title: String
     let detail: String
@@ -10,19 +12,22 @@ struct ReceiveOptionCard: View {
     let action: () -> Void
 
     var body: some View {
+        let iconAndText = AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, spacing: Spacing.lg)
         Button(action: action) {
             HStack(spacing: Spacing.lg) {
-                IconView(icon, size: 22)
-                    .foregroundStyle(foreground)
-                    .frame(width: ControlHeight.md, height: ControlHeight.md)
-                    .background(isFeatured ? Color.ms.inkMid : Color.ms.surfacePage, in: Circle())
-                VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text(title).textStyle(.bodyStrong16).foregroundStyle(foreground)
-                    Text(detail)
-                        .textStyle(.body14)
-                        .foregroundStyle(isFeatured ? Color.ms.mute : Color.ms.textBody)
+                iconAndText {
+                    IconView(icon, size: 22)
+                        .foregroundStyle(foreground)
+                        .frame(width: ControlHeight.md, height: ControlHeight.md)
+                        .background(isFeatured ? Color.ms.inkMid : Color.ms.surfacePage, in: Circle())
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        Text(title).textStyle(.bodyStrong16).foregroundStyle(foreground)
+                        Text(detail)
+                            .textStyle(.body14)
+                            .foregroundStyle(isFeatured ? Color.ms.mute : Color.ms.textBody)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: Spacing.sm)
                 IconView(.chevronRight, size: 24).foregroundStyle(foreground)
             }

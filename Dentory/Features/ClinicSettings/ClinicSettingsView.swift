@@ -85,7 +85,7 @@ struct ClinicSettingsView: View {
                 "Currency", selection: $viewModel.currency, options: ClinicSettingsViewModel.currencies,
                 identifier: "settings.currency"
             ) { $0 }
-            .frame(width: ControlWidth.shortSelect)
+            .shortSelectWidth()
             MSPicker(
                 "Time zone", selection: $viewModel.timeZone, options: viewModel.timeZones,
                 identifier: "settings.timeZone"

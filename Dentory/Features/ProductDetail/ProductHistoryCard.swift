@@ -51,5 +51,6 @@ struct ProductHistoryCard: View {
             }
             Text(row.dateText).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

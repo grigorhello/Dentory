@@ -61,6 +61,7 @@ private extension ProductExpiryCard {
             }
             Text(viewModel.unit).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, Spacing.md)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("product.expiryTotal")

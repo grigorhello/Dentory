@@ -2,6 +2,7 @@ import SwiftUI
 
 /// The dark featured card of f6: Start a procedure, then the latest procedure with Edit usage.
 struct ProcedureCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let latest: LatestProcedure?
     let startedAtText: String
     let onStart: () -> Void
@@ -16,29 +17,49 @@ struct ProcedureCard: View {
                     .accessibilityIdentifier("home.procedure.start")
                 if let latest {
                     Rectangle().fill(Color.ms.inkMid).frame(height: 1)
-                    HStack(alignment: .firstTextBaseline) {
-                        Eyebrow("Latest", color: .ms.mute)
-                        Spacer()
-                        Text(startedAtText).textStyle(.body14).foregroundStyle(Color.ms.mute)
-                    }
-                    HStack(alignment: .center, spacing: Spacing.md) {
-                        VStack(alignment: .leading, spacing: Spacing.xxs) {
-                            Text(latest.name).textStyle(.bodyStrong16).foregroundStyle(Color.ms.textOnDark)
-                            Text(supplies(latest)).textStyle(.body14).foregroundStyle(Color.ms.mute)
-                        }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("home.procedure.latest")
-                        Spacer(minLength: Spacing.sm)
-                        Button {
-                            onEditUsage(latest.id)
-                        } label: {
-                            Label("Edit usage", icon: .pencil)
-                        }
-                        .buttonStyle(.ms(.outlineOnDark, size: .small))
-                        .accessibilityIdentifier("home.procedure.editUsage")
-                    }
+                    latestLine
+                    latestRow(latest)
                 }
             }
+        }
+    }
+
+    /// Latest, then when it started at the end of the line; under it at the accessibility text sizes, where beside the
+    /// eyebrow the time broke ("3:14 P / M", MS-149).
+    private var latestLine: some View {
+        let isStacked = dynamicTypeSize.isAccessibilitySize
+        let layout = AnyLayout.row(stacked: isStacked, alignment: .firstTextBaseline, stackedSpacing: Spacing.xxs)
+        return layout {
+            Eyebrow("Latest", color: .ms.mute)
+            if !isStacked {
+                Spacer()
+            }
+            Text(startedAtText).textStyle(.body14).foregroundStyle(Color.ms.mute)
+        }
+    }
+
+    /// The procedure and its supplies, Edit usage beside them; under them at the accessibility text sizes, where beside
+    /// the button both broke mid-word ("supplie / s", "usag / e", MS-149).
+    private func latestRow(_ latest: LatestProcedure) -> some View {
+        let isStacked = dynamicTypeSize.isAccessibilitySize
+        let layout = AnyLayout.row(stacked: isStacked, stackedSpacing: Spacing.md)
+        return layout {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                Text(latest.name).textStyle(.bodyStrong16).foregroundStyle(Color.ms.textOnDark)
+                Text(supplies(latest)).textStyle(.body14).foregroundStyle(Color.ms.mute)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("home.procedure.latest")
+            if !isStacked {
+                Spacer(minLength: Spacing.sm)
+            }
+            Button {
+                onEditUsage(latest.id)
+            } label: {
+                Label("Edit usage", icon: .pencil)
+            }
+            .buttonStyle(.ms(.outlineOnDark, size: .small))
+            .accessibilityIdentifier("home.procedure.editUsage")
         }
     }
 

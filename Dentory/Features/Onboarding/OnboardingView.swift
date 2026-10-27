@@ -230,7 +230,7 @@ private struct OnboardingInviteStep: View {
                 MSPicker("Role", selection: roleBinding($row.role), options: [MembershipRole.staff, .admin]) {
                     $0.label
                 }
-                .frame(width: ControlWidth.shortSelect)
+                .shortSelectWidth()
                 .accessibilityIdentifier("onboard.inviteRow[\(index)].role")
             }
         }

@@ -28,6 +28,23 @@ struct FieldRow<Content: View>: View {
     }
 }
 
+extension View {
+    /// A select of one short word beside a field in a `FieldRow`, a currency or an invited teammate's role: 120 pt
+    /// wide, and as wide as the stacked row at the accessibility text sizes, where in 120 pt its label and value broke
+    /// mid-word ("Curre / ncy", "Sta / ff", MS-149).
+    func shortSelectWidth() -> some View {
+        modifier(ShortSelectWidth())
+    }
+}
+
+private struct ShortSelectWidth: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    func body(content: Content) -> some View {
+        content.frame(width: dynamicTypeSize.isAccessibilitySize ? nil : ControlWidth.shortSelect)
+    }
+}
+
 #Preview("Field rows") {
     @Previewable @State var unit = ""
     @Previewable @State var packUnit = ""

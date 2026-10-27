@@ -169,20 +169,24 @@ struct HomeView: View {
     }
 
     private var receiveRow: some View {
-        Button {
+        // The icon goes over the text at the accessibility text sizes, where beside it "delivery" broke (MS-149).
+        let iconAndText = AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, spacing: Spacing.lg)
+        return Button {
             writeAccess.perform { router.push(HomeRoute.receive, on: .home) }
         } label: {
             HStack(spacing: Spacing.lg) {
-                IconView(.truck, size: 24)
-                    .foregroundStyle(Color.ms.ink)
-                    .frame(width: ControlHeight.lg, height: ControlHeight.lg)
-                    .background(Color.ms.surfacePage, in: Circle())
-                VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text("Receive delivery").textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
-                    Text("Photo, PDF or manual. You confirm every line.")
-                        .textStyle(.body14)
-                        .foregroundStyle(Color.ms.textBody)
-                        .fixedSize(horizontal: false, vertical: true)
+                iconAndText {
+                    IconView(.truck, size: 24)
+                        .foregroundStyle(Color.ms.ink)
+                        .frame(width: ControlHeight.lg, height: ControlHeight.lg)
+                        .background(Color.ms.surfacePage, in: Circle())
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        Text("Receive delivery").textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
+                        Text("Photo, PDF or manual. You confirm every line.")
+                            .textStyle(.body14)
+                            .foregroundStyle(Color.ms.textBody)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 Spacer(minLength: Spacing.sm)
                 IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.textBody)
