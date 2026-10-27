@@ -101,10 +101,10 @@ struct PushedHeader: View {
                         .lineLimit(2)
                         .accessibilityIdentifier("\(identifier).context")
                 } else {
+                    // A long title, a procedure's own name, takes more lines rather than lose its end (MS-149).
                     Text(title)
                         .textStyle(.title20)
                         .foregroundStyle(Color.ms.ink)
-                        .lineLimit(1)
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("\(identifier).title")
                 }

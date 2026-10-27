@@ -8,6 +8,7 @@ struct ReceiveWaitingList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Eyebrow("Waiting for delivery")
+                .accessibilityAddTraits(.isHeader)
             ListCard {
                 ForEach(viewModel.waiting) { item in
                     ReceiveRow(

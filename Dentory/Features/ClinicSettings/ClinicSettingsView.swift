@@ -92,6 +92,7 @@ struct ClinicSettingsView: View {
             ) { $0 }
         }
         Eyebrow("Alerts")
+            .accessibilityAddTraits(.isHeader)
             .padding(.top, Spacing.sm)
         MSPicker(
             "Expiry warning", selection: $viewModel.expiryWarning, options: ExpiryWarning.allCases,

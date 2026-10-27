@@ -30,7 +30,7 @@ struct SegmentedControl<Value: Hashable & Sendable>: View {
                 segment(option)
             }
         }
-        .padding(Spacing.xs)
+        .padding(.horizontal, Spacing.xs)
         .background(Color.ms.surfaceCard, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         // The selected pill fades in place (PRD §7: fades and color only, nothing slides).
         .animation(Motion.baseAnimation, value: selection)
@@ -50,13 +50,16 @@ struct SegmentedControl<Value: Hashable & Sendable>: View {
                 .minimumScaleFactor(0.6)
                 .padding(.horizontal, Spacing.xs)
                 .frame(maxWidth: .infinity)
-                .frame(height: 40)
+                .frame(minHeight: ControlHeight.segment)
                 .background {
                     RoundedRectangle(cornerRadius: Radius.md - Spacing.xs, style: .continuous)
                         .fill(Color.ms.surfacePage)
                         .msShadow(Shadow.soft)
                         .opacity(isSelected ? 1 : 0)
                 }
+                // The track's padding above and below the pill is part of the segment, so a tap there lands: 48 pt
+                // high, over the 44 pt hit target (MS-149).
+                .padding(.vertical, Spacing.xs)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

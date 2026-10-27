@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Text input: 44 pt, 6 pt radius, ink hairline; blue when focused, danger with an inline error under it.
+/// Text input: 44 pt (taller only at the accessibility text sizes), 6 pt radius, ink hairline; blue when focused,
+/// danger with an inline error under it.
 /// Pass the Appendix B id as `identifier`: it goes on the input itself, so UI tests can tap and type into it.
 struct MSTextField: View {
     @Environment(\.isEnabled) private var isEnabled
@@ -93,6 +94,9 @@ struct MSTextField: View {
                 .keyboardType(keyboard)
                 .textContentType(contentType)
                 .textInputAutocapitalization(contentType == .emailAddress ? .never : .sentences)
+                // Room above and below the text, so the box grows with it at the accessibility text sizes rather than
+                // cut it (MS-149); at the standard sizes the box stays 44 pt.
+                .padding(.vertical, Spacing.sm)
             if let suffix {
                 // The unit keeps its width and one line ("cartridges" in Add expiry's How many on an iPhone SE); the
                 // input gives way instead (MS-136 audit V-17).
@@ -117,7 +121,7 @@ struct MSTextField: View {
             }
         }
         .padding(.horizontal, Spacing.md)
-        .frame(height: ControlHeight.md)
+        .frame(minHeight: ControlHeight.md)
         .background(
             isEnabled ? Color.ms.surfacePage : Color.ms.surfaceCard,
             in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)

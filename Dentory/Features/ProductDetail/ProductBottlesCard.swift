@@ -9,6 +9,7 @@ struct ProductBottlesCard: View {
 
     var body: some View {
         Eyebrow("Bottles")
+            .accessibilityAddTraits(.isHeader)
         ListCard {
             Text(viewModel.bottlesLine)
                 .textStyle(.bodyStrong16)

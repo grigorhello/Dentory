@@ -18,14 +18,14 @@ struct MSReadOnlyField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label).textStyle(.bodyStrong14).foregroundStyle(Color.ms.ink)
+            // A long address wraps rather than lose its middle, and the box grows with it (MS-149).
             Text(value)
                 .textStyle(.body16)
                 .foregroundStyle(Color.ms.ink)
-                .lineLimit(1)
-                .truncationMode(.middle)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Spacing.md)
-                .frame(height: ControlHeight.md)
+                .padding(.vertical, Spacing.sm)
+                .frame(minHeight: ControlHeight.md)
                 .background(Color.ms.surfaceCard, in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)

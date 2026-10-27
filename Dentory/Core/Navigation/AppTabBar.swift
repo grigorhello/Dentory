@@ -65,6 +65,14 @@ private struct AppTabBarItem: View {
         .accessibilityLabel(tab.title)
         .accessibilityValue(badge > 0 ? "\(badge)" : "")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        // At the accessibility text sizes a long press shows the tab large, as the system tab bar does (MS-149).
+        .accessibilityShowsLargeContentViewer {
+            Label {
+                Text(tab.title)
+            } icon: {
+                tab.icon.image
+            }
+        }
         .accessibilityIdentifier(tab.accessibilityIdentifier)
     }
 }

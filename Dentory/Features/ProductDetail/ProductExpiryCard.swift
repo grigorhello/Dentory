@@ -10,6 +10,7 @@ struct ProductExpiryCard: View {
 
     var body: some View {
         Eyebrow("Expiry")
+            .accessibilityAddTraits(.isHeader)
         if viewModel.batchRows.isEmpty {
             EmptyStateView("No expiry dates yet.")
                 .accessibilityIdentifier("product.expiryEmpty")

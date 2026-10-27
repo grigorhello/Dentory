@@ -37,15 +37,14 @@ struct MSSelectField: View {
             Button(action: action) {
                 HStack(spacing: Spacing.sm) {
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        // The choice and its caption wrap rather than lose their ends (MS-149).
                         Text(value ?? placeholder)
                             .textStyle(.body16)
                             .foregroundStyle(value == nil ? Color.ms.textSecondary : Color.ms.ink)
-                            .lineLimit(1)
                         if value != nil, let caption {
                             Text(caption)
                                 .textStyle(.caption12)
                                 .foregroundStyle(Color.ms.textSecondary)
-                                .lineLimit(1)
                         }
                     }
                     Spacer(minLength: 0)

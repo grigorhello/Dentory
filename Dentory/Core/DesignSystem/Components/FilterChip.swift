@@ -28,7 +28,9 @@ struct FilterChip: View {
             .foregroundStyle(isSelected ? Color.ms.onPrimary : Color.ms.ink)
             .lineLimit(1)
             .padding(.horizontal, Spacing.md)
-            .frame(height: ControlHeight.sm)
+            // 36 pt, taller only when the accessibility text sizes need it, rather than cut the label (MS-149).
+            .padding(.vertical, Spacing.xs)
+            .frame(minHeight: ControlHeight.sm)
             .background(
                 isSelected ? Color.ms.ink : Color.ms.surfaceCard,
                 in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)

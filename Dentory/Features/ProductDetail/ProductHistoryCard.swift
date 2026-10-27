@@ -8,6 +8,7 @@ struct ProductHistoryCard: View {
 
     var body: some View {
         Eyebrow("History")
+            .accessibilityAddTraits(.isHeader)
         if rows.isEmpty {
             EmptyStateView("No history yet.")
         } else {

@@ -71,8 +71,10 @@ struct MSButtonSurface<Label: View>: View {
         // A long label shrinks a little at the largest text sizes rather than lose its end ("10 ite…").
         .minimumScaleFactor(0.7)
         .padding(.horizontal, size.horizontalPadding)
+        // 48 or 36 pt, taller only when the accessibility text sizes need it, rather than cut the label (MS-149).
+        .padding(.vertical, Spacing.xs)
         .frame(maxWidth: isFullWidth ? .infinity : nil)
-        .frame(height: size.height)
+        .frame(minHeight: size.height)
         .background(background, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md, style: .continuous)

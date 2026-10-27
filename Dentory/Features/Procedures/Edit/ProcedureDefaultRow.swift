@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// One default supply (f15): a countable product's name on one line, −/+ around its default (never under 1) and the
-/// X; a multi-use product's name with "Multi-use · listed under Opened a new one?" and only the X.
+/// One default supply (f15): a countable product's name, −/+ around its default (never under 1) and the X; a
+/// multi-use product's name with "Multi-use · listed under Opened a new one?" and only the X. A long name wraps rather
+/// than lose its end (MS-149).
 struct ProcedureDefaultRow: View {
     let item: ProcedureEditViewModel.Item
     @Binding var quantity: Int
@@ -16,8 +17,6 @@ struct ProcedureDefaultRow: View {
                     Text(item.name)
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.ink)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
                     if item.tracking == .multiUse {
                         Text(ProcedureEditViewModel.multiUseCaption)
                             .textStyle(.caption12)

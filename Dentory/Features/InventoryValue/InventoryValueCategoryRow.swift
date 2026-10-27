@@ -23,6 +23,7 @@ struct InventoryValueCategoryRow: View {
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.textSecondary)
                         .monospacedDigit()
+                        .fixedSize()
                         .frame(minWidth: ControlHeight.sm, alignment: .trailing)
                 }
                 ShareBar(share: share)

@@ -95,6 +95,7 @@ struct HomeView: View {
             // f6 sets the tiles closer under their eyebrow than the screen's 16 pt rhythm.
             VStack(alignment: .leading, spacing: Spacing.xs + Spacing.xxs) {
                 Eyebrow("Needs attention")
+                    .accessibilityAddTraits(.isHeader)
                 attentionTiles(summary)
             }
             ProcedureCard(

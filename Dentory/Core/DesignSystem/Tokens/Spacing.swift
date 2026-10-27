@@ -21,6 +21,8 @@ nonisolated enum ControlHeight {
     static let sm: CGFloat = 36
     static let md: CGFloat = 44
     static let lg: CGFloat = 48
+    /// A segment's pill inside the 4 pt padded track (PRD §7 segmented control).
+    static let segment: CGFloat = 40
 
     /// Minimum hit target of anything tappable (PRD §7 accessibility).
     static let hitTarget: CGFloat = 44

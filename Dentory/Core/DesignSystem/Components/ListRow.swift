@@ -92,7 +92,8 @@ struct ListRowValue: View {
     }
 
     var body: some View {
-        Text(value).textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink).monospacedDigit()
+        // A number is never cut or wrapped: at large text sizes the row's label wraps instead (MS-149).
+        Text(value).textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink).monospacedDigit().fixedSize()
     }
 }
 

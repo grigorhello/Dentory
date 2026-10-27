@@ -36,6 +36,8 @@ struct ExpiringCard: View {
                             .foregroundStyle(Color.ms.textSecondary)
                     }
                     .monospacedDigit()
+                    // The days and the value never wrap: the name and its line do (MS-149).
+                    .fixedSize()
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier(identifier)

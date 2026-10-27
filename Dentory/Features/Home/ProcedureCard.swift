@@ -11,6 +11,7 @@ struct ProcedureCard: View {
         CardView(variant: .dark) {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 Eyebrow("Procedure", color: .ms.mute)
+                    .accessibilityAddTraits(.isHeader)
                 MSButton("Start a procedure", icon: .clipboardCheck, action: onStart)
                     .accessibilityIdentifier("home.procedure.start")
                 if let latest {
