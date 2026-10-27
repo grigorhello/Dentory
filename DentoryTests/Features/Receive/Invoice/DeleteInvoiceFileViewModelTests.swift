@@ -65,10 +65,10 @@ struct DeleteInvoiceFileViewModelTests {
         #expect(viewModel.generalError?.userMessage == "Only a received invoice's file can be deleted.",
             "The server's sentence, in house copy")
 
-        repository.fileDeletion = .failure(AppError.readOnly)
+        // Only an admin deletes the file, read-only or not (#117): a role changed to Staff meanwhile is refused.
+        repository.fileDeletion = .failure(AppError.forbidden)
         await viewModel.delete()
-        #expect(viewModel.generalError?.userMessage
-            == "Your clinic is in read-only mode. Add a card from the link in your billing email.")
+        #expect(viewModel.generalError?.userMessage == "You don't have permission to do this.")
         #expect(viewModel.deleted == nil)
     }
 
