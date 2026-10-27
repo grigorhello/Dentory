@@ -98,8 +98,8 @@ the round trip of the write from the phone, which is most of the tap-to-result t
 
 1. `ANTHROPIC_API_KEY=… make invoice-reading-live` (a key in the shell, never in a file in the repo or a chat): reads
    the five fixture invoices with the real API and prints each time and the median.
-2. On staging, once the pilot clinic has read real invoices, the median from the upload to the result, failed readings
-   included and the demo clinic's seeded invoice left out (also `docs/handoff/build-state.md`, item 13):
+2. On staging, once the pilot clinic has read real invoices, the median from the upload to the result, with failed
+   readings and the demo clinic's seeded invoice left out (also `docs/handoff/build-state.md`, item 13):
 
 ```sql
 select percentile_cont(0.5) within group (order by extract(epoch from read_at - created_at))

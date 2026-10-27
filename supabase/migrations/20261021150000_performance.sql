@@ -118,9 +118,11 @@ create index batches_clinic_idx on public.batches (clinic_id);
 -- then each held a row the other wanted, and Postgres ended one with a deadlock: with eight clients starting procedures
 -- and opening bottles at once, 117 of 126 starts failed. Every change now takes its clinic's lock first, in the first
 -- engine step each one makes (begin_action, lock_product, lock_product_row), so a clinic's changes wait in turn for the
--- milliseconds each takes and never hold rows another wants; clinics never wait for each other. A change that locks a
--- row of its own first (the procedure it edits, the action it undoes, the invoice it confirms) waits for that row
--- before the lock, so it cannot hold the lock while waiting for it. Mark as ordered and a clinic setting that refreshes
+-- milliseconds each takes; clinics never wait for each other. A few lock a row before the clinic's lock: the
+-- procedure edited or cancelled, the action undone and a delivery's invoice with it, the invoice confirmed and the
+-- invoice a receipt names. The rule that keeps them free of deadlocks: a row locked before the clinic's lock is never
+-- locked after it by another change, so the change holding the lock never waits for one that waits for the lock
+-- (undo_action and stock_receive, re-created at the end, keep it). Mark as ordered and a clinic setting that refreshes
 -- every product take the same lock, since they write the To buy lines and alerts each stock change refreshes.
 create function engine.stock_lock(p_clinic_id uuid)
 returns void
@@ -290,5 +292,127 @@ begin
     from public.products p
     where p.clinic_id = p_clinic_id and p.archived_at is null;
   end if;
+end;
+$$;
+
+-- Undo locks a delivery's invoice before the clinic's lock ----------------------------------------------------------
+-- Undo of a delivery took the clinic's lock in begin_action and only then locked the invoice, in
+-- engine.invoice_confirm_undo, while invoice_confirm locks the invoice and then the clinic's lock: a confirmation
+-- retried while its Undo ran, and that Undo, could each hold what the other waited for. MS-131's undo_action
+-- (20261021100000_invoice_confirm.sql), unchanged but for the invoice of a delivery, locked after the action and before
+-- the clinic's lock.
+create or replace function public.undo_action(p_action_id uuid, p_idempotency_key uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_original public.stock_actions;
+  v_action record;
+  v_row public.transactions;
+  v_label text;
+  v_undated uuid;
+begin
+  select * into v_original from public.stock_actions where id = p_action_id for update;
+  if not found then perform engine.fail('22023', 'unknown action'); end if;
+  perform engine.assert_member(v_original.clinic_id);
+  if v_original.by_user <> auth.uid() then perform engine.fail('42501', 'only the person who did it can undo it'); end if;
+  if v_original.kind not in ('adjust', 'receive', 'dispose', 'invoice_confirm') then
+    perform engine.fail('22023', 'this action cannot be undone');
+  end if;
+  if v_original.kind = 'invoice_confirm' then
+    perform 1 from public.invoices i where i.confirm_action_id = p_action_id for update;
+  end if;
+  v_action := engine.begin_action(v_original.clinic_id, p_idempotency_key, 'undo');
+  if v_action.o_replay then return v_action.o_action_id; end if;
+  if v_original.undone_by_action_id is not null then perform engine.fail('22023', 'already undone'); end if;
+  if now() - v_original.created_at > interval '10 seconds' then perform engine.fail('22023', 'the undo window has passed'); end if;
+  if v_original.kind = 'invoice_confirm' then
+    perform engine.invoice_confirm_undo(p_action_id);
+  end if;
+  v_label := 'Undo · ' || coalesce((select ref_label from public.transactions where action_id = p_action_id limit 1), v_original.kind);
+  for v_row in select * from public.transactions where action_id = p_action_id order by at loop
+    perform engine.lock_product(v_row.product_id);
+    if v_row.batch_id is not null then
+      update public.batches set qty = qty - v_row.delta where id = v_row.batch_id;
+      perform engine.ledger(v_original.clinic_id, v_row.product_id, v_row.batch_id, null, v_row.type, -v_row.delta,
+        'undo', p_action_id, v_label, v_row.reason, null, v_action.o_action_id, v_row.id);
+    else
+      v_undated := engine.undated_batch(v_original.clinic_id, v_row.product_id);
+      update public.batches set qty = qty - v_row.delta where id = v_undated;
+      perform engine.ledger(v_original.clinic_id, v_row.product_id, null, null, v_row.type, -v_row.delta,
+        'undo', p_action_id, v_label, v_row.reason, null, v_action.o_action_id, v_row.id);
+    end if;
+    perform public.refresh_product(v_row.product_id);
+  end loop;
+  update public.stock_actions set undone_by_action_id = v_action.o_action_id where id = p_action_id;
+  return v_action.o_action_id;
+end;
+$$;
+
+-- A receipt that names an invoice locks it before the clinic's lock -------------------------------------------------
+-- A receipt referenced as an invoice marks the To buy lines it receives with that invoice, which Postgres checks by
+-- locking the invoice row (key share) after the clinic's lock, while invoice_confirm and Undo lock that row before it.
+-- The app receives through stock_receive only manually, with no invoice, but the engine takes either. MS-106's
+-- stock_receive (20261016150000_stock_engine.sql), unchanged but for that invoice, locked before the clinic's lock.
+create or replace function public.stock_receive(
+  p_clinic_id uuid, p_lines jsonb, p_idempotency_key uuid,
+  p_ref_type public.transaction_ref_type default 'manual', p_ref_id uuid default null, p_ref_label text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_action record;
+  v_line record;
+  v_product public.products;
+  v_batch uuid;
+begin
+  perform engine.assert_member(p_clinic_id, true);
+  if p_ref_type = 'invoice' and p_ref_id is not null then
+    perform 1 from public.invoices i where i.id = p_ref_id for key share;
+  end if;
+  v_action := engine.begin_action(p_clinic_id, p_idempotency_key, 'receive');
+  if v_action.o_replay then return v_action.o_action_id; end if;
+  if jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) = 0 then
+    perform engine.fail('22023', 'nothing to receive');
+  end if;
+  for v_line in
+    select (l->>'product_id')::uuid as product_id, (l->>'qty')::numeric as qty,
+           (l->>'unit_cost')::numeric as unit_cost, nullif(l->>'lot', '') as lot, (l->>'expiry_month')::date as expiry_month
+    from jsonb_array_elements(p_lines) l
+  loop
+    if v_line.qty is null or v_line.qty <= 0 then
+      perform engine.fail('22023', 'a received quantity must be above 0');
+    end if;
+    v_product := engine.lock_product(v_line.product_id);
+    if v_product.clinic_id <> p_clinic_id then
+      perform engine.fail('42501', 'the product belongs to another clinic');
+    end if;
+    select id into v_batch from public.batches
+    where product_id = v_product.id and expiry_month is not distinct from v_line.expiry_month and lot is not distinct from v_line.lot
+    order by created_at limit 1;
+    if v_batch is null then
+      insert into public.batches (clinic_id, product_id, expiry_month, lot, qty)
+      values (p_clinic_id, v_product.id, v_line.expiry_month, v_line.lot, v_line.qty) returning id into v_batch;
+    else
+      update public.batches set qty = qty + v_line.qty where id = v_batch;
+    end if;
+    if v_line.unit_cost is not null then
+      update public.products set last_unit_cost = v_line.unit_cost where id = v_product.id;
+    end if;
+    perform engine.ledger(p_clinic_id, v_product.id, v_batch, null, 'receiving', v_line.qty,
+      p_ref_type, p_ref_id, p_ref_label, null, null, v_action.o_action_id);
+    -- A line still "to buy" counts as ordered now: the delivery is the proof.
+    update public.to_buy_items set status = 'received', received_at = now(),
+      ordered_at = coalesce(ordered_at, now()), ordered_by = coalesce(ordered_by, auth.uid()),
+      invoice_id = case when p_ref_type = 'invoice' then p_ref_id else invoice_id end
+    where product_id = v_product.id and status in ('to_buy', 'ordered');
+    perform public.refresh_product(v_product.id);
+  end loop;
+  return v_action.o_action_id;
 end;
 $$;
