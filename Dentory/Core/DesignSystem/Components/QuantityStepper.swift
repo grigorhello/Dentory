@@ -47,9 +47,11 @@ struct QuantityStepper: View {
                 .monospacedDigit()
                 .foregroundStyle(model.isHighlighted ? Color.ms.primary : Color.ms.ink)
                 .fixedSize()
-                // As tall as the buttons, so the number VoiceOver reaches by touch is a 44 pt target too.
+                // As tall as the buttons, so the number VoiceOver reaches by touch is a 44 pt target too: the shape
+                // gives the element the frame's size, which would otherwise be the text's.
                 .frame(minWidth: 36, minHeight: ControlHeight.hitTarget)
                 .accessibilityElement(children: .ignore)
+                .contentShape(.accessibility, Rectangle())
                 .accessibilityLabel(name)
                 .accessibilityValue(model.spokenValue)
                 .accessibilityAdjustableAction { direction in
