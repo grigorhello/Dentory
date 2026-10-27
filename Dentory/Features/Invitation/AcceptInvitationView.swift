@@ -122,7 +122,7 @@ private struct InvitationFields: View {
         MSReadOnlyField("Email", value: invitation.email, identifier: "invite.email")
         MSTextField(
             "Password", text: $viewModel.password, identifier: "invite.password",
-            placeholder: "At least 8 characters", error: viewModel.passwordError,
+            placeholder: NewPassword.requirement, hint: viewModel.passwordHint, error: viewModel.passwordError,
             isSecure: true, contentType: .newPassword
         )
         .focused($focus, equals: .password)

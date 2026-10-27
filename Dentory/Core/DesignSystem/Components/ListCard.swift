@@ -20,7 +20,8 @@ struct ListDivider: View {
     }
 }
 
-/// Column captions above the rows ("Expires · Qty · Lot").
+/// Column captions above the rows ("Supplies for this procedure · Qty", f13; "Supplies used · Used", f14): Inter 600 14
+/// in secondary text, set as the frames draw it, 12 pt over and 8 pt under the line.
 struct ListHeaderRow: View {
     let title: String
     var trailing: String?
@@ -39,9 +40,10 @@ struct ListHeaderRow: View {
                     Text(trailing)
                 }
             }
-            .textStyle(.body16)
+            .textStyle(.bodyStrong14)
             .foregroundStyle(Color.ms.textSecondary)
-            .padding(.vertical, Spacing.md)
+            .padding(.top, Spacing.md)
+            .padding(.bottom, Spacing.sm)
             ListDivider()
         }
     }

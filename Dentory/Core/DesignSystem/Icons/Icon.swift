@@ -19,6 +19,8 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case eyeOff = "eye-off"
     case fileText = "file-text"
     case fileUp = "file-up"
+    /// A picture: the clinic logo's placeholder (f3).
+    case image
     case info
     case layoutGrid = "layout-grid"
     case lifeBuoy = "life-buoy"
@@ -29,6 +31,8 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case penLine = "pen-line"
     case plus
     case search
+    /// A paper plane: Send invitations (f4).
+    case send
     case settings
     case shoppingCart = "shopping-cart"
     case slidersHorizontal = "sliders-horizontal"

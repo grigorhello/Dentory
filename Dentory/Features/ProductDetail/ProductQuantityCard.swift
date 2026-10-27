@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Available, Minimum and Target in three columns, then the system estimate and the last count (f20);
-/// a warning notice with the recommended addition when the product is Low or Out of stock.
+/// Available, Minimum and Target in three columns, then the system estimate and the last count (f20), in the frame's
+/// sizes: 14 pt labels and lines, a 12 pt unit; a warning notice with the recommended addition when the product is
+/// Low or Out of stock.
 struct ProductQuantityCard: View {
     let viewModel: ProductDetailViewModel
 
@@ -16,12 +17,12 @@ struct ProductQuantityCard: View {
                 ListDivider()
                 HStack(alignment: .top, spacing: Spacing.md) {
                     Text(viewModel.estimateLine)
-                        .textStyle(.body16)
+                        .textStyle(.body14)
                         .foregroundStyle(Color.ms.textBody)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: Spacing.sm)
                     Text(viewModel.countedLine)
-                        .textStyle(.body16)
+                        .textStyle(.body14)
                         .foregroundStyle(Color.ms.textBody)
                         .multilineTextAlignment(.trailing)
                         .fixedSize(horizontal: false, vertical: true)
@@ -37,10 +38,10 @@ struct ProductQuantityCard: View {
 
     private func column(_ label: String, value: String, unit: String?) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(label).textStyle(.body16).foregroundStyle(Color.ms.textSecondary)
+            Text(label).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
             Text(value).textStyle(.display32).foregroundStyle(Color.ms.ink).monospacedDigit()
             if let unit {
-                Text(unit).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
+                Text(unit).textStyle(.micro12).foregroundStyle(Color.ms.textSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

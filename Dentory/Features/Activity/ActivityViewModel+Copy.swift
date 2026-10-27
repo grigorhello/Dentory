@@ -20,7 +20,7 @@ extension ActivityViewModel {
         case .low:
             let left = (alert.tracking == .multiUse ? alert.unopened : alert.quantity) ?? 0
             let minimum = formatters.number(alert.minimum ?? 0)
-            return "\(name) is low\u{00A0}· \(formatters.number(left)) left, minimum \(minimum)."
+            return Caption.joined("\(name) is low", "\(formatters.number(left)) left, minimum \(minimum).")
         case .expiring:
             let subject = alert.expiringBatches > 1 ? alert.lot.map { "\(name) lot \($0)" } ?? name : name
             return "\(subject) \(expiry(daysLeft(for: alert)))."
@@ -37,7 +37,7 @@ extension ActivityViewModel {
     /// "Today · 8:40 AM", "Yesterday", "Sep 28".
     func whenText(for alert: ActivityAlert) -> String {
         switch formatters.daysSince(alert.openedAt) {
-        case ...0: "Today\u{00A0}· \(formatters.time(alert.openedAt))"
+        case ...0: "Today\(Caption.separator)\(formatters.time(alert.openedAt))"
         case 1: "Yesterday"
         default: formatters.monthDay(alert.openedAt)
         }

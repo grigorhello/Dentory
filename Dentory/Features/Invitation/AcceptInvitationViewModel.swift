@@ -24,8 +24,6 @@ final class AcceptInvitationViewModel {
     /// Set once the membership is active and the session is signed in: the root shows Home.
     private(set) var isFinished = false
 
-    static let minimumPasswordLength = 8
-
     private let token: String
     private let repository: InvitationRepository
     private let sessionStore: SessionStore
@@ -54,9 +52,12 @@ final class AcceptInvitationViewModel {
     var canJoin: Bool {
         invitation != nil
             && !fullName.trimmingCharacters(in: .whitespaces).isEmpty
-            && password.count >= Self.minimumPasswordLength
+            && NewPassword.isLongEnough(password)
             && !isSubmitting
     }
+
+    /// "At least 8 characters" under the password while it is too short, so a disabled Join says why.
+    var passwordHint: String? { NewPassword.hint(for: password) }
 
     func load() async {
         state = .loading

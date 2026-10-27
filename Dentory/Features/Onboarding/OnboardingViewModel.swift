@@ -44,8 +44,6 @@ final class OnboardingViewModel {
     /// The toast after step 3 ("Invitations sent · They get a link by email.").
     private(set) var completionMessage: String?
 
-    static let minimumPasswordLength = 8
-
     private let auth: AuthServicing
     private let repository: OnboardingRepository
     private let sessionStore: SessionStore
@@ -89,9 +87,12 @@ final class OnboardingViewModel {
     var canContinueAccount: Bool {
         !fullName.trimmingCharacters(in: .whitespaces).isEmpty
             && Self.looksLikeEmail(email)
-            && password.count >= Self.minimumPasswordLength
+            && NewPassword.isLongEnough(password)
             && !isSubmitting
     }
+
+    /// "At least 8 characters" under the password while it is too short, so a disabled Continue says why.
+    var passwordHint: String? { NewPassword.hint(for: password) }
 
     func createAccount() async {
         guard canContinueAccount else { return }
@@ -177,7 +178,7 @@ final class OnboardingViewModel {
             do {
                 _ = try await repository.invite(clinicID: clinicID, invites: filledInvites)
                 analytics.track(.onboardingFinished(invitations: filledInvites.count))
-                finish(message: "Invitations sent\u{00A0}· They get a link by email.")
+                finish(message: "Invitations sent\(Caption.separator)They get a link by email.")
             } catch {
                 let appError = AppError(error)
                 // A refusal of one address names it; it belongs under that row, not under step 1's email.

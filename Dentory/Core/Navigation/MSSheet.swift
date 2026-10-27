@@ -175,11 +175,9 @@ struct MSSheetContainer<Content: View>: View {
                     .padding(.bottom, Spacing.md)
                     .accessibilityHidden(true)
                 content()
-                    .padding(.horizontal, Spacing.page)
                     .padding(.bottom, Spacing.xl)
             }
-            .frame(maxWidth: PageLayout.contentMaxWidth)
-            .frame(maxWidth: .infinity)
+            .contentColumn(alignment: .center)
             .onGeometryChange(for: CGFloat.self) { proxy in
                 proxy.size.height
             } action: { height in

@@ -30,12 +30,29 @@ nonisolated enum ControlHeight {
 nonisolated enum ControlWidth {
     /// A select of one short word: an invited teammate's Role (f4), the clinic's Currency (f33).
     static let shortSelect: CGFloat = 120
+    /// A tab of the tab bar at most, so the four tabs cluster in the middle of a wide bar (f36 to f38).
+    static let tabItem: CGFloat = 120
 }
 
 /// Page layout limits. The web `container-max` and `sidebar-width` do not apply to the app.
 nonisolated enum PageLayout {
-    /// iPad content is capped at this width and centred (PRD §7).
+    /// iPad content is capped at this width, inside the page gutter, and centred (PRD §7, f36 to f38).
     static let contentMaxWidth: CGFloat = 720
     /// The list inside a sheet scrolls past this height (Appendix C pickers, Review corrections).
     static let sheetListHeight: CGFloat = 360
+    /// The status area the frames draw above every screen (PRD §7 "Status bar area 54px"), as tall as the status bar
+    /// of an iPhone with the Dynamic Island. Headers are placed under it by `headerInset(gap:safeAreaTop:)`.
+    static let frameStatusArea: CGFloat = 54
+    /// How far under the status area the frames draw a root header (62 pt from the top: f6, f11, f16, f25).
+    static let rootHeaderGap: CGFloat = Spacing.sm
+    /// How far under the status area the frames draw a pushed header's row (60 pt from the top: f13, f20, f34).
+    static let pushedHeaderGap: CGFloat = Spacing.xs + Spacing.xxs
+
+    /// How far under the safe area's top a header starts so that it sits `gap` under the status bar, as the frames
+    /// draw it under their status area. An iPhone with the Dynamic Island ends its safe area a few points under its
+    /// 54 pt status bar (62 pt on an iPhone 16 Pro, 59 on an iPhone 16), so part of the gap is already there; a header
+    /// never starts above the safe area. Elsewhere the safe area is the status bar (an iPhone SE, an iPad).
+    static func headerInset(gap: CGFloat, safeAreaTop: CGFloat) -> CGFloat {
+        max(0, min(gap, frameStatusArea + gap - safeAreaTop))
+    }
 }

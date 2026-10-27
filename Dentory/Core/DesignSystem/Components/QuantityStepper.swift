@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// 40 pt − and + around a centred value (PRD §7). The value turns primary blue when it differs from `reference`
-/// and never goes below `minimum`. `identifier` is the Appendix B row id; the parts get `.dec`, `.value` and `.inc`.
+/// 40 pt − and + around a centred value (PRD §7), their 24 pt icons as the frames draw them (f13, f15, f18, f25). The
+/// value turns primary blue when it differs from `reference` and never goes below `minimum`. `identifier` is the
+/// Appendix B row id; the parts get `.dec`, `.value` and `.inc`.
 struct QuantityStepper: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Binding var value: Int
@@ -61,7 +62,7 @@ struct QuantityStepper: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            IconView(icon, size: 20)
+            IconView(icon, size: 24)
         }
         .buttonStyle(StepperButtonStyle())
         .disabled(!isEnabled)

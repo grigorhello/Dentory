@@ -9,12 +9,13 @@ struct ProcedureBottlesSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack(spacing: Spacing.xs) {
-                Eyebrow("Opened a new one?")
-                    .accessibilityAddTraits(.isHeader)
-                IconButton(.info, label: "About Take new", variant: .quiet, size: .small, action: onExplain)
-                    .accessibilityIdentifier("procDetail.bottles.info")
-            }
+            Eyebrow("Opened a new one?")
+                .accessibilityAddTraits(.isHeader)
+                // The (i) sits 6 pt after the eyebrow at 24 pt, as f13-2 draws it, without making the line taller.
+                .overlay(alignment: .trailing) {
+                    ProcedureBottlesInfoButton(action: onExplain)
+                        .alignmentGuide(.trailing) { $0[.leading] - (Spacing.xs + Spacing.xxs) }
+                }
             ListCard {
                 ForEach(lines) { bottle in
                     ProcedureBottleRow(

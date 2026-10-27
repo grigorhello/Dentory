@@ -41,9 +41,8 @@ struct ToastHostModifier: ViewModifier {
         content.overlay(alignment: .bottom) {
             if let toast = toasts.current {
                 ToastView(toast: toast) { toasts.undo() }
-                    .padding(.horizontal, Spacing.page)
                     .padding(.bottom, toasts.bottomInset + Spacing.md)
-                    .frame(maxWidth: PageLayout.contentMaxWidth)
+                    .contentColumn(alignment: .center)
                     .transition(.opacity)
                     .id(toast.id)
             }

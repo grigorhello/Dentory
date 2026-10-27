@@ -12,10 +12,10 @@ extension ReceiveViewModel {
     /// a reading that failed, "Couldn't read · 9:41 AM", dated by the failure the same way.
     func invoiceLine(for invoice: PendingInvoice) -> String {
         if invoice.status == .failed {
-            return "\(Self.couldNotRead)\u{00A0}· \(dated(invoice.failedAt ?? invoice.createdAt))"
+            return Caption.joined(Self.couldNotRead, dated(invoice.failedAt ?? invoice.createdAt))
         }
         let supplier = invoice.supplier.flatMap { $0.isEmpty ? nil : $0 } ?? "Invoice"
-        return "\(supplier)\u{00A0}· \(dated(invoice.createdAt))"
+        return Caption.joined(supplier, dated(invoice.createdAt))
     }
 
     /// The time today, "Yesterday", or the day ("Sep 28"), in the clinic's time zone.
@@ -31,7 +31,7 @@ extension ReceiveViewModel {
     func waitingLine(for item: WaitingItem) -> String {
         let date = formatters.monthDay(item.orderedAt)
         guard let supplier = item.supplier, !supplier.isEmpty else { return "Ordered \(date)" }
-        return "\(supplier)\u{00A0}· ordered \(date)"
+        return Caption.joined(supplier, "ordered \(date)")
     }
 
     /// The quantity ordered, in the product's counted unit, as To buy shows it ("60").

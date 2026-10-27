@@ -88,9 +88,10 @@ final class InventoryUITests: XCTestCase {
         XCTAssertFalse(firstRow.exists && firstRow.isHittable, "The list did not scroll")
         pinned.assertInReach()
         XCTAssertTrue(app.descendants(matching: .any)["inv.countStock"].isHittable, "Count stock scrolled away")
-        // A chip still takes a tap 2 pt above the bottom of its 44 pt target, over the strip the rows are cut under.
+        // A chip still takes a tap 2 pt under its drawn 36 pt shape, the frame XCUITest reports, over the strip the
+        // rows are cut under.
         let low = app.buttons["Low"]
-        low.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 1 - 2 / low.frame.height)).tap()
+        low.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 1)).withOffset(CGVector(dx: 0, dy: 2)).tap()
         XCTAssertTrue(low.isSelected, "The bottom of the Low chip did not take the tap")
         app.buttons["All"].tap()
 

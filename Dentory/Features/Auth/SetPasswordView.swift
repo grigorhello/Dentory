@@ -114,7 +114,8 @@ private struct SetPasswordFields: View {
             "New password",
             text: $viewModel.password,
             identifier: "setPassword.password",
-            placeholder: "At least 8 characters",
+            placeholder: NewPassword.requirement,
+            hint: viewModel.passwordHint,
             error: viewModel.passwordError,
             trailingIcon: viewModel.isPasswordShown ? .eyeOff : .eye,
             trailingAction: .init(

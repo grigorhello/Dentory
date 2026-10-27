@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Root screen header (f6, f16, f25): eyebrow above a 32 pt display title, optional trailing controls.
+/// Root screen header (f6, f16, f25): eyebrow above a 32 pt display title, optional trailing controls. The scaffold
+/// places it 8 pt under the status bar, as the frames draw it under their status area.
 struct RootHeader<Trailing: View>: View {
     var eyebrow: String?
     let title: String
@@ -15,7 +16,9 @@ struct RootHeader<Trailing: View>: View {
     }
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: Spacing.md) {
+        // Home's buttons sit level with the bottom of its eyebrow and title (f6); a title alone is centred on its
+        // control, Count stock or + Procedure (f11, f16).
+        HStack(alignment: eyebrow == nil ? .center : .bottom, spacing: Spacing.md) {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 if let eyebrow {
                     Eyebrow(eyebrow).accessibilityIdentifier("\(identifier).eyebrow")
@@ -27,9 +30,11 @@ struct RootHeader<Trailing: View>: View {
                     .accessibilityIdentifier("\(identifier).title")
             }
             Spacer(minLength: Spacing.sm)
+            // Beside a title alone the control is a small button: its 44 pt frame reaches past the title's line
+            // instead of lowering it (f11 and f16 centre the 36 pt button on the title).
             trailing()
+                .padding(.vertical, eyebrow == nil ? -(ControlHeight.hitTarget - ControlHeight.sm) / 2 : 0)
         }
-        .padding(.top, Spacing.lg)
     }
 }
 
@@ -39,15 +44,16 @@ extension RootHeader where Trailing == EmptyView {
     }
 }
 
-/// How a pushed screen's header row reads its text: the 24 pt title (f13), or a 14 pt secondary context line
+/// How a pushed screen's header row reads its text: the 20 pt bold title (f13), or a 14 pt secondary context line
 /// such as "Anesthetic · 1 box = 50 cartridges" when the screen's own title sits in the content (f20).
 nonisolated enum PushedHeaderStyle: Sendable {
     case title
     case context
 }
 
-/// Pushed screen header (f13): 44 pt back chevron, 24 pt title, optional subtitle and a right action: a text
-/// button ("Edit", f20) or a small primary one ("Save", f15); or a "…" menu (Review invoice's Discard invoice).
+/// Pushed screen header (f13): 44 pt back chevron, the 20 pt bold title the frames draw (Inter 700, where PRD §7 says
+/// 24), optional subtitle and a right action: a text button ("Edit", f20) or a small primary one ("Save", f15); or a
+/// "…" menu (Review invoice's Discard invoice). The scaffold places its row 6 pt under the status bar.
 struct PushedHeader: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
@@ -87,14 +93,16 @@ struct PushedHeader: View {
                 .accessibilityLabel("Back")
                 .accessibilityIdentifier("\(identifier).back")
                 if style == .context {
+                    // One line as f20 draws it; a second rather than a cut-off unit on a narrow phone or at a large
+                    // text size.
                     Text(title)
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.textSecondary)
-                        .lineLimit(1)
+                        .lineLimit(2)
                         .accessibilityIdentifier("\(identifier).context")
                 } else {
                     Text(title)
-                        .textStyle(.title24)
+                        .textStyle(.title20)
                         .foregroundStyle(Color.ms.ink)
                         .lineLimit(1)
                         .accessibilityAddTraits(.isHeader)
@@ -121,7 +129,6 @@ struct PushedHeader: View {
                     .accessibilityIdentifier(subtitleIdentifier ?? "\(identifier).subtitle")
             }
         }
-        .padding(.top, Spacing.sm)
     }
 }
 
@@ -137,7 +144,7 @@ struct RootScreenModifier<Trailing: View, Pinned: View>: ViewModifier {
     var pinned: Pinned?
 
     func body(content: Content) -> some View {
-        ScreenScaffold(pinned: pinned) {
+        ScreenScaffold(headerGap: PageLayout.rootHeaderGap, pinned: pinned) {
             RootHeader(eyebrow: eyebrow, title: title, identifier: identifier, trailing: trailing)
         } content: {
             content
@@ -164,7 +171,7 @@ struct PushedScreenModifier<Pinned: View>: ViewModifier {
     var pinned: Pinned?
 
     func body(content: Content) -> some View {
-        ScreenScaffold(pinned: pinned) {
+        ScreenScaffold(headerGap: PageLayout.pushedHeaderGap, pinned: pinned) {
             PushedHeader(
                 title: title, subtitle: subtitle, identifier: identifier, subtitleIdentifier: subtitleIdentifier,
                 action: action, menu: menu, style: style, onBack: onBack
@@ -179,33 +186,41 @@ struct PushedScreenModifier<Pinned: View>: ViewModifier {
 }
 
 /// The page both screen kinds share: the header, the offline banner and the screen's pinned controls at the top,
-/// the content in a scroll view under them, both in the 720 pt column on the cream page. At rest the content starts
-/// 16 pt under the pinned block, as before anything was pinned; scrolled, it is cut where the frames cut it.
+/// the content in a scroll view under them, both in the 720 pt column on the cream page. The header sits `headerGap`
+/// under the status bar, read from the real safe area (`PageLayout.headerInset`), so it lands where the frames draw
+/// it and never under the status bar or the Dynamic Island. The banner and the pinned controls follow 12 pt apart, as
+/// the frames draw the search field under Inventory's title and Activity's segments under its header (a chip row's
+/// 44 pt targets add their 4 pt). At rest the content starts 16 pt under the pinned block, as before anything was
+/// pinned; scrolled, it is cut where the frames cut it.
 private struct ScreenScaffold<Header: View, Pinned: View, Content: View>: View {
+    let headerGap: CGFloat
     let pinned: Pinned?
     @ViewBuilder let header: () -> Header
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                header()
-                OfflineBannerHost()
-                if let pinned {
-                    pinned
+        GeometryReader { proxy in
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    header()
+                    OfflineBannerHost()
+                    if let pinned {
+                        pinned
+                    }
                 }
-            }
-            .padding(.bottom, cut)
-            .column()
-            ScrollView {
-                VStack(alignment: .leading, spacing: Spacing.lg) {
-                    content()
+                .padding(.top, PageLayout.headerInset(gap: headerGap, safeAreaTop: proxy.safeAreaInsets.top))
+                .padding(.bottom, cut)
+                .contentColumn()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Spacing.lg) {
+                        content()
+                    }
+                    .padding(.top, Spacing.lg - cut)
+                    .padding(.bottom, Spacing.xl)
+                    .contentColumn()
                 }
-                .padding(.top, Spacing.lg - cut)
-                .padding(.bottom, Spacing.xl)
-                .column()
+                .scrollDismissesKeyboard(.interactively)
             }
-            .scrollDismissesKeyboard(.interactively)
         }
         .background(Color.ms.canvas)
     }
@@ -215,15 +230,6 @@ private struct ScreenScaffold<Header: View, Pinned: View, Content: View>: View {
     /// and a card of the same colour scrolling under it.
     private var cut: CGFloat {
         pinned == nil ? Spacing.sm : Spacing.xs
-    }
-}
-
-private extension View {
-    /// The page gutter and the 720 pt column, centred on a wide screen.
-    func column() -> some View {
-        padding(.horizontal, Spacing.page)
-            .frame(maxWidth: PageLayout.contentMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
     }
 }
 

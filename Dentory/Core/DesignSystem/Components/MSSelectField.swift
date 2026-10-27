@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// A choice made on a sheet, drawn like a text field (f24's Product): the label above, then in the box the choice, or
-/// the placeholder, with a caption line under a choice and a chevron. Tapping it runs `action`, which opens the sheet.
-/// Pass the Appendix B id as `identifier`: it goes on the button, so UI tests can open it.
+/// the placeholder, with a caption line under a choice and the 24 pt chevron in body text f24 draws. Tapping it runs
+/// `action`, which opens the sheet. Pass the Appendix B id as `identifier`: it goes on the button, so UI tests can open
+/// it.
 struct MSSelectField: View {
     @Environment(\.isEnabled) private var isEnabled
     let label: String
@@ -48,7 +49,7 @@ struct MSSelectField: View {
                         }
                     }
                     Spacer(minLength: 0)
-                    IconView(.chevronDown, size: 16).foregroundStyle(Color.ms.textSecondary)
+                    IconView(.chevronDown, size: 24).foregroundStyle(Color.ms.textBody)
                 }
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.sm)

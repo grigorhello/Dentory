@@ -68,6 +68,8 @@ struct MSButtonSurface<Label: View>: View {
         .textStyle(size.textStyle)
         .foregroundStyle(foreground)
         .lineLimit(1)
+        // A long label shrinks a little at the largest text sizes rather than lose its end ("10 ite…").
+        .minimumScaleFactor(0.7)
         .padding(.horizontal, size.horizontalPadding)
         .frame(maxWidth: isFullWidth ? .infinity : nil)
         .frame(height: size.height)

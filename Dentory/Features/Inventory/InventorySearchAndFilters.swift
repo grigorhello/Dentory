@@ -21,8 +21,8 @@ struct InventorySearchAndFilters: View {
             }
         }
         .padding(.horizontal, -Spacing.page)
-        // The pills sit 4 pt inside their 44 pt row; its last 4 pt reach into the strip under the pinned controls, so
-        // the rows are cut 4 pt under the pills (f16-2) and the chips keep their whole hit area.
+        // The 36 pt chips sit 4 pt inside their 44 pt row; its last 4 pt reach into the strip under the pinned
+        // controls, so the rows are cut 4 pt under the chips (f16-2) and the chips keep their whole hit area.
         .padding(.bottom, -Spacing.xs)
         .accessibilityIdentifier("inv.filter")
     }

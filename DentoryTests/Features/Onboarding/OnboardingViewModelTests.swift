@@ -35,6 +35,16 @@ struct OnboardingViewModelTests {
         #expect(viewModel.canContinueAccount)
     }
 
+    /// A Continue disabled by a short password says why under the field; an empty one shows only the placeholder.
+    @Test func thePasswordHintShowsWhileThePasswordIsTooShort() {
+        let (viewModel, _) = make()
+        #expect(viewModel.passwordHint == nil)
+        viewModel.password = "smile"
+        #expect(viewModel.passwordHint == "At least 8 characters")
+        viewModel.password = "smiledental"
+        #expect(viewModel.passwordHint == nil)
+    }
+
     @Test func step1CreatesTheAccountAndMovesOn() async {
         let auth = FakeAuthService()
         let (viewModel, store) = make(auth: auth)

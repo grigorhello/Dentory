@@ -35,6 +35,52 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Create your clinic"].waitForExistence(timeout: 5), "Return did not continue")
     }
 
+    /// With the keyboard up and Full name focused, step 1's three fields stay above the pinned Continue where they fit,
+    /// as on an iPhone 16 or SE; a password still too short says why Continue waits, above the bar too (MS-136 audit
+    /// V-04, #207 review). A new simulator shows the software keyboard; with a hardware keyboard all three fit anyway.
+    @MainActor
+    func testStepOneStaysAboveContinueWithTheKeyboardUp() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-signedOut"]
+        app.launch()
+        let signUp = app.descendants(matching: .any)["signin.signUpAdmin"]
+        XCTAssertTrue(signUp.waitForExistence(timeout: 5))
+        signUp.tap()
+
+        let name = app.textFields["onboard.name"].firstMatch
+        XCTAssertTrue(name.waitForExistence(timeout: 5), "Step 1 did not appear")
+        name.tap()
+        waitForTheFieldsToSettle(in: app)
+        let password = app.secureTextFields["onboard.password"].firstMatch
+        let continueButton = app.buttons["onboard.continue"]
+        XCTAssertTrue(name.isHittable, "Full name went out of sight")
+        XCTAssertLessThanOrEqual(password.frame.maxY, barTop(above: continueButton), "The password is under Continue")
+
+        password.tap()
+        app.typeText("smile")
+        let hint = app.staticTexts["At least 8 characters"]
+        XCTAssertTrue(hint.waitForExistence(timeout: 3), "No hint under a password that is too short")
+        XCTAssertFalse(continueButton.isEnabled)
+        waitForTheFieldsToSettle(in: app)
+        XCTAssertLessThanOrEqual(hint.frame.maxY, barTop(above: continueButton), "The hint is under Continue")
+        app.typeText("dental")
+        XCTAssertFalse(hint.exists, "The hint stayed once the password was long enough")
+        XCTAssertTrue(continueButton.isEnabled)
+    }
+
+    /// Lets the keyboard slide in and step 1 scroll its fields above the bar.
+    @MainActor
+    private func waitForTheFieldsToSettle(in app: XCUIApplication) {
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 3)
+        _ = XCTWaiter.wait(for: [XCTestExpectation(description: "The fields settle")], timeout: 1.5)
+    }
+
+    /// The pinned bar starts 13 pt above its button: a 1 pt line and 12 pt of padding.
+    @MainActor
+    private func barTop(above button: XCUIElement) -> CGFloat {
+        button.frame.minY - 13
+    }
+
     /// A new admin who sets up the clinic and signs out hands the device over on Sign in, not on sign-up's first step
     /// (MS-137 review).
     @MainActor

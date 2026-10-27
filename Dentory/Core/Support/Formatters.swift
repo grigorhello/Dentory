@@ -91,7 +91,7 @@ nonisolated struct ClinicFormatters: Sendable {
     func dateTime(_ date: Date) -> String {
         let day = date.formatted(style.month(.abbreviated).day())
         let time = date.formatted(style.hour().minute())
-        return "\(day)\u{00A0}· \(time)"
+        return Caption.joined(day, time)
     }
 
     /// "Dec 1, 2026" for a Postgres `date`.

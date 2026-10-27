@@ -30,8 +30,7 @@ extension InventoryListViewModel {
         case .countable: "est. \(formatters.quantity(StockCount.estimate(of: product), unit: product.unit))"
         case .multiUse: "Count unopened only"
         }
-        guard let location = product.location, !location.isEmpty else { return figures }
-        return "\(figures)\u{00A0}· \(location)"
+        return Caption.joined(figures, product.location)
     }
 
     /// "Review · 2 corrections", or "Review count" (disabled) until a quantity changed (f18).

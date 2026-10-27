@@ -28,7 +28,7 @@ extension InvoiceViewModel {
         guard let invoice, state == .ready || state == .received || state == .closed else { return nil }
         let total = invoice.total.map { formatters(for: invoice).money($0) }
         let parts = [invoice.supplier, invoice.number, total].compactMap { $0?.isEmpty == false ? $0 : nil }
-        return parts.isEmpty ? nil : parts.joined(separator: "\u{00A0}· ")
+        return parts.isEmpty ? nil : Caption.joined(parts)
     }
 
     /// Money in the invoice's own currency when it names one, else the clinic's: the header and the lines' prices.
@@ -47,7 +47,7 @@ extension InvoiceViewModel {
             "Received", invoice.confirmedAt.map(formatters.dateTime),
             invoice.confirmedByName.map(PersonName.first(of:))
         ]
-        return parts.compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: "\u{00A0}· ")
+        return Caption.joined(parts)
     }
 
     /// "AI read 4 lines. Check each one, then confirm." (`invoice.banner`).

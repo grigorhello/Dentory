@@ -92,8 +92,11 @@ struct HomeView: View {
             )
         }
         if let summary = viewModel.summary {
-            Eyebrow("Needs attention")
-            attentionTiles(summary)
+            // f6 sets the tiles closer under their eyebrow than the screen's 16 pt rhythm.
+            VStack(alignment: .leading, spacing: Spacing.xs + Spacing.xxs) {
+                Eyebrow("Needs attention")
+                attentionTiles(summary)
+            }
             ProcedureCard(
                 latest: summary.latestProcedure,
                 startedAtText: summary.latestProcedure.map { formatters.dateTime($0.startedAt) } ?? "",
@@ -117,6 +120,7 @@ struct HomeView: View {
         #endif
     }
 
+    /// The three tiles share the height of the tallest, as f6 draws them.
     private func attentionTiles(_ summary: HomeSummary) -> some View {
         HStack(alignment: .top, spacing: Spacing.md) {
             AttentionTile(count: summary.toBuyCount, label: "To buy", tone: .warning, identifier: "home.tile.toBuy") {
@@ -136,6 +140,7 @@ struct HomeView: View {
                 router.select(.inventory)
             }
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func valueTiles(_ summary: HomeSummary) -> some View {

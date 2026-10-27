@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// One of the three "Needs attention" tiles (f6): a big count in its status color, ink at 0, a short label.
+/// One of the three "Needs attention" tiles (f6): a 48 pt count in its status color, ink at 0, over a short label in
+/// Inter 600 14. The three share the height of the tallest (`HomeView` stretches them), 132 pt when a label takes two
+/// lines, as f6 draws them.
 struct AttentionTile: View {
     let count: Int
     let label: String
@@ -10,17 +12,18 @@ struct AttentionTile: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
+            // 6 pt here is f6's 10 pt gap between CSS line boxes, which hold the 48 pt digits tighter than iOS does.
+            VStack(alignment: .leading, spacing: Spacing.xs + Spacing.xxs) {
                 Text("\(count)")
-                    .textStyle(.display32)
+                    .figureStyle(.display48)
                     .foregroundStyle(HomeViewModel.tone(for: count, nonZero: tone).foreground)
                 Text(label)
-                    .textStyle(.body16)
+                    .textStyle(.bodyStrong14)
                     .foregroundStyle(Color.ms.ink)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(Spacing.lg)
             .background(Color.ms.surfaceCard, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))

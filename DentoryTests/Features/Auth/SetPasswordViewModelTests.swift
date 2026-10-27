@@ -51,8 +51,10 @@ struct SetPasswordViewModelTests {
         await viewModel.verifyIfNeeded()
         viewModel.password = "short"
         #expect(!viewModel.canSave)
+        #expect(viewModel.passwordHint == "At least 8 characters", "A disabled Save password says why")
         viewModel.password = "12345678"
         #expect(viewModel.canSave)
+        #expect(viewModel.passwordHint == nil)
     }
 
     @Test func savingSetsThePasswordAndSignsTheAccountIn() async {

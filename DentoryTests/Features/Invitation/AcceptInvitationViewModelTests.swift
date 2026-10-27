@@ -61,10 +61,13 @@ struct AcceptInvitationViewModelTests {
         #expect(viewModel.caption == "Sarah Mitchell invited you as Admin. Set a password to finish.")
         #expect(!viewModel.canJoin)
         viewModel.fullName = "Dr. Daniel Kim"
+        #expect(viewModel.passwordHint == nil)
         viewModel.password = "short"
         #expect(!viewModel.canJoin)
+        #expect(viewModel.passwordHint == "At least 8 characters", "A disabled Join says why")
         viewModel.password = "longenough"
         #expect(viewModel.canJoin)
+        #expect(viewModel.passwordHint == nil)
         viewModel.fullName = "   "
         #expect(!viewModel.canJoin)
     }

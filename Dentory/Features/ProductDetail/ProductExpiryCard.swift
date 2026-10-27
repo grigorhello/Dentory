@@ -29,7 +29,7 @@ struct ProductExpiryCard: View {
                 totalLine
             }
             Text("Tap a batch to edit its expiry, lot or quantity.")
-                .textStyle(.body14)
+                .textStyle(.micro12)
                 .foregroundStyle(Color.ms.textSecondary)
         }
         Button(action: onAddExpiry) {
@@ -48,11 +48,11 @@ private extension ProductExpiryCard {
     var totalLine: some View {
         HStack(alignment: .top, spacing: Spacing.md) {
             Text(viewModel.expiryTotalLine)
-                .textStyle(.body16)
+                .textStyle(.body14)
                 .foregroundStyle(Color.ms.textBody)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: Spacing.sm)
-            Text(viewModel.unit).textStyle(.body16).foregroundStyle(Color.ms.textSecondary)
+            Text(viewModel.unit).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
         }
         .padding(.vertical, Spacing.md)
         .accessibilityElement(children: .combine)
@@ -60,7 +60,7 @@ private extension ProductExpiryCard {
     }
 }
 
-/// "Expires · Qty · Lot" above the batch rows.
+/// "Expires · Qty · Lot" above the batch rows, in the list header's Inter 600 14 (f20).
 private struct ExpiryHeaderRow: View {
     var body: some View {
         VStack(spacing: 0) {
@@ -71,9 +71,10 @@ private struct ExpiryHeaderRow: View {
                 Spacer()
                 Text("Lot")
             }
-            .textStyle(.body16)
+            .textStyle(.bodyStrong14)
             .foregroundStyle(Color.ms.textSecondary)
-            .padding(.vertical, Spacing.md)
+            .padding(.top, Spacing.md)
+            .padding(.bottom, Spacing.sm)
             ListDivider()
         }
     }

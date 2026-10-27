@@ -7,9 +7,10 @@ nonisolated enum TextStyle: CaseIterable, Sendable {
     case display48
     /// Root screen title, Outfit 500 32.
     case display32
-    /// Pushed screen title and sheet title, Inter 600 24.
+    /// Sheet title, Inter 600 24 (PRD §7; no frame draws a sheet).
     case title24
-    /// Section title, Inter 700 20.
+    /// Pushed screen title as the frames draw it (f13, f20, f34), and section title, Inter 700 20
+    /// (`--type-display-xs`).
     case title20
     /// Larger body: inputs, checkbox labels, segment labels, Inter 400 16.
     case body16
