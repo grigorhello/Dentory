@@ -10,15 +10,17 @@ struct ProductQuantityCard: View {
 
     var body: some View {
         let isStacked = dynamicTypeSize.isAccessibilitySize
+        let figures = AnyLayout.row(stacked: isStacked, alignment: .top, stackedSpacing: Spacing.md)
+        let lines = AnyLayout.row(stacked: isStacked, alignment: .top)
         CardView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                AnyLayout.row(stacked: isStacked, alignment: .top, stackedSpacing: Spacing.md) {
+                figures {
                     column("Available", value: viewModel.availableText, unit: viewModel.unit)
                     column("Minimum", value: viewModel.minimumText, unit: nil)
                     column("Target", value: viewModel.targetText, unit: nil)
                 }
                 ListDivider()
-                AnyLayout.row(stacked: isStacked, alignment: .top) {
+                lines {
                     Text(viewModel.estimateLine)
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.textBody)

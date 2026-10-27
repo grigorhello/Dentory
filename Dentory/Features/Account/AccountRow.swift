@@ -12,10 +12,11 @@ struct AccountRow: View {
     var showsDivider = true
 
     var body: some View {
+        let layout = AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, stackedSpacing: Spacing.xxs)
         VStack(spacing: 0) {
             HStack(spacing: Spacing.md) {
                 IconView(icon, size: 24)
-                AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, stackedSpacing: Spacing.xxs) {
+                layout {
                     Text(title)
                         .textStyle(.body16)
                         .frame(maxWidth: .infinity, alignment: .leading)

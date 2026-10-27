@@ -12,8 +12,9 @@ struct AccountUserCard: View {
     @ScaledMetric(relativeTo: .subheadline) private var avatarSize = ControlHeight.md
 
     var body: some View {
+        let layout = AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize)
         CardView {
-            AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize) {
+            layout {
                 Text(initials)
                     .textStyle(.bodyStrong14)
                     .foregroundStyle(Color.ms.textOnDark)

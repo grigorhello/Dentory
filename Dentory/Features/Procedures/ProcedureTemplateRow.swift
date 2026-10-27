@@ -14,10 +14,11 @@ struct ProcedureTemplateRow: View {
     private var identifier: String { "proc.template[\(template.id.uuidString.lowercased())]" }
 
     var body: some View {
+        let layout = AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, stackedSpacing: Spacing.xxs)
         VStack(spacing: 0) {
             HStack(spacing: Spacing.xs) {
                 NavigationLink(value: ProcedureRoute.start(templateID: template.id)) {
-                    AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, stackedSpacing: Spacing.xxs) {
+                    layout {
                         VStack(alignment: .leading, spacing: Spacing.xxs) {
                             Text(template.name)
                                 .textStyle(.bodyStrong14)

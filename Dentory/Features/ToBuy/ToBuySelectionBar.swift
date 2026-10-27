@@ -8,7 +8,8 @@ struct ToBuySelectionBar: View {
 
     var body: some View {
         let isStacked = dynamicTypeSize.isAccessibilitySize
-        AnyLayout.row(stacked: isStacked) {
+        let layout = AnyLayout.row(stacked: isStacked)
+        layout {
             Text(viewModel.selectionSummary)
                 .textStyle(.body14)
                 .foregroundStyle(Color.ms.textBody)
