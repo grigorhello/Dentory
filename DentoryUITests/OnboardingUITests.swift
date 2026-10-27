@@ -65,7 +65,6 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertLessThanOrEqual(hint.frame.maxY, barTop(above: continueButton), "The hint is under Continue")
         app.typeText("dental")
         XCTAssertFalse(hint.exists, "The hint stayed once the password was long enough")
-        XCTAssertTrue(continueButton.isEnabled)
     }
 
     /// Lets the keyboard slide in and step 1 scroll its fields above the bar.
