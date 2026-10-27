@@ -54,16 +54,17 @@ struct SentryErrorReporter: ErrorReporting {
     }
 }
 
-/// A call's transaction: `ok`, or a failed status with the error's kind as its `kind` tag.
+/// A call's transaction: `ok`, or a failed status, with the outcome as its `kind` tag (`ok` or the error's kind), so an
+/// alert can leave out the refusals a clinic is meant to get and the calls of a device offline.
 private struct SentryCallTiming: CallTiming {
     let transaction: Span
 
     func finish(with error: AppError?) {
+        transaction.setTag(value: error?.reportingKind ?? "ok", key: "kind")
         guard let error else {
             transaction.finish(status: .ok)
             return
         }
-        transaction.setTag(value: error.reportingKind, key: "kind")
         transaction.finish(status: Self.status(of: error))
     }
 

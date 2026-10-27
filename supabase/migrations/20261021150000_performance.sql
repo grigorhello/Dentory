@@ -5,10 +5,10 @@
 -- 49_performance_test.sql checks the rewritten view and policies against the definitions they replace.
 
 -- Row level security in one pass per query ------------------------------------------------------------------------
--- Every read policy asked is_member(clinic_id) of each row it met: a security definer function, which Postgres does
--- not inline, at about 0.15 ms a row, so Inventory's 500 products with their batches, open bottles and categories
--- took 436 ms before the list's own work (20 ms). The rule is the same, but the caller's clinics are now read once per
--- query (an InitPlan) and each row's clinic compared with them, which an index on clinic_id can use too. The
+-- Every read policy asked is_member(clinic_id) of each row it met: a security definer function, which Postgres does not
+-- inline, at about 0.15 ms a row, so Inventory's 500 products with their batches, open bottles and categories took
+-- 383 ms (p50), of which the list's own work is 22 ms. The rule is the same, but the caller's clinics are now read once
+-- per query (an InitPlan) and each row's clinic compared with them, which an index on clinic_id can use too. The
 -- admin-only tables do the same with the clinics the caller is an active admin of. The write policies, which meet the
 -- one row being written, keep is_member and is_admin.
 create function public.current_admin_clinic_ids()
@@ -115,9 +115,9 @@ create index batches_clinic_idx on public.batches (clinic_id);
 -- A clinic's stock changes, one at a time ---------------------------------------------------------------------------
 -- A stock change locks each product it changes as it reaches it: a procedure in its template's order, a count in its
 -- list's order. Two procedures sharing supplies in another order, or a procedure and a bottle opened from its product,
--- then each held a row the other wanted, and Postgres ended one with a deadlock: with eight clients starting
--- procedures at once, 154 of 160 starts failed. Every change now takes its clinic's lock first, in the first engine
--- step each one makes (begin_action, lock_product, lock_product_row), so a clinic's changes wait in turn for the
+-- then each held a row the other wanted, and Postgres ended one with a deadlock: with eight clients starting procedures
+-- and opening bottles at once, 117 of 126 starts failed. Every change now takes its clinic's lock first, in the first
+-- engine step each one makes (begin_action, lock_product, lock_product_row), so a clinic's changes wait in turn for the
 -- milliseconds each takes and never hold rows another wants; clinics never wait for each other. A change that locks a
 -- row of its own first (the procedure it edits, the action it undoes, the invoice it confirms) waits for that row
 -- before the lock, so it cannot hold the lock while waiting for it. Mark as ordered and a clinic setting that refreshes
