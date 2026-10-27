@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// The top card of Inventory value (f10): the total in large figures, a line, then Expiring ≤ 90 d, Used, 30 d and
-/// Received, 30 d in three equal columns.
+/// Received, 30 d in three equal columns, or one under the other at the accessibility text sizes (MS-149).
 struct InventoryValueTotalCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let total: String
     let stats: [InventoryValueViewModel.Stat]
 
@@ -17,7 +18,7 @@ struct InventoryValueTotalCard: View {
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     ListDivider()
                     // 8 pt between columns, so "Received, 30 d" keeps one line on a 393 pt wide iPhone.
-                    HStack(alignment: .top, spacing: Spacing.sm) {
+                    statsLayout {
                         ForEach(stats) { stat in
                             StatColumn(stat: stat)
                         }
@@ -27,6 +28,10 @@ struct InventoryValueTotalCard: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("value.total")
+    }
+
+    private var statsLayout: AnyLayout {
+        .row(stacked: dynamicTypeSize.isAccessibilitySize, alignment: .top, spacing: Spacing.sm)
     }
 }
 
@@ -40,8 +45,9 @@ private struct StatColumn: View {
                 .textStyle(.body14)
                 .foregroundStyle(Color.ms.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
+            // An amount never breaks across lines; it shrinks a little if a column is too narrow (MS-149).
             Text(stat.value)
-                .textStyle(.bodyStrong16)
+                .figureStyle(.bodyStrong16)
                 .foregroundStyle(stat.tone?.foreground ?? Color.ms.ink)
                 .monospacedDigit()
         }

@@ -46,16 +46,18 @@ struct MSPicker<Value: Hashable & Sendable>: View {
             } label: {
                 // One 8 pt gap before the chevron (a Spacer between them would add a second), so the value keeps the
                 // whole width left of it ("America/Toronto", f33).
+                // The value wraps rather than lose its end, and the box grows with it (MS-149).
                 HStack(spacing: Spacing.sm) {
                     Text(selection.map(title) ?? placeholder)
                         .textStyle(.body16)
                         .foregroundStyle(selection == nil ? Color.ms.textSecondary : Color.ms.ink)
-                        .lineLimit(1)
+                        .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     IconView(.chevronDown, size: 16).foregroundStyle(Color.ms.textSecondary)
                 }
                 .padding(.horizontal, Spacing.md)
-                .frame(height: ControlHeight.md)
+                .padding(.vertical, Spacing.sm)
+                .frame(minHeight: ControlHeight.md)
                 .background(
                     isEnabled ? Color.ms.surfacePage : Color.ms.surfaceCard,
                     in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
@@ -67,7 +69,7 @@ struct MSPicker<Value: Hashable & Sendable>: View {
                 .contentShape(Rectangle())
             }
             .accessibilityLabel(label ?? placeholder)
-            .accessibilityValue(selection.map(title) ?? "")
+            .accessibilityValue(spokenValue)
             .accessibilityIdentifier(identifier ?? "")
             if let error {
                 Text(error).textStyle(.caption12).foregroundStyle(Color.ms.danger)
@@ -75,6 +77,13 @@ struct MSPicker<Value: Hashable & Sendable>: View {
                 Text(hint).textStyle(.caption12).foregroundStyle(Color.ms.textSecondary)
             }
         }
+    }
+
+    /// The choice, or while there is none the placeholder the box shows ("Select a reason"), as `MSSelectField` and
+    /// `MSMonthField` say theirs (MS-149). Without a label the placeholder is already the label.
+    private var spokenValue: String {
+        if let selection { return title(selection) }
+        return label == nil ? "" : placeholder
     }
 
     private var borderColor: Color {

@@ -44,8 +44,9 @@ nonisolated enum Icon: String, CaseIterable, Sendable {
     case users
     case x
 
-    /// The template image; draw it with `IconView` so the size and stroke stay consistent.
+    /// The template image; draw it with `IconView` so the size and stroke stay consistent. Decorative, so VoiceOver
+    /// never reads an asset name such as "Icons/search" (MS-149); the control that holds it carries the label.
     var image: Image {
-        Image("Icons/\(rawValue)", bundle: .main).renderingMode(.template)
+        Image(decorative: "Icons/\(rawValue)", bundle: .main).renderingMode(.template)
     }
 }

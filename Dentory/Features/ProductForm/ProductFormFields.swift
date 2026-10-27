@@ -47,7 +47,8 @@ struct ProductFormFields: View {
     private var units: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Eyebrow("Units")
-            HStack(alignment: .top, spacing: Spacing.md) {
+                .accessibilityAddTraits(.isHeader)
+            FieldRow {
                 MSTextField(
                     "Counted in", text: $viewModel.unit, identifier: "newProduct.unit",
                     placeholder: "e.g. cartridges", error: viewModel.unitError
@@ -86,7 +87,8 @@ struct ProductFormFields: View {
     private var levels: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Eyebrow("Stock levels")
-            HStack(alignment: .top, spacing: Spacing.md) {
+                .accessibilityAddTraits(.isHeader)
+            FieldRow {
                 MSTextField(
                     "Minimum", text: $viewModel.minimumText, identifier: "newProduct.minimum",
                     placeholder: "Alert below", error: viewModel.minimumError, keyboard: .decimalPad

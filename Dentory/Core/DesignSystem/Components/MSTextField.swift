@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Text input: 44 pt, 6 pt radius, ink hairline; blue when focused, danger with an inline error under it.
+/// Text input: 44 pt (taller only at the accessibility text sizes), 6 pt radius, ink hairline; blue when focused,
+/// danger with an inline error under it.
 /// Pass the Appendix B id as `identifier`: it goes on the input itself, so UI tests can tap and type into it.
 struct MSTextField: View {
     @Environment(\.isEnabled) private var isEnabled
@@ -20,6 +21,9 @@ struct MSTextField: View {
     var prefix: String?
     var suffix: String?
     var isSecure = false
+    /// A note, such as why a procedure is cancelled: three lines high, its text and its example wrap rather than run
+    /// past the box, and it grows to four lines before it scrolls (MS-149).
+    var isMultiline = false
     var keyboard: UIKeyboardType = .default
     var contentType: UITextContentType?
     /// What VoiceOver calls a field whose label is drawn outside it (Billing emails' "Add email"); else the label, else
@@ -39,6 +43,7 @@ struct MSTextField: View {
         prefix: String? = nil,
         suffix: String? = nil,
         isSecure: Bool = false,
+        isMultiline: Bool = false,
         keyboard: UIKeyboardType = .default,
         contentType: UITextContentType? = nil,
         accessibilityText: String? = nil
@@ -55,6 +60,7 @@ struct MSTextField: View {
         self.prefix = prefix
         self.suffix = suffix
         self.isSecure = isSecure
+        self.isMultiline = isMultiline
         self.keyboard = keyboard
         self.contentType = contentType
         self.accessibilityText = accessibilityText
@@ -84,15 +90,14 @@ struct MSTextField: View {
             if let prefix {
                 Text(prefix).textStyle(.body16).foregroundStyle(Color.ms.textSecondary).accessibilityHidden(true)
             }
-            input
-                .textStyle(.body16)
-                .foregroundStyle(Color.ms.ink)
-                .accessibilityLabel(accessibilityText ?? label ?? placeholder)
-                .accessibilityIdentifier(identifier ?? "")
-                .focused($isFocused)
-                .keyboardType(keyboard)
-                .textContentType(contentType)
-                .textInputAutocapitalization(contentType == .emailAddress ? .never : .sentences)
+            if isMultiline {
+                ZStack(alignment: .topLeading) {
+                    multilinePlaceholder
+                    styledInput
+                }
+            } else {
+                styledInput
+            }
             if let suffix {
                 // The unit keeps its width and one line ("cartridges" in Add expiry's How many on an iPhone SE); the
                 // input gives way instead (MS-136 audit V-17).
@@ -117,7 +122,7 @@ struct MSTextField: View {
             }
         }
         .padding(.horizontal, Spacing.md)
-        .frame(height: ControlHeight.md)
+        .frame(minHeight: ControlHeight.md)
         .background(
             isEnabled ? Color.ms.surfacePage : Color.ms.surfaceCard,
             in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
@@ -129,12 +134,47 @@ struct MSTextField: View {
         .msFocusRing(isFocused)
     }
 
+    private var styledInput: some View {
+        input
+            .textStyle(.body16)
+            .foregroundStyle(Color.ms.ink)
+            .accessibilityLabel(accessibilityText ?? label ?? placeholder)
+            .accessibilityIdentifier(identifier ?? "")
+            .focused($isFocused)
+            .keyboardType(keyboard)
+            .textContentType(contentType)
+            .textInputAutocapitalization(contentType == .emailAddress ? .never : .sentences)
+            // Room above and below the text, so the box grows with it at the accessibility text sizes rather than
+            // cut it (MS-149); at the standard sizes the box stays 44 pt.
+            .padding(.vertical, Spacing.sm)
+    }
+
     @ViewBuilder private var input: some View {
         if isSecure {
             SecureField(placeholder, text: $text, prompt: prompt)
+        } else if isMultiline {
+            // The prompt stays for VoiceOver, unseen: the example is drawn under the field instead.
+            TextField(placeholder, text: $text, prompt: Text(placeholder).foregroundStyle(Color.clear), axis: .vertical)
+                .lineLimit(Self.multilineLines)
         } else {
             TextField(placeholder, text: $text, prompt: prompt)
         }
+    }
+
+    /// The lines a multiline field shows: three at least, so the field a tap or VoiceOver's touch reaches is over
+    /// 44 pt high at Large, as the box is (one line was 20 pt), and four before it scrolls.
+    private static let multilineLines = 3...4
+
+    /// A note's example, drawn under the field as text that wraps: a field's own prompt keeps one line and loses its
+    /// end ("e.g. Logged by mistake, patient cancell…" at Large on an iPhone SE). It keeps its room once typing
+    /// starts, so the box does not shrink under the first letter (MS-149).
+    private var multilinePlaceholder: some View {
+        Text(placeholder)
+            .textStyle(.body16)
+            .foregroundStyle(Color.ms.textSecondary)
+            .opacity(text.isEmpty ? 1 : 0)
+            .padding(.vertical, Spacing.sm)
+            .accessibilityHidden(true)
     }
 
     /// A tappable trailing icon: its VoiceOver label, Appendix B id and action.
@@ -169,6 +209,10 @@ struct MSTextField: View {
         )
         MSTextField("Minimum", text: .constant("20"), suffix: "cartridges", keyboard: .numberPad)
         MSTextField("Cost per box", text: .constant(""), placeholder: "0.00", prefix: "$", keyboard: .decimalPad)
+        MSTextField(
+            "Why is it cancelled?", text: .constant(""), placeholder: "e.g. Logged by mistake, patient cancelled",
+            isMultiline: true
+        )
         MSTextField("Disabled", text: .constant("Read only")).disabled(true)
     }
     .padding(Spacing.page)

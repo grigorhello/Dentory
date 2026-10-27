@@ -123,6 +123,8 @@ targets:
       - DentoryE2ETests
       # Not Now on iOS 26's Save Password? after a sign-in, as in the UI flows.
       - DentoryUITests/XCUIApplication+SavePassword.swift
+      # A quantity stepper's number, read as VoiceOver hears it, as in the UI flows.
+      - DentoryUITests/XCUIApplication+Stepper.swift
     dependencies:
       - target: Dentory
     settings:

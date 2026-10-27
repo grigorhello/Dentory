@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// A list row: title (14 ink), one caption line (12 secondary, or a status tone when it warns),
-/// and on the right a value, a badge or any trailing view. The chevron appears only when the row navigates.
+/// and on the right a value, a badge or any trailing view, which goes under the text at the accessibility text sizes.
+/// The chevron appears only when the row navigates.
 struct ListRow<Trailing: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let title: String
     var caption: String?
     var captionTone: StatusTone?
@@ -29,16 +31,7 @@ struct ListRow<Trailing: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: Spacing.md) {
-                VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text(title).textStyle(.body14).foregroundStyle(Color.ms.ink)
-                    if let caption {
-                        Text(caption)
-                            .textStyle(.caption12)
-                            .foregroundStyle(captionTone?.foreground ?? Color.ms.textSecondary)
-                    }
-                }
-                Spacer(minLength: Spacing.sm)
-                trailing()
+                textAndTrailing
                 if navigates {
                     IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.textBody)
                 }
@@ -50,6 +43,42 @@ struct ListRow<Trailing: View>: View {
             }
         }
         .contentShape(Rectangle())
+    }
+
+    private var textAndTrailing: some View {
+        let isStacked = dynamicTypeSize.isAccessibilitySize
+        let layout = AnyLayout.row(stacked: isStacked)
+        return layout {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                Text(title).textStyle(.body14).foregroundStyle(Color.ms.ink)
+                if let caption {
+                    Text(caption)
+                        .textStyle(.caption12)
+                        .foregroundStyle(captionTone?.foreground ?? Color.ms.textSecondary)
+                }
+            }
+            if !isStacked {
+                Spacer(minLength: Spacing.sm)
+            }
+            trailing()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+extension AnyLayout {
+    /// A row's text beside its value, badge or stepper, or with that part under the text at the accessibility text
+    /// sizes, where the text would otherwise break mid-word beside a part that keeps its width (MS-149). The row's
+    /// views are not rebuilt when the layout changes, so a stepper keeps its state.
+    static func row(
+        stacked: Bool,
+        alignment: VerticalAlignment = .center,
+        spacing: CGFloat = Spacing.md,
+        stackedSpacing: CGFloat = Spacing.sm
+    ) -> AnyLayout {
+        stacked
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: stackedSpacing))
+            : AnyLayout(HStackLayout(alignment: alignment, spacing: spacing))
     }
 }
 
@@ -92,7 +121,8 @@ struct ListRowValue: View {
     }
 
     var body: some View {
-        Text(value).textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink).monospacedDigit()
+        // A number is never cut or wrapped: at large text sizes the row's label wraps instead (MS-149).
+        Text(value).textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink).monospacedDigit().fixedSize()
     }
 }
 
@@ -117,7 +147,7 @@ extension ListRow where Trailing == StatusBadge {
         ListRow("Septocaine 4% 1:100,000", caption: "Anesthetic · 54 cartridges", badge: .healthy, navigates: true)
         ListRow("Composite A2", caption: "Current 2 · target 6 · Patterson", value: "4")
         ListRow("Alginate impression", caption: "Lab · Shelf 1", showsDivider: false) {
-            QuantityStepper(value: .constant(3), reference: 4, identifier: "preview.row[3]")
+            QuantityStepper(value: .constant(3), reference: 4, name: "Endo file kit", identifier: "preview.row[3]")
         }
     }
     .padding(Spacing.page)

@@ -87,6 +87,8 @@ struct StatusBadge: View {
         .textStyle(size == .small ? .micro12 : .bodyStrong14)
         .foregroundStyle(tone.foreground)
         .lineLimit(1)
+        // The status word is never cut: at large text sizes the row's label wraps instead (MS-149).
+        .fixedSize()
         .padding(.vertical, size == .small ? Spacing.xxs : Spacing.xs)
         .padding(.horizontal, size == .small ? Spacing.sm : Spacing.md)
         .background(tone.background, in: Capsule())

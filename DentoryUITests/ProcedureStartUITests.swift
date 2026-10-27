@@ -37,7 +37,7 @@ final class ProcedureStartUITests: XCTestCase {
         XCTAssertEqual(start.label, "Start procedure · 10 items")
 
         app.buttons["\(septocaine).inc"].tap()
-        XCTAssertEqual(app.staticTexts["\(septocaine).value"].label, "3")
+        XCTAssertEqual(app.stepperNumber(septocaine), "3")
         XCTAssertEqual(start.label, "Start procedure · 11 items")
         start.tap()
 
@@ -120,7 +120,7 @@ final class ProcedureStartUITests: XCTestCase {
         composite.tap()
         XCTAssertFalse(app.staticTexts["addItem.title"].waitForExistence(timeout: 2), "The sheet did not close")
         XCTAssertEqual(start.label, "Start procedure · 11 items", "Composite A2 was not taken new")
-        XCTAssertEqual(app.staticTexts["procDetail.item[00000000-0000-4000-8000-0000000000d3].value"].label, "1")
+        XCTAssertEqual(app.stepperNumber("procDetail.item[00000000-0000-4000-8000-0000000000d3]"), "1")
         XCTAssertFalse(
             app.buttons["procDetail.bottle[00000000-0000-4000-8000-0000000000d3].takeNew"].exists,
             "Composite A2 is listed under Opened a new one? too"

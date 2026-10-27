@@ -16,6 +16,7 @@ nonisolated struct YearMonth: Hashable, Comparable, Sendable {
 /// row itself. An optional month passes `clearLabel`: once one is chosen, an × in place of the icon clears it.
 struct MSMonthField: View {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let label: String
     @Binding var selection: YearMonth?
     let years: ClosedRange<Int>
@@ -80,10 +81,10 @@ struct MSMonthField: View {
         HStack(spacing: 0) {
             Button(action: toggle) {
                 HStack(spacing: Spacing.sm) {
+                    // The month wraps rather than lose its end, and the box grows with it (MS-149).
                     Text(selection.map(title) ?? placeholder)
                         .textStyle(.body16)
                         .foregroundStyle(selection == nil ? Color.ms.textSecondary : Color.ms.ink)
-                        .lineLimit(1)
                     Spacer(minLength: 0)
                     if !showsClear {
                         IconView(trailingIcon, size: trailingIcon == .chevronDown ? 16 : 20)
@@ -93,6 +94,7 @@ struct MSMonthField: View {
                 }
                 .padding(.leading, Spacing.md)
                 .padding(.trailing, showsClear ? 0 : Spacing.md)
+                .padding(.vertical, Spacing.sm)
                 .frame(maxHeight: .infinity)
                 .contentShape(.rect)
             }
@@ -112,7 +114,7 @@ struct MSMonthField: View {
                 .accessibilityIdentifier(identifier.map { "\($0).clear" } ?? "")
             }
         }
-        .frame(height: ControlHeight.md)
+        .frame(minHeight: ControlHeight.md)
         .background(isEnabled ? Color.ms.surfacePage : Color.ms.surfaceCard, in: .rect(cornerRadius: Radius.sm))
         .overlay {
             RoundedRectangle(cornerRadius: Radius.sm).strokeBorder(borderColor, lineWidth: 1)
@@ -139,7 +141,8 @@ struct MSMonthField: View {
     }
 
     private func setOpen(_ open: Bool) {
-        withAnimation(.easeOut(duration: Motion.base)) {
+        // With Reduce Motion the wheels appear in place, rather than the field growing to them.
+        withAnimation(reduceMotion ? nil : Animation.easeOut(duration: Motion.base)) {
             if let wheelsOpen {
                 wheelsOpen.wrappedValue = open
             } else {

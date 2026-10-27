@@ -24,12 +24,12 @@ final class CountStockE2ETests: XCTestCase {
         fewerBands.appears("Matrix band is not counted")
         fewerBands.tap()
         fewerBands.tap()
-        XCTAssertEqual(app.staticTexts["inv.count.row[\(matrixBands)].value"].label, "33")
+        XCTAssertEqual(app.stepperNumber("inv.count.row[\(matrixBands)]"), "33")
         E2E.searchInventory(for: "Paper points", in: app)
         let morePoints = app.buttons["inv.count.row[\(paperPoints)].inc"]
         morePoints.appears("Paper points are not counted")
         morePoints.tap()
-        XCTAssertEqual(app.staticTexts["inv.count.row[\(paperPoints)].value"].label, "6")
+        XCTAssertEqual(app.stepperNumber("inv.count.row[\(paperPoints)]"), "6")
 
         let review = app.buttons["inv.count.review"]
         XCTAssertEqual(review.label, "Review · 2 corrections", "A count was lost while searching")

@@ -9,7 +9,7 @@ struct ManualReceiveBatchRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
-            HStack(alignment: .top, spacing: Spacing.md) {
+            FieldRow {
                 MSTextField("Lot", text: $viewModel.lot, identifier: "manual.lot", placeholder: "Optional")
                     .focused(focus, equals: .lot)
                     .frame(maxWidth: .infinity)

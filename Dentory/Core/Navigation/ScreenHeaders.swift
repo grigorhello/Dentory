@@ -16,24 +16,47 @@ struct RootHeader<Trailing: View>: View {
     }
 
     var body: some View {
+        if eyebrow == nil {
+            // A title alone is one word or two of the app's own (Inventory, Procedures): where it does not fit on one
+            // line beside its control at a large text size, the control moves under it rather than break the word
+            // (MS-149).
+            ViewThatFits(in: .horizontal) {
+                row
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    titleStack
+                    trailing()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            // Home's clinic name wraps between its words beside the buttons.
+            row
+        }
+    }
+
+    private var row: some View {
         // Home's buttons sit level with the bottom of its eyebrow and title (f6); a title alone is centred on its
         // control, Count stock or + Procedure (f11, f16).
         HStack(alignment: eyebrow == nil ? .center : .bottom, spacing: Spacing.md) {
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                if let eyebrow {
-                    Eyebrow(eyebrow).accessibilityIdentifier("\(identifier).eyebrow")
-                }
-                Text(title)
-                    .textStyle(.display32)
-                    .foregroundStyle(Color.ms.ink)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("\(identifier).title")
-            }
+            titleStack
             Spacer(minLength: Spacing.sm)
             // Beside a title alone the control is a small button: its 44 pt frame reaches past the title's line
             // instead of lowering it (f11 and f16 centre the 36 pt button on the title).
             trailing()
                 .padding(.vertical, eyebrow == nil ? -(ControlHeight.hitTarget - ControlHeight.sm) / 2 : 0)
+        }
+    }
+
+    private var titleStack: some View {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
+            if let eyebrow {
+                Eyebrow(eyebrow).accessibilityIdentifier("\(identifier).eyebrow")
+            }
+            Text(title)
+                .textStyle(.display32)
+                .foregroundStyle(Color.ms.ink)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("\(identifier).title")
         }
     }
 }
@@ -56,6 +79,7 @@ nonisolated enum PushedHeaderStyle: Sendable {
 /// "…" menu (Review invoice's Discard invoice). The scaffold places its row 6 pt under the status bar.
 struct PushedHeader: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let title: String
     var subtitle: String?
     var identifier: String
@@ -80,6 +104,22 @@ struct PushedHeader: View {
     }
 
     var body: some View {
+        if action != nil, dynamicTypeSize.isAccessibilitySize {
+            // At the accessibility text sizes a title that does not fit on one line beside its button goes under Back
+            // and the button, as a large title does, rather than break its words beside them ("Edit proce / dure",
+            // MS-149).
+            ViewThatFits(in: .horizontal) {
+                header(stacked: false)
+                header(stacked: true)
+            }
+        } else {
+            header(stacked: false)
+        }
+    }
+
+    /// Back, the title and the right action on one row, the subtitle under the title (f13, f20); or stacked, Back and
+    /// the action on the row and the title and subtitle under it at the page's edge.
+    private func header(stacked: Bool) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
                 Button {
@@ -92,21 +132,8 @@ struct PushedHeader: View {
                 }
                 .accessibilityLabel("Back")
                 .accessibilityIdentifier("\(identifier).back")
-                if style == .context {
-                    // One line as f20 draws it; a second rather than a cut-off unit on a narrow phone or at a large
-                    // text size.
-                    Text(title)
-                        .textStyle(.body14)
-                        .foregroundStyle(Color.ms.textSecondary)
-                        .lineLimit(2)
-                        .accessibilityIdentifier("\(identifier).context")
-                } else {
-                    Text(title)
-                        .textStyle(.title20)
-                        .foregroundStyle(Color.ms.ink)
-                        .lineLimit(1)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityIdentifier("\(identifier).title")
+                if !stacked {
+                    titleText
                 }
                 Spacer(minLength: Spacing.sm)
                 if let action {
@@ -121,13 +148,35 @@ struct PushedHeader: View {
                 }
             }
             .padding(.leading, -Spacing.sm)
+            if stacked {
+                titleText
+            }
             if let subtitle {
                 Text(subtitle)
                     .textStyle(.body14)
                     .foregroundStyle(Color.ms.textSecondary)
-                    .padding(.leading, ControlHeight.md - Spacing.sm + Spacing.xs)
+                    .padding(.leading, stacked ? 0 : ControlHeight.md - Spacing.sm + Spacing.xs)
                     .accessibilityIdentifier(subtitleIdentifier ?? "\(identifier).subtitle")
             }
+        }
+    }
+
+    @ViewBuilder private var titleText: some View {
+        if style == .context {
+            // One line as f20 draws it; a second rather than a cut-off unit on a narrow phone or at a large text
+            // size, and all it needs at the accessibility sizes.
+            Text(title)
+                .textStyle(.body14)
+                .foregroundStyle(Color.ms.textSecondary)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .accessibilityIdentifier("\(identifier).context")
+        } else {
+            // A long title, a procedure's own name, takes more lines rather than lose its end (MS-149).
+            Text(title)
+                .textStyle(.title20)
+                .foregroundStyle(Color.ms.ink)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("\(identifier).title")
         }
     }
 }
@@ -211,6 +260,9 @@ private struct ScreenScaffold<Header: View, Pinned: View, Content: View>: View {
                 .padding(.top, PageLayout.headerInset(gap: headerGap, safeAreaTop: proxy.safeAreaInsets.top))
                 .padding(.bottom, cut)
                 .contentColumn()
+                // The header, the offline banner and the pinned controls take the height they need and the content
+                // scrolls in the rest, so at the largest text sizes a title or the banner is never cut (MS-149).
+                .fixedSize(horizontal: false, vertical: true)
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.lg) {
                         content()

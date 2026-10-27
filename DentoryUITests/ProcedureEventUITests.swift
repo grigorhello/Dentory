@@ -32,7 +32,7 @@ final class ProcedureEventUITests: XCTestCase {
         let save = app.buttons["procDetail.save"]
         XCTAssertFalse(save.isEnabled, "Save changes is enabled before anything changed")
         app.buttons["\(septocaine).inc"].tap()
-        XCTAssertEqual(app.staticTexts["\(septocaine).value"].label, "3")
+        XCTAssertEqual(app.stepperNumber(septocaine), "3")
         XCTAssertEqual(app.staticTexts["\(septocaine).warning"].label, "Recorded 2")
         save.tap()
 
@@ -56,7 +56,8 @@ final class ProcedureEventUITests: XCTestCase {
         XCTAssertEqual(warning.label, "10 items will be returned to inventory. Stock levels update immediately.")
         let confirm = app.buttons["cancelProcedure.confirm"]
         XCTAssertFalse(confirm.isEnabled, "Cancel procedure is enabled without a note")
-        let note = app.textFields["cancelProcedure.note"]
+        // The note wraps, so depending on the iOS version its field is a text view or a text field.
+        let note = app.descendants(matching: .any)["cancelProcedure.note"].firstMatch
         note.tap()
         note.typeText("Logged by mistake")
         XCTAssertTrue(confirm.isEnabled)
@@ -81,7 +82,7 @@ final class ProcedureEventUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["procDetail.editing"].waitForExistence(timeout: 5), "Editing did not open")
         app.buttons["\(septocaine).dec"].tap()
-        XCTAssertEqual(app.staticTexts["\(septocaine).value"].label, "1")
+        XCTAssertEqual(app.stepperNumber(septocaine), "1")
         app.buttons["procDetail.discard"].tap()
         let summary = app.staticTexts["procDetail.summary"]
         XCTAssertTrue(summary.waitForExistence(timeout: 3), "Discard did not end editing")

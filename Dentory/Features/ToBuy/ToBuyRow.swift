@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// One line still to buy (f25 Admin, f26 Staff): the admin's checkbox, the name over "Current 1 · target 5 ·
-/// Patterson", and −/+ around the quantity to buy, never under 1. Swipe left to remove it.
+/// Patterson", and −/+ around the quantity to buy, never under 1, which goes under the name at the accessibility text
+/// sizes (MS-149). Swipe left to remove it.
 struct ToBuyRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let item: ToBuyItem
     let line: String
     let isAdmin: Bool
@@ -13,6 +15,10 @@ struct ToBuyRow: View {
 
     private var identifier: String { "order.row[\(item.id.uuidString.lowercased())]" }
 
+    private var layout: AnyLayout {
+        .row(stacked: dynamicTypeSize.isAccessibilitySize)
+    }
+
     var body: some View {
         SwipeActionRow(actionTitle: "Remove", actionIdentifier: "\(identifier).remove", action: onRemove) {
             VStack(spacing: 0) {
@@ -20,19 +26,21 @@ struct ToBuyRow: View {
                     if isAdmin {
                         checkbox
                     }
-                    VStack(alignment: .leading, spacing: Spacing.xxs) {
-                        Text(item.name)
-                            .textStyle(.body16)
-                            .foregroundStyle(Color.ms.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(line)
-                            .textStyle(.caption12)
-                            .foregroundStyle(Color.ms.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                    layout {
+                        VStack(alignment: .leading, spacing: Spacing.xxs) {
+                            Text(item.name)
+                                .textStyle(.body16)
+                                .foregroundStyle(Color.ms.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(line)
+                                .textStyle(.caption12)
+                                .foregroundStyle(Color.ms.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityElement(children: .combine)
+                        QuantityStepper(value: $quantity, minimum: 1, name: item.name, identifier: identifier)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityElement(children: .combine)
-                    QuantityStepper(value: $quantity, minimum: 1, identifier: identifier)
                 }
                 .padding(.vertical, Spacing.md)
                 if showsDivider {

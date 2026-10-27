@@ -43,7 +43,7 @@ final class ProcedureE2ETests: XCTestCase {
         app.buttons["home.procedure.editUsage"].tap()
         app.staticTexts["procDetail.editing"].appears("Edit usage did not open the procedure")
         app.buttons["procDetail.item[\(gloves)].inc"].tap()
-        XCTAssertEqual(app.staticTexts["procDetail.item[\(gloves)].value"].label, "3")
+        XCTAssertEqual(app.stepperNumber("procDetail.item[\(gloves)]"), "3")
         app.buttons["procDetail.save"].tap()
         let toast = app.descendants(matching: .any)["toast"]
         toast.appears("No toast after Save changes")
@@ -52,7 +52,8 @@ final class ProcedureE2ETests: XCTestCase {
         E2E.expect(summary, toRead: "7 items deducted", "The record does not show the extra box")
 
         app.buttons["procDetail.cancel"].tap()
-        let note = app.textFields["cancelProcedure.note"]
+        // The note wraps, so depending on the iOS version its field is a text view or a text field.
+        let note = app.descendants(matching: .any)["cancelProcedure.note"].firstMatch
         note.appears("The cancel sheet did not open")
         XCTAssertEqual(
             app.staticTexts["cancelProcedure.warning"].label,

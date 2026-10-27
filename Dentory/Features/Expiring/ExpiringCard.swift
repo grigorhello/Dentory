@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// One batch on Expiring soon (f27): the name over "1 bottle · lot BA7 · Nov 2026", the days left in danger or
-/// warning over the value, then View product and, for Admin, Mark disposed.
+/// warning over the value, then View product and, for Admin, Mark disposed. At the accessibility text sizes the days
+/// go under the name, and Mark disposed under View product (MS-149).
 struct ExpiringCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let batch: ExpiringBatch
     let line: String
     let daysText: String
@@ -17,7 +19,7 @@ struct ExpiringCard: View {
     var body: some View {
         CardView {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                HStack(alignment: .top, spacing: Spacing.md) {
+                infoLayout {
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text(batch.name)
                             .textStyle(.bodyStrong16)
@@ -27,7 +29,7 @@ struct ExpiringCard: View {
                             .foregroundStyle(Color.ms.textBody)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    VStack(alignment: .trailing, spacing: Spacing.xxs) {
+                    VStack(alignment: isStacked ? .leading : .trailing, spacing: Spacing.xxs) {
                         Text(daysText)
                             .textStyle(.bodyStrong16)
                             .foregroundStyle(daysTone.foreground)
@@ -36,10 +38,12 @@ struct ExpiringCard: View {
                             .foregroundStyle(Color.ms.textSecondary)
                     }
                     .monospacedDigit()
+                    // The days and the value never wrap: the name and its line do (MS-149).
+                    .fixedSize()
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier(identifier)
-                HStack(spacing: Spacing.md) {
+                buttonsLayout {
                     MSButton("View product", variant: .tertiary, size: .small, action: onView)
                         .accessibilityIdentifier("\(identifier).view")
                     if showsDispose {
@@ -50,6 +54,12 @@ struct ExpiringCard: View {
             }
         }
     }
+
+    private var isStacked: Bool { dynamicTypeSize.isAccessibilitySize }
+
+    private var infoLayout: AnyLayout { .row(stacked: isStacked, alignment: .top) }
+
+    private var buttonsLayout: AnyLayout { .row(stacked: isStacked) }
 }
 
 #Preview("Expiring card") {

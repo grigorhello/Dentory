@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// One category of By category (f10): name, value and share of the total on one line, a thin bar of the share
-/// under them.
+/// One category of By category (f10): name, value and share of the total on one line (the value and share under the
+/// name at the accessibility text sizes, MS-149), a thin bar of the share under them.
 struct InventoryValueCategoryRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let name: String
     let value: String
     let shareText: String
@@ -13,17 +14,20 @@ struct InventoryValueCategoryRow: View {
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: Spacing.sm) {
-                HStack(spacing: Spacing.md) {
+                layout {
                     Text(name)
                         .textStyle(.body14)
                         .foregroundStyle(Color.ms.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    ListRowValue(value)
-                    Text(shareText)
-                        .textStyle(.body14)
-                        .foregroundStyle(Color.ms.textSecondary)
-                        .monospacedDigit()
-                        .frame(minWidth: ControlHeight.sm, alignment: .trailing)
+                    HStack(spacing: Spacing.md) {
+                        ListRowValue(value)
+                        Text(shareText)
+                            .textStyle(.body14)
+                            .foregroundStyle(Color.ms.textSecondary)
+                            .monospacedDigit()
+                            .fixedSize()
+                            .frame(minWidth: ControlHeight.sm, alignment: .trailing)
+                    }
                 }
                 ShareBar(share: share)
             }
@@ -36,6 +40,10 @@ struct InventoryValueCategoryRow: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(name), \(value), \(shareText) of the total")
+    }
+
+    private var layout: AnyLayout {
+        .row(stacked: dynamicTypeSize.isAccessibilitySize)
     }
 }
 

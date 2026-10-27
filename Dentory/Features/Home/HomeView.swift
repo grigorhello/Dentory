@@ -5,6 +5,7 @@ struct HomeView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
     @Environment(\.writeAccess) private var writeAccess
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Account's Sign out ends it (MS-137); the root puts it in the tabs' environment.
     @Environment(SessionStore.self) private var sessionStore: SessionStore?
     @State private var viewModel: HomeViewModel
@@ -95,6 +96,7 @@ struct HomeView: View {
             // f6 sets the tiles closer under their eyebrow than the screen's 16 pt rhythm.
             VStack(alignment: .leading, spacing: Spacing.xs + Spacing.xxs) {
                 Eyebrow("Needs attention")
+                    .accessibilityAddTraits(.isHeader)
                 attentionTiles(summary)
             }
             ProcedureCard(
@@ -122,7 +124,7 @@ struct HomeView: View {
 
     /// The three tiles share the height of the tallest, as f6 draws them.
     private func attentionTiles(_ summary: HomeSummary) -> some View {
-        HStack(alignment: .top, spacing: Spacing.md) {
+        tilesLayout {
             AttentionTile(count: summary.toBuyCount, label: "To buy", tone: .warning, identifier: "home.tile.toBuy") {
                 router.select(.toBuy)
             }
@@ -144,7 +146,7 @@ struct HomeView: View {
     }
 
     private func valueTiles(_ summary: HomeSummary) -> some View {
-        HStack(alignment: .top, spacing: Spacing.md) {
+        tilesLayout {
             ValueTile(
                 label: "Inventory value", value: formatters.wholeMoney(summary.inventoryValue),
                 identifier: "home.tile.inventoryValue"
@@ -160,21 +162,31 @@ struct HomeView: View {
         }
     }
 
+    /// Side by side, or one under the other at the accessibility text sizes, where a tile's label would otherwise
+    /// break mid-word (MS-149).
+    private var tilesLayout: AnyLayout {
+        .row(stacked: dynamicTypeSize.isAccessibilitySize, alignment: .top, stackedSpacing: Spacing.md)
+    }
+
     private var receiveRow: some View {
-        Button {
+        // The icon goes over the text at the accessibility text sizes, where beside it "delivery" broke (MS-149).
+        let iconAndText = AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, spacing: Spacing.lg)
+        return Button {
             writeAccess.perform { router.push(HomeRoute.receive, on: .home) }
         } label: {
             HStack(spacing: Spacing.lg) {
-                IconView(.truck, size: 24)
-                    .foregroundStyle(Color.ms.ink)
-                    .frame(width: ControlHeight.lg, height: ControlHeight.lg)
-                    .background(Color.ms.surfacePage, in: Circle())
-                VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text("Receive delivery").textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
-                    Text("Photo, PDF or manual. You confirm every line.")
-                        .textStyle(.body14)
-                        .foregroundStyle(Color.ms.textBody)
-                        .fixedSize(horizontal: false, vertical: true)
+                iconAndText {
+                    IconView(.truck, size: 24)
+                        .foregroundStyle(Color.ms.ink)
+                        .frame(width: ControlHeight.lg, height: ControlHeight.lg)
+                        .background(Color.ms.surfacePage, in: Circle())
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        Text("Receive delivery").textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
+                        Text("Photo, PDF or manual. You confirm every line.")
+                            .textStyle(.body14)
+                            .foregroundStyle(Color.ms.textBody)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 Spacer(minLength: Spacing.sm)
                 IconView(.chevronRight, size: 20).foregroundStyle(Color.ms.textBody)

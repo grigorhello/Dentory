@@ -31,6 +31,11 @@ nonisolated struct QuantityStepperModel: Equatable, Sendable {
         highlight ?? differsFromReference
     }
 
+    /// What VoiceOver reads after the item's name: the number, and "changed" while it is drawn in blue.
+    var spokenValue: String {
+        isHighlighted ? "\(value), changed" : "\(value)"
+    }
+
     mutating func increment() {
         value += 1
     }

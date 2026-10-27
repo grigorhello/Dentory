@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// One template (f11, f12): the name, the shortage line only when something is short, "12 items", and for Admin
-/// the pencil that edits its defaults. Tapping the row opens Adjust, then start.
+/// the pencil that edits its defaults. Tapping the row opens Adjust, then start. At the accessibility text sizes
+/// "12 items" goes under the name, which would otherwise break mid-word beside it ("Cleani / ng", MS-149).
 struct ProcedureTemplateRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let template: ProcedureTemplateSummary
     let itemsText: String
     let shortage: ProceduresViewModel.Shortage?
@@ -12,10 +14,11 @@ struct ProcedureTemplateRow: View {
     private var identifier: String { "proc.template[\(template.id.uuidString.lowercased())]" }
 
     var body: some View {
+        let layout = AnyLayout.row(stacked: dynamicTypeSize.isAccessibilitySize, stackedSpacing: Spacing.xxs)
         VStack(spacing: 0) {
             HStack(spacing: Spacing.xs) {
                 NavigationLink(value: ProcedureRoute.start(templateID: template.id)) {
-                    HStack(spacing: Spacing.md) {
+                    layout {
                         VStack(alignment: .leading, spacing: Spacing.xxs) {
                             Text(template.name)
                                 .textStyle(.bodyStrong14)

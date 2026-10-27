@@ -45,7 +45,7 @@ struct CatalogDisplaySection: View {
                     badge: .outOfStock
                 )
                 ListRow("Composite A2", caption: "Current 2 · target 6 · Patterson") {
-                    QuantityStepper(value: $batchQuantity, reference: 20, identifier: "catalog.row[4]")
+                    QuantityStepper(value: $batchQuantity, reference: 20, name: "Gloves", identifier: "catalog.row[4]")
                 }
                 ListRow("Count stock", navigates: true, showsDivider: false)
             }

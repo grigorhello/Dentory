@@ -51,6 +51,7 @@ struct MSSheet<Content: View, Primary: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
+        .modifier(SheetEscape(onBack: onBack))
         .accessibilityIdentifier(identifier)
     }
 }
@@ -64,6 +65,7 @@ extension MSSheet where Primary == EmptyView {
 /// The sheet variant for pickers: a search field on top and a 360 pt scrolling list (Appendix C
 /// `addItem`, `pickProduct`, `match`, `addOrder`). The caller filters `items` by `searchText`.
 struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let title: String
     var identifier: String
     /// A line under the title in the monospaced type, as the invoice line Which product is this? asks about (`match`).
@@ -76,6 +78,12 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
     @ViewBuilder let action: () -> Action
 
     static var listHeight: CGFloat { PageLayout.sheetListHeight }
+
+    private var titleLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.sm))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+    }
 
     init(
         _ title: String,
@@ -101,13 +109,17 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
-            HStack(alignment: .firstTextBaseline) {
+            // The action (+ New) goes under the title at the accessibility text sizes, where the title would otherwise
+            // break mid-word beside it (MS-149).
+            titleLayout {
                 Text(title)
                     .textStyle(.title24)
                     .foregroundStyle(Color.ms.ink)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("\(identifier).title")
-                Spacer(minLength: Spacing.sm)
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Spacer(minLength: Spacing.sm)
+                }
                 action()
             }
             if let code {
@@ -136,6 +148,7 @@ struct SheetList<Item: Identifiable, Row: View, Action: View>: View {
             .accessibilityIdentifier("\(identifier).list")
         }
         .accessibilityElement(children: .contain)
+        .modifier(SheetEscape())
         .accessibilityIdentifier(identifier)
     }
 }
@@ -194,7 +207,44 @@ struct MSSheetContainer<Content: View>: View {
     }
 }
 
+/// VoiceOver's escape, a two-finger Z, on a sheet's content (MS-149): back one step where the sheet has a Back chevron,
+/// otherwise closed, as a swipe down closes it; nothing while `sheetCloseDisabled(_:)` holds the sheet open. The sheet
+/// itself keeps VoiceOver inside it while it is up.
+private struct SheetEscape: ViewModifier {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.isSheetCloseDisabled) private var isCloseDisabled
+    var onBack: (() -> Void)?
+
+    func body(content: Content) -> some View {
+        content.accessibilityAction(.escape) {
+            guard !isCloseDisabled else { return }
+            if let onBack {
+                onBack()
+            } else {
+                dismiss()
+            }
+        }
+    }
+}
+
+private struct SheetCloseDisabledKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// Set by `sheetCloseDisabled(_:)`.
+    var isSheetCloseDisabled: Bool {
+        get { self[SheetCloseDisabledKey.self] }
+        set { self[SheetCloseDisabledKey.self] = newValue }
+    }
+}
+
 extension View {
+    /// Keeps the sheet open while `isDisabled`, against a swipe down and VoiceOver's escape alike (a delete in flight).
+    func sheetCloseDisabled(_ isDisabled: Bool) -> some View {
+        interactiveDismissDisabled(isDisabled).environment(\.isSheetCloseDisabled, isDisabled)
+    }
+
     /// Presents `content` for the item as a Dentory bottom sheet.
     func msSheet<Item: Identifiable, Content: View>(
         item: Binding<Item?>,

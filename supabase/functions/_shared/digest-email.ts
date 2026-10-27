@@ -171,7 +171,7 @@ export function daysText(days: number): string {
 
 /** Danger within 30 days or once expired, warning further out (PRD §6.7), in the app's colours. */
 function daysTone(days: number): string {
-  return days <= 30 ? "#c93a2d" : "#b86a00";
+  return days <= 30 ? "#bf372b" : "#a15c00";
 }
 
 /** "30 cartridges", "1 box", "2.5 bags": as the app's ClinicFormatters.quantity. */

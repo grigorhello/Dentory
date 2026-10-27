@@ -8,7 +8,7 @@ struct ManualReceiveAmountRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack(alignment: .top, spacing: Spacing.md) {
+            FieldRow {
                 MSTextField(
                     viewModel.quantityLabel, text: $viewModel.quantityText, identifier: "manual.qty", placeholder: "0",
                     error: viewModel.quantityError, keyboard: .decimalPad

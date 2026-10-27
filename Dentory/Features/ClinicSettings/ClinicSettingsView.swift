@@ -64,12 +64,13 @@ struct ClinicSettingsView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Clinic logo")
+        .accessibilityHint(logoHint)
         .accessibilityIdentifier("settings.logo")
         MSTextField(
             "Clinic name", text: $viewModel.name, identifier: "settings.clinicName", placeholder: "Smile Dental",
             error: viewModel.nameError, contentType: .organizationName
         )
-        HStack(alignment: .top, spacing: Spacing.md) {
+        FieldRow {
             MSTextField(
                 "City", text: $viewModel.city, identifier: "settings.city", placeholder: "Toronto",
                 contentType: .addressCity
@@ -80,18 +81,19 @@ struct ClinicSettingsView: View {
         }
         // A currency is three letters: its select is narrow, so the time zone gets the rest of the row and reads whole
         // ("America/Vancouver" on an iPhone SE, MS-136 audit V-14).
-        HStack(alignment: .top, spacing: Spacing.md) {
+        FieldRow {
             MSPicker(
                 "Currency", selection: $viewModel.currency, options: ClinicSettingsViewModel.currencies,
                 identifier: "settings.currency"
             ) { $0 }
-            .frame(width: ControlWidth.shortSelect)
+            .shortSelectWidth()
             MSPicker(
                 "Time zone", selection: $viewModel.timeZone, options: viewModel.timeZones,
                 identifier: "settings.timeZone"
             ) { $0 }
         }
         Eyebrow("Alerts")
+            .accessibilityAddTraits(.isHeader)
             .padding(.top, Spacing.sm)
         MSPicker(
             "Expiry warning", selection: $viewModel.expiryWarning, options: ExpiryWarning.allCases,
