@@ -21,8 +21,8 @@ struct MSTextField: View {
     var prefix: String?
     var suffix: String?
     var isSecure = false
-    /// A note, such as why a procedure is cancelled: the text and the placeholder wrap onto more lines, up to four,
-    /// rather than run past the box (MS-149).
+    /// A note, such as why a procedure is cancelled: three lines high, its text and its example wrap rather than run
+    /// past the box, and it grows to four lines before it scrolls (MS-149).
     var isMultiline = false
     var keyboard: UIKeyboardType = .default
     var contentType: UITextContentType?
@@ -155,14 +155,15 @@ struct MSTextField: View {
         } else if isMultiline {
             // The prompt stays for VoiceOver, unseen: the example is drawn under the field instead.
             TextField(placeholder, text: $text, prompt: Text(placeholder).foregroundStyle(Color.clear), axis: .vertical)
-                .lineLimit(1...Self.multilineLineLimit)
+                .lineLimit(Self.multilineLines)
         } else {
             TextField(placeholder, text: $text, prompt: prompt)
         }
     }
 
-    /// The most lines a multiline field shows before it scrolls.
-    private static let multilineLineLimit = 4
+    /// The lines a multiline field shows: three at least, so the field a tap or VoiceOver's touch reaches is over
+    /// 44 pt high at Large, as the box is (one line was 20 pt), and four before it scrolls.
+    private static let multilineLines = 3...4
 
     /// A note's example, drawn under the field as text that wraps: a field's own prompt keeps one line and loses its
     /// end ("e.g. Logged by mistake, patient cancell…" at Large on an iPhone SE). It keeps its room once typing
