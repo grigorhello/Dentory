@@ -53,11 +53,11 @@ declined, is the photo's doing and is not sent; it shows on the invoice and in t
    reads `//` as a comment, hence `$()`). To try it from a Debug build, the same line in `Config/Secrets.debug.xcconfig`;
    Debug events carry the environment `debug`, so filter on `production` in the alerts. Never in the repository, a chat
    or a memory.
-3. **The functions' DSN** (`dentory-functions`): on each hosted project, `supabase secrets set SENTRY_DSN=https://<key>@<org>.ingest.us.sentry.io/<project> --project-ref <ref>`,
-   then deploy the functions again (this ticket changed every one): `supabase functions deploy invite_member`,
-   `export_csv`, `extract_invoice`, `billing_checkout`, `billing_portal`, `send_push`, `stripe_webhook --no-verify-jwt`,
-   `accept_invitation --no-verify-jwt` and `send_digest --no-verify-jwt`. The secret's value is never echoed or pasted
-   anywhere else; without it the functions send nothing.
+3. **The functions' DSN** (`dentory-functions`): on each hosted project,
+   `supabase secrets set SENTRY_DSN=https://<key>@<org>.ingest.us.sentry.io/<project> --project-ref <ref>`, typed in
+   the terminal and never pasted anywhere else. Then deploy the functions again, since MS-150 changed every one but
+   `health`: `supabase functions deploy --project-ref <ref>` deploys them all, each with its `verify_jwt` setting from
+   `supabase/config.toml`. Without the secret the functions send nothing.
 4. **Check it.** A Debug build with the DSN: make a stock change (open a bottle) and find the `bottle_open` transaction
    under Performance (environment `debug`) within a minute. The functions show their first event when one happens.
 

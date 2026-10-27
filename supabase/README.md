@@ -35,6 +35,7 @@ The local runtime injects `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERV
 | `STRIPE_PROMO_COUPON_ID` | `billing_checkout` | The coupon for the lifetime promotion: 50% off, duration forever. Needed once a clinic has `promo_lifetime_50`. |
 | `STRIPE_WEBHOOK_SECRET` | `stripe_webhook` | The `whsec_…` signing secret of the webhook endpoint below. |
 | `BILLING_RETURN_URL` | the billing functions | Optional. Defaults to `https://app.dentory.ca/billing/done`, the page Checkout and the Customer Portal return to (`applinks/billing/done`). |
+| `SENTRY_DSN` | every function but `health` | Optional. The DSN of the Sentry project `dentory-functions`, never the app's. Without it, as on the local stack, nothing is sent; with it a function's unexpected errors, its 5xx answers and `extract_invoice`'s failed and timed-out readings reach Sentry, with no message, address or invoice contents (`_shared/sentry.ts`, `docs/runbooks/monitoring.md`, MS-150). |
 
 Deploy with `supabase functions deploy invite_member`, `supabase functions deploy export_csv`, `supabase functions deploy extract_invoice`, `supabase functions deploy accept_invitation --no-verify-jwt` and `supabase functions deploy send_digest --no-verify-jwt` (the setting also lives in `config.toml`).
 
@@ -97,6 +98,12 @@ curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/billing_checkout
 1. `make db-start`, `make db-reset seed-demo`, run the Debug build, sign in as sarah@smiledental.ca (Admin, password `smiledental`) or sign up a new clinic and invite someone at step 3; or call the function by hand with a signed-in user's token.
 2. `make invite-links` prints the links from the function log, as `dentory://invite?token=…`.
 3. `xcrun simctl openurl booted "dentory://invite?token=…"` opens the Join screen on the running simulator. The universal `https://app.dentory.ca/invite?token=…` form needs the domain and the Apple team id (`applinks/README.md`).
+
+## Backups, monitoring and load (MS-150)
+
+- `docs/runbooks/restore.md`: the Pro plan's daily backups and point-in-time recovery for production, the restore drill into a new project with its checks and record, and a real restore.
+- `docs/runbooks/monitoring.md`: what the app and the functions send Sentry, the DSNs, the alert rules, and what only the project's logs show.
+- `docs/runbooks/performance.md`: the load-test clinic (`seed-load.sql`), `make perf-report` and `make perf-concurrency` (`perf/`), and the device measurements on the Mac.
 
 ## Password reset email (MS-113)
 
