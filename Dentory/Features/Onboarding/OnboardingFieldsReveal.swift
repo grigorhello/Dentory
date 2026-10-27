@@ -6,6 +6,7 @@ import SwiftUI
 /// and the next one are. It runs as the focus moves, as the keyboard takes its room (which shortens the scroll view)
 /// and as the password's hint comes or goes; a newer run cancels one still waiting.
 struct OnboardingFieldsReveal: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let focus: OnboardingAccountField?
     /// From Full name's label to the end of the password's hint or error.
     let fieldsHeight: CGFloat
@@ -37,7 +38,8 @@ struct OnboardingFieldsReveal: ViewModifier {
         pending = Task {
             try? await Task.sleep(for: Self.keyboardSettle)
             guard !Task.isCancelled else { return }
-            withAnimation(Motion.baseAnimation) {
+            // With Reduce Motion the fields jump into place rather than slide (MS-149).
+            withAnimation(reduceMotion ? nil : Motion.baseAnimation) {
                 scroller.scrollTo(target, anchor: .bottom)
             }
         }

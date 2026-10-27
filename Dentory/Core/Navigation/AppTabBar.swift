@@ -29,6 +29,9 @@ struct AppTabBar: View {
             .frame(maxWidth: .infinity)
         }
         .background(Color.ms.surfaceCard)
+        // At the accessibility text sizes the bar stays at the largest standard size, as the system tab bar does, and a
+        // long press on a tab shows it large instead (MS-149).
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("tabBar")
     }
@@ -65,7 +68,7 @@ private struct AppTabBarItem: View {
         .accessibilityLabel(tab.title)
         .accessibilityValue(badge > 0 ? "\(badge)" : "")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-        // At the accessibility text sizes a long press shows the tab large, as the system tab bar does (MS-149).
+        // A long press shows the tab large where the bar stops growing (MS-149).
         .accessibilityShowsLargeContentViewer {
             Label {
                 Text(tab.title)
