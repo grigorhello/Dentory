@@ -1,0 +1,11 @@
+Pages: 5, the end
+Issue: Contrast failed [no element]
+Issue: Contrast failed [no element]
+Issue: Contrast failed [id= label=Composite A2 frame=(36.0, 624.0, 273.5, 50.0)]
+Issue: Contrast failed [id=order.row[00000000-0000-4000-8000-000000000501].remove label=Remove frame=(339.0, 305.5, 88.0, 340.5)]
+Issue: Contrast failed [id= label=America/Toronto frame=(20.0, 1030.5, 335.0, 127.5)]
+Issue: Text clipped [id=order.seg label=Ordered · 5 frame=(133.0, 109.5, 109.0, 48.0)]
+Issue: Text clipped [no element]
+Issue: Text clipped [id=order.seg label=To buy · 3 frame=(24.0, 109.5, 109.0, 48.0)]
+Issue: Text clipped [id=order.seg label=Received · 1 frame=(242.0, 109.5, 109.0, 48.0)]
+Issue: Text clipped [no element]

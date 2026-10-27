@@ -1,0 +1,13 @@
+window UIWindow level 0.0
+Back |  | button | settings.back | 12,26 44x44
+Clinic settings |  | header,text | settings.title | 60,36 132x25
+Save |  | button,disabled | settings.save | 289,30 67x36
+Clinic logo |  | button | settings.logo | 20,86 183x72
+Clinic name | Smile Dental |  | settings.clinicName | 32,209 311x21
+City | Toronto |  | settings.city | 32,292 138x21
+Country | Canada | button | settings.country | 194,280 162x44
+Currency | CAD | button | settings.currency | 20,363 120x44
+Time zone | America/Toronto | button | settings.timeZone | 152,363 203x44
+Alerts |  | header,text |  | 20,431 56x18
+Expiry warning | 30, 60 and 90 days | button | settings.expiryWarning | 20,488 335x44
+Email digest, Weekly, Monday 7 am | 1 | button | settings.digest | 36,564 303x44

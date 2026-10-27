@@ -1,0 +1,220 @@
+Attributes: Application, 0x11a02b120, pid: 39336, label: 'Dentory'
+Element subtree:
+ →Application, 0x11a02b120, pid: 39336, label: 'Dentory'
+    Window (Main), 0x11a02b890, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11a02bc40, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11a029100, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x11a02b470, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x11a01bc40, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11a02a2e0, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x11a02a400, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a02a520, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11a02a640, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11a02a760, {{0.0, 0.0}, {375.0, 667.0}}
+                        StaticText, 0x11a02a880, {{20.0, 28.0}, {242.5, 69.5}}, identifier: 'inv.header.title', label: 'Inventory'
+                        Button, 0x11a02a9a0, {{20.0, 105.5}, {298.0, 58.0}}, identifier: 'inv.countStock', label: 'Count stock'
+                          Image, 0x11a02aac0, {{36.0, 127.5}, {14.0, 14.0}}
+                          StaticText, 0x11a02abe0, {{20.0, 105.5}, {298.0, 58.0}}, label: 'Count stock'
+                        Image, 0x11a02ad00, {{32.0, 203.5}, {16.0, 16.0}}
+                        TextField, 0x11a02ae20, {{56.0, 183.5}, {287.0, 56.0}}, identifier: 'inv.search', label: 'Search products', placeholderValue: 'Search products'
+                        ScrollView, 0x11a029750, {{0.0, 259.5}, {375.0, 58.0}}, identifier: 'inv.filter'
+                          Other, 0x11a029870, {{0.0, 259.5}, {931.0, 58.0}}
+                            Button, 0x11a029990, {{20.0, 259.5}, {75.5, 58.0}}, label: 'All', Selected
+                            Button, 0x11a029ab0, {{103.5, 259.5}, {106.0, 58.0}}, label: 'Low'
+                            Button, 0x11a029bd0, {{217.5, 259.5}, {186.5, 58.0}}, label: 'Expiring'
+                            Button, 0x11a029cf0, {{412.0, 259.5}, {313.5, 58.0}}, label: 'Missing expiry'
+                            Button, 0x11a02cdc0, {{733.5, 259.5}, {177.5, 58.0}}, label: 'Healthy'
+                          Other, 0x11a02cee0, {{0.0, 259.5}, {375.0, 60.0}}
+                            Other, 0x11a02d000, {{0.0, 259.5}, {375.0, 60.0}}
+                              Other, 0x11a02d120, {{137.5, 239.5}, {100.0, 100.0}}
+                                Other, 0x11a02d240, {{137.5, 239.5}, {100.0, 100.0}}
+                                  Other, 0x11a02d360, {{186.0, 274.5}, {3.5, 10.0}}
+                              StaticText, 0x11a02d480, {{10.0, 308.0}, {355.0, 0.0}}
+                        ScrollView, 0x11a02d5a0, {{0.0, 317.5}, {375.0, 349.5}}
+                          Other, 0x11a02d6c0, {{0.0, 317.5}, {375.0, 60.0}}
+                            Other, 0x11a02d7e0, {{0.0, 317.5}, {375.0, 60.0}}
+                              Other, 0x11a02d900, {{137.5, 297.5}, {100.0, 100.0}}
+                                Other, 0x11a02da20, {{137.5, 297.5}, {100.0, 100.0}}
+                                  Other, 0x11a02db40, {{186.0, 332.5}, {3.5, 10.0}}
+                              StaticText, 0x11a02dc60, {{10.0, 366.0}, {355.0, 0.0}}
+                          Other, 0x11a02dd80, {{0.0, 317.5}, {375.0, 3480.0}}
+                            Other, 0x11a02dea0, {{36.0, 329.5}, {303.0, 838.0}}
+                              Button, 0x11a02dfc0, {{36.0, 329.5}, {303.0, 280.5}}, identifier: 'inv.row[00000000-0000-4000-8000-0000000000d7]', label: 'Rubber dam latex-free, 0 sheets · Endodontics, Out of stock'
+                                StaticText, 0x11a02e0e0, {{36.0, 343.5}, {247.5, 99.5}}, label: 'Rubber dam latex-free'
+                                StaticText, 0x11a02e200, {{36.0, 445.0}, {223.5, 92.0}}, label: '0 sheets · Endodontics'
+                                StaticText, 0x11a02e320, {{44.0, 547.0}, {222.0, 46.0}}, label: 'Out of stock'
+                              Button, 0x11a02e440, {{36.0, 610.0}, {303.0, 277.0}}, identifier: 'inv.row[00000000-0000-4000-8000-0000000000d3]', label: 'Composite A2, 1 unopened · 1 open · Restorative, Low'
+                                StaticText, 0x11a02e560, {{36.0, 624.0}, {273.5, 50.0}}, label: 'Composite A2'
+                                StaticText, 0x11a02e680, {{36.0, 676.0}, {266.0, 138.0}}, label: '1 unopened · 1 open · Restorative'
+                                StaticText, 0x11a02e7a0, {{44.0, 824.0}, {75.5, 46.0}}, label: 'Low'
+                              Button, 0x11a02e8c0, {{36.0, 887.0}, {303.0, 280.5}}, identifier: 'inv.row[00000000-0000-4000-8000-0000000000d2]', label: 'Endo file kit #15-40, 1 kit · Endodontics, Low'
+                                StaticText, 0x11a02e9e0, {{36.0, 901.0}, {238.0, 99.5}}, label: 'Endo file kit #15-40'
+                                StaticText, 0x11a02eb00, {{36.0, 1002.5}, {223.5, 92.0}}, label: '1 kit · Endodontics'
+                                StaticText, 0x11a02ec20, {{44.0, 1104.5}, {75.5, 46.0}}, label: 'Low'
+                          Other, 0x11a02ed40, {{342.0, 317.5}, {30.0, 287.5}}, label: 'Vertical scroll bar, 13 pages', value: 0%
+                          Other, 0x11a02ee60, {{342.0, 317.5}, {30.0, 287.5}}, label: 'Vertical scroll bar, 13 pages', value: 0%
+                        Button, 0x11a02ef80, {{299.0, 529.0}, {56.0, 56.0}}, identifier: 'inv.newProduct', label: 'New product'
+                          Image, 0x11a02f0a0, {{315.0, 545.0}, {24.0, 24.0}}
+                Other, 0x11a02f1c0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a02f2e0, {{0.0, 0.0}, {0.0, 0.0}}
+                  Other, 0x11a02f400, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11a02f520, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x11a02f640, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a02f760, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11a02f880, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11a02f9a0, {{0.0, 0.0}, {375.0, 667.0}}
+                        StaticText, 0x11a02fac0, {{20.0, 28.0}, {286.5, 69.5}}, identifier: 'proc.header.title', label: 'Procedures'
+                        Button, 0x11a02fbe0, {{20.0, 105.5}, {263.0, 58.0}}, identifier: 'proc.addTemplate', label: 'New procedure'
+                          Image, 0x11a02fd00, {{36.0, 127.5}, {14.0, 14.0}}
+                          StaticText, 0x11a02fe20, {{20.0, 105.5}, {263.0, 58.0}}, label: 'Procedure'
+                        ScrollView, 0x11a02ff40, {{0.0, 171.5}, {375.0, 495.5}}
+                          Other, 0x11a030060, {{0.0, 171.5}, {375.0, 2222.5}}
+                            Button, 0x11a030180, {{36.0, 179.5}, {255.0, 182.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000301]', label: 'Root canal, 1 not available, 12 items'
+                              StaticText, 0x11a0302a0, {{36.0, 197.5}, {208.5, 50.0}}, label: 'Root canal'
+                              StaticText, 0x11a0303c0, {{36.0, 249.5}, {252.5, 46.0}}, label: '1 not available'
+                              StaticText, 0x11a0304e0, {{36.0, 297.5}, {146.5, 46.0}}, label: '12 items'
+                            Button, 0x11a030600, {{295.0, 248.5}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000301].edit', label: 'Edit Root canal'
+                              Image, 0x11a030720, {{295.0, 248.5}, {44.0, 44.0}}
+                            Button, 0x11a030840, {{36.0, 362.5}, {255.0, 134.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000302]', label: 'Cleaning, 7 items'
+                              StaticText, 0x11a030960, {{36.0, 380.5}, {176.0, 50.0}}, label: 'Cleaning'
+                              StaticText, 0x11a030a80, {{36.0, 432.5}, {129.0, 46.0}}, label: '7 items'
+                            Button, 0x11a030ba0, {{295.0, 407.5}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000302].edit', label: 'Edit Cleaning'
+                              Image, 0x11a030cc0, {{295.0, 407.5}, {44.0, 44.0}}
+                            Button, 0x11a030de0, {{36.0, 497.5}, {255.0, 134.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000303]', label: 'Filling, 12 items'
+                              StaticText, 0x11a030f00, {{36.0, 515.5}, {118.0, 50.0}}, label: 'Filling'
+                              StaticText, 0x11a031020, {{36.0, 567.5}, {146.5, 46.0}}, label: '12 items'
+                            Button, 0x11a031140, {{295.0, 542.5}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000303].edit', label: 'Edit Filling'
+                              Image, 0x11a031260, {{295.0, 542.5}, {44.0, 44.0}}
+                            Button, 0x11a031380, {{36.0, 632.5}, {255.0, 134.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000304]', label: 'Crown, 10 items'
+                              StaticText, 0x11a0314a0, {{36.0, 650.5}, {129.5, 50.0}}, label: 'Crown'
+                              StaticText, 0x11a0315c0, {{36.0, 702.5}, {147.0, 46.0}}, label: '10 items'
+                            Button, 0x11a0316e0, {{295.0, 677.5}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000304].edit', label: 'Edit Crown'
+                              Image, 0x11a031800, {{295.0, 677.5}, {44.0, 44.0}}
+                            Button, 0x11a031920, {{36.0, 767.5}, {255.0, 134.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000305]', label: 'Extraction, 8 items'
+                              StaticText, 0x11a031a40, {{36.0, 785.5}, {202.0, 50.0}}, label: 'Extraction'
+                              StaticText, 0x11a031b60, {{36.0, 837.5}, {131.0, 46.0}}, label: '8 items'
+                            Button, 0x11a031c80, {{295.0, 812.5}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000305].edit', label: 'Edit Extraction'
+                              Image, 0x11a031da0, {{295.0, 812.5}, {44.0, 44.0}}
+                            StaticText, 0x11a031ec0, {{20.0, 917.5}, {334.0, 506.0}}, identifier: 'proc.note', label: 'Starting a procedure deducts its supplies right away. Pencil edits the default supplies. Starter quantities are templates, not clinical recommendations.'
+                            StaticText, 0x11a031fe0, {{20.0, 1439.5}, {307.5, 103.5}}, label: 'HISTORY · TAP TO EDIT USAGE'
+                            Other, 0x11a032100, {{0.0, 0.0}, {0.0, 0.0}}
+                          Other, 0x11a032220, {{342.0, 171.5}, {30.0, 433.5}}, label: 'Vertical scroll bar, 6 pages', value: 0%
+                          Other, 0x11a032340, {{342.0, 171.5}, {30.0, 433.5}}, label: 'Vertical scroll bar, 6 pages', value: 0%
+                Other, 0x11a032460, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a032580, {{0.0, 0.0}, {0.0, 0.0}}
+                  Other, 0x11a0326a0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11a0327c0, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x11a0328e0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a032a00, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11a032b20, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11a032c40, {{0.0, 0.0}, {375.0, 667.0}}
+                        StaticText, 0x11a032d60, {{20.0, 28.0}, {164.5, 69.5}}, identifier: 'order.header.title', label: 'To buy'
+                        Button, 0x11a032e80, {{24.0, 109.5}, {109.0, 48.0}}, identifier: 'order.seg', label: 'To buy · 3', Selected
+                        Button, 0x11a032fa0, {{133.0, 109.5}, {109.0, 48.0}}, identifier: 'order.seg', label: 'Ordered · 5'
+                        Button, 0x11a0330c0, {{242.0, 109.5}, {109.0, 48.0}}, identifier: 'order.seg', label: 'Received · 1'
+                        ScrollView, 0x119f4fc60, {{0.0, 161.5}, {375.0, 505.5}}
+                          Other, 0x119f4eda0, {{0.0, 161.5}, {375.0, 1262.5}}
+                            Other, 0x119f54190, {{20.0, 173.5}, {290.0, 116.0}}, identifier: 'order.selectionBar'
+                              StaticText, 0x119f542b0, {{20.0, 173.5}, {290.0, 50.0}}, identifier: 'order.selectionBar.summary', label: '3 of 3 selected'
+                              Button, 0x119f543d0, {{20.0, 231.5}, {140.0, 58.0}}, identifier: 'order.selectionBar.toggle', label: 'Clear'
+                            ScrollView, 0x119f544f0, {{20.0, 305.5}, {319.0, 340.5}}
+                              Other, 0x119f54610, {{20.0, 305.5}, {407.0, 340.5}}
+                                Switch, 0x119f54730, {{26.0, 453.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].select', label: 'Select Endo file kit #15-40', value: Checked
+                                StaticText, 0x119f54850, {{72.0, 317.5}, {267.0, 251.5}}, label: 'Endo file kit #15-40, Current 1 · target 5 · Patterson'
+                                  StaticText, 0x119f54970, {{72.0, 317.5}, {267.0, 111.5}}, label: 'Endo file kit #15-40'
+                                  StaticText, 0x119f54a90, {{72.0, 431.0}, {194.5, 138.0}}, label: 'Current 1 · target 5 · Patterson'
+                                Other, 0x119f54bb0, {{72.0, 577.0}, {124.0, 56.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501]'
+                                  Button, 0x119f54cd0, {{72.0, 583.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].dec', label: 'Decrease Endo file kit #15-40', value: 4
+                                    Image, 0x119f54df0, {{72.0, 583.0}, {44.0, 44.0}}
+                                  Other, 0x119f54f10, {{116.0, 577.0}, {36.0, 56.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].value', label: 'Endo file kit #15-40', value: 4
+                                    StaticText, 0x119f55030, {{119.0, 577.0}, {30.0, 56.0}}, label: '4'
+                                  Button, 0x119f55150, {{152.0, 583.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].inc', label: 'Increase Endo file kit #15-40', value: 4
+                                    Image, 0x119f55270, {{152.0, 583.0}, {44.0, 44.0}}
+                                Button, 0x119f55390, {{339.0, 305.5}, {88.0, 340.5}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].remove', label: 'Remove'
+                            ScrollView, 0x119f554b0, {{20.0, 646.0}, {319.0, 340.5}}
+                              Other, 0x119f555d0, {{20.0, 646.0}, {407.0, 340.5}}
+                                Switch, 0x119f556f0, {{26.0, 794.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].select', label: 'Select Composite A2', value: Checked
+                                StaticText, 0x119f55810, {{72.0, 658.0}, {247.5, 251.5}}, label: 'Composite A2, Current 2 · target 6 · Patterson'
+                                  StaticText, 0x119f55930, {{72.0, 658.0}, {247.5, 111.5}}, label: 'Composite A2'
+                                  StaticText, 0x119f55a50, {{72.0, 771.5}, {202.5, 138.0}}, label: 'Current 2 · target 6 · Patterson'
+                                Other, 0x119f55b70, {{72.0, 917.5}, {124.0, 56.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502]'
+                                  Button, 0x119f55c90, {{72.0, 923.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].dec', label: 'Decrease Composite A2', value: 4
+                                    Image, 0x119f55db0, {{72.0, 923.5}, {44.0, 44.0}}
+                                  Other, 0x119f55ed0, {{116.0, 917.5}, {36.0, 56.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].value', label: 'Composite A2', value: 4
+                                    StaticText, 0x119f55ff0, {{119.0, 917.5}, {30.0, 56.0}}, label: '4'
+                                  Button, 0x119f56110, {{152.0, 923.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].inc', label: 'Increase Composite A2', value: 4
+                                    Image, 0x119f56230, {{152.0, 923.5}, {44.0, 44.0}}
+                                Button, 0x119f56350, {{339.0, 646.0}, {88.0, 340.5}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].remove', label: 'Remove'
+                            ScrollView, 0x119f56470, {{20.0, 986.5}, {319.0, 339.5}}
+                              Other, 0x119f56590, {{20.0, 986.5}, {407.0, 339.5}}
+                                Switch, 0x119f566b0, {{26.0, 1134.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].select', label: 'Select Rubber dam latex-free', value: Checked
+                                StaticText, 0x119f567d0, {{72.0, 998.5}, {267.0, 251.5}}, label: 'Rubber dam latex-free, Current 0 · target 36 · Henry Schein'
+                                  StaticText, 0x119f568f0, {{72.0, 998.5}, {267.0, 111.5}}, label: 'Rubber dam latex-free'
+                                  StaticText, 0x119f56a10, {{72.0, 1112.0}, {242.5, 138.0}}, label: 'Current 0 · target 36 · Henry Schein'
+                                Other, 0x11a0331e0, {{72.0, 1258.0}, {148.0, 56.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503]'
+                                  Button, 0x11a033300, {{72.0, 1264.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].dec', label: 'Decrease Rubber dam latex-free', value: 36
+                                    Image, 0x11a033420, {{72.0, 1264.0}, {44.0, 44.0}}
+                                  Other, 0x11a033540, {{116.0, 1258.0}, {60.0, 56.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].value', label: 'Rubber dam latex-free', value: 36
+                                    StaticText, 0x11a033660, {{116.0, 1258.0}, {60.0, 56.0}}, label: '36'
+                                  Button, 0x11a033780, {{176.0, 1264.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].inc', label: 'Increase Rubber dam latex-free', value: 36
+                                    Image, 0x11a0338a0, {{176.0, 1264.0}, {44.0, 44.0}}
+                                Button, 0x11a0339c0, {{339.0, 986.5}, {88.0, 339.5}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].remove', label: 'Remove'
+                            Button, 0x11a033ae0, {{70.5, 1342.0}, {234.0, 58.0}}, identifier: 'order.add', label: 'Add item'
+                              Image, 0x11a033c00, {{86.5, 1364.0}, {14.0, 14.0}}
+                              StaticText, 0x11a033d20, {{70.5, 1342.0}, {234.0, 58.0}}, label: 'Add item'
+                          Other, 0x11a033e40, {{342.0, 161.5}, {30.0, 291.0}}, label: 'Vertical scroll bar, 5 pages', value: 0%
+                          Other, 0x11a033f60, {{342.0, 161.5}, {30.0, 291.0}}, label: 'Vertical scroll bar, 5 pages', value: 0%
+                        Button, 0x11a034080, {{20.0, 465.5}, {335.0, 131.5}}, identifier: 'order.markOrdered', label: 'Mark 3 as ordered'
+                Other, 0x11a0341a0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a0342c0, {{0.0, 0.0}, {0.0, 0.0}}
+                  Other, 0x11a0343e0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11a034500, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x11a034620, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a034740, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11a034860, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11a034980, {{0.0, 0.0}, {375.0, 667.0}}
+                        Button, 0x11a034aa0, {{12.0, 33.0}, {44.0, 44.0}}, identifier: 'settings.back', label: 'Back'
+                          Image, 0x11a034bc0, {{12.0, 33.0}, {44.0, 44.0}}
+                        Button, 0x11a034ce0, {{224.0, 26.0}, {131.0, 58.0}}, identifier: 'settings.save', label: 'Save', Disabled
+                        StaticText, 0x11a034e00, {{20.0, 88.0}, {202.5, 126.0}}, identifier: 'settings.title', label: 'Clinic settings'
+                        ScrollView, 0x11a034f20, {{0.0, 222.0}, {375.0, 445.0}}
+                          Other, 0x11a035040, {{0.0, 222.0}, {375.0, 1546.0}}
+                            Button, 0x11a035160, {{20.0, 230.0}, {321.5, 157.5}}, identifier: 'settings.logo', label: 'Clinic logo'
+                              Image, 0x11a035280, {{44.0, 297.0}, {24.0, 24.0}}
+                              StaticText, 0x11a0353a0, {{108.0, 230.0}, {233.5, 56.0}}, label: 'Clinic logo'
+                              StaticText, 0x11a0354c0, {{108.0, 288.0}, {144.5, 99.5}}, label: 'Tap to upload.'
+                            TextField, 0x11a0355e0, {{32.0, 467.5}, {311.0, 57.5}}, identifier: 'settings.clinicName', label: 'Clinic name', placeholderValue: 'Smile Dental', value: Smile Dental
+                            TextField, 0x11a035700, {{32.0, 613.0}, {311.0, 57.5}}, identifier: 'settings.city', label: 'City', placeholderValue: 'Toronto', value: Toronto
+                            Button, 0x11a035820, {{20.0, 746.5}, {335.0, 72.0}}, identifier: 'settings.country', label: 'Country', value: Canada
+                              Button, 0x11a035940, {{20.0, 746.5}, {335.0, 72.0}}
+                                StaticText, 0x11a035a60, {{20.0, 746.5}, {335.0, 72.0}}, label: 'Canada'
+                                Image, 0x11a035b80, {{327.0, 774.5}, {16.0, 16.0}}
+                            Button, 0x11a035ca0, {{20.0, 890.5}, {335.0, 72.0}}, identifier: 'settings.currency', label: 'Currency', value: CAD
+                              Button, 0x11a035dc0, {{20.0, 890.5}, {335.0, 72.0}}
+                                StaticText, 0x11a035ee0, {{20.0, 890.5}, {335.0, 72.0}}, label: 'CAD'
+                                Image, 0x11a036000, {{327.0, 918.5}, {16.0, 16.0}}
+                            Button, 0x11a036120, {{20.0, 1030.5}, {335.0, 127.5}}, identifier: 'settings.timeZone', label: 'Time zone', value: America/Toronto
+                              Button, 0x11a036240, {{20.0, 1030.5}, {335.0, 127.5}}
+                                StaticText, 0x11a036360, {{20.0, 1030.5}, {335.0, 127.5}}, label: 'America/Toronto'
+                                Image, 0x11a036480, {{327.0, 1086.5}, {16.0, 16.0}}
+                            StaticText, 0x11a0365a0, {{20.0, 1182.0}, {152.0, 52.0}}, label: 'ALERTS'
+                            Button, 0x11a0366c0, {{20.0, 1306.0}, {335.0, 127.5}}, identifier: 'settings.expiryWarning', label: 'Expiry warning', value: 30, 60 and 90 days
+                              Button, 0x11a0367e0, {{20.0, 1306.0}, {335.0, 127.5}}
+                                StaticText, 0x11a036900, {{20.0, 1306.0}, {335.0, 127.5}}, label: '30, 60 and 90 days'
+                                Image, 0x11a036a20, {{327.0, 1362.0}, {16.0, 16.0}}
+                            Switch, 0x11a036b40, {{36.0, 1465.5}, {303.0, 262.5}}, identifier: 'settings.digest', label: 'Email digest, Weekly, Monday 7 am', value: 1
+                              StaticText, 0x11a036c60, {{36.0, 1465.5}, {134.0, 111.5}}, label: 'Email digest'
+                              StaticText, 0x11a036d80, {{36.0, 1579.0}, {203.0, 149.0}}, label: 'Weekly, Monday 7 am'
+                          Other, 0x11a036ea0, {{342.0, 222.0}, {30.0, 445.0}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                            Other, 0x11a036fc0, {{369.0, 262.0}, {3.0, 546.0}}
+                          Other, 0x11a0370e0, {{342.0, 222.0}, {30.0, 445.0}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                            Other, 0x11a037200, {{369.0, 262.0}, {3.0, 546.0}}
+                Other, 0x11a037320, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11a037440, {{0.0, 0.0}, {375.0, 667.0}}
+Path to element:
+ →Application, 0x11a02b120, pid: 39336, label: 'Dentory'
+Query chain:
+ →Find: Target Application 'ca.dentory.app'
+  Output: {
+    Application, 0x119e41170, pid: 39336, label: 'Dentory'
+  }

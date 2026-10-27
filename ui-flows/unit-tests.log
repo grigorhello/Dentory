@@ -1,0 +1,10 @@
+Writing result bundle at path:
+	/Users/runner/work/_temp/results/unit-tests.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:02010C24-263D-445A-8934-74FE019F15CA, OS:18.6, name:iPhone 16 }
+{ platform:iOS Simulator, arch:x86_64, id:02010C24-263D-445A-8934-74FE019F15CA, OS:18.6, name:iPhone 16 }
+2026-10-27 17:33:37.894 xcodebuild[18527:53553] [MT] IDETestOperationsObserverDebug: 51.214 elapsed -- Testing started completed.
+2026-10-27 17:33:37.895 xcodebuild[18527:53553] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 17:33:37.895 xcodebuild[18527:53553] [MT] IDETestOperationsObserverDebug: 51.215 sec, +51.215 sec -- end
+Testing started

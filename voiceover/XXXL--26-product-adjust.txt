@@ -1,0 +1,36 @@
+window UIWindow level 0.0
+Back |  | button | product.back | 12,26 44x44
+Anesthetic · 1 box = 50 cartridges |  | text | product.context | 60,26 172x44
+Edit |  | button | product.edit | 289,30 67x36
+Septocaine 4% 1:100,000 |  | header,text | product.title | 20,-71 315x32
+Healthy |  | text | product.status | 20,-31 104x30
+Available, 54, cartridges |  | text | product.quantity | 36,31 84x98
+Minimum, 20 |  | text | product.quantity | 141,31 78x73
+Target, 60 |  | text | product.quantity | 246,31 55x73
+System estimate · 38 cartridges used in 30 days |  | text | product.quantity | 36,162 151x66
+Counted Oct 1 |  | text | product.quantity | 219,162 120x22
+Adjust |  | button | product.adjust | 20,260 335x48
+Add to buy |  | button | product.addToBuy | 20,320 335x48
+Expiry |  | header,text |  | 20,384 67x23
+Expires |  | text |  | 36,435 65x22
+Qty |  | text |  | 190,435 32x22
+Lot |  | text |  | 312,435 28x22
+Dec 2026, in 90 days, 20, A112 |  | button | product.batch[00000000-0000-4000-8000-0000000000b1] | 36,466 303x113
+Dec 2026, in 90 days, 34, B441 |  | button | product.batch[00000000-0000-4000-8000-0000000000b2] | 36,579 303x105
+54 of 54 tracked · 54 expire within 90 days, cartridges |  | text | product.expiryTotal | 36,696 303x44
+Tap a batch to edit its expiry, lot or quantity. |  | text |  | 20,768 263x42
+Add expiry |  | button | product.addExpiry | 20,825 198x48
+History |  | header,text |  | 20,889 81x23
+43 → 41, Physical count · Michael, Oct 1 |  | text | product.history[00000000-0000-4000-8000-0000000000f1] | 36,940 303x90
+−2, Root canal · Sarah, Oct 1 |  | text | product.history[00000000-0000-4000-8000-0000000000f2] | 36,1042 303x39
++40, Invoice INV-10092 · Michael, Sep 30 |  | text | product.history[00000000-0000-4000-8000-0000000000f3] | 36,1092 303x77
+Show all |  | button | product.historyAll | 20,1197 146x48
+Delete product |  | button | product.delete | 20,1261 335x48
+modal UIDimmingView in UIDropShadowView
+modal UIDimmingView in UITransitionView
+Adjust inventory |  | header,text | adjust.title | 27,326 212x34
+System estimate 54 cartridges. A reason is recorded in history. |  | text |  | 27,364 276x42
+Actual quantity | 54 |  | adjust.quantity | 39,457 207x26
+cartridges |  | text |  | 253,459 83x21
+Reason | Select a reason | button | adjust.reason | 27,533 321x42
+Save adjustment |  | button,disabled | adjust.save | 27,590 321x46

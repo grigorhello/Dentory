@@ -1,0 +1,12 @@
+Writing result bundle at path:
+	/Users/runner/work/_temp/results/ui-flows.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:02010C24-263D-445A-8934-74FE019F15CA, OS:18.6, name:iPhone 16 }
+{ platform:iOS Simulator, arch:x86_64, id:02010C24-263D-445A-8934-74FE019F15CA, OS:18.6, name:iPhone 16 }
+2026-10-27 18:13:10.138 xcodebuild[22101:62738] [MT] IDETestOperationsObserverDebug: 2342.474 elapsed -- Testing started completed.
+2026-10-27 18:13:10.139 xcodebuild[22101:62738] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 18:13:10.139 xcodebuild[22101:62738] [MT] IDETestOperationsObserverDebug: 2342.474 sec, +2342.474 sec -- end
+** TEST EXECUTE FAILED **
+
+Testing started

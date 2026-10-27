@@ -1,0 +1,42 @@
+window UIWindow level 0.0
+Inventory |  | header,text | inv.header.title | 20,28 145x41
+Count stock |  | button | inv.countStock | 217,31 139x36
+Search products | Search products |  | inv.search | 56,92 287x22
+All |  | button,selected |  | 20,141 42x36
+Low |  | button |  | 70,141 52x36
+Expiring |  | button |  | 130,141 80x36
+Missing expiry |  | button |  | 218,141 123x36
+Healthy |  | button |  | 349,141 77x36
+Rubber dam latex-free, 0 sheets · Endodontics, Out of stock |  | button | inv.row[00000000-0000-4000-8000-0000000000d7] | 36,193 303x63
+Composite A2, 1 unopened · 1 open · Restorative, Low |  | button | inv.row[00000000-0000-4000-8000-0000000000d3] | 36,256 303x63
+Endo file kit #15-40, 1 kit · Endodontics, Low |  | button | inv.row[00000000-0000-4000-8000-0000000000d2] | 36,319 303x63
+Root canal sealer, 0 unopened · 1 open · Endodontics, Low |  | button | inv.row[00000000-0000-4000-8000-0000000000d9] | 36,382 303x63
+Temporary cement, 0 unopened · 1 open · Restorative, Low |  | button | inv.row[00000000-0000-4000-8000-0000000000da] | 36,445 303x63
+Bonding agent, 0 unopened · 1 open · Restorative, Expiring |  | button | inv.row[00000000-0000-4000-8000-0000000000d4] | 36,508 303x63
+Gutta percha F2, 7 packs · Endodontics, Missing expiry |  | button | inv.row[00000000-0000-4000-8000-0000000000d8] | 36,571 303x63
+Alginate impression, 3 unopened · 1 open · Impression, Healthy |  | button | inv.row[00000000-0000-4000-8000-0000000000dc] | 36,634 303x63
+Nitrile gloves M, 14 boxes · PPE, Healthy |  | button | inv.row[00000000-0000-4000-8000-0000000000d5] | 36,697 303x63
+Septocaine 4% 1:100,000, 54 cartridges · Anesthetic, Healthy |  | button | inv.row[00000000-0000-4000-8000-0000000000d1] | 36,760 303x63
+Suction tips, 9 bags · Disposable, Healthy |  | button | inv.row[00000000-0000-4000-8000-0000000000db] | 36,823 303x63
+Surface disinfectant, 1 unopened · 2 open · Sterilization, Healthy |  | button | inv.row[00000000-0000-4000-8000-0000000000d6] | 36,886 303x62
+New product |  | button | inv.newProduct | 299,530 56x56
+Home |  | button | tab.home | 8,615 87x48
+Inventory |  | button,selected | tab.inventory | 99,615 87x48
+Procedures |  | button | tab.procedures | 190,615 87x48
+To buy | 3 | button | tab.toBuy | 281,615 87x48
+modal UITransitionView in UIWindow
+New product |  | header,text | newProduct.title | 20,-119 143x30 modal
+Name | As written on the box |  | newProduct.name | 32,-39 311x22 modal
+Category | Select | button | newProduct.category | 20,10 335x67 modal
+Units |  | header,text |  | 20,93 45x18 modal
+Counted in | e.g. cartridges |  | newProduct.unit | 32,157 138x22 modal
+Received as | e.g. box |  | newProduct.packUnit | 206,157 138x22 modal
+Multi-use (bottle, syringe, kit) | 0 | button | newProduct.multiUse | 20,206 335x44 modal
+Tracked as unopened and open items. |  | text |  | 20,254 217x15 modal
+Stock levels |  | header,text |  | 20,285 109x18 modal
+Minimum | Alert below |  | newProduct.minimum | 32,349 138x22 modal
+Target | Reorder up to |  | newProduct.target | 206,349 138x22 modal
+Supplier | Optional |  | newProduct.supplier | 32,432 311x22 modal
+Location | Optional |  | newProduct.location | 32,515 311x22 modal
+Quantity, expiry and lot are entered on the receiving form. |  | text | newProduct.receivingHint | 20,564 328x15 modal
+Create product |  | button,disabled | newProduct.submit | 20,595 335x48 modal

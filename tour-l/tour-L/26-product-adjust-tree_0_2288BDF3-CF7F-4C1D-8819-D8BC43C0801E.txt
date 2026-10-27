@@ -1,0 +1,297 @@
+Attributes: Application, 0x106d6e430, pid: 25621, label: 'Dentory'
+Element subtree:
+ →Application, 0x106d6e430, pid: 25621, label: 'Dentory'
+    Window (Main), 0x106d6fc10, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x106d709c0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x106d6f1b0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x106d701c0, {{-375.0, -667.0}, {1125.0, 2001.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+          Other, 0x106d6f5d0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x106d67f70, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x106d6b810, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x106d73010, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106d73130, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x106d73250, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x106d73370, {{0.0, 0.0}, {375.0, 667.0}}
+                        StaticText, 0x106d73490, {{20.0, 28.0}, {146.5, 18.0}}, identifier: 'home.header.eyebrow', label: 'FRIDAY, OCTOBER 2'
+                        StaticText, 0x106d735b0, {{20.0, 48.0}, {192.0, 40.5}}, identifier: 'home.header.title', label: 'Smile Dental'
+                        Button, 0x106d736d0, {{259.0, 44.5}, {44.0, 44.0}}, identifier: 'home.header.bell', label: 'Alerts', value: New alerts
+                          Image, 0x106d737f0, {{259.0, 44.5}, {44.0, 44.0}}
+                        Button, 0x106d73910, {{311.0, 44.5}, {44.0, 44.0}}, identifier: 'home.header.account', label: 'Account'
+                          Image, 0x106d73a30, {{311.0, 44.5}, {44.0, 44.0}}
+                        ScrollView, 0x106d73b50, {{0.0, 96.5}, {375.0, 570.5}}
+                          Other, 0x106d73c70, {{0.0, 96.5}, {375.0, 719.0}}
+                            StaticText, 0x106d73d90, {{20.0, 104.5}, {139.5, 18.0}}, label: 'NEEDS ATTENTION'
+                            Button, 0x106d73eb0, {{20.0, 128.5}, {103.5, 132.5}}, identifier: 'home.tile.toBuy', label: '3 To buy'
+                              StaticText, 0x106d73fd0, {{36.0, 144.5}, {26.0, 60.5}}, label: '3'
+                              StaticText, 0x106d740f0, {{36.0, 211.0}, {46.0, 17.0}}, label: 'To buy'
+                            Button, 0x106d74210, {{135.5, 128.5}, {104.0, 132.5}}, identifier: 'home.tile.expiring', label: '2 Expiring soon'
+                              StaticText, 0x106d74330, {{151.7, 144.5}, {26.0, 60.5}}, label: '2'
+                              StaticText, 0x106d74450, {{151.7, 211.0}, {59.5, 34.0}}, label: 'Expiring soon'
+                            Button, 0x106d74570, {{251.5, 128.5}, {103.5, 132.5}}, identifier: 'home.tile.missingExpiry', label: '1 Missing expiry'
+                              StaticText, 0x106d74690, {{267.3, 144.5}, {17.5, 60.5}}, label: '1'
+                              StaticText, 0x106d747b0, {{267.3, 211.0}, {56.5, 34.0}}, label: 'Missing expiry'
+                            StaticText, 0x106d748d0, {{36.0, 293.0}, {92.0, 18.0}}, label: 'PROCEDURE'
+                            Button, 0x106d749f0, {{36.0, 327.0}, {225.5, 48.0}}, identifier: 'home.procedure.start', label: 'Start a procedure'
+                              Image, 0x106d74b10, {{60.0, 342.0}, {18.0, 18.0}}
+                              StaticText, 0x106d74c30, {{36.0, 327.0}, {225.5, 48.0}}, label: 'Start a procedure'
+                            StaticText, 0x106d74d50, {{36.0, 408.0}, {55.0, 18.0}}, label: 'LATEST'
+                            StaticText, 0x106d74e70, {{242.5, 408.5}, {96.5, 17.0}}, label: 'Oct 1 · 3:14 PM'
+                            StaticText, 0x106d74f90, {{36.0, 444.8}, {123.5, 38.5}}, identifier: 'home.procedure.latest', label: 'Root canal, 12 supplies · Sarah'
+                              StaticText, 0x106d750b0, {{36.0, 444.8}, {81.5, 19.5}}, label: 'Root canal'
+                              StaticText, 0x106d751d0, {{36.0, 466.2}, {123.5, 17.0}}, label: '12 supplies · Sarah'
+                            Button, 0x106d752f0, {{212.0, 446.0}, {127.0, 36.0}}, identifier: 'home.procedure.editUsage', label: 'Edit usage'
+                              Image, 0x106d75410, {{228.0, 457.0}, {14.0, 14.0}}
+                              StaticText, 0x106d75530, {{212.0, 446.0}, {127.0, 36.0}}, label: 'Edit usage'
+                            Button, 0x106d75650, {{20.0, 518.0}, {161.5, 77.5}}, identifier: 'home.tile.inventoryValue', label: 'Inventory value $12,420'
+                              StaticText, 0x106d75770, {{36.0, 534.0}, {101.5, 17.0}}, label: 'Inventory value'
+                              StaticText, 0x106d75890, {{36.0, 555.0}, {77.5, 24.5}}, label: '$12,420'
+                            Button, 0x106d759b0, {{193.5, 518.0}, {161.5, 77.5}}, identifier: 'home.tile.atRisk', label: 'At risk, 90 days $186'
+                              StaticText, 0x106d75ad0, {{209.5, 534.0}, {103.0, 17.0}}, label: 'At risk, 90 days'
+                              StaticText, 0x106d75bf0, {{209.5, 555.0}, {46.0, 24.5}}, label: '$186'
+                            Button, 0x106d75d10, {{20.0, 611.5}, {335.0, 87.5}}, identifier: 'home.receive', label: 'Receive delivery, Photo, PDF or manual. You confirm every line.'
+                              Image, 0x106d75e30, {{48.0, 643.5}, {24.0, 24.0}}
+                              StaticText, 0x106d75f50, {{100.0, 627.5}, {128.0, 19.5}}, label: 'Receive delivery'
+                              StaticText, 0x106d76070, {{100.0, 649.0}, {179.0, 34.0}}, label: 'Photo, PDF or manual. You confirm every line.'
+                              Image, 0x106d76190, {{319.0, 645.5}, {20.0, 20.0}}
+                            Button, 0x106d762b0, {{36.0, 715.0}, {303.0, 76.5}}, identifier: 'shell.demo.push', label: 'Shell demo, A pushed screen with a pinned bar, a sheet and a toast. Long press to open the catalog.'
+                              StaticText, 0x106d763d0, {{36.0, 729.0}, {74.0, 17.0}}, label: 'Shell demo'
+                              StaticText, 0x106d764f0, {{36.0, 748.0}, {249.5, 29.5}}, label: 'A pushed screen with a pinned bar, a sheet and a toast. Long press to open the catalog.'
+                              Image, 0x106d76610, {{319.0, 743.5}, {20.0, 20.0}}
+                          Other, 0x106d76730, {{342.0, 96.5}, {30.0, 509.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                          Other, 0x106d76850, {{342.0, 96.5}, {30.0, 509.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                Other, 0x106d76970, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106d76a90, {{0.0, 0.0}, {0.0, 0.0}}
+                  Other, 0x106d76bb0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x106d76cd0, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x106d76df0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106d76f10, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x106d77030, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x106d77150, {{0.0, 0.0}, {375.0, 667.0}}
+                        StaticText, 0x106d77270, {{20.0, 28.0}, {171.0, 40.5}}, identifier: 'proc.header.title', label: 'Procedures'
+                        Button, 0x106d77390, {{228.5, 30.5}, {126.5, 36.0}}, identifier: 'proc.addTemplate', label: 'New procedure'
+                          Image, 0x106d774b0, {{244.5, 41.5}, {14.0, 14.0}}
+                          StaticText, 0x106d775d0, {{228.5, 30.5}, {126.5, 36.0}}, label: 'Procedure'
+                        ScrollView, 0x106d776f0, {{0.0, 76.5}, {375.0, 590.5}}
+                          Other, 0x106d77810, {{0.0, 76.5}, {375.0, 608.0}}
+                            Button, 0x106d77930, {{36.0, 84.5}, {255.0, 70.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000301]', label: 'Root canal, 1 not available, 12 items'
+                              StaticText, 0x106d77a50, {{36.0, 102.5}, {71.5, 17.0}}, label: 'Root canal'
+                              StaticText, 0x106d77b70, {{36.0, 121.5}, {80.0, 15.0}}, label: '1 not available'
+                              StaticText, 0x106d77c90, {{244.5, 112.0}, {46.5, 15.0}}, label: '12 items'
+                            Button, 0x106d77db0, {{295.0, 97.5}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000301].edit', label: 'Edit Root canal'
+                              Image, 0x106d77ed0, {{295.0, 97.5}, {44.0, 44.0}}
+                            Button, 0x106d77ff0, {{36.0, 155.5}, {255.0, 53.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000302]', label: 'Cleaning, 7 items'
+                              StaticText, 0x106d78110, {{36.0, 173.5}, {60.0, 17.0}}, label: 'Cleaning'
+                              StaticText, 0x106d78230, {{250.0, 174.5}, {41.0, 15.0}}, label: '7 items'
+                            Button, 0x106d78350, {{295.0, 160.0}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000302].edit', label: 'Edit Cleaning'
+                              Image, 0x106d78470, {{295.0, 160.0}, {44.0, 44.0}}
+                            Button, 0x106d78590, {{36.0, 209.5}, {255.0, 53.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000303]', label: 'Filling, 12 items'
+                              StaticText, 0x106d786b0, {{36.0, 227.5}, {40.5, 17.0}}, label: 'Filling'
+                              StaticText, 0x106d787d0, {{244.5, 228.5}, {46.5, 15.0}}, label: '12 items'
+                            Button, 0x106d788f0, {{295.0, 214.0}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000303].edit', label: 'Edit Filling'
+                              Image, 0x106d78a10, {{295.0, 214.0}, {44.0, 44.0}}
+                            Button, 0x106d78b30, {{36.0, 263.5}, {255.0, 53.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000304]', label: 'Crown, 10 items'
+                              StaticText, 0x106d78c50, {{36.0, 281.5}, {44.5, 17.0}}, label: 'Crown'
+                              StaticText, 0x106d78d70, {{244.5, 282.5}, {46.5, 15.0}}, label: '10 items'
+                            Button, 0x106d78e90, {{295.0, 268.0}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000304].edit', label: 'Edit Crown'
+                              Image, 0x106d78fb0, {{295.0, 268.0}, {44.0, 44.0}}
+                            Button, 0x106d790d0, {{36.0, 317.5}, {255.0, 53.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000305]', label: 'Extraction, 8 items'
+                              StaticText, 0x106d791f0, {{36.0, 335.5}, {69.0, 17.0}}, label: 'Extraction'
+                              StaticText, 0x106d79310, {{249.5, 336.5}, {41.5, 15.0}}, label: '8 items'
+                            Button, 0x106d79430, {{295.0, 322.0}, {44.0, 44.0}}, identifier: 'proc.template[d0000000-0000-4000-8000-000000000305].edit', label: 'Edit Extraction'
+                              Image, 0x106d79550, {{295.0, 322.0}, {44.0, 44.0}}
+                            StaticText, 0x106d79670, {{20.0, 386.5}, {309.0, 44.0}}, identifier: 'proc.note', label: 'Starting a procedure deducts its supplies right away. Pencil edits the default supplies. Starter quantities are templates, not clinical recommendations.'
+                            StaticText, 0x106d79790, {{20.0, 446.5}, {220.5, 18.0}}, label: 'HISTORY · TAP TO EDIT USAGE'
+                            Other, 0x106d798b0, {{36.0, 472.5}, {303.0, 188.0}}
+                              Button, 0x106d799d0, {{36.0, 472.5}, {303.0, 63.0}}, identifier: 'proc.history[00000000-0000-4000-8000-0000000000e1]', label: 'Root canal, Oct 1 · 3:14 PM · Sarah, 12 items'
+                                StaticText, 0x106d79af0, {{36.0, 486.5}, {70.0, 17.0}}, label: 'Root canal'
+                                StaticText, 0x106d79c10, {{36.0, 505.5}, {126.0, 15.0}}, label: 'Oct 1 · 3:14 PM · Sarah'
+                                StaticText, 0x106d79d30, {{260.5, 496.0}, {46.5, 15.0}}, label: '12 items'
+                                Image, 0x106d79e50, {{319.0, 493.5}, {20.0, 20.0}}
+                              Button, 0x106d79f70, {{36.0, 535.5}, {303.0, 63.0}}, identifier: 'proc.history[00000000-0000-4000-8000-0000000000e2]', label: 'Cleaning, Oct 1 · 11:20 AM · Michael, 7 items'
+                                StaticText, 0x106d7a090, {{36.0, 549.5}, {58.5, 17.0}}, label: 'Cleaning'
+                                StaticText, 0x106d7a1b0, {{36.0, 568.5}, {142.5, 15.0}}, label: 'Oct 1 · 11:20 AM · Michael'
+                                StaticText, 0x106d7a2d0, {{266.0, 559.0}, {41.0, 15.0}}, label: '7 items'
+                                Image, 0x106d7a3f0, {{319.0, 556.5}, {20.0, 20.0}}
+                              Button, 0x106d7a510, {{36.0, 598.5}, {303.0, 62.0}}, identifier: 'proc.history[00000000-0000-4000-8000-0000000000e3]', label: 'Filling, Sep 30 · 2:05 PM · Sarah, 12 items'
+                                StaticText, 0x106d7a630, {{36.0, 612.5}, {39.0, 17.0}}, label: 'Filling'
+                                StaticText, 0x106d7a750, {{36.0, 631.5}, {140.0, 15.0}}, label: 'Sep 30 · 2:05 PM · Sarah'
+                                StaticText, 0x106d7a870, {{260.5, 622.0}, {46.5, 15.0}}, label: '12 items'
+                                Image, 0x106d7a990, {{319.0, 619.5}, {20.0, 20.0}}
+                          Other, 0x106d7aab0, {{342.0, 76.5}, {30.0, 529.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                          Other, 0x106d7abd0, {{342.0, 76.5}, {30.0, 529.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                Other, 0x106d7acf0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106d7ae10, {{0.0, 0.0}, {0.0, 0.0}}
+                  Other, 0x106d7af30, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x106d7b050, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x106d7b170, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106d7b290, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x106d7b3b0, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x106d7b4d0, {{0.0, 0.0}, {375.0, 667.0}}
+                        StaticText, 0x106d7b5f0, {{20.0, 28.0}, {98.0, 40.5}}, identifier: 'order.header.title', label: 'To buy'
+                        Button, 0x106d7b710, {{24.0, 80.5}, {109.0, 48.0}}, identifier: 'order.seg', label: 'To buy · 3', Selected
+                        Button, 0x106d7b830, {{133.0, 80.5}, {109.0, 48.0}}, identifier: 'order.seg', label: 'Ordered · 5'
+                        Button, 0x106d7b950, {{242.0, 80.5}, {109.0, 48.0}}, identifier: 'order.seg', label: 'Received · 1'
+                        ScrollView, 0x106d7ba70, {{0.0, 132.5}, {375.0, 534.5}}
+                          Other, 0x106d7bb90, {{0.0, 132.5}, {375.0, 422.0}}
+                            Other, 0x106d7bcb0, {{20.0, 148.5}, {335.0, 36.0}}, identifier: 'order.selectionBar'
+                              StaticText, 0x106d7bdd0, {{20.0, 158.0}, {99.0, 17.0}}, identifier: 'order.selectionBar.summary', label: '3 of 3 selected'
+                              Button, 0x106d7bef0, {{285.5, 148.5}, {69.5, 36.0}}, identifier: 'order.selectionBar.toggle', label: 'Clear'
+                            ScrollView, 0x106d7c010, {{20.0, 204.5}, {319.0, 95.5}}
+                              Other, 0x106d7c130, {{20.0, 204.5}, {407.0, 95.5}}
+                                Switch, 0x106d7c250, {{26.0, 230.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].select', label: 'Select Endo file kit #15-40', value: Checked
+                                StaticText, 0x106d7c370, {{72.0, 216.5}, {98.5, 70.5}}, label: 'Endo file kit #15-40, Current 1 · target 5 · Patterson'
+                                  StaticText, 0x106d7c490, {{72.0, 216.5}, {93.0, 39.0}}, label: 'Endo file kit #15-40'
+                                  StaticText, 0x106d7c5b0, {{72.0, 257.5}, {98.5, 29.5}}, label: 'Current 1 · target 5 · Patterson'
+                                Other, 0x106d7c6d0, {{215.0, 230.0}, {124.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501]'
+                                  Button, 0x106d7c7f0, {{215.0, 230.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].dec', label: 'Decrease Endo file kit #15-40', value: 4
+                                    Image, 0x106d7c910, {{215.0, 230.0}, {44.0, 44.0}}
+                                  Other, 0x106d7ca30, {{259.0, 230.0}, {36.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].value', label: 'Endo file kit #15-40', value: 4
+                                    StaticText, 0x106d7cb50, {{271.8, 242.0}, {10.5, 19.5}}, label: '4'
+                                  Button, 0x106d7cc70, {{295.0, 230.0}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].inc', label: 'Increase Endo file kit #15-40', value: 4
+                                    Image, 0x106d7cd90, {{295.0, 230.0}, {44.0, 44.0}}
+                                Button, 0x106c7a650, {{339.0, 204.5}, {88.0, 95.5}}, identifier: 'order.row[00000000-0000-4000-8000-000000000501].remove', label: 'Remove'
+                            ScrollView, 0x106c77d60, {{20.0, 300.0}, {319.0, 76.0}}
+                              Other, 0x106c7b730, {{20.0, 300.0}, {407.0, 76.0}}
+                                Switch, 0x106c7b850, {{26.0, 315.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].select', label: 'Select Composite A2', value: Checked
+                                StaticText, 0x106c7b970, {{72.0, 312.0}, {107.0, 51.0}}, label: 'Composite A2, Current 2 · target 6 · Patterson'
+                                  StaticText, 0x106c7ba90, {{72.0, 312.0}, {107.0, 19.5}}, label: 'Composite A2'
+                                  StaticText, 0x106c7bbb0, {{72.0, 333.5}, {100.5, 29.5}}, label: 'Current 2 · target 6 · Patterson'
+                                Other, 0x106c7bcd0, {{215.0, 315.5}, {124.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502]'
+                                  Button, 0x106c7bf00, {{215.0, 315.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].dec', label: 'Decrease Composite A2', value: 4
+                                    Image, 0x106c7c020, {{215.0, 315.5}, {44.0, 44.0}}
+                                  Other, 0x106c7c140, {{259.0, 315.5}, {36.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].value', label: 'Composite A2', value: 4
+                                    StaticText, 0x106c7c260, {{271.8, 327.8}, {10.5, 19.5}}, label: '4'
+                                  Button, 0x106c7c380, {{295.0, 315.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].inc', label: 'Increase Composite A2', value: 4
+                                    Image, 0x106c7c4a0, {{295.0, 315.5}, {44.0, 44.0}}
+                                Button, 0x106c7c5c0, {{339.0, 300.0}, {88.0, 76.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000502].remove', label: 'Remove'
+                            ScrollView, 0x106c7c6e0, {{20.0, 376.0}, {319.0, 94.5}}
+                              Other, 0x106c7c800, {{20.0, 376.0}, {407.0, 94.5}}
+                                Switch, 0x106c7c920, {{26.0, 401.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].select', label: 'Select Rubber dam latex-free', value: Checked
+                                StaticText, 0x106c7ca40, {{72.0, 388.0}, {126.0, 70.5}}, label: 'Rubber dam latex-free, Current 0 · target 36 · Henry Schein'
+                                  StaticText, 0x106c7cb60, {{72.0, 388.0}, {96.5, 39.0}}, label: 'Rubber dam latex-free'
+                                  StaticText, 0x106c7cc80, {{72.0, 429.0}, {126.0, 29.5}}, label: 'Current 0 · target 36 · Henry Schein'
+                                Other, 0x106c7cda0, {{215.0, 401.5}, {124.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503]'
+                                  Button, 0x106c7cec0, {{215.0, 401.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].dec', label: 'Decrease Rubber dam latex-free', value: 36
+                                    Image, 0x106c7cfe0, {{215.0, 401.5}, {44.0, 44.0}}
+                                  Other, 0x106c7d100, {{259.0, 401.5}, {36.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].value', label: 'Rubber dam latex-free', value: 36
+                                    StaticText, 0x106c7d220, {{266.5, 413.5}, {21.0, 19.5}}, label: '36'
+                                  Button, 0x106c7d340, {{295.0, 401.5}, {44.0, 44.0}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].inc', label: 'Increase Rubber dam latex-free', value: 36
+                                    Image, 0x106c7d460, {{295.0, 401.5}, {44.0, 44.0}}
+                                Button, 0x106c7d580, {{339.0, 376.0}, {88.0, 94.5}}, identifier: 'order.row[00000000-0000-4000-8000-000000000503].remove', label: 'Remove'
+                            Button, 0x106c7d6a0, {{129.5, 490.5}, {116.5, 36.0}}, identifier: 'order.add', label: 'Add item'
+                              Image, 0x106c7d7c0, {{145.5, 501.5}, {14.0, 14.0}}
+                              StaticText, 0x106c7d8e0, {{129.5, 490.5}, {116.5, 36.0}}, label: 'Add item'
+                          Other, 0x106c7da00, {{342.0, 132.5}, {30.0, 404.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                          Other, 0x106c7db20, {{342.0, 132.5}, {30.0, 404.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                        Button, 0x106c7dc40, {{20.0, 550.0}, {335.0, 48.0}}, identifier: 'order.markOrdered', label: 'Mark 3 as ordered'
+                Other, 0x106c7dd60, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106c7de80, {{0.0, 0.0}, {0.0, 0.0}}
+                  Other, 0x106c7dfa0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x106c7e0c0, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x106c7e1e0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106c7e300, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x106c7e420, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x106c7e540, {{0.0, 0.0}, {375.0, 667.0}}
+                        Button, 0x106c7e660, {{12.0, 26.0}, {44.0, 44.0}}, identifier: 'product.back', label: 'Back'
+                          Image, 0x106c7e780, {{12.0, 26.0}, {44.0, 44.0}}
+                        StaticText, 0x106c7e8a0, {{60.0, 31.0}, {133.5, 34.0}}, identifier: 'product.context', label: 'Anesthetic · 1 box = 50 cartridges'
+                        Button, 0x106c7e9c0, {{296.0, 30.0}, {59.0, 36.0}}, identifier: 'product.edit', label: 'Edit'
+                        ScrollView, 0x106c7eae0, {{0.0, 78.0}, {375.0, 589.0}}
+                          Other, 0x106c7ec00, {{0.0, 78.0}, {375.0, 1102.0}}
+                            StaticText, 0x106c7ed20, {{20.0, 86.0}, {239.5, 24.5}}, identifier: 'product.title', label: 'Septocaine 4% 1:100,000'
+                            StaticText, 0x106c7ee40, {{20.0, 118.5}, {88.5, 25.0}}, identifier: 'product.status', label: 'Healthy'
+                            StaticText, 0x106c7ef60, {{36.0, 175.5}, {59.5, 80.5}}, identifier: 'product.quantity', label: 'Available, 54, cartridges'
+                              StaticText, 0x106c7f080, {{36.0, 175.5}, {59.5, 17.0}}, label: 'Available'
+                              StaticText, 0x106c7f1a0, {{36.0, 196.5}, {40.0, 40.5}}, label: '54'
+                              StaticText, 0x106c7f2c0, {{36.0, 241.0}, {59.0, 15.0}}, label: 'cartridges'
+                            StaticText, 0x106c7f3e0, {{141.0, 175.5}, {61.0, 61.5}}, identifier: 'product.quantity', label: 'Minimum, 20'
+                              StaticText, 0x106c7f500, {{141.0, 175.5}, {61.0, 17.0}}, label: 'Minimum'
+                              StaticText, 0x106c7f620, {{141.0, 196.5}, {40.0, 40.5}}, label: '20'
+                            StaticText, 0x106c7f740, {{246.0, 175.5}, {42.5, 61.5}}, identifier: 'product.quantity', label: 'Target, 60'
+                              StaticText, 0x106c7f860, {{246.0, 175.5}, {42.5, 17.0}}, label: 'Target'
+                              StaticText, 0x106c7f980, {{246.0, 196.5}, {40.0, 40.5}}, label: '60'
+                            StaticText, 0x106c7faa0, {{36.0, 289.0}, {176.5, 34.0}}, identifier: 'product.quantity', label: 'System estimate · 38 cartridges used in 30 days'
+                            StaticText, 0x106c7fbc0, {{245.5, 289.0}, {93.5, 17.0}}, identifier: 'product.quantity', label: 'Counted Oct 1'
+                            Button, 0x106c7fce0, {{20.0, 355.0}, {130.5, 48.0}}, identifier: 'product.adjust', label: 'Adjust'
+                              Image, 0x106c7fe00, {{44.0, 370.0}, {18.0, 18.0}}
+                              StaticText, 0x106c7ff20, {{20.0, 355.0}, {130.5, 48.0}}, label: 'Adjust'
+                            Button, 0x106c80040, {{162.5, 355.0}, {192.5, 48.0}}, identifier: 'product.addToBuy', label: 'Add to buy'
+                              Image, 0x106c80160, {{198.5, 370.0}, {18.0, 18.0}}
+                              StaticText, 0x106c80280, {{162.5, 355.0}, {192.5, 48.0}}, label: 'Add to buy'
+                            StaticText, 0x106c803a0, {{20.0, 419.0}, {53.5, 18.0}}, label: 'EXPIRY'
+                            StaticText, 0x106c804c0, {{36.0, 465.0}, {50.5, 17.0}}, label: 'Expires'
+                            StaticText, 0x106c805e0, {{189.8, 465.0}, {24.5, 17.0}}, label: 'Qty'
+                            StaticText, 0x106c80700, {{317.5, 465.0}, {21.5, 17.0}}, label: 'Lot'
+                            Button, 0x106c80820, {{36.0, 491.0}, {303.0, 95.0}}, identifier: 'product.batch[00000000-0000-4000-8000-0000000000b1]', label: 'Dec 2026, in 90 days, 20, A112'
+                              StaticText, 0x106c80940, {{44.0, 507.0}, {41.0, 39.0}}, label: 'Dec 2026'
+                              StaticText, 0x106c80a60, {{52.0, 552.0}, {59.5, 15.0}}, label: 'in 90 days'
+                              StaticText, 0x106c80b80, {{188.8, 525.8}, {25.0, 24.5}}, label: '20'
+                              StaticText, 0x106c80ca0, {{298.5, 530.0}, {32.5, 16.0}}, label: 'A112'
+                            Button, 0x106c80dc0, {{36.0, 586.0}, {303.0, 67.5}}, identifier: 'product.batch[00000000-0000-4000-8000-0000000000b2]', label: 'Dec 2026, in 90 days, 34, B441'
+                              StaticText, 0x106c80ee0, {{36.0, 598.0}, {75.5, 19.5}}, label: 'Dec 2026'
+                              StaticText, 0x106c81000, {{44.0, 623.5}, {59.5, 15.0}}, label: 'in 90 days'
+                              StaticText, 0x106c81120, {{188.8, 607.0}, {25.0, 24.5}}, label: '34'
+                              StaticText, 0x106c81240, {{306.5, 611.2}, {32.5, 16.0}}, label: 'B441'
+                            StaticText, 0x106c81360, {{36.0, 665.5}, {303.0, 34.0}}, identifier: 'product.expiryTotal', label: '54 of 54 tracked · 54 expire within 90 days, cartridges'
+                              StaticText, 0x106c81480, {{36.0, 665.5}, {188.0, 34.0}}, label: '54 of 54 tracked · 54 expire within 90 days'
+                              StaticText, 0x106c815a0, {{271.0, 665.5}, {68.0, 17.0}}, label: 'cartridges'
+                            StaticText, 0x106c816c0, {{20.0, 727.5}, {251.0, 15.0}}, label: 'Tap a batch to edit its expiry, lot or quantity.'
+                            Button, 0x106c817e0, {{20.0, 758.5}, {166.5, 48.0}}, identifier: 'product.addExpiry', label: 'Add expiry'
+                              Image, 0x106c81900, {{44.0, 774.5}, {16.0, 16.0}}
+                              StaticText, 0x106c81a20, {{20.0, 758.5}, {166.5, 48.0}}, label: 'Add expiry'
+                            StaticText, 0x106c81b40, {{20.0, 822.5}, {64.5, 18.0}}, label: 'HISTORY'
+                            StaticText, 0x106c81c60, {{36.0, 868.5}, {303.0, 52.0}}, identifier: 'product.history[00000000-0000-4000-8000-0000000000f1]', label: '43 → 41, Physical count · Michael, Oct 1'
+                              StaticText, 0x106c81d80, {{36.0, 868.5}, {65.5, 19.5}}, label: '43 → 41'
+                              StaticText, 0x106c81ea0, {{113.5, 868.5}, {124.0, 39.0}}, label: 'Physical count · Michael'
+                              StaticText, 0x106c81fc0, {{306.0, 870.5}, {33.0, 17.0}}, label: 'Oct 1'
+                            StaticText, 0x106c820e0, {{36.0, 932.5}, {303.0, 32.5}}, identifier: 'product.history[00000000-0000-4000-8000-0000000000f2]', label: '−2, Root canal · Sarah, Oct 1'
+                              StaticText, 0x106c82200, {{36.0, 932.5}, {21.0, 19.5}}, label: '−2'
+                              StaticText, 0x106c82320, {{69.0, 932.5}, {137.0, 19.5}}, label: 'Root canal · Sarah'
+                              StaticText, 0x106c82440, {{306.0, 934.5}, {33.0, 17.0}}, label: 'Oct 1'
+                            StaticText, 0x106c82560, {{36.0, 977.0}, {303.0, 39.0}}, identifier: 'product.history[00000000-0000-4000-8000-0000000000f3]', label: '+40, Invoice INV-10092 · Michael, Sep 30'
+                              StaticText, 0x106c82680, {{36.0, 977.0}, {31.5, 19.5}}, label: '+40'
+                              StaticText, 0x106c827a0, {{79.5, 977.0}, {153.0, 39.0}}, label: 'Invoice INV-10092 · Michael'
+                              StaticText, 0x106c828c0, {{291.5, 979.0}, {47.5, 17.0}}, label: 'Sep 30'
+                            Button, 0x106c829e0, {{20.0, 1044.0}, {121.0, 48.0}}, identifier: 'product.historyAll', label: 'Show all'
+                            Button, 0x106c82b00, {{20.0, 1108.0}, {335.0, 48.0}}, identifier: 'product.delete', label: 'Delete product'
+                              Image, 0x106c82c20, {{111.5, 1124.0}, {16.0, 16.0}}
+                              StaticText, 0x106c82d40, {{20.0, 1108.0}, {335.0, 48.0}}, label: 'Delete product'
+                          Other, 0x106c82e60, {{342.0, 78.0}, {30.0, 589.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                            Other, 0x106c82f80, {{369.0, 81.0}, {3.0, 311.5}}
+                          Other, 0x106c830a0, {{342.0, 78.0}, {30.0, 589.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                            Other, 0x106c831c0, {{369.0, 81.0}, {3.0, 311.5}}
+                Other, 0x106c832e0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106c83400, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x106c83520, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x106c83640, {{-375.0, -667.0}, {1125.0, 2001.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Other, 0x106c83760, {{8.0, 328.2}, {359.0, 330.8}}
+          Other, 0x106c83880, {{8.0, 328.2}, {359.0, 330.8}}
+          Other, 0x106c839a0, {{8.0, 328.2}, {359.0, 330.8}}
+            Other, 0x106c83ac0, {{8.0, 328.2}, {359.0, 330.8}}
+              Other, 0x106c83be0, {{8.0, 328.2}, {359.0, 330.8}}
+                Other, 0x106c83d00, {{8.0, 328.2}, {359.0, 330.8}}
+                  ScrollView, 0x106c83e20, {{8.0, 328.2}, {359.0, 330.8}}
+                    Other, 0x106c83f40, {{8.0, 328.2}, {359.0, 330.8}}
+                      Other, 0x106c84060, {{27.1, 351.2}, {320.7, 284.8}}, identifier: 'adjust'
+                        StaticText, 0x106c84180, {{27.1, 351.2}, {173.8, 28.2}}, identifier: 'adjust.title', label: 'Adjust inventory'
+                        StaticText, 0x106c842a0, {{27.1, 383.3}, {275.7, 32.5}}, label: 'System estimate 54 cartridges. A reason is recorded in history.'
+                        StaticText, 0x106c843c0, {{27.1, 431.2}, {98.6, 16.3}}, label: 'Actual quantity'
+                        TextField, 0x106c844e0, {{38.6, 464.2}, {225.0, 20.1}}, identifier: 'adjust.quantity', label: 'Actual quantity', value: 54
+                        StaticText, 0x106c84600, {{271.3, 466.1}, {65.1, 16.3}}, label: 'cartridges'
+                        StaticText, 0x106c84720, {{27.1, 510.6}, {48.3, 16.3}}, label: 'Reason'
+                        Button, 0x106c84840, {{27.1, 532.6}, {320.7, 42.1}}, identifier: 'adjust.reason', label: 'Reason', value: Select a reason
+                          Button, 0x106c84960, {{27.1, 532.6}, {320.7, 42.1}}
+                            StaticText, 0x106c84a80, {{27.1, 532.6}, {320.7, 42.1}}, label: 'Select a reason'
+                            Image, 0x106c84ba0, {{321.0, 546.0}, {15.3, 15.3}}
+                        Button, 0x106c84cc0, {{27.1, 590.1}, {320.7, 46.0}}, identifier: 'adjust.save', label: 'Save adjustment', Disabled
+                    Other, 0x106c84de0, {{335.4, 347.4}, {28.7, 292.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                      Other, 0x106c84f00, {{361.3, 350.3}, {2.9, 286.7}}
+                    Other, 0x106c85020, {{335.4, 347.4}, {28.7, 292.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                      Other, 0x106c85140, {{361.3, 350.3}, {2.9, 286.7}}
+Path to element:
+ →Application, 0x106d6e430, pid: 25621, label: 'Dentory'
+Query chain:
+ →Find: Target Application 'ca.dentory.app'
+  Output: {
+    Application, 0x106e67850, pid: 25621, label: 'Dentory'
+  }

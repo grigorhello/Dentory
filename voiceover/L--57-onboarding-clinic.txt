@@ -1,0 +1,8 @@
+window UIWindow level 0.0
+Admin sign-up · Step 2 of 3 |  | text |  | 20,68 215x18
+Create your clinic |  | header,text | onboard.title | 20,90 265x41
+Clinic logo |  | button | onboard.logo | 20,147 299x72
+Clinic name | Smile Dental |  | onboard.clinicName | 32,269 311x22
+City | Toronto |  | onboard.city | 32,352 138x22
+Country | United States | button | onboard.country | 194,318 162x67
+Create clinic → |  | button,disabled | onboard.continue | 20,611 335x48

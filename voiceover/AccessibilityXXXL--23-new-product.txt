@@ -1,0 +1,33 @@
+window UIWindow level 0.0
+Inventory |  | header,text | inv.header.title | 20,28 243x70
+Count stock |  | button | inv.countStock | 20,106 298x58
+Search products | Search products |  | inv.search | 56,184 287x56
+All |  | button,selected |  | 20,260 76x58
+Low |  | button |  | 104,260 106x58
+Expiring |  | button |  | 218,260 187x58
+Missing expiry |  | button |  | 412,260 314x58
+Healthy |  | button |  | 734,260 178x58
+Rubber dam latex-free, 0 sheets · Endodontics, Out of stock |  | button | inv.row[00000000-0000-4000-8000-0000000000d7] | 36,330 303x281
+Composite A2, 1 unopened · 1 open · Restorative, Low |  | button | inv.row[00000000-0000-4000-8000-0000000000d3] | 36,610 303x277
+Endo file kit #15-40, 1 kit · Endodontics, Low |  | button | inv.row[00000000-0000-4000-8000-0000000000d2] | 36,887 303x281
+New product |  | button | inv.newProduct | 299,529 56x56
+Home |  | button | tab.home | 8,614 87x49
+Inventory |  | button,selected | tab.inventory | 99,614 87x49
+Procedures |  | button | tab.procedures | 190,615 87x48
+To buy | 3 | button | tab.toBuy | 281,614 87x49
+modal UITransitionView in UIWindow
+New product |  | header,text | newProduct.title | 20,-1440 212x138 modal
+Name | As written on the box |  | newProduct.name | 32,-1222 311x56 modal
+Category | Select | button | newProduct.category | 20,-1142 335x128 modal
+Units |  | header,text |  | 20,-998 121x52 modal
+Counted in | e.g. cartridges |  | newProduct.unit | 32,-870 311x56 modal
+Received as | e.g. box |  | newProduct.packUnit | 32,-730 311x56 modal
+Multi-use (bottle, syringe, kit) | 0 | button | newProduct.multiUse | 20,-650 335x167 modal
+Tracked as unopened and open items. |  | text |  | 20,-479 270x138 modal
+Stock levels |  | header,text |  | 20,-325 296x52 modal
+Minimum | Alert below |  | newProduct.minimum | 32,-197 311x56 modal
+Target | Reorder up to |  | newProduct.target | 32,-57 311x56 modal
+Supplier | Optional |  | newProduct.supplier | 32,88 311x56 modal
+Location | Optional |  | newProduct.location | 32,232 311x56 modal
+Quantity, expiry and lot are entered on the receiving form. |  | text | newProduct.receivingHint | 20,312 293x184 modal
+Create product |  | button,disabled | newProduct.submit | 20,512 335x132 modal

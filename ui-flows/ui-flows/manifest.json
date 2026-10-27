@@ -1,0 +1,170 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "F69D8DC3-6DE6-457C-BA7A-CF42470795A2.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"At least 8 characters\" StaticText`_0_EBDFD9B1-4E20-4A55-84F5-43BC595295F9.txt",
+        "timestamp" : 1793123773.143
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "F7DE0A65-EB67-4D5E-B6A1-147B3D3921BD",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-27 at 05.56.13 PM",
+        "timestamp" : 1793123773.143
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "118271A1-6DD6-42CB-9082-62CC387FB0AB.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"At least 8 characters\" StaticText`_0_88CC6B05-DDDC-422B-AD9E-6D28F3CAEC33.txt",
+        "timestamp" : 1793123772.156
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "69005B7B-E996-4BFF-ABBB-E9D74AFF8A2A",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-27 at 05.56.12 PM",
+        "timestamp" : 1793123772.156
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "BAF0DFB3-41A7-49EB-AAAC-2E264BA73D48.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"At least 8 characters\" StaticText`_0_969B5F63-438C-4FCE-92D4-FBE8821FFCAB.txt",
+        "timestamp" : 1793123771.18
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "1CEF5E14-23C4-47DD-8BD0-2F8A7D4EEF62",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-27 at 05.56.11 PM",
+        "timestamp" : 1793123771.18
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "9BEF446A-DF8A-4D78-B397-2333D547248D.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"At least 8 characters\" StaticText`_0_F0B00A80-3842-44E0-9370-19D6C033FFED.txt",
+        "timestamp" : 1793123770.204
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "BB82553D-D493-4C70-ADF1-84589CB06404",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-27 at 05.56.10 PM",
+        "timestamp" : 1793123770.205
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "3AAF2CE2-756A-4B98-8FA3-37F112ED0244.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Debug description for `\"At least 8 characters\" StaticText`_0_C80152CA-8EB1-4077-88E2-B4CAF906A397.txt",
+        "timestamp" : 1793123769.436
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "694DC07D-6218-4595-8DF0-AC3774788517",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-27 at 05.56.09 PM",
+        "timestamp" : 1793123769.436
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "514B175D-BA59-4109-A859-1D5E102996DE",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-27 at 05.56.07 PM",
+        "timestamp" : 1793123767.63
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "8AD7EF60-E4AF-4EBD-9611-5846D2FDB2CF",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-27 at 05.56.07 PM",
+        "timestamp" : 1793123767.945
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "F813B7D1-5083-4508-9790-A29D784395D0",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "UI Snapshot 2026-10-27 at 05.56.03 PM",
+        "timestamp" : 1793123763.108
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "475FEAE5-182D-4AA7-881C-041C886C70E3",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-27 at 05.56.03 PM",
+        "timestamp" : 1793123763.421
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "09BDD757-10A0-4D5B-B983-6CFA72A0DD72",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-27 at 05.56.02 PM",
+        "timestamp" : 1793123762.31
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "E37EB937-75C9-4FC7-921E-EC9C846B3C9B",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-27 at 05.55.58 PM",
+        "timestamp" : 1793123758.845
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "A444259B-5647-4A8B-BBD3-14BF493E4E3E",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Synthesized Event 2026-10-27 at 05.55.57 PM",
+        "timestamp" : 1793123757.016
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "02010C24-263D-445A-8934-74FE019F15CA",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "560BA62A-D3AE-45A8-AE41-16F3383C9F27.mp4",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Screen Recording 2026-10-27 at 05.55.51 PM.mp4",
+        "timestamp" : 1793123751.296
+      }
+    ],
+    "testIdentifier" : "OnboardingUITests/testStepOneStaysAboveContinueWithTheKeyboardUp()",
+    "testIdentifierURL" : "test://com.apple.xcode/Dentory/DentoryUITests/OnboardingUITests/testStepOneStaysAboveContinueWithTheKeyboardUp"
+  }
+]

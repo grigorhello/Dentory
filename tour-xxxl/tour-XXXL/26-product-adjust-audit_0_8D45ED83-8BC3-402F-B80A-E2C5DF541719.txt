@@ -1,0 +1,9 @@
+Pages: 2, the end
+Issue: Contrast failed [id=adjust.save label=Save adjustment frame=(27.14666666666667, 590.072, 320.7066666666667, 45.952)]
+Issue: Potentially inaccessible text [no element]
+Issue: Potentially inaccessible text [no element]
+Issue: Text clipped [id= label=cartridges frame=(253.07733333333334, 458.9173333333333, 83.28800000000001, 21.061333333333323)]
+Issue: Text clipped [id= label=System estimate 54 cartridges. A reason is recorded in history. frame=(27.14666666666667, 364.1413333333333, 275.71200000000005, 42.1226666666667)]
+Issue: Text clipped [id= label=Actual quantity frame=(27.14666666666667, 421.5813333333333, 126.84666666666666, 21.061333333333323)]
+Issue: Text clipped [id=adjust.title label=Adjust inventory frame=(27.14666666666667, 326.32666666666665, 211.57066666666665, 33.98533333333336)]
+Issue: Text clipped [id= label=Select a reason frame=(27.14666666666667, 532.6320000000001, 320.7066666666667, 42.122666666666646)]

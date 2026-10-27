@@ -1,0 +1,42 @@
+Attributes: Application, 0x1135ead10, pid: 30921, label: 'Dentory'
+Element subtree:
+ →Application, 0x1135ead10, pid: 30921, label: 'Dentory'
+    Window (Main), 0x1135ea4d0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x1135edb20, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x1135edc40, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x1135ea8f0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x1135da780, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x1135edd60, {{0.0, 0.0}, {375.0, 667.0}}
+                Other, 0x1135ede80, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x1135edfa0, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x1135ee0c0, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x1135ee1e0, {{0.0, 0.0}, {375.0, 667.0}}
+                        ScrollView, 0x1135ee300, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x1135ee420, {{0.0, 20.0}, {375.0, 388.5}}
+                            StaticText, 0x1135ee540, {{20.0, 68.0}, {215.0, 18.0}}, label: 'ADMIN SIGN-UP · STEP 2 OF 3'
+                            StaticText, 0x1135ee660, {{20.0, 90.0}, {265.0, 40.5}}, identifier: 'onboard.title', label: 'Create your clinic'
+                            Button, 0x1135ee780, {{20.0, 146.5}, {299.0, 72.0}}, identifier: 'onboard.logo', label: 'Clinic logo'
+                              Image, 0x1135ee8a0, {{44.0, 161.0}, {24.0, 24.0}}
+                              StaticText, 0x1135ee9c0, {{41.5, 189.0}, {29.0, 15.0}}, label: 'Logo'
+                              StaticText, 0x1135eeae0, {{108.0, 154.8}, {81.5, 19.5}}, label: 'Clinic logo'
+                              StaticText, 0x1135eec00, {{108.0, 176.2}, {211.0, 34.0}}, label: 'Tap to upload. Optional, square works best.'
+                            TextField, 0x1135eed20, {{32.0, 268.5}, {311.0, 22.0}}, identifier: 'onboard.clinicName', label: 'Clinic name', placeholderValue: 'Smile Dental'
+                            TextField, 0x1135eee40, {{32.0, 351.5}, {137.5, 22.0}}, identifier: 'onboard.city', label: 'City', placeholderValue: 'Toronto'
+                            Button, 0x1135eef60, {{193.5, 317.5}, {161.5, 67.0}}, identifier: 'onboard.country', label: 'Country', value: United States
+                              Button, 0x1135ef080, {{193.5, 340.5}, {161.5, 44.0}}
+                                StaticText, 0x1135ef1a0, {{193.5, 340.5}, {161.5, 44.0}}, label: 'United States'
+                                Image, 0x1135ef2c0, {{327.0, 354.5}, {16.0, 16.0}}
+                          Other, 0x1135ef3e0, {{342.0, 20.0}, {30.0, 578.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                            Other, 0x1135ef500, {{369.0, 212.5}, {3.0, 382.5}}
+                          Other, 0x1135ef620, {{342.0, 20.0}, {30.0, 578.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                            Other, 0x1135ef740, {{369.0, 212.5}, {3.0, 382.5}}
+                        Button, 0x1135ef860, {{20.0, 611.0}, {335.0, 48.0}}, identifier: 'onboard.continue', label: 'Create clinic →', Disabled
+                Other, 0x1135ef980, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x1135efaa0, {{0.0, 0.0}, {375.0, 667.0}}
+Path to element:
+ →Application, 0x1135ead10, pid: 30921, label: 'Dentory'
+Query chain:
+ →Find: Target Application 'ca.dentory.app'
+  Output: {
+    Application, 0x1135ed900, pid: 30921, label: 'Dentory'
+  }

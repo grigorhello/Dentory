@@ -1,0 +1,3 @@
+Pages: 1, the end
+Issue: Text clipped [id= label=ADMIN SIGN-UP · STEP 2 OF 3 frame=(20.0, 68.0, 269.0, 23.0)]
+Issue: Contrast failed [id=onboard.continue label=Create clinic → frame=(20.0, 611.0, 335.0, 48.0)]

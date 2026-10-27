@@ -1,0 +1,22 @@
+Attributes: StaticText, 0x105e645d0, {{20.0, 477.3}, {117.0, 14.7}}, label: 'At least 8 characters'
+Element subtree:
+ →StaticText, 0x105e645d0, {{20.0, 477.3}, {117.0, 14.7}}, label: 'At least 8 characters'
+Path to element:
+ →StaticText, 0x105e645d0, {{20.0, 477.3}, {117.0, 14.7}}, label: 'At least 8 characters'
+Query chain:
+ →Find: Target Application 'ca.dentory.app'
+  Output: {
+    Application, 0x105da0d70, pid: 83691, label: 'Dentory'
+  }
+  ↪︎Find: Descendants matching type StaticText
+    Output: {
+      StaticText, 0x105f8f940, {{316.4, 783.4}, {0.0, 0.0}}
+      StaticText, 0x105f84c00, {{20.0, 77.0}, {212.7, 17.7}}, label: 'Admin sign-up · Step 1 of 3'
+      StaticText, 0x105f84d20, {{20.0, 98.7}, {282.7, 80.7}}, identifier: 'onboard.title', label: 'Create your admin account'
+      StaticText, 0x105f84e40, {{20.0, 183.3}, {336.7, 39.0}}, label: 'You will own the clinic workspace and invite the team.'
+      StaticText, 0x105f852c0, {{20.0, 477.3}, {117.0, 14.7}}, label: 'At least 8 characters'
+    }
+    ↪︎Find: Elements matching predicate '"At least 8 characters" IN identifiers'
+      Output: {
+        StaticText, 0x105e88eb0, {{20.0, 477.3}, {117.0, 14.7}}, label: 'At least 8 characters'
+      }

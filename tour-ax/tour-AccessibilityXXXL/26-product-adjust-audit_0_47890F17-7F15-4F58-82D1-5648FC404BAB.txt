@@ -1,0 +1,6 @@
+Pages: 2, the end
+Issue: Contrast failed [id=adjust.save label=Save adjustment frame=(20.0, 805.5, 335.0, 131.5)]
+Issue: Text clipped [id= label=Actual quantity frame=(20.0, 460.5, 301.5, 50.0)]
+Issue: Text clipped [id=adjust.title label=Adjust inventory frame=(20.0, 54.0, 256.0, 138.0)]
+Issue: Text clipped [id= label=cartridges frame=(145.0, 528.25, 198.0, 50.0)]
+Issue: Text clipped [id= label=System estimate 54 cartridges. A reason is recorded in history. frame=(20.0, 196.0, 332.0, 248.5)]
