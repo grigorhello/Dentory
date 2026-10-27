@@ -1,12 +1,12 @@
 # Engineering process
 
-How Dentory tickets go from "To do" to "Feature QA". It started with the previous Claude project (MS-101 to MS-106, 2026-10-15 and 16) and was last changed on 2026-10-23 (models and a fresh context per ticket, section 1a); it is written for a thread that picks up the next ticket. `CLAUDE.md` and the `dentory-ios` skill hold the rules; this file holds the reasons and the details.
+How Dentory tickets go from "To do" to "Feature QA". It started with the previous Claude project (MS-101 to MS-106, 2026-10-15 and 16) and was last changed on 2026-10-27 (one project thread per ticket, section 1a); it is written for a ticket's thread. `CLAUDE.md` and the `dentory-ios` skill hold the rules; this file holds the reasons and the details.
 
 ## 1. Roles
 
 - **Grigor** owns the product. He confirms decisions, tries merged tickets, types passwords and makes changes on his side (GitHub settings, Supabase dashboard, Apple Developer, App Store). He does not want to be asked for anything Claude is allowed to do.
-- **The project chat** (coordinator) routes asks. Engineering asks go to the build thread; marketing, sales and other asks each get their own thread.
-- **The build thread** runs on Grigor's Mac through Remote Control and coordinates: it picks the ticket, moves the Notion card, starts a builder, runs the reviewer, replies in the thread and takes the next ticket without stopping.
+- **The project chat** (coordinator) routes asks and opens one thread per ticket or fix, from `build-state.md`'s "Next", without asking Grigor; marketing, sales and other asks each get their own thread too. Grigor's defect reports, "push now" and other engineering asks land here and get a thread.
+- **A ticket's thread** runs on Grigor's Mac through Remote Control, or in the cloud when the ticket needs no local stack or simulator, and coordinates that one ticket: it confirms the blockers, moves the Notion card, starts a builder, runs the reviewer, does the after-merge steps (section 3, step 11), replies in the thread and resolves. It never takes another ticket.
 - **The ticket builder** (`.claude/agents/ticket-builder.md`) builds one ticket in a fresh context, from reading the issue to an open PR with green CI, and fixes the reviewer's findings when the thread resumes it.
 - **The reviewer agent** (`.claude/agents/pr-reviewer.md`) reviews every PR and merges it when nothing blocks. The developer never merges its own PR by hand.
 
@@ -14,21 +14,25 @@ How Dentory tickets go from "To do" to "Feature QA". It started with the previou
 
 | Work | Model | Why |
 |---|---|---|
-| The build thread and `ticket-builder` | Opus 5.5 (`claude-opus-5-5`) | Builds and fixes; the project default for new threads. |
+| The ticket threads and `ticket-builder` | Opus 5.5 (`claude-opus-5-5`) | Builds and fixes; the project default for new threads. |
 | `pr-reviewer` | Sonnet 5.5 (`claude-sonnet-5-5`) | Reviews read and check more than they write; the cheaper model is enough. |
 | Product decisions the PRD and MS-100 leave open, and a ticket judged too hard for Opus | Fable 5.1 (`claude-fable-5-1`) | Kept for judgement calls. The thread says so in the thread, then runs that work as an Agent call with `model: "fable"`: a decision agent with the options, or the `ticket-builder` started on Fable. The thread's own model changes only when Grigor asks for it (its `switch_model` tool is for his requests). |
 
-**A fresh context per ticket.** Until 2026-10-20 one thread built ticket after ticket in a single context, which grew until it had to be compacted again and again, and every step re-sent all of it. Now the build thread starts one `ticket-builder` per ticket or fix with the Agent tool; the builder reads `CLAUDE.md`, the skill, `mac-tooling.md`, the issue and `build-state.md`, and returns a short report. The thread keeps only coordination: the ticket picked, the PR, the verdicts. On `CHANGES_REQUESTED` the thread resumes the same builder (SendMessage to its id) with the findings, so a ticket's context lives as long as the ticket and no longer. Reviewers are likewise one agent per PR, resumed for its later rounds.
+**One thread per ticket (Grigor, 2026-10-27).** Every ticket or fix gets its own project thread, which the coordinator opens from `build-state.md`'s "Next"; it builds that one ticket, does the after-merge steps, records the result in `build-state.md` and resolves. A finished thread is never reused: one build thread had carried ticket after ticket from 2026-10-15 to 2026-10-27, its context grew to millions of tokens, and it hit usage limits several times a day. Tickets that need nothing from the Mac (no local stack or simulator) can run in cloud threads in parallel, as MS-149 and MS-150 do since 2026-10-27.
+
+**A fresh context per ticket.** Until 2026-10-20 one thread built ticket after ticket in a single context, which grew until it had to be compacted again and again, and every step re-sent all of it. Inside a ticket's thread, the thread starts one `ticket-builder` per ticket or fix with the Agent tool; the builder reads `CLAUDE.md`, the skill, `mac-tooling.md`, the issue and `build-state.md`, and returns a short report. The thread keeps only coordination: the ticket picked, the PR, the verdicts. On `CHANGES_REQUESTED` the thread resumes the same builder (SendMessage to its id) with the findings, so a ticket's context lives as long as the ticket and no longer. Reviewers are likewise one agent per PR, resumed for its later rounds.
 
 When the builder (or a reviewer, or a CI wait) is the only work running, the thread waits on it inside its open turn, as a foreground Agent call, so Grigor sees the thread working (his request of 2026-10-23: "always show some animation that you are working on something"); work that runs beside other work goes in the background, which keeps Bash, Read, Edit and Write.
 
-What the thread gives a builder: the issue number (or the fix and the review it comes from), a scratch directory under its scratchpad, the PR attribution block and commit trailer, and any decision already taken in the thread. One builder at a time: they share the local Supabase stack and the test simulator `7A14DBA5-…`; reviewers use a fresh simulator and never touch the stack.
+What the thread gives a builder: the issue number (or the fix and the review it comes from), a scratch directory under its scratchpad, the PR attribution block and commit trailer, and any decision already taken in the thread. One builder at a time owns the local Supabase stack and the test simulator `7A14DBA5-…`; a second builder or a reviewer working in parallel creates its own simulators (at most two booted at once), never touches the stack, and relies on CI's database job. With several agents running the Mac's load can pass 100, which makes UI tests lose taps: rerun a single failure before calling it real. Agents never change global configuration (a reviewer once ran `gh auth setup-git`, which rewrote `~/.gitconfig`); if `git clone` cannot authenticate, `gh repo clone` can.
 
 Every Agent call also names the model (`model: "opus"` for the builder, `"sonnet"` for the reviewer): a session loads agent definitions when it starts, so a definition changed since then would otherwise run on its old model. A definition added since the session started (as `ticket-builder.md` was on 2026-10-23) is not available as an agent type until the next session; until then the thread starts a `general-purpose` agent with the same model and the file's body as the brief.
 
-The Mac checkout (`/Users/grigorgrigoryan/Documents/Personal/Dentory`) is where the build thread runs and where Claude Code loads `CLAUDE.md`, `.claude/agents` and the skills; it is also the one folder linked to the hosted Supabase project. Nobody builds or edits there any more, so after every merge the thread fast-forwards it (`/usr/bin/git -C … fetch` then `merge --ff-only origin/claude/project-thread-ocu7tf`; it stays on the default branch and clean apart from Grigor's own untracked files) and deletes the builder's scratch directory (clone and build output).
+The Mac checkout (`/Users/grigorgrigoryan/Documents/Personal/Dentory`) is where a Mac ticket thread runs and where Claude Code loads `CLAUDE.md`, `.claude/agents` and the skills; it is also the one folder linked to the hosted Supabase project. Nobody builds or edits there any more, so after every merge a Mac thread fast-forwards it, and every Mac thread does so first thing because cloud threads cannot reach it, (`/usr/bin/git -C … fetch` then `merge --ff-only origin/claude/project-thread-ocu7tf`; it stays on the default branch and clean apart from Grigor's own untracked files) and deletes the builder's scratch directory (clone and build output).
 
-When the thread itself grows long (a compaction summary appears), the coordinator can start a fresh build thread with the brief in section 10; nothing is lost because the state is in `build-state.md`, GitHub and Notion.
+Usage limits stop agents mid-work ("You've hit your session limit"); their work is saved. After the reset, look at the clone (branch, uncommitted files, open PR) and resume the same agent with SendMessage rather than starting a new one. `gh pr checks` can lag behind a finished run: `gh run list --branch <branch>` shows the head's real state.
+
+Nothing is lost between threads because the state is in `build-state.md`, GitHub and Notion; section 10 is the brief for a new ticket thread.
 
 ## 2. Tools and places
 
@@ -46,9 +50,9 @@ When the thread itself grows long (a compaction summary appears), the coordinato
 
 ## 3. The ticket loop
 
-The thread does steps 1, 2, 7 (its reply), 9, 11 and 12; the `ticket-builder` it starts does steps 3 to 8 and the fixes in step 10.
+The coordinator picks the ticket; the ticket's thread does steps 1, 2, 7 (its reply), 9, 11 and 12; the `ticket-builder` it starts does steps 3 to 8 and the fixes in step 10.
 
-1. **Pick the ticket.** The next step in `docs/BUILD-ORDER.md` whose blockers are all merged. Check GitHub (issues and PRs), not memory, for what is really merged.
+1. **Confirm the ticket.** The coordinator opened the thread for the next step in `docs/BUILD-ORDER.md` (its brief is `build-state.md`'s "Next" entry); the thread checks on GitHub, not memory, that every blocker is merged or waived in the decisions log (as #107 is for the launch passes, 2026-10-26 21:00).
 2. **Move the Notion card to In progress**, post the thread checklist, and start a `ticket-builder` for the ticket (section 1a lists what it gets).
 3. **Read** `CLAUDE.md`, the skill, the issue, every frame it lists, its prototype screen key and the PRD section. Read MS-100 for decisions that touch the ticket.
 4. **Branch** `ms-1NN-short-name` from the default branch, in the builder's own clone. One ticket, one branch, one PR.
@@ -58,8 +62,8 @@ The thread does steps 1, 2, 7 (its reply), 9, 11 and 12; the `ticket-builder` it
 8. **Wait for CI**. Fix red CI on the same branch; never skip or disable a test to get green.
 9. **Run the reviewer**: the `pr-reviewer` agent with the PR number and a scratch directory. It checks CI, blockers, scope against the issue, the skill checklist, correctness, tests and the PR body, then either squash-merges (`gh pr merge --squash --delete-branch --match-head-commit <sha>`) or posts numbered findings.
 10. **On changes requested**: the thread resumes the builder with the findings; it fixes every one on the same branch, pushes and waits for CI; the thread resumes the reviewer. At most 2 rounds: after 2 rounds without a merge, or on `NEEDS_OWNER`, stop and ask Grigor with the question in one line. A re-run only because another PR merged first ("behind the default branch") does not count. The limit was 3 rounds until 2026-10-23; Grigor lowered it with the move to a cheaper reviewer.
-11. **After the merge**: the issue closes through `Closes #N`; move the Notion card to Feature QA (Grigor moves it to Done after his QA, section 5); fast-forward the Mac checkout and delete the builder's scratch directory (section 1a); post one reply in the thread (what the PR delivers, what the reviewer caught, anything Grigor must do). Then take the next ticket at once (rule of 2026-10-16). The next builder adds the merged row to `docs/handoff/build-state.md` in its PR.
-12. **Database tickets only**: after the merge, push the migrations to the hosted staging project (`supabase db push` in a terminal tab; Grigor types the database password). So far this is batched: the thread asks Grigor to say "push now" and he decides when. A migration that sorts before one already on staging needs `supabase db push --include-all`.
+11. **After the merge**: the issue closes through `Closes #N`; move the Notion card to Feature QA (Grigor moves it to Done after his QA, section 5); fast-forward the Mac checkout and delete the builder's scratch directory (section 1a); post one reply in the thread (what the PR delivers, what the reviewer caught, anything Grigor must do). Then record the result in a PR that changes only `docs/handoff/build-state.md` (and the decisions log if a row is owed): the merged row and the ticket's In progress line removed; the thread merges it itself once CI is green (a review adds nothing to a status note), then resolves. The coordinator opens the next ticket's thread at once (rule of 2026-10-16, in a new thread since 2026-10-27).
+12. **Database tickets only**: after the merge, push the migrations to the hosted staging project (`supabase db push` in a terminal tab; Grigor types the database password). So far this is batched: Grigor says "push now" in the project chat when he wants it, and the coordinator opens a Mac thread that runs it in a terminal tab. A migration that sorts before one already on staging needs `supabase db push --include-all`.
 
 ## 4. Board flow (Notion "Dentory · Product board")
 
@@ -71,9 +75,9 @@ One card per ticket, linked to its GitHub issue. The Status column is the only f
 | Needs design | The ticket needs a screen that is not in the design board. | The thread that notices it | When a frame is missing (none today; every ticket has its frames). |
 | Design review | Grigor's design is being checked against the PRD. | Claude | After Grigor shares new or changed designs; the thread checks them and writes or updates the tickets. |
 | To do | Ready to build, in build order. | Claude | Default state of every open ticket. |
-| In progress | A build thread is working on it. | The build thread | The moment it starts the ticket (step 1 of the loop). |
-| PR review | The PR is open; CI and the reviewer agent are running. | The build thread | When `gh pr create` succeeds. |
-| Feature QA | Merged; for Grigor to try. | The build thread | Right after the reviewer merges. |
+| In progress | A ticket's thread is working on it. | The ticket's thread | The moment it starts the ticket (step 2 of the loop). |
+| PR review | The PR is open; CI and the reviewer agent are running. | The ticket's thread | When `gh pr create` succeeds. |
+| Feature QA | Merged; for Grigor to try. | The ticket's thread | Right after the reviewer merges. |
 | Done | Grigor tried it and is satisfied. | Grigor, or Claude when he says "done" or "works" about the ticket in a thread | After his QA (section 5). |
 
 MS-100 (the decision ticket) went straight to Done when Grigor accepted it. A ticket that fails QA stays in Feature QA until the fix is merged (see section 5); it does not go back to In progress, because the fix is a new PR.
@@ -88,7 +92,7 @@ Human QA is Grigor's, on the cards in Feature QA:
 
 1. **How he tries a ticket.** Until the app shell and sign-in exist (MS-103, MS-110), database tickets are tried through the pgTAP results and Studio on the local stack, and app tickets through the Debug build in the simulator on his Mac (`make project`, open the project, run). The design-system catalog is reachable by long-pressing the "Home" text on the Home tab. From M1 on, the Debug build against the local stack seeded with the demo clinic (MS-109) is the QA build; from MS-152 on, TestFlight builds against the hosted project.
 2. **What he checks.** The acceptance criteria listed in the issue and the frames the issue embeds. The reviewer has already checked them against the code; his pass is for how it feels and for anything the ticket did not foresee.
-3. **How he reports a problem.** One message in the build thread naming the ticket and what is wrong. The thread starts a `ticket-builder` for the fix, which reproduces it and fixes it on a new branch `ms-1NN-fix-short-name` with a PR that says `Refs #N` (the issue is already closed), through the same CI and reviewer loop. A problem that is a new requirement rather than a defect becomes a new issue, added to the build order where its dependencies put it, with a card in To do.
+3. **How he reports a problem.** One message in the project chat (or in the ticket's thread, if it is still open) naming the ticket and what is wrong. The coordinator opens a thread for the fix, which starts a `ticket-builder`, which reproduces it and fixes it on a new branch `ms-1NN-fix-short-name` with a PR that says `Refs #N` (the issue is already closed), through the same CI and reviewer loop. A problem that is a new requirement rather than a defect becomes a new issue, added to the build order where its dependencies put it, with a card in To do.
 4. **When the card moves to Done.** When he says so (any clear "done", "works", "ok" about that ticket) or moves it himself. Claude moves it on his word and never on its own.
 5. **Bundles are fine.** He can try several tickets at once and say "all good up to MS-106"; the thread moves every card named.
 
@@ -115,6 +119,6 @@ Rounds so far were lost on: simulator names in test commands, unlocked package v
 
 Sources are in `docs/handoff/ticket-sources/` (one Markdown file per milestone group; each ticket is a `## MS-1NN · title` section with a `meta:` line for milestone, priority, points, frames and dependencies). `build.py <commit-sha>` rebuilds the per-ticket files, `tickets.json`, `all-tickets.md` and `BUILD-ORDER.md` with frame links pinned to that commit; its paths at the top point at the previous project's shared folder and must be edited to the new location before running. After a rebuild, update the GitHub issue body and the Notion card (page ids in `notion_ids.txt`). A decision change goes into MS-100 and into every ticket it names. The brand tickets (MS-158 to MS-162) have their own source, `ticket-sources/brand/brand-assets.md`, and generator, `build_brand.py <commit-sha>`, which pins the links to the brand files; they stay out of `build.py` and of the build order on purpose.
 
-## 10. Onboarding a new build thread
+## 10. Starting a ticket thread
 
-Brief: "Build the next Dentory ticket in build order on Grigor's Mac, one `ticket-builder` agent per ticket (engineering-process.md, section 1a). Read docs/handoff/build-state.md and docs/handoff/engineering-process.md first, then CLAUDE.md. Check GitHub for the real current state. Do not stop after a merge." The thread runs on Opus 5.5, the project default. Start a Remote Control session on the approved folder; it starts with no prompt when the folder is already approved for the project.
+Brief: "Build <ticket or fix, with its issue number> on Grigor's Mac (or in the cloud when it needs no local stack or simulator), with one `ticket-builder` agent (engineering-process.md, section 1a). Read docs/handoff/build-state.md (its "Next" entry for this ticket is the brief) and docs/handoff/engineering-process.md first, then CLAUDE.md, and check GitHub for the real current state. Run the review loop, the after-merge steps and the build-state update, then resolve the thread; the next ticket gets a new thread." The thread runs on Opus 5.5, the project default. Start a Remote Control session on the approved folder; it starts with no prompt when the folder is already approved for the project. Only one Mac thread builds at a time (one local stack, one test simulator); a second one waits or works without them.

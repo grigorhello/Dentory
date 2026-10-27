@@ -14,7 +14,7 @@ The house standard for Dentory's Swift code. Where a ticket and this skill disag
 3. Put the code in the ticket's feature folder (section 2), creating it for a feature's first ticket.
 4. Write the view model tests first (section 6), then the view model, then the view. Set the PRD Appendix B id as `.accessibilityIdentifier` on every interactive element.
 5. Before pushing: `make lint`, `make test WARNINGS_AS_ERRORS=YES`, a build for the iPhone 16 and iPad Pro 11-inch simulators, the UI flows the ticket changes, `make e2e` when it touches a journey the end-to-end flows drive (or the database or Edge Functions under one), and the `swiftui-pro` review of the SwiftUI diff with its genuine findings fixed. `docs/handoff/mac-tooling.md` lists what CI rejects that the Mac accepts.
-6. Open the PR from `.github/pull_request_template.md`: title `MS-1NN · …`, `Closes #N`, simulator screenshots next to the frame images, and a note wherever the frame was followed over the PRD. Then stop at green CI and report: the build thread runs the review loop in `CLAUDE.md` and resumes you with any findings.
+6. Open the PR from `.github/pull_request_template.md`: title `MS-1NN · …`, `Closes #N`, simulator screenshots next to the frame images, and a note wherever the frame was followed over the PRD. Then stop at green CI and report: the ticket's thread runs the review loop in `CLAUDE.md` and resumes you with any findings.
 
 ## 2. Layout
 
