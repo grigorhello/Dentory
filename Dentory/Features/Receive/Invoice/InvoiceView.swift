@@ -4,8 +4,9 @@ import SwiftUI
 /// reviewing, and by Activity's delivery alert: the reading state, then the read header with the banner and the lines
 /// to review over Confirm & receive (MS-130, MS-131), a received delivery's lines read-only under when and by whom it
 /// was received, or what went wrong with a way on. The header's "…" menu discards the invoice, or deletes a received
-/// invoice's file (MS-146). Receive manually, Try again for an upload, the lines' choices, Confirm & receive, Discard
-/// invoice and Delete invoice file are writes, so in read-only mode the sheet says why instead (MS-142).
+/// invoice's file (MS-146). Receive manually, Try again for an upload, the lines' choices, Confirm & receive and
+/// Discard invoice are writes, so in read-only mode the sheet says why instead (MS-142); Delete invoice file stays open
+/// there, since an admin deletes the clinic's invoice images at any time (PRD §9, decided on #117).
 struct InvoiceView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
@@ -139,9 +140,10 @@ struct InvoiceView: View {
         writeAccess.perform(viewModel.askToDiscard)
     }
 
-    /// So is Delete invoice file (MS-146).
+    /// Delete invoice file is not: the question opens in read-only mode too, since the invoice images are the clinic's
+    /// to delete at any time (PRD §9, decided on #117), and the server lets the admin delete them (MS-146).
     private func askToDeleteFile() {
-        writeAccess.perform(viewModel.askToDeleteFile)
+        viewModel.askToDeleteFile()
     }
 
     /// A discard that failed, as a toast; the question stays for another try.

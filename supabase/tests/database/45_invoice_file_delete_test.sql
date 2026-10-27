@@ -1,25 +1,22 @@
--- MS-146 · Delete invoice file: only an admin of a clinic that may write deletes a received invoice's photo or PDF;
--- invoice_file_delete lets go of it (who and when kept), then the invoices bucket lets the admin delete the pages, which
--- it refuses while the received invoice holds them; the lines, the stock received, the ledger and History stay; asked
--- again it keeps the first who and when; an invoice says whether a page of it is still in the bucket, so a deletion cut
--- short is offered again.
+-- MS-146 · Delete invoice file: only an admin of the invoice's clinic deletes a received invoice's photo or PDF, in a
+-- read-only clinic too (as decided on #117: 48_invoice_file_delete_read_only_test.sql); invoice_file_delete lets go of
+-- it (who and when kept), then the invoices bucket lets the admin delete the pages, which it refuses while the received
+-- invoice holds them; the lines, the stock received, the ledger and History stay; asked again it keeps the first who
+-- and when; an invoice says whether a page of it is still in the bucket, so a deletion cut short is offered again.
 begin;
-select plan(28);
+select plan(27);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('00000000-0000-4000-8000-000000146001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sarah@files.test'),
   ('00000000-0000-4000-8000-000000146002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'michael@files.test'),
-  ('00000000-0000-4000-8000-000000146003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'olivia@files.test'),
   ('00000000-0000-4000-8000-000000146004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'dana@files.test'),
   ('00000000-0000-4000-8000-000000146005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'daniel@files.test');
 insert into public.clinics (id, name, country, currency, time_zone, trial_ends_at) values
   ('00000000-0000-4000-8000-000000146011', 'Smile Dental', 'CA', 'CAD', 'America/Toronto', now() + interval '30 days'),
-  ('00000000-0000-4000-8000-000000146012', 'Lapsed Dental', 'CA', 'CAD', 'America/Toronto', now() - interval '1 day'),
   ('00000000-0000-4000-8000-000000146013', 'Other Dental', 'CA', 'CAD', 'America/Toronto', now() + interval '30 days');
 insert into public.memberships (clinic_id, user_id, email, full_name, role, status) values
   ('00000000-0000-4000-8000-000000146011', '00000000-0000-4000-8000-000000146001', 'sarah@files.test', 'Sarah Mitchell', 'admin', 'active'),
   ('00000000-0000-4000-8000-000000146011', '00000000-0000-4000-8000-000000146002', 'michael@files.test', 'Michael Reyes', 'staff', 'active'),
-  ('00000000-0000-4000-8000-000000146012', '00000000-0000-4000-8000-000000146003', 'olivia@files.test', 'Olivia Grant', 'admin', 'active'),
   ('00000000-0000-4000-8000-000000146013', '00000000-0000-4000-8000-000000146004', 'dana@files.test', 'Dana Lee', 'admin', 'active'),
   ('00000000-0000-4000-8000-000000146011', '00000000-0000-4000-8000-000000146005', 'daniel@files.test', 'Dr. Daniel Kim', 'admin', 'active');
 insert into public.products (id, clinic_id, name, unit, pack_unit, pack_size) values
@@ -27,8 +24,8 @@ insert into public.products (id, clinic_id, name, unit, pack_unit, pack_size) va
 insert into public.batches (clinic_id, product_id, qty) values
   ('00000000-0000-4000-8000-000000146011', '00000000-0000-4000-8000-000000146021', 54);
 
--- 31: Patterson's delivery, photographed on two pages, received below; 32: an invoice waiting for review; 33: Lapsed
--- Dental's, received before its trial ended; 34: a received PDF.
+-- 31: Patterson's delivery, photographed on two pages, received below; 32: an invoice waiting for review; 34: a received
+-- PDF.
 insert into public.invoices (id, clinic_id, storage_path, source, status, supplier, number, total, currency, created_by, file_kind,
   file_count, confirmed_at, confirmed_by) values
   ('00000000-0000-4000-8000-000000146031', '00000000-0000-4000-8000-000000146011',
@@ -37,9 +34,6 @@ insert into public.invoices (id, clinic_id, storage_path, source, status, suppli
   ('00000000-0000-4000-8000-000000146032', '00000000-0000-4000-8000-000000146011',
    '00000000-0000-4000-8000-000000146011/00000000-0000-4000-8000-000000146032', 'camera', 'ready', 'Patterson', 'INV-2', 10, null,
    '00000000-0000-4000-8000-000000146001', 'jpg', 1, null, null),
-  ('00000000-0000-4000-8000-000000146033', '00000000-0000-4000-8000-000000146012',
-   '00000000-0000-4000-8000-000000146012/00000000-0000-4000-8000-000000146033', 'camera', 'confirmed', 'Patterson', 'INV-3', 10, null,
-   '00000000-0000-4000-8000-000000146003', 'jpg', 1, now() - interval '2 days', '00000000-0000-4000-8000-000000146003'),
   ('00000000-0000-4000-8000-000000146034', '00000000-0000-4000-8000-000000146011',
    '00000000-0000-4000-8000-000000146011/00000000-0000-4000-8000-000000146034', 'file', 'confirmed', 'Benco', 'B-7', 12, null,
    '00000000-0000-4000-8000-000000146001', 'pdf', 1, now() - interval '1 day', '00000000-0000-4000-8000-000000146001');
@@ -52,7 +46,6 @@ insert into storage.objects (bucket_id, name) values
   ('invoices', '00000000-0000-4000-8000-000000146011/00000000-0000-4000-8000-000000146031/page-1.jpg'),
   ('invoices', '00000000-0000-4000-8000-000000146011/00000000-0000-4000-8000-000000146031/page-2.jpg'),
   ('invoices', '00000000-0000-4000-8000-000000146011/00000000-0000-4000-8000-000000146032/page-1.jpg'),
-  ('invoices', '00000000-0000-4000-8000-000000146012/00000000-0000-4000-8000-000000146033/page-1.jpg'),
   ('invoices', '00000000-0000-4000-8000-000000146011/00000000-0000-4000-8000-000000146034/page-1.pdf');
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
@@ -107,20 +100,16 @@ select pg_temp.act_as('00000000-0000-4000-8000-000000146004');
 select throws_ok($$ select public.invoice_file_delete(pg_temp.i('31')) $$,
   '42501', 'Only an admin can delete invoice files', 'nor another clinic''s admin');
 reset role;
-select pg_temp.act_as('00000000-0000-4000-8000-000000146003');
-select throws_ok($$ select public.invoice_file_delete(pg_temp.i('33')) $$,
-  '42501', 'The clinic is read-only until a payment method is added', 'nor a read-only clinic''s admin (MS-142)');
-reset role;
 select pg_temp.act_as('00000000-0000-4000-8000-000000146001');
 select throws_ok($$ select public.invoice_file_delete(pg_temp.i('32')) $$,
   '22023', 'Only a received invoice''s file can be deleted', 'an invoice waiting for review is discarded instead (MS-130)');
 select throws_ok($$ select public.invoice_file_delete('00000000-0000-4000-8000-000000146099') $$,
   '42501', 'Only an admin can delete invoice files', 'an invoice that does not exist is refused like another clinic''s');
 reset role;
-select is((select count(*)::integer from public.invoices where id in (pg_temp.i('31'), pg_temp.i('32'), pg_temp.i('33'))
+select is((select count(*)::integer from public.invoices where id in (pg_temp.i('31'), pg_temp.i('32'))
     and (file_deleted_at is not null or storage_path is null)), 0,
   'a refusal lets go of nothing');
-select is(pg_temp.pages('31') + pg_temp.pages('32') + pg_temp.pages('33'), 4, 'and deletes no page');
+select is(pg_temp.pages('31') + pg_temp.pages('32'), 3, 'and deletes no page');
 
 -- Delete invoice file -------------------------------------------------------------------------------------------------------
 select pg_temp.act_as('00000000-0000-4000-8000-000000146001');

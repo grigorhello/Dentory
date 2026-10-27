@@ -161,4 +161,30 @@ struct DemoInvoiceTests {
         #expect(try await invoices.invoice(id: invoiceID) == deleted, "Kept for the launch")
         #expect(try await invoices.deleteFile(invoiceID: invoiceID, clinicID: clinicID) == deleted, "Asked again")
     }
+
+    /// `-demoInvoice received`, for read-only mode's UI flow (#117): the frames' invoice opens received, as Activity's
+    /// History shows it, its lines resolved and its photo kept until the demo's admin deletes it; Receive delivery has
+    /// nothing to continue reviewing.
+    @Test func theReceivedLaunchStartsWithTheFramesInvoiceReceived() async throws {
+        let invoices = DemoInvoiceRepository(launched: .received)
+        let receive = DemoReceiveRepository(
+            added: DemoInvoiceRepository.Launched.received.added, settled: { invoices.settled }
+        )
+        let invoiceID = DemoInvoiceRepository.readyID
+        let received = try await invoices.invoice(id: invoiceID)
+        #expect(received.status == .confirmed && received.confirmedByName == "Sarah Mitchell")
+        #expect(received.confirmedAt == Session.demoNow)
+        #expect(received.lines.map(\.state) == [.matched, .matched, .created, .skipped])
+        #expect(received.lines.compactMap(\.productName).count == 3, "Each line received names its product")
+        #expect(received.hasFile, "Received, it keeps its photo")
+        #expect(try await receive.overview(clinicID: clinicID).invoices.isEmpty, "Nothing to continue reviewing")
+        await #expect(throws: AppError.forbidden, "No invoice being read above it") {
+            try await invoices.invoice(id: DemoInvoiceRepository.readingID)
+        }
+        #expect(DemoInvoiceRepository.Launched.reading.added == .reading)
+        #expect(DemoInvoiceRepository.Launched.failed.added == .failed)
+
+        let deleted = try await invoices.deleteFile(invoiceID: invoiceID, clinicID: clinicID)
+        #expect(!deleted.hasFile && deleted.lines.count == 4)
+    }
 }

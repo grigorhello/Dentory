@@ -161,6 +161,40 @@ final class ReadOnlyUITests: XCTestCase {
         XCTAssertTrue(row.waitForNonExistence(timeout: 5), "Remove did not work in read-only mode")
     }
 
+    /// The invoice images are the clinic's to delete at any time (PRD §9, decided on #117): the delivery received
+    /// before the trial ended opens from Activity's History, and its "…" menu deletes the file after the question, as
+    /// in a clinic that may write (MS-146), with no read-only sheet.
+    @MainActor
+    func testAnAdminStillDeletesAReceivedInvoicesFile() {
+        let app = launch(["-demoInvoice", "received"])
+        XCTAssertTrue(app.staticTexts["home.notice"].waitForExistence(timeout: 5), "The clinic is not read-only")
+        let bell = app.buttons["home.header.bell"]
+        XCTAssertTrue(bell.exists, "No bell")
+        bell.tap()
+        XCTAssertTrue(app.buttons["History"].waitForExistence(timeout: 5), "Activity did not open")
+        app.buttons["History"].tap()
+        let receipt = app.buttons["activity.row[00000000-0000-4000-8000-0000000000f3]"]
+        for _ in 0..<3 where !(receipt.exists && receipt.isHittable) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(receipt.waitForExistence(timeout: 5), "The receipt does not open its invoice")
+        receipt.tap()
+        XCTAssertTrue(app.staticTexts["invoice.received"].waitForExistence(timeout: 5), "It did not open as received")
+
+        app.buttons["invoice.menu"].tap()
+        let deleteFile = app.buttons["invoice.menu.deleteFile"]
+        XCTAssertTrue(deleteFile.waitForExistence(timeout: 5), "The menu did not open")
+        deleteFile.tap()
+        let confirm = app.buttons["invoice.deleteFile.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Delete invoice file did not ask first")
+        XCTAssertFalse(app.staticTexts["readOnly.title"].exists, "Delete invoice file is gated")
+        confirm.tap()
+        let notice = app.staticTexts["invoice.fileDeleted"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 5), "The file was not deleted in read-only mode")
+        XCTAssertFalse(app.staticTexts["readOnly.title"].exists, "No read-only sheet for the deletion")
+        XCTAssertTrue(app.buttons["invoice.menu"].waitForNonExistence(timeout: 5), "The menu still offers the deletion")
+    }
+
     /// The clinic's data stays its own: Export CSV works in read-only mode (MS-143's decision).
     @MainActor
     func testExportStillWorksInReadOnlyMode() {

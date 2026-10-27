@@ -3,17 +3,29 @@ import Foundation
 /// Review invoice without a server (previews, UI tests, screenshots): the demo clinic's Patterson invoice, read at
 /// 8:55 AM with f23's four lines; with `-demoInvoice reading` an invoice being read that stays so, and with
 /// `-demoInvoice failed` one whose reading fails once it is asked about (Receive delivery lists it,
-/// `ReceiveOverview.demo`). Captured pages upload in a moment and are read 1.5 seconds after they are asked for, as the
-/// prototype's 1.4, into the frames' invoice. Lines are settled as the server settles them (MS-130), against the shared
-/// demo products, and stay so for the launch; Confirm & receive adds the delivery to those products and its Undo puts
-/// them back (MS-131); a received invoice's file is deleted by the demo's admin (MS-146).
+/// `ReceiveOverview.demo`); with `-demoInvoice received` the Patterson invoice received already, as Activity's History
+/// shows it, so a read-only clinic's admin can delete its file (#117). Captured pages upload in a moment and are read
+/// 1.5 seconds after they are asked for, as the prototype's 1.4, into the frames' invoice. Lines are settled as the
+/// server settles them (MS-130), against the shared demo products, and stay so for the launch; Confirm & receive adds
+/// the delivery to those products and its Undo puts them back (MS-131); a received invoice's file is deleted by the
+/// demo's admin (MS-146).
 final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     /// What `-demoInvoice` asks for.
     enum Launched: String {
-        case reading, failed
+        case reading, failed, received
 
         static var current: Launched? {
             UserDefaults.standard.string(forKey: "demoInvoice").flatMap(Self.init(rawValue:))
+        }
+
+        /// The invoice it adds above the Patterson one in Receive delivery's list, being read or failed; none when the
+        /// Patterson one is received.
+        var added: PendingInvoice.Status? {
+            switch self {
+            case .reading: .reading
+            case .failed: .failed
+            case .received: nil
+            }
         }
     }
 
@@ -39,8 +51,9 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
     init(launched: Launched? = .current, store: DemoProductStore? = nil) {
         self.launched = launched
         self.store = store
-        var invoices = [Self.readyID: Self.read(id: Self.readyID)]
-        if launched != nil {
+        let patterson = Self.read(id: Self.readyID)
+        var invoices = [Self.readyID: launched == .received ? Self.received(patterson) : patterson]
+        if launched?.added != nil {
             invoices[Self.readingID] = Self.reading(id: Self.readingID, started: true)
         }
         self.invoices = invoices
@@ -263,6 +276,26 @@ final class DemoInvoiceRepository: InvoiceRepository, @unchecked Sendable {
             readingStarted: true, lineCount: lines.count, lines: lines,
             createdAt: id == readyID ? readyUploadedAt : .now, hasFile: true
         )
+    }
+
+    /// The frames' invoice received by the demo's admin at the demo's moment, with its photo (`-demoInvoice received`):
+    /// its lines resolved as `InvoiceConfirmUITests` resolves them, Yes, match on the endo kit, Tempbond NE created and
+    /// the surcharge ignored.
+    private static func received(_ invoice: InvoiceSummary) -> InvoiceSummary {
+        var received = Self.invoice(invoice, status: .confirmed, receivedAt: Session.demoNow)
+        received.lines = invoice.lines.map { line in
+            switch line.state {
+            case .possibleMatch:
+                line.settled(.matched, productID: line.suggestedProductID, productName: line.suggestedProductName)
+            case .newProduct:
+                line.settled(.created, productID: demoID(0x420), productName: line.suggestedName)
+            case .needsReview:
+                line.settled(.skipped, productID: nil, productName: nil)
+            case .matched, .created, .skipped:
+                line
+            }
+        }
+        return received
     }
 
     /// The invoice in another status: set aside, received by the demo's admin at `receivedAt`, or back in review.
