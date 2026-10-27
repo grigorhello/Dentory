@@ -3,7 +3,7 @@ import Foundation
 /// Review invoice (MS-129, MS-130, MS-131, MS-146): the upload, the invoice row, the reading and its progress, setting
 /// the invoice aside, its lines (`InvoiceLinesRepository`), receiving it (`InvoiceReceivingRepository`) and deleting a
 /// received invoice's file (`InvoiceFileRepository`). Admin only; the server refuses anyone else, and a read-only
-/// clinic's writes.
+/// clinic's writes but the file's deletion (decided on #117).
 protocol InvoiceRepository: InvoiceLinesRepository, InvoiceReceivingRepository, InvoiceFileRepository {
     /// Flow step 1: the pages to `invoices/{clinic_id}/{invoice_id}/page-n.(jpg|pdf)`, replacing any of a try before.
     func upload(_ document: InvoiceDocument, clinicID: UUID) async throws
