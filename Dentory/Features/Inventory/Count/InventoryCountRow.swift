@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// One row of count mode (f18), laid out like the prototype's inventory row: the name, the sub-line under it, and
-/// the stepper 12 pt to the right. A long name wraps beside the stepper rather than lose its end (MS-149).
+/// the stepper 12 pt to the right. A long name wraps beside the stepper rather than lose its end, and the stepper goes
+/// under the name at the accessibility text sizes (MS-149).
 struct InventoryCountRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let product: ProductSummary
     let caption: String
     let isCorrected: Bool
@@ -11,7 +13,7 @@ struct InventoryCountRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: Spacing.md) {
+            layout {
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(product.name)
                         .textStyle(.body14)
@@ -34,6 +36,10 @@ struct InventoryCountRow: View {
                 ListDivider()
             }
         }
+    }
+
+    private var layout: AnyLayout {
+        .row(stacked: dynamicTypeSize.isAccessibilitySize)
     }
 }
 

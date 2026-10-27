@@ -5,6 +5,7 @@ struct HomeView: View {
     @Environment(\.appDependencies) private var dependencies
     @Environment(AppRouter.self) private var router
     @Environment(\.writeAccess) private var writeAccess
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Account's Sign out ends it (MS-137); the root puts it in the tabs' environment.
     @Environment(SessionStore.self) private var sessionStore: SessionStore?
     @State private var viewModel: HomeViewModel
@@ -123,7 +124,7 @@ struct HomeView: View {
 
     /// The three tiles share the height of the tallest, as f6 draws them.
     private func attentionTiles(_ summary: HomeSummary) -> some View {
-        HStack(alignment: .top, spacing: Spacing.md) {
+        tilesLayout {
             AttentionTile(count: summary.toBuyCount, label: "To buy", tone: .warning, identifier: "home.tile.toBuy") {
                 router.select(.toBuy)
             }
@@ -145,7 +146,7 @@ struct HomeView: View {
     }
 
     private func valueTiles(_ summary: HomeSummary) -> some View {
-        HStack(alignment: .top, spacing: Spacing.md) {
+        tilesLayout {
             ValueTile(
                 label: "Inventory value", value: formatters.wholeMoney(summary.inventoryValue),
                 identifier: "home.tile.inventoryValue"
@@ -159,6 +160,12 @@ struct HomeView: View {
                 router.push(HomeRoute.expiring(window: 90), on: .home)
             }
         }
+    }
+
+    /// Side by side, or one under the other at the accessibility text sizes, where a tile's label would otherwise
+    /// break mid-word (MS-149).
+    private var tilesLayout: AnyLayout {
+        .row(stacked: dynamicTypeSize.isAccessibilitySize, alignment: .top, stackedSpacing: Spacing.md)
     }
 
     private var receiveRow: some View {

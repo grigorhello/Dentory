@@ -234,6 +234,9 @@ private struct ScreenScaffold<Header: View, Pinned: View, Content: View>: View {
                 .padding(.top, PageLayout.headerInset(gap: headerGap, safeAreaTop: proxy.safeAreaInsets.top))
                 .padding(.bottom, cut)
                 .contentColumn()
+                // The header, the offline banner and the pinned controls take the height they need and the content
+                // scrolls in the rest, so at the largest text sizes a title or the banner is never cut (MS-149).
+                .fixedSize(horizontal: false, vertical: true)
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.lg) {
                         content()

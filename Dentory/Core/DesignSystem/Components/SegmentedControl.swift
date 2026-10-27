@@ -64,6 +64,8 @@ struct SegmentedControl<Value: Hashable & Sendable>: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        // A long press shows the label large where the segment can only shrink it, at the accessibility sizes (MS-149).
+        .accessibilityShowsLargeContentViewer()
     }
 }
 

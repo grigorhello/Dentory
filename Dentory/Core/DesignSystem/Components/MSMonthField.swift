@@ -16,6 +16,7 @@ nonisolated struct YearMonth: Hashable, Comparable, Sendable {
 /// row itself. An optional month passes `clearLabel`: once one is chosen, an × in place of the icon clears it.
 struct MSMonthField: View {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let label: String
     @Binding var selection: YearMonth?
     let years: ClosedRange<Int>
@@ -140,7 +141,8 @@ struct MSMonthField: View {
     }
 
     private func setOpen(_ open: Bool) {
-        withAnimation(.easeOut(duration: Motion.base)) {
+        // With Reduce Motion the wheels appear in place, rather than the field growing to them.
+        withAnimation(reduceMotion ? nil : Animation.easeOut(duration: Motion.base)) {
             if let wheelsOpen {
                 wheelsOpen.wrappedValue = open
             } else {

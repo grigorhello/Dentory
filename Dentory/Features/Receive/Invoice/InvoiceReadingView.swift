@@ -7,6 +7,17 @@ struct InvoiceReadingView: View {
     let onReceiveManually: () -> Void
 
     var body: some View {
+        // At least the page's middle, and taller when the text needs it at the largest sizes, rather than cut "Reading
+        // invoice" (MS-149).
+        ZStack {
+            Color.clear
+                .containerRelativeFrame(.vertical) { height, _ in height * Self.share }
+            block
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var block: some View {
         VStack(spacing: Spacing.xs) {
             DocumentPlaceholder()
                 .padding(.bottom, Spacing.lg)
@@ -25,8 +36,6 @@ struct InvoiceReadingView: View {
             .accessibilityIdentifier("invoice.reading")
         }
         .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
-        .containerRelativeFrame(.vertical, alignment: .center) { height, _ in height * Self.share }
     }
 
     /// The part of the page's height the block is centred in: the page's middle, a little above the visual centre the
