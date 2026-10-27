@@ -19,10 +19,10 @@ select is(public.currency_for_country('us'), 'USD', 'country codes are case-inse
 select is(public.currency_for_country('FR'), 'EUR', 'euro countries pay in EUR');
 select is(public.currency_for_country('ZZ'), 'USD', 'an unknown country falls back to USD');
 
--- Signed out: refused.
+-- Signed out: refused, by the grant itself since MS-151 (the function's own "Sign in first" stays for a missing user).
 set local role anon;
-select throws_ok($$ select public.clinic_create('Smile', 'Toronto', 'CA', 'America/Toronto', 'Sarah') $$, '42501', 'Sign in first',
-  'anonymous callers cannot create a clinic');
+select throws_ok($$ select public.clinic_create('Smile', 'Toronto', 'CA', 'America/Toronto', 'Sarah') $$, '42501',
+  'permission denied for function clinic_create', 'anonymous callers cannot create a clinic');
 reset role;
 
 -- The owner creates the clinic.

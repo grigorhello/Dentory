@@ -15,7 +15,9 @@ struct ClinicLogoStorage: Sendable {
             try await client.storage.from("logos").upload(
                 path, data: jpeg, options: FileOptions(contentType: LogoImage.contentType, upsert: true)
             )
-            try await client.from("clinics").update(["logo_path": path]).eq("id", value: clinicID.uuidString).execute()
+            // Nothing is sent back: members read only the clinic's columns that are not billing (MS-151).
+            try await client.from("clinics").update(["logo_path": path], returning: .minimal)
+                .eq("id", value: clinicID.uuidString).execute()
         } catch {
             throw AppError(error)
         }

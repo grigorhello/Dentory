@@ -27,7 +27,7 @@ The local runtime injects `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERV
 | Secret | Used by | Value |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | `extract_invoice` | A Claude API key (Claude Console, API keys). Without it, as on the local stack, every reading fails at once with the reason error. |
-| `RESEND_API_KEY` | `invite_member`, `export_csv`, `stripe_webhook`, `send_digest` | A Resend API key for the `dentory.ca` sending domain (Resend, API keys). Without it the function sends nothing and writes the email, link included, to its log; that is how the local stack runs. |
+| `RESEND_API_KEY` | `invite_member`, `export_csv`, `stripe_webhook`, `send_digest` | A Resend API key for the `dentory.ca` sending domain (Resend, API keys). Without it the function sends nothing. On the local stack it writes the email, link included, to its log, which is how the local stack runs; a hosted project's log only says how many emails went unsent, never an address or a link (MS-151). |
 | `EMAIL_FROM` | `invite_member`, `export_csv`, `stripe_webhook`, `send_digest` | Optional. Defaults to `Dentory <invites@dentory.ca>`; the domain must be verified in Resend (SPF and DKIM records at the registrar). |
 | `APP_LINK_BASE` | `invite_member`, `send_digest` | Optional. Defaults to `https://app.dentory.ca`, the universal-link host (`applinks/README.md`). |
 | `STRIPE_SECRET_KEY` | the billing functions | The Stripe secret key: `sk_test_…` on staging, `sk_live_…` on prod. Without it `billing_checkout` and `billing_portal` answer 503 "Billing isn't set up yet. Try again later.", as on the local stack. |
