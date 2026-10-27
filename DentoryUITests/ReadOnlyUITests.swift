@@ -145,15 +145,14 @@ final class ReadOnlyUITests: XCTestCase {
         let row = app.buttons[daniel]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "The team did not load")
         row.tap()
-        // iOS 26 draws a dialog's action as a button inside a button, both with its id.
-        let role = app.buttons["\(daniel).menu.role"].firstMatch
+        let role = app.buttons["\(daniel).menu.role"]
         XCTAssertTrue(role.waitForExistence(timeout: 5), "No menu")
         role.tap()
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForExistence(timeout: 5), "Change role is not gated")
         app.buttons["readOnly.ok"].tap()
         XCTAssertTrue(app.staticTexts["readOnly.title"].waitForNonExistence(timeout: 5))
         row.tap()
-        let remove = app.buttons["\(daniel).menu.remove"].firstMatch
+        let remove = app.buttons["\(daniel).menu.remove"]
         XCTAssertTrue(remove.waitForExistence(timeout: 5), "No menu")
         remove.tap()
         let confirm = app.buttons["team.remove.confirm"]

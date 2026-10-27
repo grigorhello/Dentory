@@ -56,8 +56,7 @@ final class TeamUITests: XCTestCase {
         openTeam(in: app)
 
         app.buttons[michael].tap()
-        // iOS 26 draws a dialog's action as a button inside a button, both with its id.
-        let toAdmin = app.buttons["\(michael).menu.role"].firstMatch
+        let toAdmin = app.buttons["\(michael).menu.role"]
         XCTAssertTrue(toAdmin.waitForExistence(timeout: 5), "No menu")
         XCTAssertEqual(toAdmin.label, "Change role to Admin")
         toAdmin.tap()
@@ -65,8 +64,8 @@ final class TeamUITests: XCTestCase {
         wait(for: [expectation(for: michaelAdmin, evaluatedWith: app.buttons[michael])], timeout: 5)
 
         tapWhenReady(app.buttons[daniel])
-        XCTAssertEqual(app.buttons["\(daniel).menu.remove"].firstMatch.label, "Remove from clinic")
-        tapWhenReady(app.buttons["\(daniel).menu.remove"].firstMatch)
+        XCTAssertEqual(app.buttons["\(daniel).menu.remove"].label, "Remove from clinic")
+        tapWhenReady(app.buttons["\(daniel).menu.remove"])
         let question = app.staticTexts["team.remove.title"]
         XCTAssertTrue(question.waitForExistence(timeout: 5), "No question before removing")
         XCTAssertEqual(question.label, "Remove Dr. Daniel Kim?")

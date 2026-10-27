@@ -56,8 +56,8 @@ final class ProcedureEventUITests: XCTestCase {
         XCTAssertEqual(warning.label, "10 items will be returned to inventory. Stock levels update immediately.")
         let confirm = app.buttons["cancelProcedure.confirm"]
         XCTAssertFalse(confirm.isEnabled, "Cancel procedure is enabled without a note")
-        // A note wraps, so its field is a text view.
-        let note = app.textViews["cancelProcedure.note"]
+        // The note wraps, so depending on the iOS version its field is a text view or a text field.
+        let note = app.descendants(matching: .any)["cancelProcedure.note"].firstMatch
         note.tap()
         note.typeText("Logged by mistake")
         XCTAssertTrue(confirm.isEnabled)
