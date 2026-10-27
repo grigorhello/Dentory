@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true, claimed, emails });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "send_digest");
   }
 });
 

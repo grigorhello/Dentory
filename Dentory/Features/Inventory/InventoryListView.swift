@@ -42,7 +42,9 @@ struct InventoryListView: View {
                 }
             }
             .reloadOnReturn { await viewModel.load() }
-            .onChange(of: dependencies.writes.appliedWrites) { reload() }
+            .onChange(of: dependencies.writes.appliedWrites) {
+                Task { await viewModel.stockChanged() }
+            }
             .onChange(of: router.selectedTab) { _, tab in
                 if tab == .inventory { reload() }
             }

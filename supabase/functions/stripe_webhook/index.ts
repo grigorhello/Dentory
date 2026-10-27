@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     await handle(event, stripeConfig(), serviceClient());
     return json({ received: true });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "stripe_webhook");
   }
 });
 

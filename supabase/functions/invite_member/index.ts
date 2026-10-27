@@ -60,6 +60,6 @@ Deno.serve(async (req) => {
       delivery,
     });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "invite_member");
   }
 });

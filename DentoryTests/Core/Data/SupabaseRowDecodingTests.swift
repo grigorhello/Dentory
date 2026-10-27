@@ -44,6 +44,28 @@ struct SupabaseRowDecodingTests {
         #expect(try decoder.decode(Bool.self, from: Data("true".utf8)))
     }
 
+    /// MS-150: Home reads the clinic's members alongside the latest procedure and finds its starter among them; an
+    /// invitation not accepted yet has no account.
+    @Test func theLatestProcedureFindsItsStarterAmongTheMembers() throws {
+        let event = #"""
+        [{"id":"d0000000-0000-4000-8000-000000000e01","name":"Root canal","started_at":"2026-10-01T19:14:00+00:00",
+          "started_by":"d0000000-0000-4000-8000-000000000a01","procedure_event_items":[{"count":12}]}]
+        """#
+        let members = #"""
+        [{"user_id":null,"full_name":"Priya Patel"},
+         {"user_id":"d0000000-0000-4000-8000-000000000a02","full_name":"Dr. Daniel Kim"},
+         {"user_id":"d0000000-0000-4000-8000-000000000a01","full_name":"Sarah Mitchell"}]
+        """#
+        let row = try #require(try decoder.decode([HomeEventRow].self, from: Data(event.utf8)).first)
+        let rows = try decoder.decode([HomeMemberRow].self, from: Data(members.utf8))
+        #expect(rows.first?.userId == nil)
+        let procedure = LatestProcedure(event: row, members: rows)
+        #expect(procedure.name == "Root canal")
+        #expect(procedure.supplyCount == 12)
+        #expect(procedure.startedByFirstName == "Sarah")
+        #expect(LatestProcedure(event: row, members: Array(rows.prefix(2))).startedByFirstName == "")
+    }
+
     @Test func membershipRowForSignIn() throws {
         let json = #"""
         {"role":"admin","full_name":"Sarah Mitchell",

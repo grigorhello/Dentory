@@ -1,6 +1,7 @@
 // Request parsing and the one JSON error shape every Dentory function answers with:
 // { "error": { "code": "…", "message": "…", "field": "email" | undefined } }.
 // The app maps the status and the field to AppError (Core/Data/AppError+Functions.swift).
+import { reportLater } from "./sentry.ts";
 
 export class HttpError extends Error {
   constructor(
@@ -20,14 +21,17 @@ export function json(body: unknown, status = 200): Response {
   });
 }
 
-export function errorResponse(error: unknown): Response {
+/** The answer for `error`; a 500, the function's own or an unexpected one, also goes to Sentry (`_shared/sentry.ts`). */
+export function errorResponse(error: unknown, fn: string): Response {
   if (error instanceof HttpError) {
+    if (error.status >= 500) reportLater({ fn, kind: error.code, error });
     return json(
       { error: { code: error.code, message: error.message, field: error.field } },
       error.status,
     );
   }
   console.error(error);
+  reportLater({ fn, kind: "unexpected", error });
   return json({ error: { code: "unknown", message: "Couldn't save. Try again." } }, 500);
 }
 

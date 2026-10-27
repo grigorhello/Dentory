@@ -66,6 +66,6 @@ Deno.serve(async (req) => {
     });
     return json({ url: session.url });
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "billing_checkout");
   }
 });

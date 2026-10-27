@@ -31,7 +31,11 @@ final class InventoryListViewModel {
     }
 
     private(set) var state: LoadState = .loading
+    /// The clinic's products in the order the server sent them.
     private(set) var products: [ProductSummary]
+    /// The same products in list order, sorted once per answer: the rows filter it on every key typed in the search
+    /// and every tap on a stepper, which must not sort 500 names each time (MS-150).
+    private var listOrder: [ProductSummary] = []
     var searchText = ""
     var filter: InventoryFilter
     /// A category name handed over by Inventory value (MS-135), shown as a removable chip.
@@ -73,7 +77,9 @@ final class InventoryListViewModel {
         self.analytics = analytics
         self.filter = filter
         self.category = category
-        products = cache.load([ProductSummary].self, for: Self.cacheKey(clinicID: clinicID)) ?? []
+        let cached = cache.load([ProductSummary].self, for: Self.cacheKey(clinicID: clinicID)) ?? []
+        products = cached
+        listOrder = Self.inListOrder(cached)
         if let draft = draftStore.load(), draft.clinicID == clinicID, draft.userID == userID {
             count = draft
         }
@@ -87,19 +93,26 @@ final class InventoryListViewModel {
     /// insensitive), sorted Out of stock › Low › Expiring › Missing expiry › Healthy, then by name.
     var visibleProducts: [ProductSummary] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return sortedProducts(
-            products
-                .filter { filter.includes($0.status) }
-                .filter { category == nil || $0.categoryName == category }
-                .filter { query.isEmpty || $0.name.localizedStandardContains(query) }
-        )
+        let chip = filter
+        let chosenCategory = category
+        return listOrder.filter { product in
+            chip.includes(product.status)
+                && (chosenCategory == nil || product.categoryName == chosenCategory)
+                && (query.isEmpty || product.name.localizedStandardContains(query))
+        }
     }
 
-    private func sortedProducts(_ products: [ProductSummary]) -> [ProductSummary] {
+    private static func inListOrder(_ products: [ProductSummary]) -> [ProductSummary] {
         products.sorted { lhs, rhs in
             if lhs.status.sortRank != rhs.status.sortRank { return lhs.status.sortRank < rhs.status.sortRank }
             return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
         }
+    }
+
+    /// The products of an answer, or the counted figures of an applied count, with their list order.
+    private func show(_ products: [ProductSummary]) {
+        self.products = products
+        listOrder = Self.inListOrder(products)
     }
 
     /// Why the list is empty, once there is an answer to show; nil while the first load is on its way.
@@ -123,7 +136,7 @@ final class InventoryListViewModel {
     func load() async {
         do {
             let fresh = try await repository.products(clinicID: clinicID)
-            products = fresh
+            show(fresh)
             cache.store(fresh, for: Self.cacheKey(clinicID: clinicID))
             state = .loaded
         } catch {
@@ -131,6 +144,13 @@ final class InventoryListViewModel {
             // The last answer stays on screen; the banner says why it may be stale.
             state = products.isEmpty ? .failed(appError) : .loaded
         }
+    }
+
+    /// A stock change written from this device (`WriteCoordinator.appliedWrites`) reloads the list, except the count
+    /// this list is applying: that one reloads once it is written, so Apply count reads the list once, not twice.
+    func stockChanged() async {
+        guard !isApplyingCount else { return }
+        await load()
     }
 
     /// Home's tiles preselect a chip (`home.tile.missingExpiry`).
@@ -154,7 +174,7 @@ final class InventoryListViewModel {
     /// The corrected products of the whole list, whatever the search and the chip show, in list order.
     var corrections: [ProductSummary] {
         guard let count else { return [] }
-        return count.corrections(among: sortedProducts(products))
+        return count.corrections(among: listOrder)
     }
 
     /// How many products the count corrects, without ordering them (the labels and the buttons' state).
@@ -206,8 +226,9 @@ final class InventoryListViewModel {
     }
 
     /// Writes one Count transaction per corrected product, leaves count mode with the toast, shows the
-    /// counted figures at once and loads the fresh list (the server's status). The cached list follows, so a count
-    /// queued offline shows its figures on the next visit too, and analytics hears how many corrections went in.
+    /// counted figures at once and, once the server applied them, loads the fresh list (the server's status); a count
+    /// queued offline reloads when it is replayed (`stockChanged()`). The cached list follows, so a queued count shows
+    /// its figures on the next visit too, and analytics hears how many corrections went in.
     func applyCount() async {
         guard let count else { return }
         let corrected = corrections
@@ -215,21 +236,21 @@ final class InventoryListViewModel {
         await submitGuard.run {
             countError = nil
             do {
-                _ = try await repository.applyCount(
+                let outcome = try await repository.applyCount(
                     clinicID: clinicID,
                     counts: corrected.map { CountedQuantity(productID: $0.id, counted: Decimal(count.value(for: $0))) }
                 )
                 let counted = Dictionary(uniqueKeysWithValues: corrected.map { ($0.id, count.value(for: $0)) })
-                products = products.map { product in
+                show(products.map { product in
                     counted[product.id].map { product.counted(Decimal($0)) } ?? product
-                }
+                })
                 cache.store(products, for: Self.cacheKey(clinicID: clinicID))
                 let seconds = count.seconds(until: formatters.clock.now)
                 analytics.track(.countApplied(corrections: corrected.count, seconds: seconds))
                 countApplied = CountApplied(title: "Count applied", detail: Self.productsUpdated(corrected.count))
                 countSheet = nil
                 endCount()
-                await load()
+                if case .applied = outcome { await load() }
             } catch {
                 countError = AppError(error)
             }

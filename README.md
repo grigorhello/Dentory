@@ -32,6 +32,9 @@ Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one
 | `make db-reset` | Drop the local database, apply `supabase/migrations` in order, then `supabase/seed.sql` |
 | `make db-test` | Run the pgTAP tests in `supabase/tests` |
 | `make seed-demo` | Load the demo clinic Smile Dental after a reset (`make db-reset seed-demo`). Sign in as sarah@smiledental.ca (Admin) or michael@smiledental.ca (Staff), password `smiledental`. Dates are relative to the day it runs, so reseed before a demo. |
+| `make seed-load` | Load the load-test clinic Load test dental after a reset (`make db-reset seed-load`, or after `seed-demo`): 500 products and about 5,500 ledger rows over six months, its stock moved only through the stock functions (MS-150). Sign in as olivia@loadtest.example (Admin) or hannah@loadtest.example (Staff), password `loadtest`. Local stack only. |
+| `make perf-report` | Time every call the app's screens make, and Start procedure and Apply count, for the load-test clinic's admin: p50, p95 and the slowest in milliseconds (`PERF_RUNS=30`; `docs/runbooks/performance.md`) |
+| `make perf-concurrency` | Eight clients start procedures and open bottles of the load-test clinic at once, then check that every change was written and every product's stock equals its ledger |
 | `make functions-serve` | Serve the Edge Functions locally (`/functions/v1/<name>`) |
 | `make functions-check` | Type-check the Edge Functions (`brew install deno`) |
 

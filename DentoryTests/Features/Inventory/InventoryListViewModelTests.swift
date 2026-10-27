@@ -140,4 +140,16 @@ struct InventoryListViewModelTests {
         #expect(relaunched.state == .loaded)
         #expect(relaunched.products.count == 12)
     }
+
+    /// MS-150: the list is sorted once per answer and the rows only filter it, so the cached rows are in list order
+    /// before any load.
+    @Test func theCachedRowsAreInListOrder() async {
+        let cache = InMemoryResponseCache()
+        let first = make(cache: cache)
+        await first.load()
+        let relaunched = make(repository: FakeInventoryRepository(result: .failure(AppError.network)), cache: cache)
+        #expect(names(relaunched) == names(first))
+        #expect(names(relaunched).first == "Rubber dam latex-free")
+        #expect(names(relaunched).last == "Surface disinfectant")
+    }
 }
