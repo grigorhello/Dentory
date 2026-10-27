@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Two fields side by side, as Counted in beside Received as (f21), or a field and its button. Once the text is too
-/// large for both on a line, the second goes under the first instead of cutting either one: from the xxLarge text size
-/// on an iPhone, at the accessibility sizes in an iPad's wider column (MS-149). The fields are not rebuilt when the
-/// layout changes, so focus and what is typed stay.
+/// Two fields side by side, as Counted in beside Received as in the New product sheet, or a field and its button. Once
+/// the text is too large for both on a line, the second goes under the first instead of cutting either one: from the
+/// xxLarge text size on an iPhone, at the accessibility sizes in an iPad's wider column (MS-149). The fields are not
+/// rebuilt when the layout changes, so focus and what is typed stay.
 struct FieldRow<Content: View>: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
