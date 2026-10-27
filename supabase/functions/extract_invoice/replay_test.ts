@@ -4,7 +4,8 @@
 import { assert, assertEquals, assertFalse, assertRejects, assertStrictEquals, assertThrows } from "jsr:@std/assert@1";
 import { fixtureInvoices, fixturePages, recordedAnswer } from "./fixture_invoices.ts";
 import { type ModelCall, parseExtraction, readInvoice, ReadingFailure } from "./reading.ts";
-import { isLocalStack, modelCallFor, recordings, replayCall } from "./replay.ts";
+import { isLocalStack } from "../_shared/environment.ts";
+import { modelCallFor, recordings, replayCall } from "./replay.ts";
 
 const live = () => new AbortController().signal;
 

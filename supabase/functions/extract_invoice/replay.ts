@@ -2,13 +2,15 @@
 // get their recorded answers, the ones reading_test.ts replays, so a fixture PDF uploaded from the app is read end to
 // end without the Claude API, as the end-to-end flows (DentoryE2ETests) receive one. The request is the one the API
 // would get; only its answer comes from the recording, chosen by the pages it carries. Any other pages fail as every
-// reading did without a key. A hosted project never replays: its SUPABASE_URL is not the local stack's gateway, and
-// modelCallFor, which index.ts asks, decides it from the function's own environment alone.
+// reading did without a key. A hosted project never replays: its SUPABASE_URL is not the local stack's gateway
+// (isLocalStack in _shared/environment.ts, which the email fallback asks too), and modelCallFor, which index.ts asks,
+// decides it from the function's own environment alone.
 import harbourview from "./fixtures/harbourview-hv-2207.json" with { type: "json" };
 import lakeshore from "./fixtures/lakeshore-ls-58113.json" with { type: "json" };
 import northbridge from "./fixtures/northbridge-inv-10092.json" with { type: "json" };
 import prairie from "./fixtures/prairie-pdw-90412.json" with { type: "json" };
 import riveSud from "./fixtures/rive-sud-f-3381.json" with { type: "json" };
+import { isLocalStack } from "../_shared/environment.ts";
 import { type ModelCall, ReadingFailure, type ReadingRequest } from "./reading.ts";
 
 /** Each fixture invoice's recorded answer, under the SHA-256 of its page files in order (`shasum -a 256`). The app
@@ -21,11 +23,6 @@ export const recordings: Record<string, unknown> = {
     prairie,
   "5913e72cd2645b7e59092d91727a6e48e923254815727bacf6c5d98c67ab7225": riveSud,
 };
-
-/** The CLI points the local functions' SUPABASE_URL at the stack's own gateway, kong; a hosted project's is its URL. */
-export function isLocalStack(supabaseURL = Deno.env.get("SUPABASE_URL") ?? ""): boolean {
-  return URL.canParse(supabaseURL) && new URL(supabaseURL).hostname === "kong";
-}
 
 /** Who reads an invoice, from the function's environment: the Claude API whenever a key is set; without one, the
  * recordings, on the local stack only; anywhere else nobody, and the reading fails with the reason error, as it did
