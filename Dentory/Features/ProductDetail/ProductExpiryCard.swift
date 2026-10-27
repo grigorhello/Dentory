@@ -4,6 +4,7 @@ import SwiftUI
 /// Without a dated batch the card says "No expiry dates yet." and the total line still shows the undated stock.
 /// Tapping a batch opens Edit batch and Add expiry adds one (MS-119).
 struct ProductExpiryCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let viewModel: ProductDetailViewModel
     let onBatch: (UUID) -> Void
     let onAddExpiry: () -> Void
@@ -44,15 +45,20 @@ struct ProductExpiryCard: View {
     }
 }
 
-/// "54 of 54 tracked · 54 expire within 90 days" with the unit on the right.
+/// "54 of 54 tracked · 54 expire within 90 days" with the unit on the right, or under it at the accessibility text
+/// sizes, where beside it the unit breaks mid-word ("cartri / dges", MS-149).
 private extension ProductExpiryCard {
     var totalLine: some View {
-        HStack(alignment: .top, spacing: Spacing.md) {
+        let isStacked = dynamicTypeSize.isAccessibilitySize
+        let layout = AnyLayout.row(stacked: isStacked, alignment: .top, stackedSpacing: Spacing.xxs)
+        return layout {
             Text(viewModel.expiryTotalLine)
                 .textStyle(.body14)
                 .foregroundStyle(Color.ms.textBody)
                 .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: Spacing.sm)
+            if !isStacked {
+                Spacer(minLength: Spacing.sm)
+            }
             Text(viewModel.unit).textStyle(.body14).foregroundStyle(Color.ms.textSecondary)
         }
         .padding(.vertical, Spacing.md)
@@ -61,16 +67,32 @@ private extension ProductExpiryCard {
     }
 }
 
-/// "Expires · Qty · Lot" above the batch rows, in the list header's Inter 600 14 (f20).
+/// "Expires · Qty · Lot" above the batch rows, in the list header's Inter 600 14 (f20); at the accessibility text
+/// sizes Qty and Lot go under Expires, as each row's quantity and lot go under its date.
 private struct ExpiryHeaderRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("Expires")
-                Spacer()
-                Text("Qty")
-                Spacer()
-                Text("Lot")
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Expires")
+                        HStack {
+                            Text("Qty")
+                            Spacer()
+                            Text("Lot")
+                        }
+                    }
+                } else {
+                    HStack {
+                        Text("Expires")
+                        Spacer()
+                        Text("Qty")
+                        Spacer()
+                        Text("Lot")
+                    }
+                }
             }
             .textStyle(.bodyStrong14)
             .foregroundStyle(Color.ms.textSecondary)
@@ -81,24 +103,34 @@ private struct ExpiryHeaderRow: View {
     }
 }
 
-/// Date in bold with the days-left badge under it, the quantity in Inter 700 20 as f20 draws it, the lot in mono.
+/// Date in bold with the days-left badge under it, the quantity in Inter 700 20 as f20 draws it, the lot in mono. At
+/// the accessibility text sizes the quantity and lot go under the badge: beside the badge, which keeps its width, the
+/// date and lot broke mid-word and the row ran past the screen's edge (MS-149).
 private struct ProductBatchRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let row: ProductDetailViewModel.BatchRow
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: Spacing.md) {
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(row.dateText).textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
-                    StatusBadge(row.daysText, tone: row.daysTone, size: .small)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        dateAndDays
+                        HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
+                            quantity
+                            Spacer(minLength: Spacing.sm)
+                            lot
+                        }
+                    }
+                } else {
+                    HStack(alignment: .center, spacing: Spacing.md) {
+                        dateAndDays
+                        Spacer(minLength: Spacing.sm)
+                        quantity
+                        Spacer(minLength: Spacing.sm)
+                        lot
+                    }
                 }
-                Spacer(minLength: Spacing.sm)
-                Text(row.quantityText).textStyle(.title20).foregroundStyle(Color.ms.ink).monospacedDigit()
-                Spacer(minLength: Spacing.sm)
-                Text(row.lot)
-                    .textStyle(.mono)
-                    .foregroundStyle(Color.ms.textSecondary)
-                    .frame(minWidth: Spacing.xxxl, alignment: .trailing)
             }
             .padding(.vertical, Spacing.md)
             // The soonest batch due within the window stands out with the ink hairline (MS-119).
@@ -108,5 +140,23 @@ private struct ProductBatchRow: View {
             ListDivider()
         }
         .contentShape(Rectangle())
+    }
+
+    private var dateAndDays: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text(row.dateText).textStyle(.bodyStrong16).foregroundStyle(Color.ms.ink)
+            StatusBadge(row.daysText, tone: row.daysTone, size: .small)
+        }
+    }
+
+    private var quantity: some View {
+        Text(row.quantityText).textStyle(.title20).foregroundStyle(Color.ms.ink).monospacedDigit()
+    }
+
+    private var lot: some View {
+        Text(row.lot)
+            .textStyle(.mono)
+            .foregroundStyle(Color.ms.textSecondary)
+            .frame(minWidth: Spacing.xxxl, alignment: .trailing)
     }
 }
