@@ -9,7 +9,7 @@ Give this file to Claude in the first message of the new project and ask it to s
 
 ## Grigor's working preferences
 - Wants Claude to act as a senior product owner and use its own judgment; he confirms or changes decisions afterwards. He gave the go-ahead for MS-100's decisions on 2026-10-15 without changes.
-- Rule from 2026-10-16: after a merge, go straight to the next ticket in build order; do not ask. Ask only for what truly needs him (a decision, a password typed in his terminal, a setting on his side).
+- Rule from 2026-10-16: after a merge, the next ticket in build order starts right away, without asking him; since 2026-10-27 it starts in a new thread that the coordinator opens. Ask only for what truly needs him (a decision, a password typed in his terminal, a setting on his side).
 - He expects Claude to take every step it is permitted to take. When a thread asked him to press Merge himself on 2026-10-15 he pushed back ("why you can not do this?") and added permission rules on the Mac so Claude merges itself.
 - He answers within minutes and asks "what are you doing now?" when a thread goes quiet: post a status refresh before any long wait.
 - He follows progress on the Notion board, not GitHub Projects.
