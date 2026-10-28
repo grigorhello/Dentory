@@ -63,27 +63,45 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
     }
 
     var resetResult: Result<Void, Error> = .success(())
-    var verifyResult: Result<Void, Error> = .success(())
+    var verifyResult: Result<PasswordReset, Error> = .success(.demoLink)
     var updatePasswordResult: Result<Void, Error> = .success(())
-    /// The session `restore()` answers once the new password is saved, as the recovery session would.
+    var linkSignInResult: Result<Void, Error> = .success(())
+    /// The session `restore()` answers once the link's account signs in, as the recovery session would.
     var sessionAfterReset: Session? = .demo
     private(set) var resetEmails: [String] = []
     private(set) var verifiedTokenHashes: [String] = []
     private(set) var updatedPasswords: [String] = []
+    /// The links whose account signed in on the device.
+    private(set) var linkSignIns: [PasswordReset] = []
 
     func sendPasswordReset(email: String) async throws {
         resetEmails.append(email)
         try resetResult.get()
     }
 
-    func verifyPasswordReset(tokenHash: String) async throws {
+    func verifyPasswordReset(tokenHash: String) async throws -> PasswordReset {
         verifiedTokenHashes.append(tokenHash)
-        try verifyResult.get()
+        return try verifyResult.get()
     }
 
-    func updatePassword(_ password: String) async throws {
+    /// Like the link's own client: the device's stored session is not touched.
+    func updatePassword(_ password: String, for reset: PasswordReset) async throws -> PasswordReset {
         updatedPasswords.append(password)
         try updatePasswordResult.get()
-        storedSession = sessionAfterReset
+        return reset
     }
+
+    func signIn(with reset: PasswordReset) async throws {
+        linkSignIns.append(reset)
+        try linkSignInResult.get()
+        storedSession = sessionAfterReset
+        storedAccount = nil
+    }
+}
+
+extension PasswordReset {
+    /// A good link of the demo admin, Sarah.
+    nonisolated static let demoLink = PasswordReset(
+        userID: Session.demo.userID, email: "sarah@smiledental.ca", accessToken: "access", refreshToken: "refresh"
+    )
 }

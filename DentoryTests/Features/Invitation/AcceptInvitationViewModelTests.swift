@@ -13,11 +13,13 @@ struct AcceptInvitationViewModelTests {
         auth: FakeAuthService = FakeAuthService(signInResult: .success(staffSession)),
         repository: FakeInvitationRepository = FakeInvitationRepository(),
         token: String = "token-1",
-        analytics: SpyAnalytics = SpyAnalytics()
+        analytics: SpyAnalytics = SpyAnalytics(),
+        state: SessionStore.State = .signedOut,
+        signingOut: FakeSigningOut = FakeSigningOut()
     ) -> (AcceptInvitationViewModel, SessionStore) {
-        let store = SessionStore(auth: auth, state: .signedOut)
+        let store = SessionStore(auth: auth, state: state)
         let viewModel = AcceptInvitationViewModel(
-            token: token, repository: repository, sessionStore: store, analytics: analytics
+            token: token, repository: repository, sessionStore: store, signingOut: signingOut, analytics: analytics
         )
         return (viewModel, store)
     }
@@ -89,6 +91,34 @@ struct AcceptInvitationViewModelTests {
         #expect(viewModel.isFinished)
         #expect(viewModel.generalError == nil)
         #expect(analytics.events == [.invitationAccepted], "MS-147: never the name or the password")
+    }
+
+    /// F4: joining over another member's session runs Sign out's clean-up first, so their cache, queued writes and push
+    /// token never carry over to the invitee.
+    @Test func joiningOverAnotherAccountRunsSignOutsCleanUpFirst() async {
+        let auth = FakeAuthService(signInResult: .success(Self.staffSession))
+        let signingOut = FakeSigningOut()
+        var signInsBeforeCleanUp: Int?
+        signingOut.onSignOut = { signInsBeforeCleanUp = auth.signIns.count }
+        let (viewModel, store) = make(auth: auth, state: .signedIn(.demo), signingOut: signingOut)
+        await viewModel.load()
+        viewModel.password = "smiledental"
+        await viewModel.join()
+        #expect(signingOut.signOutCount == 1)
+        #expect(signInsBeforeCleanUp == 0, "The clean-up runs while the previous member is still signed in")
+        #expect(store.state == .signedIn(Self.staffSession))
+    }
+
+    @Test func joiningOnASignedOutDeviceOrAsTheSameAccountKeepsTheDevice() async {
+        for state in [SessionStore.State.signedOut, .signedIn(Self.staffSession)] {
+            let signingOut = FakeSigningOut()
+            let (viewModel, _) = make(state: state, signingOut: signingOut)
+            await viewModel.load()
+            viewModel.password = "smiledental"
+            await viewModel.join()
+            #expect(viewModel.isFinished)
+            #expect(signingOut.signOutCount == 0, "Nothing to clean for \(state)")
+        }
     }
 
     @Test func aRefusedPasswordShowsUnderTheField() async {

@@ -7,8 +7,6 @@ final class PreviewAuthService: AuthServicing, @unchecked Sendable {
     var account: Account?
     /// Accounts the demo invitation flow created: address to the password set and the session it yields.
     private var registered: [String: (password: String, session: Session)] = [:]
-    /// The demo admin, signed in by a good reset link until the new password is saved (MS-113).
-    private var recovering: Session?
     static let demoPassword = "smiledental"
     static let demoEmails = ["sarah@smiledental.ca", "michael@smiledental.ca"]
     /// The one reset link that works without a server; any other token hash reads as expired.
@@ -61,18 +59,25 @@ final class PreviewAuthService: AuthServicing, @unchecked Sendable {
         guard email.contains("@") else { throw AppError.invalidEmail }
     }
 
-    func verifyPasswordReset(tokenHash: String) async throws {
+    /// The good link belongs to the demo admin; the device's session stays as it is (F4).
+    func verifyPasswordReset(tokenHash: String) async throws -> PasswordReset {
         try await Task.sleep(for: .milliseconds(300))
         guard tokenHash == Self.demoResetToken else { throw AppError.notFound }
-        recovering = .demo
+        return PasswordReset(
+            userID: Session.demo.userID, email: Session.demo.email, accessToken: "demo", refreshToken: "demo"
+        )
     }
 
-    func updatePassword(_ password: String) async throws {
+    func updatePassword(_ password: String, for reset: PasswordReset) async throws -> PasswordReset {
         try await Task.sleep(for: .milliseconds(300))
         guard password.count >= 8 else { throw AppError.shortPassword }
-        guard let recovering else { throw AppError.unknown("No reset in progress") }
-        session = recovering
-        self.recovering = nil
+        return reset
+    }
+
+    /// The demo admin, once the new password is saved.
+    func signIn(with reset: PasswordReset) async throws {
+        session = .demo
+        account = nil
     }
 }
 

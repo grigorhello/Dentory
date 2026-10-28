@@ -190,4 +190,20 @@ struct SessionStoreTests {
         await check.value
         #expect(store.state == .signedOut)
     }
+
+    /// F4: a link that would sign another account in here knows to run Sign out's clean-up first.
+    @Test func anotherAccountIsTheOneThatDiffersFromTheDevicesAccount() {
+        let auth = FakeAuthService()
+        #expect(!SessionStore(auth: auth, state: .signedOut).holdsAnotherAccount(than: "sarah@smiledental.ca"))
+        #expect(!SessionStore(auth: auth, state: .restoring).holdsAnotherAccount(than: "sarah@smiledental.ca"))
+        let signedIn = SessionStore(auth: auth, state: .signedIn(.demo))
+        #expect(signedIn.accountEmail == "sarah@smiledental.ca")
+        #expect(!signedIn.holdsAnotherAccount(than: "Sarah@SmileDental.ca"), "Addresses compare without case")
+        #expect(signedIn.holdsAnotherAccount(than: "michael@smiledental.ca"))
+        let newClinic = SessionStore(
+            auth: auth, state: .needsClinic(Account(userID: UUID(), email: "owner@newclinic.ca", fullName: "Owner"))
+        )
+        #expect(newClinic.holdsAnotherAccount(than: "sarah@smiledental.ca"))
+        #expect(!newClinic.holdsAnotherAccount(than: "owner@newclinic.ca"))
+    }
 }

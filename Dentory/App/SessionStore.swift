@@ -64,6 +64,23 @@ final class SessionStore {
         return nil
     }
 
+    /// The address of the account on this device, signed in or still without a clinic; nil when signed out.
+    var accountEmail: String? {
+        switch state {
+        case .signedIn(let session): session.email
+        case .needsClinic(let account): account.email
+        case .signedOut, .restoring: nil
+        }
+    }
+
+    /// Whether signing `email` in here would change the account on this device: a link that does so (an invitation, a
+    /// password reset) runs Sign out's clean-up first, so the previous member's cached answers, queued writes, count
+    /// in progress and push token never carry over to the next one (security review F4).
+    func holdsAnotherAccount(than email: String) -> Bool {
+        guard let accountEmail else { return false }
+        return accountEmail.caseInsensitiveCompare(email) != .orderedSame
+    }
+
     func restore() async {
         lastChecked = now()
         do {

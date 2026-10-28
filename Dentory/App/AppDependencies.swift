@@ -283,11 +283,7 @@ struct AppDependencies: Sendable {
     func makeAccountViewModel(session: Session, sessionStore: SessionStore) -> AccountViewModel {
         AccountViewModel(
             session: session, repository: accountRepository, cache: cache,
-            signingOut: DeviceSignOut(
-                sessionStore: sessionStore, cache: cache, writes: writes.queue, push: push,
-                pendingLogo: pendingClinicLogo, countDraft: countDraftStore
-            ),
-            analytics: analytics
+            signingOut: makeDeviceSignOut(sessionStore: sessionStore), analytics: analytics
         )
     }
 
@@ -334,26 +330,6 @@ struct AppDependencies: Sendable {
         OnboardingViewModel(
             auth: auth, repository: onboardingRepository, sessionStore: sessionStore, progress: onboardingProgress,
             analytics: analytics, locale: locale, startingAt: step, account: account, clinicID: clinicID
-        )
-    }
-
-    /// Reset password with the email typed on Sign in (MS-113).
-    @MainActor
-    func makeResetPasswordViewModel(email: String) -> ResetPasswordViewModel {
-        ResetPasswordViewModel(email: email, auth: auth)
-    }
-
-    /// Set a new password for the token hash of a reset link (MS-113).
-    @MainActor
-    func makeSetPasswordViewModel(tokenHash: String, sessionStore: SessionStore) -> SetPasswordViewModel {
-        SetPasswordViewModel(tokenHash: tokenHash, auth: auth, sessionStore: sessionStore)
-    }
-
-    /// The Join screen's view model for the token of an invitation link (MS-112).
-    @MainActor
-    func makeAcceptInvitationViewModel(token: String, sessionStore: SessionStore) -> AcceptInvitationViewModel {
-        AcceptInvitationViewModel(
-            token: token, repository: invitationRepository, sessionStore: sessionStore, analytics: analytics
         )
     }
 }

@@ -27,13 +27,18 @@ final class AcceptInvitationViewModel {
     private let token: String
     private let repository: InvitationRepository
     private let sessionStore: SessionStore
+    private let signingOut: SigningOut
     private let analytics: Analytics
     private let submitGuard = SubmitGuard()
 
-    init(token: String, repository: InvitationRepository, sessionStore: SessionStore, analytics: Analytics) {
+    init(
+        token: String, repository: InvitationRepository, sessionStore: SessionStore, signingOut: SigningOut,
+        analytics: Analytics
+    ) {
         self.token = token
         self.repository = repository
         self.sessionStore = sessionStore
+        self.signingOut = signingOut
         self.analytics = analytics
     }
 
@@ -86,6 +91,10 @@ final class AcceptInvitationViewModel {
             } catch {
                 handle(AppError(error))
                 return
+            }
+            // Another account signed in here gets Sign out's clean-up first, so nothing of it carries over (F4).
+            if sessionStore.holdsAnotherAccount(than: invitation.email) {
+                await signingOut.signOut()
             }
             if await sessionStore.signIn(email: invitation.email, password: password) {
                 analytics.track(.invitationAccepted)

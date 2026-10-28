@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// Set a new password (MS-113, gap G4, not drawn), opened by the reset email's link: the new password with
-/// show/hide and Save password, in the Sign in style. An expired or used link offers a new one; Sign in
-/// leaves the link.
+/// Set a new password (MS-113, gap G4, not drawn), opened by the reset email's link: the link's address, the new
+/// password with show/hide and Save password, in the Sign in style. An expired or used link offers a new one. In every
+/// state a text button leaves the link: Sign in, or Cancel when an account is still signed in here (F4).
 struct SetPasswordView: View {
     @Environment(\.appDependencies) private var dependencies
     @State private var viewModel: SetPasswordViewModel
     /// The password is saved and the session reloaded: the root drops the link and shows Home.
     let onFinished: () -> Void
-    /// The way out of a link that does not work.
+    /// The way out of the link, to Sign in or to the account still signed in here.
     let onSignIn: () -> Void
 
     init(viewModel: SetPasswordViewModel, onFinished: @escaping () -> Void, onSignIn: @escaping () -> Void) {
@@ -51,8 +51,9 @@ struct SetPasswordView: View {
                 .padding(.top, Spacing.xxxxl)
                 .accessibilityIdentifier("setPassword.loading")
         case .ready:
-            SetPasswordHeader(title: "Set a new password", caption: "Choose a password for your Dentory account.")
+            SetPasswordHeader(title: "Set a new password", caption: viewModel.caption)
             SetPasswordFields(viewModel: viewModel)
+            leaveButton
         case .expired:
             SetPasswordHeader(title: "This link has expired", caption: "Send a new one.")
                 .accessibilityIdentifier("setPassword.expired")
@@ -61,21 +62,21 @@ struct SetPasswordView: View {
             }
             .buttonStyle(.ms(.primary, size: .medium, fullWidth: true))
             .accessibilityIdentifier("setPassword.sendNew")
-            signInButton
+            leaveButton
         case .failed(let error):
             SetPasswordHeader(title: "Couldn't open the link", caption: error.userMessage)
             MSButton("Try again", variant: .secondary, isFullWidth: true) {
                 Task { await viewModel.verify() }
             }
             .accessibilityIdentifier("setPassword.retry")
-            signInButton
+            leaveButton
         }
     }
 
-    private var signInButton: some View {
-        Button("Sign in") { onSignIn() }
+    private var leaveButton: some View {
+        Button(viewModel.leavesToSignIn ? LocalizedStringKey("Sign in") : "Cancel") { onSignIn() }
             .buttonStyle(.ms(.text, size: .medium, fullWidth: true))
-            .accessibilityIdentifier("setPassword.signIn")
+            .accessibilityIdentifier(viewModel.leavesToSignIn ? "setPassword.signIn" : "setPassword.cancel")
     }
 }
 

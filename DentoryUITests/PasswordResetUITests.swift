@@ -1,7 +1,8 @@
 import XCTest
 
-/// MS-113: Forgot password on Sign in, the reset link's Set a new password, and an expired link. Runs on the
-/// preview doubles: `demo-reset` is the link that works, any other token hash reads as expired.
+/// MS-113: Forgot password on Sign in, the reset link's Set a new password, and an expired link; security review F4:
+/// the link names its account, leaves the signed-in member signed in until the password is saved, and has a way out.
+/// Runs on the preview doubles: `demo-reset` is Sarah's link that works, any other token hash reads as expired.
 final class PasswordResetUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
@@ -41,6 +42,10 @@ final class PasswordResetUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Set a new password"].waitForExistence(timeout: 5), "Set a new password missing")
         let save = app.buttons["setPassword.save"]
         XCTAssertTrue(save.waitForExistence(timeout: 5), "No Save password button")
+        XCTAssertTrue(
+            app.staticTexts["Choose a password for sarah@smiledental.ca"].exists, "The link's address is not shown"
+        )
+        XCTAssertTrue(app.buttons["setPassword.signIn"].exists, "The ready state has no way back to Sign in")
         XCTAssertFalse(save.isEnabled, "Save password is enabled before a password is typed")
 
         app.secureTextFields["setPassword.password"].firstMatch.tap()
@@ -106,5 +111,57 @@ final class PasswordResetUITests: XCTestCase {
         app.open(try XCTUnwrap(URL(string: "dentory://reset-password?token_hash=demo-reset")))
         XCTAssertTrue(app.staticTexts["Set a new password"].waitForExistence(timeout: 5), "The new link is hidden")
         XCTAssertFalse(app.staticTexts["resetPassword.title"].exists, "Reset password is still on top")
+    }
+
+    @MainActor
+    func testTheReadyStateLeadsBackToSignIn() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-signedOut", "-resetPassword", "demo-reset"]
+        app.launch()
+
+        let signIn = app.buttons["setPassword.signIn"]
+        XCTAssertTrue(signIn.waitForExistence(timeout: 5), "The ready state has no way back to Sign in")
+        XCTAssertEqual(signIn.label, "Sign in")
+        signIn.tap()
+        XCTAssertTrue(app.buttons["signin.submit"].waitForExistence(timeout: 5), "Sign in did not appear")
+    }
+
+    /// F4: a link for another account opened on Michael's device leaves him signed in; Cancel returns to his Home.
+    @MainActor
+    func testALinkForAnotherAccountLeavesTheSignedInMemberSignedIn() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-staff", "-resetPassword", "demo-reset"]
+        app.launch()
+
+        XCTAssertTrue(
+            app.staticTexts["Choose a password for sarah@smiledental.ca"].waitForExistence(timeout: 5),
+            "The link's address is not shown"
+        )
+        XCTAssertFalse(app.buttons["setPassword.signIn"].exists, "Sign in shows while Michael is signed in")
+        let cancel = app.buttons["setPassword.cancel"]
+        XCTAssertTrue(cancel.exists, "The ready state has no way back")
+        cancel.tap()
+
+        XCTAssertTrue(app.staticTexts["Smile Dental"].waitForExistence(timeout: 8), "Home did not appear")
+        XCTAssertFalse(
+            app.descendants(matching: .any)["home.receive"].exists, "Home is not Michael's: Staff have no Receive"
+        )
+    }
+
+    /// F4: saving the password over Michael's session signs Sarah in only then, after Sign out's clean-up.
+    @MainActor
+    func testSavingALinkForAnotherAccountSignsThatAccountIn() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-staff", "-resetPassword", "demo-reset"]
+        app.launch()
+
+        let field = app.secureTextFields["setPassword.password"].firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Set a new password missing")
+        field.tap()
+        app.typeText("newpassword")
+        app.buttons["setPassword.save"].tap()
+
+        let receive = app.descendants(matching: .any)["home.receive"]
+        XCTAssertTrue(receive.waitForExistence(timeout: 8), "Home is not Sarah's: an admin sees Receive delivery")
     }
 }

@@ -20,10 +20,12 @@ struct RootView: View {
     /// with step 1 already pushed.
     @State private var signInPath: NavigationPath
     /// The token of the invitation link that opened the app: the Join screen (f5) shows whatever the
-    /// session is, and the new session replaces the old one when the invitee joins (MS-112).
+    /// session is, and the new session replaces the old one when the invitee joins (MS-112), after Sign out's
+    /// clean-up when another account was signed in (F4).
     @State private var invitationToken: String?
     /// The token hash of the password reset link that opened the app: Set a new password shows whatever
-    /// the session is, and the account of the link is signed in once the password is saved (MS-113).
+    /// the session is, which the link leaves as it is; the account of the link is signed in only once its
+    /// password is saved, after Sign out's clean-up when another account was signed in (MS-113, F4).
     @State private var resetTokenHash: String?
 
     init(
