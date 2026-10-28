@@ -13,7 +13,7 @@ One high finding: an admin could forge an invitation token and use it to set the
 | F1 | High | An admin could write membership rows directly and forge an invitation, then set the password of a colleague's or a dormant account through `accept_invitation` | Fixed |
 | F2 | Medium | An admin could write the clinic's settings and billing emails directly, past `clinic_settings_save` and `billing_emails_save`, and `clinic_create` kept any time zone; a zone Postgres does not know stops the nightly refresh of every clinic | Fixed |
 | F3 | Low | Without `RESEND_API_KEY`, a hosted project's function log would hold invitation links, export download links and addresses | Fixed |
-| F4 | Low | A password reset link replaces the session on the device as soon as it opens, and Set a new password names no account | Fixed (MS-113 fix, PR #PRNUM) |
+| F4 | Low | A password reset link replaces the session on the device as soon as it opens, and Set a new password names no account | Fixed (MS-113 fix, PR #218) |
 | F5 | Low | Staff could read their clinic's billing columns (Stripe ids, promotion, billing emails) | Fixed |
 | F6 | Low | Invitations had no limit: any admin, so anyone who signs up, could send unlimited emails from dentory.ca | Fixed (30 an hour per clinic, 3 per clinic to one address) |
 | F7 | Low | Sentry recorded every request's address and each 5xx request, whatever the app's own breadcrumb rule said | Fixed |
@@ -120,7 +120,7 @@ One high finding: an admin could forge an invitation token and use it to set the
   - Sign in only once the password is saved, as the comment at `RootView.swift:25-27` already intends.
   - Give the ready state a way back to Sign in.
   - Run the Sign out clean-up (`DeviceSignOut`) whenever the signed-in user changes.
-- **Fix** (MS-113 fix, PR #PRNUM; all four points).
+- **Fix** (MS-113 fix, PR #218; all four points).
   - The link is verified on a client of its own (`SupabaseClientProvider.makeLinkClient`) whose session lives in memory (`InMemoryAuthStorage`) and is never refreshed, so the session in the Keychain stays the signed-in member's. `verifyPasswordReset` returns the link's account and recovery session (`PasswordReset`), and the new password is saved on that session too (`updatePassword(_:for:)`).
   - The ready state names the account: "Choose a password for sarah@smiledental.ca".
   - The link's account signs in on the device (`signIn(with:)`, `setSession` on the app's client) only once the server took the password; a failed sign-in is retried without sending the password again.
