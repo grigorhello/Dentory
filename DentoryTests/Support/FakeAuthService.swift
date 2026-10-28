@@ -101,7 +101,7 @@ final class FakeAuthService: AuthServicing, @unchecked Sendable {
 
 extension PasswordReset {
     /// A good link of the demo admin, Sarah.
-    static let demoLink = PasswordReset(
+    nonisolated static let demoLink = PasswordReset(
         userID: Session.demo.userID, email: "sarah@smiledental.ca", accessToken: "access", refreshToken: "refresh"
     )
 }
