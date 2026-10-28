@@ -50,6 +50,35 @@ struct DeviceSignOutTests {
         #expect(dependencies.countDraftStore.load() == nil)
     }
 
+    /// F4: a reset link saved over another member's session clears the device before the link's account signs in, as
+    /// Sign out does; until then the signed-in member keeps the device as it was.
+    @Test func aResetLinkForAnotherAccountClearsTheDeviceOnlyOnceThePasswordIsSaved() async {
+        let dependencies = AppDependencies.preview(role: .staff)
+        let michael = Session.demo(role: .staff)
+        let store = SessionStore(auth: dependencies.auth, state: .signedIn(michael))
+        let key = CacheKey(method: "HomeRepository.summary", clinicID: michael.clinicID)
+        dependencies.cache.store(HomeSummary.demo, for: key)
+        _ = dependencies.writes.queue.enqueue(function: "stock_adjust", params: [:], key: UUID(), at: Session.demoNow)
+        dependencies.countDraftStore.save(StockCount(clinicID: michael.clinicID, userID: michael.userID))
+        let viewModel = dependencies.makeSetPasswordViewModel(
+            tokenHash: PreviewAuthService.demoResetToken, sessionStore: store
+        )
+
+        await viewModel.verifyIfNeeded()
+        #expect(viewModel.caption == "Choose a password for sarah@smiledental.ca")
+        #expect(store.state == .signedIn(michael), "Opening the link signs no one in or out")
+        #expect(dependencies.cache.load(HomeSummary.self, for: key) != nil)
+        #expect(dependencies.writes.queue.count == 1)
+
+        viewModel.password = "newpassword"
+        await viewModel.save()
+        #expect(viewModel.isFinished)
+        #expect(store.session?.email == "sarah@smiledental.ca", "The link's account is signed in")
+        #expect(dependencies.cache.load(HomeSummary.self, for: key) == nil, "Michael's cached answers are gone")
+        #expect(dependencies.writes.queue.isEmpty, "Michael's queued writes are not sent as Sarah")
+        #expect(dependencies.countDraftStore.load() == nil)
+    }
+
     @Test func theRouterStartsTheNextPersonOnHome() {
         let router = AppRouter(selectedTab: .inventory, inventoryFilter: .low)
         router.push(HomeRoute.account, on: .home)

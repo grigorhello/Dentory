@@ -6,14 +6,14 @@ MS-146 (#208) merged during the review. Its `20261021120000_invoice_file_delete.
 
 ## Result
 
-One high finding: an admin could forge an invitation token and use it to set the password of another person's account. It is fixed, with tests. One medium finding, the direct writes to a clinic's settings that #122's note describes, is fixed too. Of the eleven low findings, six are fixed, four are accepted with their reasons, and one is a recommended app follow-up. The hosted projects' settings that no code can set are listed under "Open items for Grigor".
+One high finding: an admin could forge an invitation token and use it to set the password of another person's account. It is fixed, with tests. One medium finding, the direct writes to a clinic's settings that #122's note describes, is fixed too. Of the eleven low findings, six are fixed, four are accepted with their reasons, and one is a recommended app follow-up, since fixed in its own pull request (F4). The hosted projects' settings that no code can set are listed under "Open items for Grigor".
 
 | ID | Severity | Finding | Status |
 |---|---|---|---|
 | F1 | High | An admin could write membership rows directly and forge an invitation, then set the password of a colleague's or a dormant account through `accept_invitation` | Fixed |
 | F2 | Medium | An admin could write the clinic's settings and billing emails directly, past `clinic_settings_save` and `billing_emails_save`, and `clinic_create` kept any time zone; a zone Postgres does not know stops the nightly refresh of every clinic | Fixed |
 | F3 | Low | Without `RESEND_API_KEY`, a hosted project's function log would hold invitation links, export download links and addresses | Fixed |
-| F4 | Low | A password reset link replaces the session on the device as soon as it opens, and Set a new password names no account | Open, follow-up recommended |
+| F4 | Low | A password reset link replaces the session on the device as soon as it opens, and Set a new password names no account | Fixed (MS-113 fix, PR #PRNUM) |
 | F5 | Low | Staff could read their clinic's billing columns (Stripe ids, promotion, billing emails) | Fixed |
 | F6 | Low | Invitations had no limit: any admin, so anyone who signs up, could send unlimited emails from dentory.ca | Fixed (30 an hour per clinic, 3 per clinic to one address) |
 | F7 | Low | Sentry recorded every request's address and each 5xx request, whatever the app's own breadcrumb rule said | Fixed |
@@ -103,7 +103,7 @@ One high finding: an admin could forge an invitation token and use it to set the
   - Elsewhere the log keeps one line saying how many emails went unsent, with no address, subject or link.
 - **Tests.** `_shared/email_test.ts` (`make functions-check`).
 
-### F4 · A reset link switches the device's account on open (Low, open)
+### F4 · A reset link switches the device's account on open (Low, fixed)
 
 - **Where.**
   - `Dentory/App/RootView.swift:76-91` opens Set a new password for any reset link, whoever is signed in.
@@ -120,6 +120,18 @@ One high finding: an admin could forge an invitation token and use it to set the
   - Sign in only once the password is saved, as the comment at `RootView.swift:25-27` already intends.
   - Give the ready state a way back to Sign in.
   - Run the Sign out clean-up (`DeviceSignOut`) whenever the signed-in user changes.
+- **Fix** (MS-113 fix, PR #PRNUM; all four points).
+  - The link is verified on a client of its own (`SupabaseClientProvider.makeLinkClient`) whose session lives in memory (`InMemoryAuthStorage`) and is never refreshed, so the session in the Keychain stays the signed-in member's. `verifyPasswordReset` returns the link's account and recovery session (`PasswordReset`), and the new password is saved on that session too (`updatePassword(_:for:)`).
+  - The ready state names the account: "Choose a password for sarah@smiledental.ca".
+  - The link's account signs in on the device (`signIn(with:)`, `setSession` on the app's client) only once the server took the password; a failed sign-in is retried without sending the password again.
+  - Every state of the screen has a text button out: "Sign in" on a signed-out device, "Cancel" back to the account still signed in.
+  - Before a link signs another account in over the one on the device, a reset link or an invitation (MS-112), Sign out's clean-up runs (`DeviceSignOut`, through `AppDependencies.makeDeviceSignOut`): cached answers, queued writes, a pending logo and a count in progress go, and the push token is removed while the previous member's session can still do it. The same account, or a signed-out device, keeps everything.
+- **Tests.**
+  - `SetPasswordViewModelTests`: the address, the device's session untouched by opening the link and by a refused password, the way out, the clean-up only for another account and before the sign-in, the retry that only signs in, a recovery session that ran out before or after the save.
+  - `AcceptInvitationViewModelTests`: joining over another account runs the clean-up first; a signed-out device or the same account does not. `SessionStoreTests`: which account counts as another.
+  - `DeviceSignOutTests`: on the real composition, a link for Sarah opened on Michael's device keeps his cache and queue until the save, then clears them and signs Sarah in.
+  - `PasswordResetUITests`: the address and the way back to Sign in; on Michael's device, Cancel returns to his Home, and Save signs Sarah in.
+  - Checked once on the local stack with the Debug build: Michael signed in, Sarah's recovery link opened, Cancel and a relaunch kept Michael (the auth audit log shows no logout); a second link saved a password and Sarah was signed in, also after a relaunch.
 
 ### F5 · Staff read the billing columns (Low, fixed)
 

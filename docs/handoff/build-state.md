@@ -86,6 +86,7 @@ Migrations on the default branch: `20261016021500_schema.sql`, `20261016130000_a
 ## In progress
 
 - **MS-136 · Pilot readiness pass (#107)**, build step 41: the end-to-end flows (#205) and both halves of the pilot audit (#207, #210) are merged; `docs/handoff/pilot-audit.md` lists every difference with its status. Left on #107, and why it stays open: the TestFlight internal build (needs Grigor, item 2) and a week of internal use with the demo clinic, then fixing any P0 or P1 found. The launch passes run during that week (decisions log, 2026-10-26 21:00).
+- **MS-113 fix · A password reset link no longer switches the signed-in account** (`Refs #84`, security review F4), PR #PRNUM on `ms-113-fix-reset-link-session`, built on the Mac: the link is verified on a client that keeps its session in memory, the ready state names the account and has a way out (Sign in, or Cancel back to the account signed in), the link's account signs in only once the password is saved, and Sign out's clean-up runs before a reset link or an invitation signs another account in. Waiting for review; "Next" entry 1 stays until the merge.
 - **MS-157 · Rename the services and accounts outside the repository (#145)**, build step 17, is Grigor's checklist (Claude project, Supabase display name, Apple, DNS, Claude Design); nothing in the repository is left for it.
 
 ## Next, in build order

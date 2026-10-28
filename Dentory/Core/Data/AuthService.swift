@@ -16,12 +16,15 @@ protocol AuthServicing: Sendable {
     /// never tells who has an account. Throws `AppError.validation(field: "email", …)` for a malformed
     /// address or too many requests.
     func sendPasswordReset(email: String) async throws
-    /// Opens the reset link: signs the link's account in for the password change. Throws
-    /// `AppError.notFound` when the link has expired or was already used.
-    func verifyPasswordReset(tokenHash: String) async throws
-    /// Sets the signed-in account's password. Throws `AppError.validation(field: "password", …)` when the
-    /// server refuses it.
-    func updatePassword(_ password: String) async throws
+    /// Opens the reset link on a client that keeps nothing, so the account signed in on this device stays signed in
+    /// (security review F4). Throws `AppError.notFound` when the link has expired or was already used.
+    func verifyPasswordReset(tokenHash: String) async throws -> PasswordReset
+    /// Sets the password of the link's account, still without touching the device's session, and returns the
+    /// recovery session as it stands after. Throws `AppError.validation(field: "password", …)` when the server
+    /// refuses the password, `AppError.notFound` when the recovery session has expired.
+    func updatePassword(_ password: String, for reset: PasswordReset) async throws -> PasswordReset
+    /// Signs the link's account in on this device, once its new password is saved.
+    func signIn(with reset: PasswordReset) async throws
 }
 
 extension AppError {
@@ -53,6 +56,9 @@ struct SupabaseAuthService: AuthServicing {
     /// `https://app.dentory.ca/reset-password` for the hosted project (MS-100 D12). The email template adds
     /// `?token_hash=…&type=recovery` (`supabase/templates/recovery.html`). Nil leaves it to the project's site URL.
     let passwordResetRedirect: URL?
+    /// A client for one reset link that keeps its session in memory only, so opening the link never replaces the
+    /// session stored on the device (security review F4).
+    var makeLinkClient: @Sendable () -> SupabaseClient = { SupabaseClientProvider.makeLinkClient() }
 
     func restore() async throws -> RestoredSession {
         guard let stored = client.auth.currentSession else { return .none }
@@ -146,21 +152,44 @@ struct SupabaseAuthService: AuthServicing {
         }
     }
 
-    func verifyPasswordReset(tokenHash: String) async throws {
+    func verifyPasswordReset(tokenHash: String) async throws -> PasswordReset {
+        let response: AuthResponse
         do {
-            try await client.auth.verifyOTP(tokenHash: tokenHash, type: .recovery)
+            response = try await makeLinkClient().auth.verifyOTP(tokenHash: tokenHash, type: .recovery)
         } catch let error as AuthError {
             throw Self.resetLinkError(for: error)
         } catch {
             throw AppError(error)
         }
+        guard let session = response.session else { throw AppError.notFound }
+        return PasswordReset(session: session)
     }
 
-    func updatePassword(_ password: String) async throws {
+    func updatePassword(_ password: String, for reset: PasswordReset) async throws -> PasswordReset {
+        let link = makeLinkClient()
         do {
-            try await client.auth.update(user: UserAttributes(password: password))
+            try await link.auth.setSession(accessToken: reset.accessToken, refreshToken: reset.refreshToken)
+        } catch let error as AuthError {
+            throw Self.resetLinkError(for: error)
+        } catch {
+            throw AppError(error)
+        }
+        do {
+            try await link.auth.update(user: UserAttributes(password: password))
         } catch let error as AuthError {
             throw Self.newPasswordError(for: error)
+        } catch {
+            throw AppError(error)
+        }
+        // A recovery session that had expired was refreshed by `setSession`, which spent the old refresh token.
+        return link.auth.currentSession.map(PasswordReset.init(session:)) ?? reset
+    }
+
+    func signIn(with reset: PasswordReset) async throws {
+        do {
+            try await client.auth.setSession(accessToken: reset.accessToken, refreshToken: reset.refreshToken)
+        } catch let error as AuthError {
+            throw Self.resetLinkError(for: error)
         } catch {
             throw AppError(error)
         }
@@ -195,11 +224,15 @@ struct SupabaseAuthService: AuthServicing {
         return .shortPassword
     }
 
-    /// An expired link and a used one both answer `otp_expired`; the screen offers a new link for either.
+    /// An expired link and a used one both answer `otp_expired`; the screen offers a new link for either, and for a
+    /// recovery session that ran out before the password was saved.
     static func resetLinkError(for error: AuthError) -> AppError {
+        if case .sessionMissing = error { return .notFound }
         guard case .api(_, let code, _, _) = error else { return AppError(error) }
         switch code {
-        case .otpExpired, .flowStateExpired, .flowStateNotFound: return .notFound
+        case .otpExpired, .flowStateExpired, .flowStateNotFound, .sessionNotFound, .sessionExpired,
+             .refreshTokenNotFound, .refreshTokenAlreadyUsed:
+            return .notFound
         default: return .unknown(error.localizedDescription)
         }
     }
@@ -235,6 +268,18 @@ struct SupabaseAuthService: AuthServicing {
         )
     }
 
+}
+
+extension PasswordReset {
+    /// The recovery session a reset link opened.
+    nonisolated init(session: Auth.Session) {
+        self.init(
+            userID: session.user.id,
+            email: session.user.email ?? "",
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken
+        )
+    }
 }
 
 /// The membership row with its clinic, as the select above shapes it.
