@@ -117,8 +117,8 @@ struct PushedHeader: View {
         }
     }
 
-    /// Back, the title and the right action on one row, the subtitle under the title (f13, f20); or stacked, Back and
-    /// the action on the row and the title and subtitle under it at the page's edge.
+    /// Back, the title with the subtitle under it centred on Back (f13, f23, f38), and the right action, on one row; or
+    /// stacked, Back and the action on the row and the title and subtitle under it at the page's edge.
     private func header(stacked: Bool) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
@@ -151,17 +151,23 @@ struct PushedHeader: View {
             if stacked {
                 titleText
             }
+        }
+    }
+
+    /// The title, and the subtitle under it with the 4 pt f23 and f38 leave between them.
+    private var titleText: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            titleLine
             if let subtitle {
                 Text(subtitle)
                     .textStyle(.body14)
                     .foregroundStyle(Color.ms.textSecondary)
-                    .padding(.leading, stacked ? 0 : ControlHeight.md - Spacing.sm + Spacing.xs)
                     .accessibilityIdentifier(subtitleIdentifier ?? "\(identifier).subtitle")
             }
         }
     }
 
-    @ViewBuilder private var titleText: some View {
+    @ViewBuilder private var titleLine: some View {
         if style == .context {
             // One line as f20 draws it; a second rather than a cut-off unit on a narrow phone or at a large text
             // size, and all it needs at the accessibility sizes.
@@ -236,12 +242,13 @@ struct PushedScreenModifier<Pinned: View>: ViewModifier {
 
 /// The page both screen kinds share: the header, the offline banner and the screen's pinned controls at the top,
 /// the content in a scroll view under them, both in the 720 pt column on the cream page. The header sits `headerGap`
-/// under the status bar, read from the real safe area (`PageLayout.headerInset`), so it lands where the frames draw
-/// it and never under the status bar or the Dynamic Island. The banner and the pinned controls follow 12 pt apart, as
-/// the frames draw the search field under Inventory's title and Activity's segments under its header (a chip row's
-/// 44 pt targets add their 4 pt). At rest the content starts 16 pt under the pinned block, as before anything was
-/// pinned; scrolled, it is cut where the frames cut it.
+/// under the frames' status area, read from the real safe area (`PageLayout.headerInset`), so it lands where the
+/// frames draw it, an iPad's where f36 to f38 do, and never under the status bar or the Dynamic Island. The banner and
+/// the pinned controls follow 12 pt apart, as the frames draw the search field under Inventory's title and Activity's
+/// segments under its header (a chip row's 44 pt targets add their 4 pt). At rest the content starts 16 pt under the
+/// pinned block, as before anything was pinned; scrolled, it is cut where the frames cut it.
 private struct ScreenScaffold<Header: View, Pinned: View, Content: View>: View {
+    @Environment(\.horizontalSizeClass) private var sizeClass
     let headerGap: CGFloat
     let pinned: Pinned?
     @ViewBuilder let header: () -> Header
@@ -257,7 +264,9 @@ private struct ScreenScaffold<Header: View, Pinned: View, Content: View>: View {
                         pinned
                     }
                 }
-                .padding(.top, PageLayout.headerInset(gap: headerGap, safeAreaTop: proxy.safeAreaInsets.top))
+                .padding(.top, PageLayout.headerInset(
+                    gap: headerGap, safeAreaTop: proxy.safeAreaInsets.top, isRegularWidth: sizeClass == .regular
+                ))
                 .padding(.bottom, cut)
                 .contentColumn()
                 // The header, the offline banner and the pinned controls take the height they need and the content

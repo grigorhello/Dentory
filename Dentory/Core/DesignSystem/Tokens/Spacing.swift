@@ -50,11 +50,14 @@ nonisolated enum PageLayout {
     /// How far under the status area the frames draw a pushed header's row (60 pt from the top: f13, f20, f34).
     static let pushedHeaderGap: CGFloat = Spacing.xs + Spacing.xxs
 
-    /// How far under the safe area's top a header starts so that it sits `gap` under the status bar, as the frames
-    /// draw it under their status area. An iPhone with the Dynamic Island ends its safe area a few points under its
-    /// 54 pt status bar (62 pt on an iPhone 16 Pro, 59 on an iPhone 16), so part of the gap is already there; a header
-    /// never starts above the safe area. Elsewhere the safe area is the status bar (an iPhone SE, an iPad).
-    static func headerInset(gap: CGFloat, safeAreaTop: CGFloat) -> CGFloat {
-        max(0, min(gap, frameStatusArea + gap - safeAreaTop))
+    /// How far under the safe area's top a header starts so that it sits `gap` under the frames' 54 pt status area. An
+    /// iPhone with the Dynamic Island ends its safe area a few points under its 54 pt status bar (62 pt on an iPhone 16
+    /// Pro, 59 on an iPhone 16), so part of the gap is already there; a header never starts above the safe area. A
+    /// phone with a shorter status bar (an iPhone SE's 20 pt), which no frame draws, keeps its header `gap` under it.
+    /// In a regular width (an iPad) the header sits as far from the top as f36 to f38 draw it, the status area being
+    /// taller than the iPad's own 24 pt status bar (MS-148).
+    static func headerInset(gap: CGFloat, safeAreaTop: CGFloat, isRegularWidth: Bool = false) -> CGFloat {
+        let underStatusArea = frameStatusArea + gap - safeAreaTop
+        return max(0, isRegularWidth ? underStatusArea : min(gap, underStatusArea))
     }
 }

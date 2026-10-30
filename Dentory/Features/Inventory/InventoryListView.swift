@@ -26,14 +26,15 @@ struct InventoryListView: View {
             } pinned: {
                 InventorySearchAndFilters(viewModel: viewModel)
             }
-            // Floats over the rows, 20 pt above the tab bar (f16); the list leaves room under its last row.
-            .overlay(alignment: .bottomTrailing) {
+            // Floats over the rows, 20 pt above the tab bar and at the end of the content column (f16), beside the rows
+            // on an iPad too; the list leaves room under its last row.
+            .overlay(alignment: .bottom) {
                 if !viewModel.isCounting {
                     FloatingAddButton(label: "New product", action: newProduct)
-                        .padding(.horizontal, Spacing.page)
-                        .padding(.bottom, Spacing.page)
                         .accessibilityIdentifier("inv.newProduct")
                         .adminOnly()
+                        .padding(.bottom, Spacing.page)
+                        .contentColumn(alignment: .trailing)
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
