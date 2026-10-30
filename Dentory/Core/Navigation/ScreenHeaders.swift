@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Root screen header (f6, f16, f25): eyebrow above a 32 pt display title, optional trailing controls. The scaffold
-/// places it 8 pt under the status bar, as the frames draw it under their status area.
+/// places it where the frames draw it, 8 pt under their 54 pt status area (`PageLayout.headerInset`).
 struct RootHeader<Trailing: View>: View {
     var eyebrow: String?
     let title: String
@@ -76,7 +76,7 @@ nonisolated enum PushedHeaderStyle: Sendable {
 
 /// Pushed screen header (f13): 44 pt back chevron, the 20 pt bold title the frames draw (Inter 700, where PRD §7 says
 /// 24), optional subtitle and a right action: a text button ("Edit", f20) or a small primary one ("Save", f15); or a
-/// "…" menu (Review invoice's Discard invoice). The scaffold places its row 6 pt under the status bar.
+/// "…" menu (Review invoice's Discard invoice). The scaffold places its row 6 pt under the frames' status area.
 struct PushedHeader: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
