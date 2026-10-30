@@ -142,6 +142,9 @@ final class InvoiceReviewUITests: XCTestCase {
     @MainActor
     func testPickProductMatchesAFeeFromWhichProductIsThis() {
         let app = openInvoice()
+        // The fourth line's buttons open just under the screen's bottom edge and the pinned Confirm bar, where a tap
+        // does not reach them: they are scrolled up first.
+        app.swipeUp()
         app.buttons["invoice.line[4].b"].tap()
         let title = app.staticTexts["match.title"]
         XCTAssertTrue(title.waitForExistence(timeout: 5), "Which product is this? did not open")
