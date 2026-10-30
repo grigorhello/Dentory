@@ -56,6 +56,20 @@ struct TeamViewModelTests {
         #expect(viewModel.isAdmin == false)
         viewModel.openMenu(for: michael)
         #expect(viewModel.menuMember == nil, "No menu for Staff (f32)")
+        #expect(viewModel[menuOpenFor: michael.id] == false)
+    }
+
+    @Test func anAdminsRowOpensItsOwnMenu() async {
+        let viewModel = make()
+        await viewModel.load()
+        viewModel.openMenu(for: michael)
+        #expect(viewModel[menuOpenFor: michael.id])
+        #expect(viewModel[menuOpenFor: daniel.id] == false, "Only the row tapped shows its menu")
+        viewModel[menuOpenFor: daniel.id] = true
+        viewModel[menuOpenFor: michael.id] = false
+        #expect(viewModel[menuOpenFor: daniel.id], "A row closing late leaves the menu opened since")
+        viewModel[menuOpenFor: daniel.id] = false
+        #expect(viewModel.menuMember == nil, "Closing the menu forgets the person")
     }
 
     @Test func anAdminChangesARoleBothWays() async {

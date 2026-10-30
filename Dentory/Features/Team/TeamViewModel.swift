@@ -32,13 +32,7 @@ final class TeamViewModel {
     private(set) var state: LoadState = .loading
     private(set) var members: [TeamMember]
     /// The person whose menu is open (Admin).
-    var menuMember: TeamMember?
-
-    /// The menu's dialog: open while a person is chosen; dismissing it forgets them.
-    var isMenuPresented: Bool {
-        get { menuMember != nil }
-        set { if !newValue { menuMember = nil } }
-    }
+    private(set) var menuMember: TeamMember?
     var sheet: Sheet?
     private(set) var isRemoving = false
     /// A toast the screen shows once.
@@ -86,6 +80,21 @@ final class TeamViewModel {
     func openMenu(for member: TeamMember) {
         guard isAdmin else { return }
         menuMember = member
+    }
+
+    /// Whether this person's menu is open, for their row's dialog: each row has its own, which an iPad shows as a
+    /// popover pointing at the row (MS-148). Closing it forgets the person, unless another row's menu has opened since.
+    subscript(menuOpenFor memberID: TeamMember.ID) -> Bool {
+        get { menuMember?.id == memberID }
+        set {
+            if newValue {
+                if let member = members.first(where: { $0.id == memberID }) {
+                    openMenu(for: member)
+                }
+            } else if menuMember?.id == memberID {
+                menuMember = nil
+            }
+        }
     }
 
     /// Change role to Admin, or to Staff: the last admin stays an admin.

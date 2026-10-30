@@ -18,14 +18,6 @@ struct TeamView: View {
         content
             .pushedScreen(title: "Team", identifier: "team", action: inviteAction)
             .reloadOnReturn { await viewModel.load() }
-            .confirmationDialog(
-                viewModel.menuMember.map { viewModel.title(for: $0) } ?? "",
-                isPresented: $viewModel.isMenuPresented,
-                titleVisibility: .visible,
-                presenting: viewModel.menuMember
-            ) { member in
-                menu(for: member)
-            }
             .onChange(of: viewModel.message) { _, message in
                 guard let message else { return }
                 dependencies.toasts.show(message.title, detail: message.detail)
@@ -77,6 +69,13 @@ struct TeamView: View {
             .buttonStyle(.plain)
             .accessibilityHint("Opens the choices for this person")
             .accessibilityIdentifier(viewModel.identifier(for: member))
+            // On the row, so that an iPad's popover points at it; attached to the screen it had nothing to point at
+            // and never showed (MS-148). A phone shows the same action sheet as before.
+            .confirmationDialog(
+                viewModel.title(for: member), isPresented: $viewModel[menuOpenFor: member.id], titleVisibility: .visible
+            ) {
+                menu(for: member)
+            }
         } else {
             row.accessibilityIdentifier(viewModel.identifier(for: member))
         }

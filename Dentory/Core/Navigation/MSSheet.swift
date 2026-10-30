@@ -173,7 +173,8 @@ extension SheetList where Action == EmptyView {
 
 /// Wraps sheet content in the drawn look: 36×4 grab handle, cream background, 20 pt top radius,
 /// height fitted to the content (up to the screen), keyboard avoiding, swipe down or tap the scrim to close.
-/// On iPad the sheet is a centred form sheet at the content width (f36).
+/// On an iPad the sheet is a centred card as wide as the content column, 720 pt, and as tall as its content up to the
+/// screen (PRD §6.10, `ColumnSheetSizing`).
 struct MSSheetContainer<Content: View>: View {
     @ViewBuilder let content: () -> Content
     @State private var contentHeight: CGFloat = 0
@@ -200,6 +201,7 @@ struct MSSheetContainer<Content: View>: View {
         .scrollBounceBehavior(.basedOnSize)
         .scrollDismissesKeyboard(.interactively)
         .presentationDetents(contentHeight > 0 ? [.height(contentHeight)] : [.medium])
+        .columnSheetSizing(contentHeight: contentHeight)
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(Spacing.page)
         .presentationBackground(Color.ms.surfacePage)
