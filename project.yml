@@ -29,6 +29,11 @@ settings:
     WARNINGS_AS_ERRORS: NO
     SWIFT_TREAT_WARNINGS_AS_ERRORS: $(WARNINGS_AS_ERRORS)
     GCC_TREAT_WARNINGS_AS_ERRORS: $(WARNINGS_AS_ERRORS)
+    # Dentory's Apple Developer team (individual enrollment; the id is public) and Xcode's automatic signing, through
+    # the Apple account signed into Xcode on the Mac that ships (`make archive`, MS-152). Simulator builds, CI's
+    # included, sign to run locally and need no account.
+    DEVELOPMENT_TEAM: 886B9D4D6M
+    CODE_SIGN_STYLE: Automatic
 
 packages:
   Supabase:
@@ -53,8 +58,8 @@ targets:
       - package: Supabase
       - package: Sentry
       - package: PostHog
-    # Universal links `https://app.dentory.ca/invite?token=…` (MS-100 D12, MS-112). The domain serves
-    # applinks/.well-known/apple-app-site-association with the Apple team id once the team exists.
+    # Universal links `https://app.dentory.ca/invite?token=…` (MS-100 D12, MS-112), once the domain serves
+    # applinks/.well-known/apple-app-site-association, which names the app by its team id (886B9D4D6M).
     # Push notifications through APNs (MS-144); Xcode turns `development` into `production` when it exports for
     # TestFlight and the App Store.
     entitlements:

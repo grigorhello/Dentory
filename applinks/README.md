@@ -4,7 +4,7 @@ The files the invitation and password reset links need on `https://app.dentory.c
 
 | Path | What it does |
 |---|---|
-| `.well-known/apple-app-site-association` | Tells iOS that `https://app.dentory.ca/invite?token=…` opens the Dentory app. Replace `TEAMID` with the Apple Developer team id once the team exists (Apple Developer, Membership details). Serve it as `application/json` over HTTPS with no redirect; Apple's CDN fetches it when the app is installed. |
+| `.well-known/apple-app-site-association` | Tells iOS that `https://app.dentory.ca/invite?token=…` opens the Dentory app, named by the Apple Developer team id `886B9D4D6M` and the bundle id (`886B9D4D6M.ca.dentory.app`, MS-152). Serve it as `application/json` over HTTPS with no redirect; Apple's CDN fetches it when the app is installed. |
 | `invite/index.html` | What a browser shows when the app is not installed or the link was opened on a computer: an "Open in Dentory" button (`dentory://invite?token=…`) and a note to install the app. |
 | `reset-password/index.html` | The same for the password reset link (MS-113): `https://app.dentory.ca/reset-password?token_hash=…&type=recovery` becomes an "Open in Dentory" button (`dentory://reset-password?token_hash=…`). |
 | `open/index.html` | The weekly digest's "Open Dentory" button (MS-145): `https://app.dentory.ca/open` opens the app where it was; in a browser, an "Open in Dentory" button (`dentory://open`) and a note to install the app. |

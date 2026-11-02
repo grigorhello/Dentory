@@ -24,3 +24,6 @@ Config/Secrets.debug.xcconfig
 
 # macOS
 .DS_Store
+
+# Release archives and exports (make archive, make upload: RELEASE_DIR)
+/build/

@@ -21,8 +21,8 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 # Stops test runs early when no simulator matched SIM_NAME (skipped when SIM_DESTINATION is set by hand).
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
-.PHONY: project build test uitest e2e lint db-start db-stop db-reset db-test seed-demo seed-load perf-report \
-	perf-concurrency functions-serve functions-check invite-links invoice-reading-live
+.PHONY: project build test uitest e2e lint release-check archive upload testflight db-start db-stop db-reset db-test \
+	seed-demo seed-load perf-report perf-concurrency functions-serve functions-check invite-links invoice-reading-live
 
 project:
 	xcodegen generate
@@ -56,6 +56,60 @@ e2e:
 
 lint:
 	swiftlint lint --strict
+
+# Release builds for TestFlight and the App Store (MS-152, docs/runbooks/release.md): from a fresh clone of the default
+# branch on the Mac that ships, signed through the Apple account signed into Xcode. They talk to the production
+# project, whose ref (public: it is part of the API URL) is PRODUCTION_REF; its URL and anon key are in the git-ignored
+# Config/Secrets.xcconfig. The archive and the export land in RELEASE_DIR (git-ignored).
+PRODUCTION_REF :=
+RELEASE_DIR ?= build/release
+ARCHIVE_PATH = $(RELEASE_DIR)/Dentory.xcarchive
+# The build number App Store Connect sees: the default branch's commit count at the archived commit, higher after
+# every merge. BUILD_NUMBER=<n> overrides it (90.1 uploads commit 90 a second time).
+BUILD_NUMBER ?= $(shell /usr/bin/git rev-list --count HEAD 2>/dev/null)
+SECRETS := Config/Secrets.xcconfig
+# The last value $(SECRETS) gives the setting $(1), without its `//` comment and spaces, as Xcode reads it.
+SECRET_VALUE = sed -n 's|^[[:space:]]*$(1)[[:space:]]*=||p' $(SECRETS) | tail -1 | sed -e 's|//.*||' \
+	-e 's|^[[:space:]]*||' -e 's|[[:space:]]*$$||'
+
+# Stops a release before anything is built unless it talks to production: PRODUCTION_REF set, and $(SECRETS) with
+# production's URL, written https:/$()/<ref>.supabase.co as Secrets.example.xcconfig shows, and an anon key. A legacy
+# anon key (a JWT) must name production's ref and the anon role, so neither another project's key nor the service role
+# key ships; a publishable key (sb_publishable_…) passes. The shell reads the key and never prints it.
+release-check:
+	@[ -n "$(PRODUCTION_REF)" ] || { echo "PRODUCTION_REF is empty: set it in the Makefile to production's ref."; exit 1; }
+	@[ -f $(SECRETS) ] || { echo "No $(SECRETS): write production's URL and anon key into it (release runbook)."; exit 1; }
+	@url=$$($(call SECRET_VALUE,SUPABASE_URL)); [ "$$url" = 'https:/$$()/$(PRODUCTION_REF).supabase.co' ] || { \
+		echo "SUPABASE_URL in $(SECRETS) is not production's: write https:/\$$()/$(PRODUCTION_REF).supabase.co."; exit 1; }
+	@key=$$($(call SECRET_VALUE,SUPABASE_ANON_KEY)); \
+	[ -n "$$key" ] || { echo "SUPABASE_ANON_KEY in $(SECRETS) is empty: write production's anon key into it."; exit 1; }; \
+	case "$$key" in sb_publishable_*) exit 0 ;; esac; \
+	claims=$$(printf '%s' "$$key" | cut -s -d . -f 2 | tr '_-' '/+'); \
+	while [ $$(( $${#claims} % 4 )) -ne 0 ]; do claims="$$claims="; done; \
+	claims=$$(printf '%s' "$$claims" | base64 -d 2>/dev/null); \
+	printf '%s' "$$claims" | grep -Eq '"role" *: *"anon"' && \
+		printf '%s' "$$claims" | grep -Eq '"ref" *: *"$(PRODUCTION_REF)"' || { \
+		echo "SUPABASE_ANON_KEY in $(SECRETS) is not production's anon key."; exit 1; }
+
+# A Release archive for App Store Connect: version MARKETING_VERSION (project.yml), build BUILD_NUMBER, signed
+# automatically (-allowProvisioningUpdates lets Xcode create the distribution certificate and profile).
+archive: release-check
+	@case "$(BUILD_NUMBER)" in '' | *[!0-9.]*) \
+		echo "The build number \"$(BUILD_NUMBER)\" is not a number: pass BUILD_NUMBER=<n>."; exit 1 ;; esac
+	@echo "Archiving $$(/usr/bin/git rev-parse --short HEAD) as build $(BUILD_NUMBER), for $(PRODUCTION_REF)."
+	$(XCODEBUILD) -configuration Release -destination 'generic/platform=iOS' -archivePath $(ARCHIVE_PATH) \
+		-allowProvisioningUpdates CURRENT_PROJECT_VERSION=$(BUILD_NUMBER) archive
+
+# Exports the archive with Config/ExportOptions.plist, which uploads it to App Store Connect with its symbols through
+# the Apple account signed into Xcode; TestFlight shows the build once Apple has processed it.
+upload:
+	@[ -d $(ARCHIVE_PATH) ] || { echo "No archive at $(ARCHIVE_PATH): run make archive first."; exit 1; }
+	xcodebuild -exportArchive -archivePath $(ARCHIVE_PATH) -exportOptionsPlist Config/ExportOptions.plist \
+		-exportPath $(RELEASE_DIR)/export -allowProvisioningUpdates
+
+# The whole upload: archive (release-check first), then upload.
+testflight: archive
+	@$(MAKE) --no-print-directory upload
 
 # Local Supabase stack (Docker). Studio: http://127.0.0.1:54323, API: http://127.0.0.1:54321.
 db-start:
