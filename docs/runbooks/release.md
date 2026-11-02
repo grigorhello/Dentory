@@ -87,7 +87,9 @@ ship in the app). It never prints the key.
 1. **Xcode › Settings › Accounts**: the Apple account of Dentory's team (team ID `886B9D4D6M`, individual enrollment)
    signed in. `make archive` and `make upload` sign through it: with `-allowProvisioningUpdates` Xcode creates the
    Apple Distribution certificate and the App Store profile, and turns on the app's capabilities (Associated Domains,
-   Push Notifications) for the App ID `ca.dentory.app`.
+   Push Notifications) for the App ID `ca.dentory.app`. The first time codesign uses the new certificate's key, macOS
+   may ask in a dialog on the Mac, with the login password: Always Allow. Until someone answers it, the archive waits
+   at its signing step.
 2. **The agreements** accepted (`app-store-connect.md`, step 0): an Apple Developer Program License Agreement waiting in
    App Store Connect or at developer.apple.com blocks every upload.
 3. **The APNs key** (developer.apple.com › Keys › Apple Push Notifications service) for the secrets above (build state,
