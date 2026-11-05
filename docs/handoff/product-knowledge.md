@@ -73,7 +73,7 @@ Ordering through the app or supplier integrations, barcode scanning, patient or 
 - Data is isolated per clinic in the database (row-level security on every table), and Staff permissions are enforced by the database, not only by the app.
 - All stock changes are server-side transactions in an append-only ledger; a retried request changes nothing twice; several users can act at once (two assistants each opening a bottle).
 - Undo exists for single reversible actions (adjustment, invoice received, disposal, added to To buy) for a few seconds; there is no silent deletion.
-- Hosting: Supabase (Postgres, Auth, Storage, Edge Functions) in the US east region for the pilot; Stripe for payments; Resend for email; Apple push. The invoice reading model runs server side; the clinic's invoice never leaves the server path.
+- Hosting: Supabase (Postgres, Auth, Storage, Edge Functions): production, which holds the clinics' data, in the US west (Oregon) region (`us-west-2`), and staging, with test data only, in US east (Ohio) (`us-east-2`); Stripe for payments; Resend for email; Apple push. The invoice reading model runs server side; the clinic's invoice never leaves the server path.
 - Performance targets: 500 products scroll smoothly; starting a procedure or applying a count under 1 second; invoice reading under 20 seconds with a progress state.
 
 ## 9. Vocabulary (use these words exactly)

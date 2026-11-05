@@ -6,45 +6,45 @@ xcodebuild (`make testflight`), signed through the Apple account signed into Xco
 the Apple account and production's keys never reach GitHub (decisions log, 2026-11-02). What to type into App Store
 Connect is in `docs/handoff/app-store-connect.md`; this runbook says when.
 
-Release builds talk to the production Supabase project. Debug builds talk to the local stack, or to staging through
-the git-ignored `Config/Secrets.debug.xcconfig`. Production is changed from the Mac only, never from CI, and
-`supabase db push` to it only on Grigor's word.
+Release builds talk to the production Supabase project, `xjtmoctrodgtnsxafeps` in West US (Oregon). Debug builds
+talk to the local stack, or to staging through the git-ignored `Config/Secrets.debug.xcconfig`. Production is changed
+from the Mac only, never from CI, and `supabase db push` to it only on Grigor's word.
 
 ## Once, before the first upload
 
 ### The production project (Grigor, in the Supabase dashboard)
 
-1. **Create it.** New project in Grigor's organization: name `Dentory production` (staging is `Dentory`), region Canada
-   Central (`ca-central-1`), the recommendation for clinics in Canada (decisions log, 2026-11-02), and the generated
-   database password kept in the password manager. The region chosen is the one `site/privacy.html` and
-   `docs/handoff/product-knowledge.md` name. The organization is on Pro, and production gets Small compute and
+1. **The project.** `Dentory` in Grigor's organization, created on 2026-11-04 in West US (Oregon), `us-west-2`: Grigor
+   kept it there rather than recreate it in Canada (Central) (decisions log, 2026-11-05 01:38), and `site/privacy.html`
+   and `docs/handoff/product-knowledge.md` name that region. Staging stays in US east (Ohio) with test data only. The
+   database password stays in the password manager. The organization is on Pro, and production gets Small compute and
    point-in-time recovery (`docs/runbooks/restore.md`, "Turning them on").
-2. **Its ref** is the 20-character id in the dashboard URL (`supabase.com/dashboard/project/<ref>`). It is public, part
-   of the API URL, and goes into the Makefile's `PRODUCTION_REF` in a pull request like any other change. Until that is
-   merged, `make archive` refuses to start.
+2. **Its ref**, `xjtmoctrodgtnsxafeps`, is public, part of the API URL `https://xjtmoctrodgtnsxafeps.supabase.co`,
+   and is the Makefile's `PRODUCTION_REF`: `make archive` refuses any other project's URL or key.
 3. **The database.** From a fresh clone of the default branch ("Every release", step 1), so the Mac's own checkout
-   stays linked to staging: `supabase link --project-ref <ref>` (it asks for the database password), then, on Grigor's
-   word, `supabase db push`. It applies every migration in order, the private buckets and the four scheduled jobs
-   included; `supabase migration list` then shows the same migrations on both sides.
-4. **The Edge Functions.** `supabase functions deploy --project-ref <ref>` deploys all ten, each with its setting from
-   `supabase/config.toml`, which turns JWT verification off for the four that check their callers themselves:
-   `accept_invitation`, `send_push`, `send_digest` and `stripe_webhook`. The dashboard's Edge Functions page then lists
-   ten, those four without JWT verification.
+   stays linked to staging: `supabase link --project-ref xjtmoctrodgtnsxafeps` (it asks for the database password),
+   then, on Grigor's word, `supabase db push`. It applies every migration in order, the private buckets and the four
+   scheduled jobs included; `supabase migration list` then shows the same migrations on both sides.
+4. **The Edge Functions.** `supabase functions deploy --project-ref xjtmoctrodgtnsxafeps` deploys all ten, each with
+   its setting from `supabase/config.toml`, which turns JWT verification off for the four that check their callers
+   themselves: `accept_invitation`, `send_push`, `send_digest` and `stripe_webhook`. The dashboard's Edge Functions
+   page then lists ten, those four without JWT verification.
 5. **The function secrets**, typed in the terminal and never pasted anywhere else:
-   `supabase secrets set --project-ref <ref> NAME=value …` for the rows of `supabase/README.md`'s table ("Secrets and
-   settings"), with production's values:
+   `supabase secrets set --project-ref xjtmoctrodgtnsxafeps NAME=value …` for the rows of `supabase/README.md`'s
+   table ("Secrets and settings"), with production's values:
    - `RESEND_API_KEY`, for the `dentory.ca` sending domain;
    - `ANTHROPIC_API_KEY`, from a Claude Console workspace with a spend limit;
    - Stripe's live keys: `STRIPE_SECRET_KEY` (`sk_live_…`), `STRIPE_PRICE_ID`, `STRIPE_PROMO_COUPON_ID` and
-     `STRIPE_WEBHOOK_SECRET`, after the "Stripe" steps of the same file in live mode, the webhook at production's URL;
+     `STRIPE_WEBHOOK_SECRET`, after the "Stripe" steps of the same file in live mode, with the webhook at
+     `https://xjtmoctrodgtnsxafeps.supabase.co/functions/v1/stripe_webhook`;
    - APNs: `APNS_KEY`, `APNS_KEY_ID`, `APNS_TEAM_ID=886B9D4D6M` and `APNS_ENVIRONMENT=production`, since TestFlight and
      App Store builds register with Apple's production service;
    - `SENTRY_DSN` of the `dentory-functions` project (`docs/runbooks/monitoring.md`).
 
-   `supabase secrets list --project-ref <ref>` shows the names that are set.
+   `supabase secrets list --project-ref xjtmoctrodgtnsxafeps` shows the names that are set.
 6. **Vault, for the scheduled jobs.** The database calls `send_push` each minute and `send_digest` each hour with the
    URL and key it finds in Vault (build state, item 9). In production's SQL editor,
-   `select vault.create_secret('https://<ref>.supabase.co', 'project_url');` and
+   `select vault.create_secret('https://xjtmoctrodgtnsxafeps.supabase.co', 'project_url');` and
    `select vault.create_secret('<service role key>', 'service_role_key');` with the legacy `service_role` key (Project
    Settings › API Keys › Legacy API Keys); close the query without saving it. Without them pushes are dropped after a
    day and digests stay queued.
@@ -66,7 +66,7 @@ release copies that file into its fresh clone. Write it from the Supabase CLI, s
 checkout once `PRODUCTION_REF` is merged there:
 
 ```sh
-ref=<production ref>
+ref=xjtmoctrodgtnsxafeps
 supabase projects api-keys --project-ref "$ref" -o json | python3 -c '
 import json, sys
 key = next(k["api_key"] for k in json.load(sys.stdin) if k["name"] == "anon")

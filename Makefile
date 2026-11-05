@@ -61,7 +61,7 @@ lint:
 # branch on the Mac that ships, signed through the Apple account signed into Xcode. They talk to the production
 # project, whose ref (public: it is part of the API URL) is PRODUCTION_REF; its URL and anon key are in the git-ignored
 # Config/Secrets.xcconfig. The archive and the export land in RELEASE_DIR (git-ignored).
-PRODUCTION_REF :=
+PRODUCTION_REF := xjtmoctrodgtnsxafeps
 RELEASE_DIR ?= build/release
 ARCHIVE_PATH = $(RELEASE_DIR)/Dentory.xcarchive
 # The build number App Store Connect sees: the default branch's commit count at the archived commit, higher after
