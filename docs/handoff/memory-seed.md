@@ -31,7 +31,7 @@ Give this file to Claude in the first message of the new project and ask it to s
 - The session can open a terminal tab in the thread for commands Grigor must type himself (`supabase login`, the database password for `supabase db push`).
 
 ## Supabase
-- Hosted project "Dentory" (region us-east-2, Postgres 17) is the staging project for the pilot; project ref `umauofcfackicgvscefa` (the ref is part of the public API URL, not a secret; the anon key and database password are). A separate prod project is created before TestFlight (MS-152).
+- Hosted project "Dentory" (region us-east-2, Postgres 17) is the staging project for the pilot; project ref `umauofcfackicgvscefa` (the ref is part of the public API URL, not a secret; the anon key and database password are). The production project, also "Dentory" (region us-west-2, Oregon), was created on 2026-11-04 (MS-152): project ref `xjtmoctrodgtnsxafeps`, public like staging's; its migrations are pushed by hand on Grigor's word, never from CI.
 - The repo was linked to it on 2026-10-16 02:11 UTC. After a database ticket merges, `supabase db push` in a terminal tab sends the migrations; Grigor types the database password. As of 2026-10-16 15:30 UTC the three merged migrations (schema, access, stock engine) are not pushed yet; the thread is waiting for Grigor to say "push now".
 - Secrets: the app reads SUPABASE_URL and SUPABASE_ANON_KEY from the git-ignored `Config/Secrets.xcconfig` (Release builds); `Config/Secrets.example.xcconfig` is the template; Debug builds talk to the local stack (`make db-start`), which needs no secrets.
 

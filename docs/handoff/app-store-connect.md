@@ -14,14 +14,14 @@ Facts: app name Dentory, bundle id `ca.dentory.app` (permanent at the first uplo
 | 3 | Sidebar, General, App Privacy | Privacy policy URL and the published data label |
 | 4 | Sidebar, iOS App, 1.0 Prepare for Submission | Version 1.1.0, text, URLs, copyright, App Review information, manual release |
 | 5 | TestFlight tab | Test information and the internal group |
-| 6 | Build thread on the Mac | Team ID in `applinks/`, signing team in Xcode, encryption key in Info.plist |
+| 6 | Build thread on the Mac | Team ID in `applinks/`, signing team and encryption key in the project (MS-152), then `make testflight` for each upload |
 
 The sidebar labels are Apple's as of October 2026. If a screen looks different, say what it shows and the thread adapts.
 
 ## Step 0. Agreements and Team ID
 
 1. If App Store Connect shows a yellow banner about an updated Apple Developer Program License Agreement, accept it (the Account Holder does this at developer.apple.com, Agreements). Builds cannot be uploaded while it waits.
-2. Team ID: developer.apple.com, Account, Membership details, "Team ID". It is public (it goes into a file every browser can read), not a secret.
+2. Team ID: developer.apple.com, Account, Membership details, "Team ID". It is public (it goes into a file every browser can read), not a secret. Dentory's is `886B9D4D6M` (individual enrollment; Grigor, 2026-11-02).
 3. Nothing in Business, Agreements, Tax and Banking is needed: the app is free and sells nothing through Apple, so the Paid Apps agreement stays unsigned.
 
 ## Step 1. App Information
@@ -110,7 +110,7 @@ Sidebar, iOS App, "1.0 Prepare for Submission". Save at the top right; do not cl
 
 App Review Information (Apple reads it, customers never do):
 
-- Sign-in required: on. Username and password: the demo clinic's Admin account on the production Supabase project; it does not exist yet, so leave both empty until MS-152 and add the Staff account in the notes then.
+- Sign-in required: on. Username and password: the demo clinic's Admin account on the production Supabase project, the review clinic `docs/runbooks/release.md` makes ("External testers"); leave both empty until it exists, and add its Staff account in the notes then.
 - Contact information: Grigor's first name, last name, phone in international form (+1 and the number, no spaces needed) and email.
 - Notes, pasted:
 
@@ -135,12 +135,12 @@ Users and Access needs nothing now. To let someone else see TestFlight builds or
 
 ## Step 6. Hand-off to the build thread
 
-These change the iOS project and are the build thread's ("Implementing the tickets", on the Mac), one small PR:
+Items 1 to 3 change the iOS project and came with MS-152 (#123); item 4 is every upload, from the release runbook (`docs/runbooks/release.md`):
 
-1. `applinks/.well-known/apple-app-site-association`: replace `TEAMID` with the Team ID. Universal links start working once `app.dentory.ca` serves the file.
-2. `project.yml`, under `settings.base`: `DEVELOPMENT_TEAM` set to the Team ID and `CODE_SIGN_STYLE: Automatic`, then `make project`. In Xcode, Signing and Capabilities shows the team and registers the App ID with the Associated Domains capability. The Push Notifications capability and an APNs key (developer.apple.com, Keys) come with MS-144.
+1. `applinks/.well-known/apple-app-site-association`: the Team ID `886B9D4D6M` in place of `TEAMID`. Universal links start working once `app.dentory.ca` serves the file.
+2. `project.yml`, under `settings.base`: `DEVELOPMENT_TEAM: 886B9D4D6M` and `CODE_SIGN_STYLE: Automatic`. Automatic signing through the Apple account signed into Xcode registers the App ID's capabilities, Associated Domains and Push Notifications; the APNs key (developer.apple.com, Keys) is made by hand (MS-144).
 3. `Dentory/Resources/Info.plist`: `ITSAppUsesNonExemptEncryption` set to `false`. The app uses only HTTPS, which is exempt, and the key answers the export compliance question for every build instead of a prompt on each upload.
-4. First archive and upload: Xcode, Product, Archive, Distribute App, App Store Connect (MS-152). The build then appears under TestFlight and on the version page.
+4. Every upload: `make testflight` in a fresh clone of the default branch on the Mac, which archives with xcodebuild and uploads with `Config/ExportOptions.plist` through that Apple account (no Xcode Cloud, decisions log, 2026-11-02). The build then appears under TestFlight and on the version page.
 
 ## D18, recorded in MS-100 and `decisions-log.md`
 

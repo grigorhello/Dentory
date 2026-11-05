@@ -6,7 +6,7 @@ Dental inventory app for small clinics, native SwiftUI for iPhone and iPad (iOS 
 1. Install Xcode 26 or later, then `brew install xcodegen swiftlint`.
 2. Install Docker Desktop and the Supabase CLI (`brew install supabase/tap/supabase`), then `make db-start`. Debug builds talk to this local stack; nothing else is needed to run the app.
 3. `make project` and open `Dentory.xcodeproj`. The project file is generated from `project.yml` and not committed, except `Package.resolved`, which pins the Swift package versions (commit it when they change). Rerun `make project` after pulling or adding files.
-4. Only for Release builds and TestFlight: `cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig` and fill in the hosted project's URL and anon key (see Database below).
+4. Only for Release builds and TestFlight: production's URL and anon key in `Config/Secrets.xcconfig`, written as `docs/runbooks/release.md` says (see Database below).
 
 ## Commands
 | Command | What it does |
@@ -17,6 +17,9 @@ Dental inventory app for small clinics, native SwiftUI for iPhone and iPad (iOS 
 | `make uitest` | Run the UI tests (XCUITest) on the iPhone 16 simulator, on the app's demo doubles (`-uiTesting`) |
 | `make e2e` | Run the end-to-end flows (MS-136, `DentoryE2ETests`) on the iPhone 16 simulator against the local stack, which it resets and seeds with the demo clinic first; needs `make db-start` from this checkout |
 | `make lint` | Run SwiftLint in strict mode |
+| `make archive` | Archive a Release build for App Store Connect into `build/release`, signed through the Apple account in Xcode, build number the commit count; refuses before building unless `Config/Secrets.xcconfig` holds production's URL and anon key (`make release-check`) |
+| `make upload` | Upload that archive to App Store Connect, where TestFlight shows it once processed |
+| `make testflight` | `make archive`, then `make upload`: a release, from a fresh clone of the default branch (`docs/runbooks/release.md`) |
 
 Add `WARNINGS_AS_ERRORS=YES` to fail on any compiler warning (CI does). `SIM_NAME="iPad Pro 11-inch (M4)"` runs the tests on another simulator. CI adds `SPM_FLAGS=-onlyUsePackageVersionsFromResolvedFile` so it builds exactly the committed package versions.
 
@@ -40,11 +43,11 @@ Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one
 
 Adding a change: `supabase migration new <name>` creates the file under `supabase/migrations`; write the SQL, add a pgTAP test next to the others, then `make db-reset db-test`. `supabase gen types --lang=swift --local` prints Swift types for the current schema (MS-154 wires them into the app). CI (`database` job, Ubuntu) runs `supabase db start`, `make db-reset db-test` and `make functions-check` on every pull request and fails when a test fails.
 
-**Hosted projects.** Two Supabase projects belong to Grigor's account: staging (the pilot clinic) and, before TestFlight, prod. To work with one from your Mac:
+**Hosted projects.** Two Supabase projects belong to Grigor's account: staging (the pilot clinic) and production, which Release builds talk to, the ones TestFlight and the App Store get. Setting production up and every release are in `docs/runbooks/release.md`. To work with one from your Mac:
 1. `supabase login` once; it opens the browser and stores your token in the keychain.
 2. `supabase link --project-ref <ref>`; the ref is the 20-character id in the dashboard URL (`supabase.com/dashboard/project/<ref>`). It asks for the database password and writes only `supabase/.temp` (git-ignored).
 3. `supabase db push` applies the migrations that are not on the hosted project yet. Do this for staging after a merge. Pushing to prod is a deliberate manual step, never done from CI.
 
-The app's keys for a hosted project (Project Settings → API: the URL and the `anon public` key) go in `Config/Secrets.xcconfig` for Release builds, or `Config/Secrets.debug.xcconfig` to point a Debug build at it; both are git-ignored and must stay out of the repo and of chat. The local stack needs no secrets: its URL and anon key are the same on every machine and sit in `Config/Debug.xcconfig`.
+The app's keys for a hosted project (its URL and its `anon` key) go in `Config/Secrets.xcconfig` for Release builds, production's only (`make archive` refuses another project's, the Makefile's `PRODUCTION_REF`), or in `Config/Secrets.debug.xcconfig` to point a Debug build at staging; both are git-ignored and must stay out of the repo and of chat. The local stack needs no secrets: its URL and anon key are the same on every machine and sit in `Config/Debug.xcconfig`.
 
 Edge Function secrets (the Resend key for invitation emails, MS-112) are set on the hosted project with `supabase secrets set`; `supabase/README.md` lists them. The local stack needs none: without a key the functions write the emails to their log (`make invite-links`).

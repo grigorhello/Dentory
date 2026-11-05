@@ -183,10 +183,10 @@ One high finding: an admin could forge an invitation token and use it to set the
 - **Where.**
   - Release builds register `dentory` (`Dentory/Resources/Info.plist:24-27`) and take invitation and reset tokens from it (`InvitationLink.swift`, `PasswordResetLink.swift:22`).
   - The fallback pages turn the https link into a `dentory://` link (`applinks/invite/index.html:36`, `applinks/reset-password/index.html:36`).
-  - Until the Apple team id replaces `TEAMID` (`applinks/.well-known/apple-app-site-association:5`), every link takes that path.
+  - Until `app.dentory.ca` serves `applinks/`, every link takes that path. The Apple team id is in `applinks/.well-known/apple-app-site-association:5` since MS-152.
 - **What could happen.** iOS does not say which app opens a scheme two apps claim. A malicious app on a member's phone could receive a token and use it with the public anon key.
 - **Why accepted.** It needs a malicious app installed on the member's phone. The fallback was decided on 2026-10-19 until the domain and the team id exist. Release emails carry only https links (`Config/Release.xcconfig:7`, `_shared/invitation-email.ts:17-20`).
-- **Open items.** The team id (build state, item 2), and keeping `dentory://reset-password` off the prod project's redirect URLs. Once universal links work, the custom scheme can be limited to Debug builds.
+- **Open items.** The static host for `applinks/` (build state, item 4; the team id came with MS-152), and keeping `dentory://reset-password` off the prod project's redirect URLs. Once universal links work, the custom scheme can be limited to Debug builds.
 
 ### F11 · CI actions pinned to tags (Low, accepted)
 
@@ -237,7 +237,7 @@ Settings no repository change can make, on staging now and on prod when it exist
    - the email rate limits and the minimum interval per address at Supabase's defaults or stricter (the local stack's 1 second is for tests only).
 2. **Redirect URLs on prod:** only `https://app.dentory.ca/reset-password`. `dentory://reset-password` belongs on staging only, and only while a Debug build points at it (`supabase/README.md`, Password reset email).
 3. **`RESEND_API_KEY`** on each hosted project before real invitations go out (build state, item 4). Without it nothing is sent, and the log now says only how many emails went unsent.
-4. **The Apple team id** in `applinks/.well-known/apple-app-site-association` and the static host for `applinks/` (build state, items 2 and 4), so invitation and reset links open the app without the `dentory://` fallback (F10).
+4. **The static host for `applinks/`** at `app.dentory.ca` (build state, item 4; the Apple team id is in its `apple-app-site-association` since MS-152), so invitation and reset links open the app without the `dentory://` fallback (F10).
 5. **After this PR merges, on staging:**
    - `supabase db push`;
    - deploy again every function this PR touches: `invite_member`, `export_csv`, `extract_invoice`, `stripe_webhook --no-verify-jwt` and `send_digest --no-verify-jwt`.

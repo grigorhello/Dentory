@@ -32,5 +32,5 @@ Dentory is a dental inventory app for small clinics: native iPhone and iPad app 
 
 ## Never
 - Never put a key, token, password or project secret in a chat, a file, a memory or the repository. Secrets live in the git-ignored `Config/Secrets*.xcconfig`, the Supabase dashboard and the Mac keychain.
-- Never push migrations to the production Supabase project from CI or without Grigor's word; prod does not exist yet (created before TestFlight, MS-152).
+- Never push migrations to the production Supabase project from CI or without Grigor's word; production is the project "Dentory" in us-west-2 (Oregon), ref `xjtmoctrodgtnsxafeps`, created 2026-11-04 (MS-152).
 - Never delete issues, cards or branches that carry history; close or archive instead.
