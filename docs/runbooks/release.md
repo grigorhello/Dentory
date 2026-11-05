@@ -17,8 +17,9 @@ from the Mac only, never from CI, and `supabase db push` to it only on Grigor's 
 1. **The project.** `Dentory` in Grigor's organization, created on 2026-11-04 in West US (Oregon), `us-west-2`: Grigor
    kept it there rather than recreate it in Canada (Central) (decisions log, 2026-11-05 01:38), and `site/privacy.html`
    and `docs/handoff/product-knowledge.md` name that region. Staging stays in US east (Ohio) with test data only. The
-   database password stays in the password manager. The organization is on Pro, and production gets Small compute and
-   point-in-time recovery (`docs/runbooks/restore.md`, "Turning them on").
+   database password stays in the password manager. The organization goes on Pro before a clinic relies on production,
+   so the project never pauses, and production gets Small compute and point-in-time recovery
+   (`docs/runbooks/restore.md`, "Turning them on"; build state, item 15).
 2. **Its ref**, `xjtmoctrodgtnsxafeps`, is public, part of the API URL `https://xjtmoctrodgtnsxafeps.supabase.co`,
    and is the Makefile's `PRODUCTION_REF`: `make archive` refuses any other project's URL or key.
 3. **The database.** From a fresh clone of the default branch ("Every release", step 1), so the Mac's own checkout
@@ -200,8 +201,10 @@ password reset links open the app for the reviewers.
   into it included, since Sentry, PostHog and supabase-swift are static: user defaults, file timestamps and system boot
   time, each with the reason the decisions log gives (2026-11-05 02:52). A pull request that calls a new one (disk
   space, active keyboards, `UserDefaults(suiteName:)` for an App Group), uses one for another reason, or adds or
-  updates a package that does, declares it there. Apple reads the binary, not what runs, and App Store Connect does not
-  accept a build that misses one (ITMS-91053). After `make archive` these print what the build calls: today
+  updates a package that does, declares it there. Apple reads the binary, not what runs, and has announced that App
+  Store Connect does not accept a build that misses one (ITMS-91053); build 91, uploaded on 2026-11-05 before the app
+  had a manifest, was still processed, so treat that email as a fix due before the next upload. After `make archive`
+  these print what the build calls: today
   `_stat`, `_fstat`, `NSFileCreationDate`, `NSURLCreationDateKey` and `NSURLContentModificationDateKey` (file
   timestamps), `_mach_absolute_time` and `systemUptime` (system boot time) and `NSUserDefaults` (user defaults);
   anything new they print needs its category in the manifest, with a reason that fits its use.
@@ -211,7 +214,8 @@ password reset links open the app for the reviewers.
   calls='^_(f?stat|lstat|fstatat|f?getattrlist|getattrlist(bulk|at)|f?statv?fs|mach_absolute_time)$'
   keys='NSUserDefaults|NSFile(Creation|Modification)Date|NSFileSystem|NSURL(Volume|Creation|ContentModification)'
   nm -u "$app" | grep -E "$calls|$keys"
-  otool -v -s __TEXT __objc_methname "$app" | grep -E 'systemUptime|activeInputModes|initWithSuiteName'
+  otool -v -s __TEXT __objc_methname "$app" | grep -E \
+    'systemUptime|activeInputModes|initWithSuiteName|creationDate|modificationDate|fileCreationDate|fileModificationDate'
   ```
 - **Tag** the commit the App Store got: `git tag v1.1.0 <sha>` and `git push origin v1.1.0`, so the next release's
   changes read as `git log v1.1.0..`.
@@ -221,4 +225,4 @@ password reset links open the app for the reviewers.
 
 | Date | Version | Build | Commit | `make e2e` | Uploaded by | Internal testing | External testing | App Store |
 |---|---|---|---|---|---|---|---|---|
-| | | | | | | | | |
+| 2026-11-05 | 1.1.0 | 91 | `138f842` | 7 of 7 passed | Claude on Grigor's Mac | Processed 2026-11-05 | Waits for dentory.ca and #107's week | Not submitted |
