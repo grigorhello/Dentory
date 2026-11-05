@@ -124,8 +124,11 @@ Mac checkout's packages.
    copy from the upload.
 6. **Processing.** App Store Connect › TestFlight lists the build as Processing, usually for 5 to 30 minutes, then Apple
    emails. Export compliance is already answered: `Info.plist` sets `ITSAppUsesNonExemptEncryption` to false, since the
-   app uses only HTTPS, so no "Missing Compliance" appears. The internal group "Dentory team" has automatic
-   distribution on and gets the build at once; its testers install it from the TestFlight app.
+   app uses only HTTPS, so no "Missing Compliance" appears. An email naming ITMS-91053 (the build calls a
+   required-reason API its privacy manifest does not declare) or ITMS-91056 (a manifest Apple cannot read) means a fix
+   to `Dentory/Resources/PrivacyInfo.xcprivacy` ("After a release", The privacy manifest), in a pull request, before the
+   next upload. The internal group "Dentory team" has automatic distribution on and gets the build at once; its testers
+   install it from the TestFlight app.
 7. **Test it** on an iPhone and an iPad, against production:
    - sign up a clinic, or sign in to the review clinic (below); Home, Inventory, Procedures, To buy and Activity load;
    - start a procedure and edit its usage, count stock, receive manually, and receive a delivery from a photo of a
@@ -191,6 +194,25 @@ password reset links open the app for the reviewers.
   higher `MARKETING_VERSION` in `project.yml` (1.1.1 for fixes, 1.2.0 for features), in a pull request like any other
   change, and the new version in App Store Connect (iOS App, "+") before it is submitted. Build numbers keep growing on
   their own.
+- **The privacy manifest.** `Dentory/Resources/PrivacyInfo.xcprivacy`, at the root of the app, declares no tracking,
+  the data the app collects, row for row the App Privacy label of `app-store-connect.md` step 3 (a change to one is a
+  change to the other), and every required-reason API that `Dentory.app/Dentory` calls, the code of the packages linked
+  into it included, since Sentry, PostHog and supabase-swift are static: user defaults, file timestamps and system boot
+  time, each with the reason the decisions log gives (2026-11-05 02:52). A pull request that calls a new one (disk
+  space, active keyboards, `UserDefaults(suiteName:)` for an App Group), uses one for another reason, or adds or
+  updates a package that does, declares it there. Apple reads the binary, not what runs, and App Store Connect does not
+  accept a build that misses one (ITMS-91053). After `make archive` these print what the build calls: today
+  `_stat`, `_fstat`, `NSFileCreationDate`, `NSURLCreationDateKey` and `NSURLContentModificationDateKey` (file
+  timestamps), `_mach_absolute_time` and `systemUptime` (system boot time) and `NSUserDefaults` (user defaults);
+  anything new they print needs its category in the manifest, with a reason that fits its use.
+
+  ```sh
+  app=build/release/Dentory.xcarchive/Products/Applications/Dentory.app/Dentory
+  calls='^_(f?stat|lstat|fstatat|f?getattrlist|getattrlist(bulk|at)|f?statv?fs|mach_absolute_time)$'
+  keys='NSUserDefaults|NSFile(Creation|Modification)Date|NSFileSystem|NSURL(Volume|Creation|ContentModification)'
+  nm -u "$app" | grep -E "$calls|$keys"
+  otool -v -s __TEXT __objc_methname "$app" | grep -E 'systemUptime|activeInputModes|initWithSuiteName'
+  ```
 - **Tag** the commit the App Store got: `git tag v1.1.0 <sha>` and `git push origin v1.1.0`, so the next release's
   changes read as `git log v1.1.0..`.
 - **The clone** can go once the build is processed and its symbols are in Sentry; App Store Connect keeps its own.
