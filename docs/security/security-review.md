@@ -228,7 +228,7 @@ One high finding: an admin could forge an invitation token and use it to set the
 
 ## Open items for Grigor
 
-Settings no repository change can make, on staging now and on prod when it exists:
+Settings no repository change can make, on staging and on prod:
 
 1. **Auth settings** (dashboard, Authentication):
    - minimum password length 8, as the app asks;
