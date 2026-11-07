@@ -1,5 +1,6 @@
 -- The rules the schema enforces on its own: clinic isolation of references, the batch and expiry
--- rules of MS-100 D8 and D9, and the uniqueness of emails, names, open To buy lines and open alerts.
+-- rules (MS-100 D8; no batch below 0 since 2026-11-07, where D9 let the undated one go negative), and the
+-- uniqueness of emails, names, open To buy lines and open alerts.
 begin;
 select plan(22);
 
@@ -66,15 +67,15 @@ select lives_ok($$
   insert into public.products (clinic_id, name, unit, pack_unit, pack_size) values ('00000000-0000-4000-8000-0000000000c1', 'Gloves', 'boxes', 'case', 10)
 $$, '1 case = 10 boxes is a valid pack');
 
--- Batches (MS-100 D9) and expiry months
+-- Batches (no batch below 0) and expiry months
 select throws_ok($$
   insert into public.batches (clinic_id, product_id, expiry_month, qty)
   values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', '2026-12-01', -1)
 $$, '23514', null, 'a dated batch cannot go negative');
-select lives_ok($$
+select throws_ok($$
   insert into public.batches (clinic_id, product_id, expiry_month, qty)
   values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', null, -1)
-$$, 'the undated batch may go negative');
+$$, '23514', null, 'nor can the undated batch');
 select throws_ok($$
   insert into public.batches (clinic_id, product_id, expiry_month, qty)
   values ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000a1', '2026-12-15', 1)
