@@ -129,7 +129,7 @@ final class ProductFormViewModel {
     /// The switch moves unless the product holds stock (G1): then the inline error stays until it is 0.
     func setMultiUse(_ isOn: Bool) {
         guard isOn != isMultiUse else { return }
-        // Any stock blocks it, negative (MS-100 D9) or in open bottles: a quantity of 0 can be -1 unopened + 1 open.
+        // Any stock blocks it, unopened or in open bottles: none unopened can still leave a bottle open.
         if case .edit(let product) = mode, product.unopened != 0 || product.openCount > 0 {
             trackingError = "Set stock to 0 before changing how it is tracked."
             return

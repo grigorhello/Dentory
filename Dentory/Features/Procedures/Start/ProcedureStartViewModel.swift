@@ -3,8 +3,9 @@ import Observation
 
 /// Adjust, then start (f13, f37): the template's countable supplies with steppers and remove, Add item, the
 /// multi-use products with Take new, and Start procedure, which deducts every row, opens the bottles taken new
-/// and records the procedure (`stock_procedure_start`). Nothing is blocked: a short item goes negative. The
-/// summary, the row lines and the labels are in `ProcedureStartViewModel+Lines.swift`.
+/// and records the procedure (`stock_procedure_start`). Nothing is blocked: a short item takes what is in stock
+/// and stops at 0, never below. The summary, the row lines and the labels are in
+/// `ProcedureStartViewModel+Lines.swift`.
 @MainActor
 @Observable
 final class ProcedureStartViewModel {
