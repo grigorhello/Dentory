@@ -1,6 +1,6 @@
 # Starting catalogs
 
-A starting catalog is a list of products a clinic can begin with instead of an empty Inventory: the products a practice of its kind keeps in stock, each with its category, its units, a starting minimum and target, and how it is tracked. It goes into one clinic, local or hosted, with `make seed-catalog`. The clinic then sets its real quantities, deletes what it does not carry, renames products to its brands and adds the rest in the app.
+A starting catalog is a list of products a clinic can begin with instead of an empty Inventory: the products a practice of its kind keeps in stock, each with its category, its units, a starting minimum and target, and how it is tracked. It goes into one clinic, local or hosted, with `make seed-catalog`. The clinic then sets its real quantities, archives what it does not carry, renames products to its brands and adds the rest in the app.
 
 | File | What it is |
 |---|---|
@@ -44,6 +44,7 @@ Names are matched as written, only without regard to case: a clinic's own name f
 make seed-catalog CLINIC_ID=<uuid> [CATALOG=general-practice] [TARGET=local|linked]
 ```
 
+- Push the migrations to that project first (`supabase db push`): without `20261107063703_no_alerts_before_first_stock.sql`, the nightly refresh opens an Out of stock alert, a push and a To buy line for every product still at 0.
 - `CLINIC_ID` is the clinic's `id` in `public.clinics`. On a hosted project: `supabase db query --linked "select id, name from public.clinics order by created_at"`.
 - `TARGET=local` (the default) writes to the local stack. `TARGET=linked` writes to the project this clone is linked to (`supabase link --project-ref <ref>`; production's ref is the Makefile's `PRODUCTION_REF`), through the Management API with the CLI's own login (`supabase login`): no database password or key is read, passed or printed. `TARGET` is read from the command line only, never from the environment.
 - It prints the target first, then what it added: `Smile Groove: added 0 categories and 74 products from the general-practice catalog.` A run that changes nothing says 0 and 0.
