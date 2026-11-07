@@ -1,6 +1,6 @@
 -- The stock engine: every function writes the ledger and keeps batches and open items right, soonest
--- expiry goes first and shortfalls land on the undated batch, retries change nothing, cancelling gives
--- back to the original batches, Undo has its window and owner, and permissions hold.
+-- expiry goes first and a shortfall stops at 0, retries change nothing, cancelling gives back to the
+-- original batches, Undo has its window and owner, and permissions hold.
 begin;
 select plan(95);
 
@@ -63,7 +63,7 @@ select is(
   (select id from public.stock_actions where idempotency_key = pg_temp.k(2)), 'a retry returns the first action');
 select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 10::numeric, 'and changes nothing');
 
--- Procedure start: FEFO, take-new, negative stock ------------------------------------------------------
+-- Procedure start: FEFO, take-new, a shortfall -----------------------------------------------------------
 reset role;
 select pg_temp.act_as('00000000-0000-4000-8000-0000000000b1');
 select lives_ok($$ select public.stock_procedure_start('00000000-0000-4000-8000-0000000000c1', null, 'Root canal',
@@ -73,14 +73,14 @@ select is((select id from public.procedure_events where name = 'Root canal'), (s
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e1'), 0::numeric, 'the soonest batch is emptied first');
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e2'), 29::numeric, 'then the next one');
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3'), 3::numeric, 'undated stock is taken last');
-select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), -2::numeric, 'stock may go negative');
-select is((select qty from public.batches where product_id = '00000000-0000-4000-8000-0000000000d3' and expiry_month is null and lot is null), -2::numeric, 'and the shortfall sits on the undated batch');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 0::numeric, 'a short item stops at 0');
+select is((select qty from public.batches where product_id = '00000000-0000-4000-8000-0000000000d3' and expiry_month is null and lot is null), 0::numeric, 'and its batch is empty, not below 0');
 select is((select count(*) from public.open_items where product_id = '00000000-0000-4000-8000-0000000000d2' and finished_at is null), 1::bigint, 'take-new opened a bottle');
 select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e4'), 1::numeric, 'from the unopened stock');
 select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d2'), 2::numeric, 'opening does not change the multi-use total');
-select is((select count(*) from public.transactions where ref_type = 'procedure_event' and ref_label = 'Root canal' and batch_id is not null), 5::bigint, 'one ledger row per batch touched');
+select is((select count(*) from public.transactions where ref_type = 'procedure_event' and ref_label = 'Root canal' and batch_id is not null), 4::bigint, 'one ledger row per batch touched');
 select is((select status from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' and status = 'to_buy'), 'to_buy', 'an out-of-stock product is added to To buy');
-select is((select qty from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' and status = 'to_buy'), 12::numeric, 'with target minus current');
+select is((select qty from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' and status = 'to_buy'), 10::numeric, 'with target minus current');
 select is((select count(*) from public.alerts where product_id = '00000000-0000-4000-8000-0000000000d3' and kind = 'out_of_stock' and resolved_at is null), 1::bigint, 'and an out-of-stock alert');
 select is(public.product_status_of('00000000-0000-4000-8000-0000000000d1'), 'missing_expiry', 'Septocaine still has undated stock');
 
@@ -156,9 +156,9 @@ select is(pg_temp.batch_qty('00000000-0000-4000-8000-0000000000e3'), 5::numeric,
 select is((select count(*) from public.transactions where reverses_id = (select id from public.transactions where action_id = (select id from public.stock_actions where idempotency_key = pg_temp.k(40)))), 1::bigint, 'with a reversal row pointing at it');
 select lives_ok($$ select public.stock_receive('00000000-0000-4000-8000-0000000000c1', '[{"product_id":"00000000-0000-4000-8000-0000000000d3","qty":4}]', pg_temp.k(42)) $$, 'receive gloves while their To buy line was never ordered');
 select is((select count(*) from public.to_buy_items where product_id = '00000000-0000-4000-8000-0000000000d3' and status = 'received'), 1::bigint, 'the To buy line is received');
-select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 2::numeric, 'the shortfall is covered');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 4::numeric, 'the gloves are in stock again');
 select lives_ok($$ select public.undo_action((select id from public.stock_actions where idempotency_key = pg_temp.k(42)), pg_temp.k(43)) $$, 'a receiving can be undone');
-select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), -2::numeric, 'and the stock goes back');
+select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d3'), 0::numeric, 'and the stock goes back');
 select lives_ok($$ select public.stock_procedure_edit((select id from public.stock_actions where idempotency_key = pg_temp.k(3)), '[{"product_id":"00000000-0000-4000-8000-0000000000d1","qty":69},{"product_id":"00000000-0000-4000-8000-0000000000d3","qty":12}]', array[]::uuid[], pg_temp.k(44)) $$, 'a procedure can be edited a second time');
 select lives_ok($$ select public.stock_procedure_edit((select id from public.stock_actions where idempotency_key = pg_temp.k(3)), '[{"product_id":"00000000-0000-4000-8000-0000000000d1","qty":70},{"product_id":"00000000-0000-4000-8000-0000000000d3","qty":12}]', array[]::uuid[], pg_temp.k(47)) $$, 'and a third time in the same transaction');
 select is(pg_temp.qty('00000000-0000-4000-8000-0000000000d1'), 30::numeric, 'two opposite edits leave the total as it was');
