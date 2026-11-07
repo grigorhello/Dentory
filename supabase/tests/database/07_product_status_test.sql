@@ -41,13 +41,18 @@ insert into public.products (id, clinic_id, name, unit, tracking, minimum, targe
 -- Archived: the daily refresh and the attention tiles leave it out.
 insert into public.products (id, clinic_id, name, unit, tracking, minimum, target, archived_at) values
   ('00000000-0000-4000-8000-0000000000d4', '00000000-0000-4000-8000-0000000000c1', 'Old gauze', 'packs', 'countable', 5, 10, now());
--- Septocaine: 50 dated five months out, 4 undated. Bonding: 2 unopened dated far out, 1 open. Gloves: nothing.
+-- Septocaine: 50 dated five months out, 4 undated. Bonding: 2 unopened dated far out, 1 open. Gloves: none left.
 insert into public.batches (id, clinic_id, product_id, expiry_month, lot, qty) values
   ('00000000-0000-4000-8000-0000000000e1', '00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d1', date_trunc('month', current_date + interval '5 months')::date, 'A112', 50),
   ('00000000-0000-4000-8000-0000000000e3', '00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d1', null, null, 4),
   ('00000000-0000-4000-8000-0000000000e4', '00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d2', date_trunc('month', current_date + interval '8 months')::date, 'BA7', 2);
 insert into public.open_items (clinic_id, product_id, opened_by) values
   ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d2', '00000000-0000-4000-8000-0000000000a1');
+-- Gloves ran out: 10 boxes received and used up, so their ledger shows they were stocked once (a product never stocked
+-- raises nothing, 51_no_alerts_before_first_stock_test.sql).
+insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, ref_type, reason, action_id) values
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d3', 'receiving', 10, 0, 10, '00000000-0000-4000-8000-0000000000a1', 'manual', null, gen_random_uuid()),
+  ('00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000d3', 'adjustment', -10, 10, 0, '00000000-0000-4000-8000-0000000000a1', 'manual', 'Physical count', gen_random_uuid());
 select public.refresh_all_products();
 
 select is(status, 'missing_expiry', 'Septocaine: undated stock, nothing expiring yet') from public.product_status where product_id = '00000000-0000-4000-8000-0000000000d1';

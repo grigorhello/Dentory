@@ -32,7 +32,7 @@ A clinic always has at least one Admin. Role gating hides controls rather than g
 
 **Receive a delivery (Admin).** Take a photo or upload a PDF or image of the supplier invoice; the app reads it server side (usually under 20 seconds) and proposes one line per item as Matched, Possible match, New product or Needs review. The admin confirms every line; nothing touches inventory before Confirm & receive. Packs convert to counted units (5 boxes become 250 cartridges), unit cost is stored, batches are created with lot and expiry, matching To buy items become Received. Receive manually is always available.
 
-**To buy.** A shopping list the clinic takes to its supplier, not an ordering system. Items are added automatically when a product goes Low or Out of stock (suggested quantity = target minus current), or by hand by anyone. Segments To buy, Ordered, Received. Admins select items and Mark N as ordered; receiving the invoice closes the loop.
+**To buy.** A shopping list the clinic takes to its supplier, not an ordering system. Items are added automatically when a product goes Low or Out of stock (suggested quantity = target minus current), or by hand by anyone. A product nobody has stocked yet, such as one from a starting catalog before its first count or delivery, raises no alert and is not suggested until then. Segments To buy, Ordered, Received. Admins select items and Mark N as ordered; receiving the invoice closes the loop.
 
 **Expiring soon.** 30, 60 and 90-day windows, one card per batch with value at risk. Admins Mark disposed with the quantity, recorded as a Disposal.
 

@@ -22,7 +22,8 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
 .PHONY: project build test uitest e2e lint release-check archive upload testflight db-start db-stop db-reset db-test \
-	seed-demo seed-load perf-report perf-concurrency functions-serve functions-check invite-links invoice-reading-live
+	seed-demo seed-load seed-catalog catalog-check perf-report perf-concurrency functions-serve functions-check \
+	invite-links invoice-reading-live
 
 project:
 	xcodegen generate
@@ -136,6 +137,22 @@ seed-demo:
 # own; run it right after db-reset (or after seed-demo). Local stack only.
 seed-load:
 	docker exec -i $(DB_CONTAINER) psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -o /dev/null < supabase/seed-load.sql
+
+# A starting catalog (supabase/catalogs/README.md) into one clinic, local or hosted: CLINIC_ID=<uuid>,
+# CATALOG=<a file in supabase/catalogs> (general-practice), TARGET=local (the local stack) or TARGET=linked (the
+# project this clone is linked to, through the Management API with the CLI's own login: no key is read or printed).
+# Adds only the categories and products the clinic lacks, at 0, and prints how many. TARGET comes from the command
+# line only, never from the environment, so a hosted project is written only when asked for.
+CATALOG ?= general-practice
+TARGET = local
+seed-catalog:
+	@CLINIC_ID='$(CLINIC_ID)' CATALOG='$(CATALOG)' TARGET='$(TARGET)' sh supabase/catalogs/seed.sh
+
+# The catalog on two new clinics on the local stack, the way seed-catalog runs it, twice each; then what the nightly
+# status refresh, first counts and a first delivery do to its products (supabase/catalogs/check.sh). CI runs it after
+# the demo seed.
+catalog-check:
+	DB_CONTAINER=$(DB_CONTAINER) CATALOG=$(CATALOG) sh supabase/catalogs/check.sh
 
 # How long each of the app's calls takes in the database for the load-test clinic's admin: p50, p95 and the slowest
 # of PERF_RUNS runs, in milliseconds (supabase/perf/report.sql). Run it after db-reset and seed-load, before

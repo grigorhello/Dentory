@@ -26,6 +26,11 @@ insert into public.batches (clinic_id, product_id, expiry_month, qty) values
   ('00000000-0000-4000-8000-000000000b41', '00000000-0000-4000-8000-000000000b64', null, 5);
 insert into public.open_items (clinic_id, product_id, opened_by, opened_at) values
   ('00000000-0000-4000-8000-000000000b41', '00000000-0000-4000-8000-000000000b63', '00000000-0000-4000-8000-000000000b31', now() - interval '3 days');
+-- Rubber dam ran out: 36 sheets received and used up, so its ledger shows it was stocked once (a product never stocked
+-- raises nothing, 51_no_alerts_before_first_stock_test.sql).
+insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, ref_type, reason, action_id) values
+  ('00000000-0000-4000-8000-000000000b41', '00000000-0000-4000-8000-000000000b62', 'receiving', 36, 0, 36, '00000000-0000-4000-8000-000000000b31', 'manual', null, gen_random_uuid()),
+  ('00000000-0000-4000-8000-000000000b41', '00000000-0000-4000-8000-000000000b62', 'adjustment', -36, 36, 0, '00000000-0000-4000-8000-000000000b31', 'manual', 'Physical count', gen_random_uuid());
 insert into public.procedure_templates (id, clinic_id, name, archived_at) values
   ('00000000-0000-4000-8000-000000000b71', '00000000-0000-4000-8000-000000000b41', 'Root canal', null),
   ('00000000-0000-4000-8000-000000000b72', '00000000-0000-4000-8000-000000000b41', 'Retired', now()),
