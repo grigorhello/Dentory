@@ -148,8 +148,9 @@ Mac checkout's packages.
 ## External testers
 
 Waits for `https://dentory.ca/privacy` and `https://dentory.ca/support` to serve `site/privacy.html` and
-`site/support.html` with their placeholders filled (GitHub Pages and the DNS, MS-161), and for #107's week of internal
-use to end with no P0 or P1 left open.
+`site/support.html` with their placeholders filled (GitHub Pages and the DNS, MS-161), for `https://app.dentory.ca`
+to serve the `applinks/` folder (the Staff invitation of step 1 opens from a link there; until then it leads nowhere,
+`supabase/README.md`), and for #107's week of internal use to end with no P0 or P1 left open.
 
 1. **The review clinic on production**, the demo clinic of the App Review notes, made through the app on a TestFlight
    build, never with `supabase/seed-demo.sql`, which is for the local stack only and whose password is in this public
@@ -225,4 +226,4 @@ password reset links open the app for the reviewers.
 
 | Date | Version | Build | Commit | `make e2e` | Uploaded by | Internal testing | External testing | App Store |
 |---|---|---|---|---|---|---|---|---|
-| 2026-11-05 | 1.1.0 | 91 | `138f842` | 7 of 7 passed | Claude on Grigor's Mac | Processed 2026-11-05 | Waits for dentory.ca and #107's week | Not submitted |
+| 2026-11-05 | 1.1.0 | 91 | `138f842` | 7 of 7 passed | Claude on Grigor's Mac | Processed 2026-11-05 | Waits for dentory.ca, app.dentory.ca and #107's week | Not submitted |
