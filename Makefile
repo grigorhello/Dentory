@@ -149,7 +149,7 @@ seed-catalog:
 	@CLINIC_ID='$(CLINIC_ID)' CATALOG='$(CATALOG)' TARGET='$(TARGET)' sh supabase/catalogs/seed.sh
 
 # The catalog on two new clinics on the local stack, the way seed-catalog runs it, twice each; then what the nightly
-# status refresh, a first count and a first delivery do to its products (supabase/catalogs/check.sh). CI runs it after
+# status refresh, first counts and a first delivery do to its products (supabase/catalogs/check.sh). CI runs it after
 # the demo seed.
 catalog-check:
 	DB_CONTAINER=$(DB_CONTAINER) CATALOG=$(CATALOG) sh supabase/catalogs/check.sh

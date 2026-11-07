@@ -3,8 +3,8 @@
 # `make seed-catalog` runs it, on two clinics made through clinic_create by two new accounts, as sign-up makes them.
 # - A, as sign-up leaves it: the first run adds every product and only the categories sign-up does not make, the
 #   second run nothing; check.sql then checks each product against the catalog's rules and New product's, that nothing
-#   else was written, what the admin's screens read, and what the nightly status refresh, a first count and a first
-#   delivery do (in a transaction it rolls back).
+#   else was written, what the admin's screens read, and what the nightly status refresh (nothing, before a
+#   product's first stock), two first counts and a first delivery do (in a transaction it rolls back).
 # - B, with the category of the first product renamed, the first product archived under its name in lower case and
 #   the second typed in capitals with a unit of its own: a run that fails part-way adds nothing; the real run adds the
 #   missing category and every other product and changes neither of those two; a second run adds nothing.

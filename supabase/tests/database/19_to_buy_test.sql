@@ -30,6 +30,11 @@ from (values
   ('00000000-0000-4000-8000-000000000e62', 1), ('00000000-0000-4000-8000-000000000e63', 25),
   ('00000000-0000-4000-8000-000000000e64', 12), ('00000000-0000-4000-8000-000000000e65', 2)
 ) as v (product_id, qty);
+-- Rubber dam ran out: 36 sheets received and used up, so its ledger shows it was stocked once (a product never stocked
+-- gets no automatic line, 51_no_alerts_before_first_stock_test.sql).
+insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, ref_type, reason, action_id) values
+  ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e61', 'receiving', 36, 0, 36, '00000000-0000-4000-8000-000000000e31', 'manual', null, gen_random_uuid()),
+  ('00000000-0000-4000-8000-000000000e41', '00000000-0000-4000-8000-000000000e61', 'adjustment', -36, 36, 0, '00000000-0000-4000-8000-000000000e31', 'manual', 'Physical count', gen_random_uuid());
 insert into public.procedure_templates (id, clinic_id, name) values
   ('00000000-0000-4000-8000-000000000e71', '00000000-0000-4000-8000-000000000e41', 'Root canal');
 select public.refresh_product(p.id) from public.products p where p.clinic_id = '00000000-0000-4000-8000-000000000e41';

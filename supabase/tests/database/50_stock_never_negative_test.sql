@@ -67,11 +67,13 @@ select is((select count(*) from public.transactions where product_id = '00000000
   'and nothing for the pens, since none left stock');
 select is((select count(*) from public.batches where product_id = '00000000-0000-4000-8000-000000050d01'), 0::bigint,
   'nor does a batch appear for them');
+-- The pens were never stocked, so they wait for their first stock before To buy suggests them
+-- (20261107063703_no_alerts_before_first_stock.sql); Septocaine, short, goes on To buy.
 select results_eq(
   $$ select p.name, t.qty from public.to_buy_items t join public.products p on p.id = t.product_id
      where t.status = 'to_buy' order by p.name $$,
-  $$ values ('Pens', 10::numeric), ('Septocaine', 60::numeric) $$,
-  'both go on To buy, up to their targets');
+  $$ values ('Septocaine', 60::numeric) $$,
+  'Septocaine goes on To buy up to its target; the pens, never stocked, do not');
 
 -- Edit usage gives back only what was taken -------------------------------------------------------------------------------
 reset role;

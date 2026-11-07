@@ -53,19 +53,16 @@ make seed-catalog CLINIC_ID=<uuid> [CATALOG=general-practice] [TARGET=local|link
 
 Checked by `make catalog-check` against the database as it is.
 
-1. **Right away**: Inventory lists every catalog product with the badge Out of stock (a product's status is worked out as it is read, and its quantity is 0), and the Low filter shows them all, since Low includes Out of stock. Home is unchanged: no To buy lines, no alerts, no stock value.
-2. **At the next nightly status refresh** (pg_cron at 07:00 UTC: 2 AM in Toronto in winter, 3 AM in summer; `refresh_all_products`, which runs `refresh_product` on every active product), each product still at 0 gets:
-   - an Out of stock alert in Activity, and the bell's dot;
-   - a push, "Septocaine 4% 1:100,000 is out of stock.", to every member whose device allows notifications (on a project set up for pushes, `supabase/README.md`), held until 7 AM clinic time (MS-144's waking hours): one push per product, 74 for an untouched catalog;
-   - an automatic To buy line for its target (target less 0), so To buy and Home's To buy tile count every such product, in the catalog's order. The Monday digest email counts them too.
-3. **When the clinic sets a product's quantity**:
-   - Receive manually (Admin) takes the quantity in the pack (boxes, cases), the expiry month and the lot: the product is Healthy, or Expiring for a close date, its alert closes and its To buy line moves to Received.
-   - Adjust (on the product, both roles; Actual quantity, reason Physical count) or Count stock set the quantity without an expiry date (MS-100 D9), so the product reads Missing expiry until its dates are entered on the product. Its Out of stock alert closes, but a To buy line the refresh added stays, at target less the new quantity (at least 1), until someone removes it or marks it ordered.
+1. **Right away, and until each product's first stock**: Inventory lists every catalog product at 0 with the badge Out of stock (a product's status is worked out as it is read), its page says the same, and the Low filter shows them all, since Low includes Out of stock. Nothing else changes: no alert in Activity, no push, no To buy line, no Home tile, no stock value. A product never stocked raises nothing (`supabase/migrations/20261107063703_no_alerts_before_first_stock.sql`): not at the nightly status refresh (pg_cron, 07:00 UTC), not when its minimum or target changes, not when a procedure uses it (stock never goes below 0, so the procedure takes nothing), and not when a count finds none. Add to buy still puts it on To buy by hand.
+2. **When the clinic sets a product's quantity**, the product is stocked from then on and behaves like any other:
+   - Receive manually (Admin) takes the quantity in the pack (boxes, cases), the expiry month and the lot: the product is Healthy, or Expiring for a close date.
+   - Adjust (on the product, both roles; Actual quantity, reason Physical count) or Count stock set the quantity without an expiry date (MS-100 D9), so the product reads Missing expiry, with its alert, until its dates are entered on the product.
+   - If the quantity is at or under the minimum, the product reads Low: its Low alert opens and To buy suggests target less stock. When a product once stocked is used down to 0, it goes Out of stock with its alert, its push at 7 AM clinic time (MS-144's waking hours) and its To buy line, as before.
    - Count stock's steppers move one at a time: quick for products counted in boxes, bags and bottles, slow for one counted by the hundred. For those, type the quantity in Adjust or receive it.
    - A multi-use product counts unopened containers only: count the one in use too, then Open a new bottle on its page, so it reads, say, 2 unopened and 1 open.
-4. **Products the clinic does not carry**: Delete product on the product's page (Admin) archives it, closes its alerts and takes it off To buy; a later catalog run does not bring it back.
+3. **Products the clinic does not carry**: Delete product on the product's page (Admin) archives it and takes it out of Inventory; a later catalog run does not bring it back.
 
-So run a catalog when the clinic is ready to enter its stock, and have it enter that stock, or delete what it does not carry, before the next 07:00 UTC refresh; every product left at 0 then raises its alert, its 7 AM push and a To buy line.
+So a catalog can go into a clinic whenever it suits: the clinic enters its stock product by product, over days if it needs to, and each product starts to raise alerts and To buy suggestions from its first quantity.
 
 ## Adapting a copy for another kind of practice
 
