@@ -74,9 +74,10 @@ select throws_ok(
   '42501', null, 'staff cannot create a category');
 reset role;
 
--- Levels: a new product without stock is Out of stock and gets its alert and auto To buy line at its first
--- stock or level change (or from refresh_all_products at 07:00), not on insert or on an edit that keeps the
--- levels; target under minimum is refused; raising the minimum above the stock opens Low, lowering it resolves Low
+-- Levels: a new product without stock is Out of stock, but gets no alert and no auto To buy line until its first
+-- stock (20261107063703_no_alerts_before_first_stock.sql): not on insert, not on an edit that keeps the levels, not on
+-- a level or tracking change; target under minimum is refused; raising the minimum above the stock opens Low, lowering
+-- it resolves Low
 select pg_temp.act_as('00000000-0000-4000-8000-000000000e31');
 select lives_ok(
   $$ insert into public.products (id, clinic_id, name, unit, minimum, target)
@@ -92,7 +93,7 @@ select lives_ok(
 reset role;
 select ok(not exists (
   select 1 from public.alerts where product_id = '00000000-0000-4000-8000-000000000e63' and resolved_at is null),
-  'creating a product opens no alert and no To buy line until its first stock or level change');
+  'creating a product opens no alert and no To buy line');
 select is((select count(*) from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000e63'), 0::bigint, 'no auto To buy line either');
 select pg_temp.act_as('00000000-0000-4000-8000-000000000e31');
 -- The Edit sheet sends every column: a new name with the same levels is not a level change.
@@ -141,8 +142,10 @@ select lives_ok(
   $$ update public.products set tracking = 'multi_use' where id = '00000000-0000-4000-8000-000000000e65' $$,
   'a product whose batches are all used up can change how it is tracked');
 reset role;
-select is((select t.qty from public.to_buy_items t where t.product_id = '00000000-0000-4000-8000-000000000e63' and t.status = 'to_buy'), 10::numeric,
-  'the first change to an out-of-stock product opens its auto To buy line for the target');
+select ok(
+  not exists (select 1 from public.alerts where product_id = '00000000-0000-4000-8000-000000000e63' and resolved_at is null)
+  and not exists (select 1 from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000e63'),
+  'a tracking change on a product never stocked opens no alert and no auto To buy line either');
 
 -- Delete product: admins of the clinic only
 select pg_temp.act_as('00000000-0000-4000-8000-000000000e32');

@@ -31,6 +31,11 @@ insert into public.batches (id, clinic_id, product_id, expiry_month, lot, qty) v
   ('00000000-0000-4000-8000-000000115033', '00000000-0000-4000-8000-000000115011', '00000000-0000-4000-8000-000000115023', pg_temp.month(0), 'BA7', 2);
 insert into public.invoices (id, clinic_id, source, storage_path, status, supplier, created_by) values
   ('00000000-0000-4000-8000-000000115041', '00000000-0000-4000-8000-000000115011', 'file', 'invoices/patterson.pdf', 'ready', 'Patterson Dental', '00000000-0000-4000-8000-000000115001');
+-- The gloves ran out: 10 boxes received and used up, so their ledger shows they were stocked once (a product never
+-- stocked raises nothing, 51_no_alerts_before_first_stock_test.sql).
+insert into public.transactions (clinic_id, product_id, type, delta, qty_before, qty_after, by_user, ref_type, reason, action_id) values
+  ('00000000-0000-4000-8000-000000115011', '00000000-0000-4000-8000-000000115022', 'receiving', 10, 0, 10, '00000000-0000-4000-8000-000000115001', 'manual', null, gen_random_uuid()),
+  ('00000000-0000-4000-8000-000000115011', '00000000-0000-4000-8000-000000115022', 'adjustment', -10, 10, 0, '00000000-0000-4000-8000-000000115001', 'manual', 'Physical count', gen_random_uuid());
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
