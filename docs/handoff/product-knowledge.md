@@ -53,7 +53,7 @@ A clinic always has at least one Admin. Role gating hides controls rather than g
 5. **Multi-use products handled honestly.** Bottles, syringes and kits are tracked as unopened plus open items with who opened them and when. No percentage guesses.
 6. **A shopping list, not a purchasing module.** To buy fills itself from minimums and targets; the clinic keeps ordering from the supplier it already has.
 7. **Everything is auditable.** Every change carries user, time and reference; nothing is hard-deleted; products are archived; reversals are new records.
-8. **Mistakes are fixed, never blocked.** Stock can go negative and shows as Out of stock; a procedure can be edited or cancelled from history with a note.
+8. **Mistakes are fixed, never blocked.** A procedure that uses more than is in stock still starts: that item stops at 0, never below, and shows as Out of stock; a procedure can be edited or cancelled from history with a note.
 9. **Per-clinic pricing with unlimited users.** Adding the whole team costs nothing extra.
 
 ## 6. What it does not do (do not promise these)

@@ -31,6 +31,10 @@ struct ServerRefusalTests {
         #expect(ServerRefusal.sentence(for: "Another procedure is already called Filling.")
             == "Another procedure is already called Filling.")
         #expect(ServerRefusal.sentence(for: "Resolve every line to continue.") == "Resolve every line to continue.")
+        // Stock never goes below 0: Undo keeps what was used since, and no bottle is opened out of nothing.
+        #expect(ServerRefusal.sentence(for: "Some of it was used already, so the adjustment stays.")
+            == "Some of it was used already, so the adjustment stays.")
+        #expect(ServerRefusal.sentence(for: "Bonding agent is out of stock.") == "Bonding agent is out of stock.")
     }
 
     @Test func aConstraintsOwnMessageIsTheSaveFailure() {

@@ -274,8 +274,8 @@ select results_eq(
   $$values ('00000000-0000-4000-8000-000000004801', 55.00::numeric, 0, 55.00::numeric, 3.00::numeric),
            ('00000000-0000-4000-8000-000000004802', 0.00::numeric, 2, 2.00::numeric, 0.00::numeric),
            ('00000000-0000-4000-8000-000000004803', 0.00::numeric, 0, 0.00::numeric, 0.00::numeric),
-           ('00000000-0000-4000-8000-000000004804', -3.00::numeric, 0, -3.00::numeric, 0.00::numeric)$$,
-  'the fixtures cover what the view sums: dated, undated, opened, finished, nothing at all and short'
+           ('00000000-0000-4000-8000-000000004804', 0.00::numeric, 0, 0.00::numeric, 0.00::numeric)$$,
+  'the fixtures cover what the view sums: dated, undated, opened, finished, nothing at all and short (stopped at 0)'
 );
 select pg_temp.act_as('00000000-0000-4000-8000-0000000048a2');
 select bag_eq('select * from public.product_stock', (select sql from old_product_stock),

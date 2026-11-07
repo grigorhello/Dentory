@@ -77,8 +77,8 @@ select results_eq(
   'the procedure heads the history with Michael and its three supplies');
 select results_eq(
   $$ select name, quantity, status from public.inventory_list('00000000-0000-4000-8000-000000000b41') where name <> 'Surface disinfectant' order by name $$,
-  $$ values ('Rubber dam', -1::numeric, 'out_of_stock'), ('Septocaine', 51::numeric, 'healthy') $$,
-  'the short item goes negative and reads Out of stock; nothing was blocked');
+  $$ values ('Rubber dam', 0::numeric, 'out_of_stock'), ('Septocaine', 51::numeric, 'healthy') $$,
+  'the short item stops at 0 and reads Out of stock; nothing was blocked');
 select results_eq(
   $$ select unopened, open_count from public.inventory_list('00000000-0000-4000-8000-000000000b41') where name = 'Surface disinfectant' $$,
   $$ values (0::numeric, 2) $$,
@@ -94,7 +94,7 @@ select is(
   1::bigint, 'and belongs to the procedure, so a cancellation can reverse it');
 select results_eq(
   $$ select qty, source::text, status::text from public.to_buy_items where product_id = '00000000-0000-4000-8000-000000000b62' $$,
-  $$ values (37::numeric, 'auto', 'to_buy') $$,
+  $$ values (36::numeric, 'auto', 'to_buy') $$,
   'To buy adds the short item by itself, up to its target');
 select is(
   (select sum(delta) from public.transactions where product_id = '00000000-0000-4000-8000-000000000b61' and type = 'procedure'),

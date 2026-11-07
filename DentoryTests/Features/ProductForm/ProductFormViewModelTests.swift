@@ -206,17 +206,13 @@ struct ProductFormViewModelTests {
         #expect(empty.isMultiUse && empty.trackingError == nil)
     }
 
-    @Test func negativeStockOrAnOpenBottleBlocksTheSwitchToo() {
-        // MS-100 D9: -1 unopened plus 1 open bottle reads quantity 0, yet the product holds stock.
-        let product = ProductDetail.fixture(tracking: .multiUse, quantity: 0, unopened: -1, openCount: 1)
+    @Test func anOpenBottleBlocksTheSwitchToo() {
+        // None unopened, yet the product holds the bottle that is open.
+        let product = ProductDetail.fixture(tracking: .multiUse, quantity: 1, unopened: 0, openCount: 1)
         let bottle = make(mode: .edit(product))
         bottle.setMultiUse(false)
         #expect(bottle.isMultiUse)
         #expect(bottle.trackingError == "Set stock to 0 before changing how it is tracked.")
-        let short = make(mode: .edit(ProductDetail.fixture(quantity: -2, unopened: -2)))
-        short.setMultiUse(true)
-        #expect(!short.isMultiUse)
-        #expect(short.trackingError != nil)
     }
 
     @Test func thePackSizeReadsNativeDigitsAndWantsAWholeNumber() {
