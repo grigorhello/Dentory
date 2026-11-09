@@ -40,6 +40,49 @@ struct FormattersTests {
         #expect(ClinicFormatters.plural(of: "packs") == "packs")
         #expect(ClinicFormatters.plural(of: "pouch") == "pouches")
         #expect(ClinicFormatters.plural(of: "case") == "cases")
+        #expect(ClinicFormatters.plural(of: "battery") == "batteries")
+        #expect(ClinicFormatters.plural(of: "tray") == "trays")
+    }
+
+    /// The units an invoice is read in (Review invoice): "each" is an invoice's EA, never "eaches".
+    @Test func unitsTheSameInBothAndAbbreviationsStayAsTheyAre() {
+        #expect(ClinicFormatters.plural(of: "each") == "each")
+        #expect(ClinicFormatters.plural(of: "Each") == "Each")
+        #expect(ClinicFormatters.plural(of: "ea") == "ea")
+        #expect(ClinicFormatters.plural(of: "EA") == "EA")
+        #expect(ClinicFormatters.plural(of: "oz") == "oz")
+        #expect(ClinicFormatters.plural(of: "pk") == "pk", "No vowel: an abbreviation")
+        #expect(ClinicFormatters.plural(of: "ml") == "ml")
+        #expect(ClinicFormatters.plural(of: "10/pk") == "10/pk")
+        #expect(ClinicFormatters.plural(of: "") == "")
+        #expect(ClinicFormatters.singular(of: "each") == "each")
+        #expect(ClinicFormatters.plural(of: "dozen") == "dozens", "New product's \"Receive in dozens\"")
+    }
+
+    /// A unit with a count after it: the word before the count takes the plural.
+    @Test func aPackWithItsCountTakesThePluralOnThePack() {
+        #expect(ClinicFormatters.plural(of: "pack of 10") == "packs of 10")
+        #expect(ClinicFormatters.plural(of: "box of 100") == "boxes of 100")
+        #expect(ClinicFormatters.plural(of: "box (100)") == "boxes (100)")
+        #expect(ClinicFormatters.plural(of: "box/100") == "boxes/100")
+        #expect(ClinicFormatters.plural(of: "box 100") == "boxes 100")
+        #expect(ClinicFormatters.plural(of: "Pack Of 10") == "Packs Of 10", "As a clinic may type it")
+        #expect(ClinicFormatters.plural(of: "4oz bottle") == "4oz bottles", "A number inside the first word stays")
+        #expect(ClinicFormatters.singular(of: "packs of 10") == "pack of 10")
+        #expect(ClinicFormatters.singular(of: "boxes (100)") == "box (100)")
+        #expect(ClinicFormatters.singular(of: "boxes 100") == "box 100")
+        #expect(formatters.quantity(1, unit: "packs of 10") == "1 pack of 10")
+    }
+
+    /// Receive manually shows one pack as the singular of the pack unit's plural ("1 box = 50 cartridges").
+    @Test func theSingularOfAPluralIsTheUnitAgain() {
+        let units = [
+            "box", "bottle", "pouch", "case", "battery", "tray", "brush", "syringe", "cartridge", "piece", "kit",
+            "sterile pouch", "each", "ea", "dozen", "pk", "ml", "pack of 10", "box (100)", "4oz bottle"
+        ]
+        for unit in units {
+            #expect(ClinicFormatters.singular(of: ClinicFormatters.plural(of: unit)) == unit, "\(unit)")
+        }
     }
 
     /// What a money field shows before the amount (Receive manually's cost).
