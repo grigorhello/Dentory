@@ -70,5 +70,10 @@ jobs:
       - name: Check the starting catalog
         run: make catalog-check
 
+      # The demo history (supabase/catalogs/demo-history.sql) on a new clinic with the catalog, sent as
+      # `make seed-demo-history` sends it, then its end state, a second run and the refusals.
+      - name: Check the demo history
+        run: make demo-history-check
+
       - name: Type-check the Edge Functions
         run: make functions-check

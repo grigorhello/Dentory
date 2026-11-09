@@ -26,7 +26,7 @@ Add `WARNINGS_AS_ERRORS=YES` to fail on any compiler warning (CI does). `SIM_NAM
 CI (`.github/workflows/ci.yml`) runs `make project lint build test WARNINGS_AS_ERRORS=YES` on every pull request, and the database job below next to it. It compiles the UI tests and the end-to-end flows but runs neither: the flows need the local stack, which GitHub's macOS runners cannot run, so `make e2e` runs on a Mac (`docs/handoff/mac-tooling.md`).
 
 ## Database
-Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one timestamped SQL file per change), `seed.sql` (runs on every reset; empty for now), `seed-demo.sql` (the demo clinic from the design, MS-109), `catalogs/` (starting catalogs for a new clinic), `functions/` (Deno Edge Functions, one folder each), `tests/database/` (pgTAP).
+Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one timestamped SQL file per change), `seed.sql` (runs on every reset; empty for now), `seed-demo.sql` (the demo clinic from the design, MS-109), `catalogs/` (starting catalogs for a new clinic, and a demo history for a demo clinic that holds one), `functions/` (Deno Edge Functions, one folder each), `tests/database/` (pgTAP).
 
 | Command | What it does |
 |---|---|
@@ -38,12 +38,14 @@ Everything lives in `supabase/`: `config.toml` (local stack), `migrations/` (one
 | `make seed-load` | Load the load-test clinic Load test dental after a reset (`make db-reset seed-load`, or after `seed-demo`): 500 products and about 5,500 ledger rows over six months, its stock moved only through the stock functions (MS-150). Sign in as olivia@loadtest.example (Admin) or hannah@loadtest.example (Staff), password `loadtest`. Local stack only. |
 | `make seed-catalog CLINIC_ID=<uuid>` | Add a starting catalog (`CATALOG=general-practice`: 74 products a general practice keeps, at 0) to one clinic: on the local stack, or with `TARGET=linked` on the hosted project this clone is linked to, through the CLI's login and no key. Adds only the categories and products the clinic lacks (`supabase/catalogs/README.md`) |
 | `make catalog-check` | Run that catalog on two new clinics on the local stack, twice each, and check what it wrote and what the nightly refresh, first counts and a first delivery then do |
+| `make seed-demo-history CLINIC_ID=<uuid>` | Give a demo clinic that holds the general-practice catalog, never stocked, about six weeks of stock history ending today, through the stock functions: local, or with `TARGET=linked` on the linked project. Permanent (the ledger is append-only), so demo clinics only; `DRY_RUN=1` prints what it would write (`supabase/catalogs/README.md`, "Demo history") |
+| `make demo-history-check` | Run that history on a new clinic on the local stack and check its end state, a second run and its refusals |
 | `make perf-report` | Time every call the app's screens make, and Start procedure and Apply count, for the load-test clinic's admin: p50, p95 and the slowest in milliseconds (`PERF_RUNS=30`; `docs/runbooks/performance.md`) |
 | `make perf-concurrency` | Eight clients start procedures and open bottles of the load-test clinic at once, then check that every change was written and every product's stock equals its ledger |
 | `make functions-serve` | Serve the Edge Functions locally (`/functions/v1/<name>`) |
 | `make functions-check` | Type-check the Edge Functions (`brew install deno`) |
 
-Adding a change: `supabase migration new <name>` creates the file under `supabase/migrations`; write the SQL, add a pgTAP test next to the others, then `make db-reset db-test`. `supabase gen types --lang=swift --local` prints Swift types for the current schema (MS-154 wires them into the app). CI (`database` job, Ubuntu) runs `supabase db start`, `make db-reset db-test`, `make seed-demo db-test`, `make catalog-check` and `make functions-check` on every pull request and fails when a test fails.
+Adding a change: `supabase migration new <name>` creates the file under `supabase/migrations`; write the SQL, add a pgTAP test next to the others, then `make db-reset db-test`. `supabase gen types --lang=swift --local` prints Swift types for the current schema (MS-154 wires them into the app). CI (`database` job, Ubuntu) runs `supabase db start`, `make db-reset db-test`, `make seed-demo db-test`, `make catalog-check`, `make demo-history-check` and `make functions-check` on every pull request and fails when a test fails.
 
 **Hosted projects.** Two Supabase projects belong to Grigor's account: staging (the pilot clinic) and production, which Release builds talk to, the ones TestFlight and the App Store get. Setting production up and every release are in `docs/runbooks/release.md`. To work with one from your Mac:
 1. `supabase login` once; it opens the browser and stores your token in the keychain.
