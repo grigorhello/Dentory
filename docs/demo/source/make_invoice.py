@@ -38,8 +38,8 @@ HST = Decimal("0.13")
 # Item, description as printed, lot, expiry month (YYYY-MM), quantity, unit of measure, unit price, kind.
 # Products the catalog receives in packs (cartridges and needles in boxes, gloves in cases) are invoiced by the pack;
 # the others are invoiced in the unit the clinic counts them in, since a line for a product without a pack size is
-# received as it is (engine.invoice_counted_per_unit). The units are spelled out rather than EA, which Review invoice
-# would show as "4 eaches". Each description matches its product's name closely (docs/demo/README.md), except line 3,
+# received as it is (engine.invoice_counted_per_unit); their U/M is that unit (SYR, BAND, SHEET), so Review invoice
+# reads "4 syringes". Each description matches its product's name closely (docs/demo/README.md), except line 3,
 # whose "4G" makes it a Possible match on purpose.
 LINES = [
     ("300-1450", "SEPTOCAINE 4% 1:100,000 50/BX", "B6412", "2028-09", 2, "BX", "71.00", "product"),

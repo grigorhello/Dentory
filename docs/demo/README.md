@@ -58,8 +58,8 @@ exactly `northbridge-inv-10418.json`.
 
 Products received in packs are invoiced by the pack (boxes of 50 cartridges or 100 needles, a case of 10 glove
 boxes) and converted on receipt; the others are invoiced in the unit the clinic counts, since a line for a product
-without a pack size is received as it is (`engine.invoice_counted_per_unit`). Those units are spelled SYR, BAND and
-SHEET rather than EA: Review invoice shows a line read in "each" as "4 eaches" (a known issue).
+without a pack size is received as it is (`engine.invoice_counted_per_unit`). Those lines print the unit the clinic
+counts (SYR, BAND, SHEET), so Review invoice reads them as "4 syringes", "72 bands" and "36 sheets".
 
 ## After Confirm & receive on Smile Groove
 
