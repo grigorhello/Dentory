@@ -55,8 +55,8 @@ nonisolated struct ClinicFormatters: Sendable {
     }
 
     /// "boxes" for "box", "pouches" for "pouch", "batteries" for "battery", "packs of 10" for "pack of 10"; a word
-    /// already plural ("packs"), one the same in both ("each", an invoice's EA; "dozen") and an abbreviation without a
-    /// vowel ("pk", "ml") stay as they are. Enough for the pack units a clinic types (New product's pack sentence,
+    /// already plural ("packs"), one the same in both ("each", an invoice's EA) and an abbreviation without a vowel
+    /// ("pk", "ml") stay as they are. Enough for the pack units a clinic types (New product's pack sentence,
     /// Receive manually's quantity) and the units an invoice is read in (Review invoice's "4 each").
     nonisolated static func plural(of unit: String) -> String {
         inflectingHead(of: unit) { head, word in
@@ -72,7 +72,7 @@ nonisolated struct ClinicFormatters: Sendable {
     }
 
     /// Units that read the same for one and for several: "1 each", "4 each".
-    private nonisolated static let unitsSameInBoth: Set<String> = ["each", "ea", "dozen", "oz"]
+    private nonisolated static let unitsSameInBoth: Set<String> = ["each", "ea", "oz"]
     private nonisolated static let vowels: Set<Character> = ["a", "e", "i", "o", "u"]
 
     /// Where the words that name what a unit counts end: " of 10", " (100)", "/100", " 100".

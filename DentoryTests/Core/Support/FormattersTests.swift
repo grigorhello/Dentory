@@ -50,14 +50,13 @@ struct FormattersTests {
         #expect(ClinicFormatters.plural(of: "Each") == "Each")
         #expect(ClinicFormatters.plural(of: "ea") == "ea")
         #expect(ClinicFormatters.plural(of: "EA") == "EA")
-        #expect(ClinicFormatters.plural(of: "dozen") == "dozen")
         #expect(ClinicFormatters.plural(of: "oz") == "oz")
         #expect(ClinicFormatters.plural(of: "pk") == "pk", "No vowel: an abbreviation")
         #expect(ClinicFormatters.plural(of: "ml") == "ml")
         #expect(ClinicFormatters.plural(of: "10/pk") == "10/pk")
         #expect(ClinicFormatters.plural(of: "") == "")
         #expect(ClinicFormatters.singular(of: "each") == "each")
-        #expect(formatters.quantity(4, unit: "each") == "4 each")
+        #expect(ClinicFormatters.plural(of: "dozen") == "dozens", "New product's \"Receive in dozens\"")
     }
 
     /// A unit with a count after it: the word before the count takes the plural.
@@ -66,9 +65,12 @@ struct FormattersTests {
         #expect(ClinicFormatters.plural(of: "box of 100") == "boxes of 100")
         #expect(ClinicFormatters.plural(of: "box (100)") == "boxes (100)")
         #expect(ClinicFormatters.plural(of: "box/100") == "boxes/100")
+        #expect(ClinicFormatters.plural(of: "box 100") == "boxes 100")
+        #expect(ClinicFormatters.plural(of: "Pack Of 10") == "Packs Of 10", "As a clinic may type it")
         #expect(ClinicFormatters.plural(of: "4oz bottle") == "4oz bottles", "A number inside the first word stays")
         #expect(ClinicFormatters.singular(of: "packs of 10") == "pack of 10")
         #expect(ClinicFormatters.singular(of: "boxes (100)") == "box (100)")
+        #expect(ClinicFormatters.singular(of: "boxes 100") == "box 100")
         #expect(formatters.quantity(1, unit: "packs of 10") == "1 pack of 10")
     }
 
