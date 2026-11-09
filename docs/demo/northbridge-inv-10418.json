@@ -1,0 +1,109 @@
+{
+  "supplier": "Northbridge Dental Supply",
+  "invoice_number": "INV-10418",
+  "invoice_date": "2026-11-09",
+  "currency": "CAD",
+  "total": 900.24,
+  "lines": [
+    {
+      "raw": "SEPTOCAINE 4% 1:100,000 50/BX",
+      "qty": 2,
+      "unit": "box",
+      "unit_price": 71.0,
+      "line_total": 142.0,
+      "lot": "B6412",
+      "expiry": "2028-09",
+      "kind": "product"
+    },
+    {
+      "raw": "NEEDLE 30G SHORT 100/BX",
+      "qty": 1,
+      "unit": "box",
+      "unit_price": 19.0,
+      "line_total": 19.0,
+      "lot": "N30-5521",
+      "expiry": "2031-08",
+      "kind": "product"
+    },
+    {
+      "raw": "COMPOSITE A2 SYRINGE 4G",
+      "qty": 4,
+      "unit": "syringe",
+      "unit_price": 56.0,
+      "line_total": 224.0,
+      "lot": "7741A2",
+      "expiry": "2029-04",
+      "kind": "product"
+    },
+    {
+      "raw": "ETCH GEL 37% SYRINGE",
+      "qty": 4,
+      "unit": "syringe",
+      "unit_price": 12.5,
+      "line_total": 50.0,
+      "lot": "EG27015",
+      "expiry": "2027-01",
+      "kind": "product"
+    },
+    {
+      "raw": "MATRIX BAND",
+      "qty": 72,
+      "unit": "band",
+      "unit_price": 0.48,
+      "line_total": 34.56,
+      "lot": "MB8820",
+      "expiry": "2031-11",
+      "kind": "product"
+    },
+    {
+      "raw": "RUBBER DAM LATEX FREE",
+      "qty": 36,
+      "unit": "sheet",
+      "unit_price": 0.56,
+      "line_total": 20.16,
+      "lot": "RD6633",
+      "expiry": "2030-06",
+      "kind": "product"
+    },
+    {
+      "raw": "EARLOOP MASK LEVEL 3 50/BX",
+      "qty": 8,
+      "unit": "box",
+      "unit_price": 14.5,
+      "line_total": 116.0,
+      "lot": "EM3-2290",
+      "expiry": "2031-10",
+      "kind": "product"
+    },
+    {
+      "raw": "NITRILE GLOVES M 10 BX/CS",
+      "qty": 1,
+      "unit": "case",
+      "unit_price": 94.0,
+      "line_total": 94.0,
+      "lot": "NG4471",
+      "expiry": "2030-09",
+      "kind": "product"
+    },
+    {
+      "raw": "HEMOSTATIC GEL SYRINGE",
+      "qty": 2,
+      "unit": "syringe",
+      "unit_price": 41.0,
+      "line_total": 82.0,
+      "lot": "HG1186",
+      "expiry": "2026-12",
+      "kind": "product"
+    },
+    {
+      "raw": "FREIGHT",
+      "qty": 1,
+      "unit": null,
+      "unit_price": 14.95,
+      "line_total": 14.95,
+      "lot": null,
+      "expiry": null,
+      "kind": "fee"
+    }
+  ]
+}
