@@ -22,7 +22,8 @@ XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) \
 CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulator named "$(SIM_NAME)". See: xcrun simctl list devices available))
 
 .PHONY: project build test uitest e2e lint release-check archive upload testflight db-start db-stop db-reset db-test \
-	seed-demo seed-load seed-catalog catalog-check perf-report perf-concurrency functions-serve functions-check \
+	seed-demo seed-load seed-catalog catalog-check seed-demo-history demo-history-check perf-report perf-concurrency \
+	functions-serve functions-check \
 	invite-links invoice-reading-live
 
 project:
@@ -153,6 +154,20 @@ seed-catalog:
 # the demo seed.
 catalog-check:
 	DB_CONTAINER=$(DB_CONTAINER) CATALOG=$(CATALOG) sh supabase/catalogs/check.sh
+
+# About six weeks of stock history ending today (supabase/catalogs/README.md, "Demo history") into one clinic that holds
+# the general-practice catalog and never stocked it, local or hosted: CLINIC_ID=<uuid>, TARGET=local (the default) or
+# TARGET=linked (the project this clone is linked to, through the Management API with the CLI's own login). It prints
+# what it will write first and stops on a refusal; DRY_RUN=1 stops there in any case. The ledger is append-only, so the
+# history stays in the clinic for good: demo clinics only. TARGET comes from the command line only, as for seed-catalog.
+seed-demo-history:
+	@CLINIC_ID='$(CLINIC_ID)' TARGET='$(TARGET)' DRY_RUN='$(DRY_RUN)' sh supabase/catalogs/demo-history.sh
+
+# The demo history on a new clinic with the catalog on the local stack, the way seed-demo-history runs it, then its end
+# state, a second run and the refusals (supabase/catalogs/demo-history-check.sh). KEEP=1 keeps the clinic to look at in
+# the app. CI runs it after catalog-check.
+demo-history-check:
+	DB_CONTAINER=$(DB_CONTAINER) KEEP=$(KEEP) sh supabase/catalogs/demo-history-check.sh
 
 # How long each of the app's calls takes in the database for the load-test clinic's admin: p50, p95 and the slowest
 # of PERF_RUNS runs, in milliseconds (supabase/perf/report.sql). Run it after db-reset and seed-load, before

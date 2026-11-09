@@ -7,31 +7,17 @@
 # this file says when to run it and what the clinic sees afterwards.
 set -eu
 
-clinic_id=${CLINIC_ID:-}
 catalog=${CATALOG:-general-practice}
-target=${TARGET:-local}
 here=$(dirname "$0")
 file="$here/$catalog.sql"
+# CLINIC_ID and TARGET, checked as demo-history.sh checks them.
+. "$here/target.sh"
 
-uuid='^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$'
-if ! printf '%s\n' "$clinic_id" | grep -Eq "$uuid"; then
-  echo "CLINIC_ID=\"$clinic_id\" is not a clinic id: pass CLINIC_ID=<uuid>, as the clinics table has it." >&2
-  exit 1
-fi
-clinic_id=$(printf '%s' "$clinic_id" | tr 'A-F' 'a-f')
 case $catalog in
   '' | *[!a-z0-9-]*) echo "CATALOG=\"$catalog\" is not a catalog name: use the name of a file in $here." >&2; exit 1 ;;
 esac
 [ -f "$file" ] || { echo "There is no catalog $file." >&2; exit 1; }
-case $target in
-  local) echo "Adding the $catalog catalog to clinic $clinic_id on the local stack." >&2 ;;
-  linked)
-    ref=$(cat supabase/.temp/project-ref 2>/dev/null || true)
-    [ -n "$ref" ] || { echo "This clone is not linked to a project: run supabase link --project-ref <ref> first." >&2; exit 1; }
-    echo "Adding the $catalog catalog to clinic $clinic_id on the linked project $ref." >&2
-    ;;
-  *) echo "TARGET=\"$target\": use local or linked." >&2; exit 1 ;;
-esac
+echo "Adding the $catalog catalog to clinic $clinic_id on $destination." >&2
 
 # --yes: the hosted target is chosen on purpose with TARGET=linked; CLI versions that ask before writing to a hosted
 # project would otherwise stop a run without a terminal. -o csv keeps the answer the same for people and agents.
