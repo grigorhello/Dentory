@@ -43,25 +43,57 @@ nonisolated struct ClinicFormatters: Sendable {
         "\(number(amount)) \(amount == 1 ? Self.singular(of: unit) : unit)"
     }
 
-    /// "bottle" for "bottles", "box" for "boxes", "battery" for "batteries"; a unit that is not an English plural
-    /// stays as it is.
+    /// "bottle" for "bottles", "box" for "boxes", "battery" for "batteries", "pack of 10" for "packs of 10"; a unit
+    /// that is not an English plural stays as it is.
     nonisolated static func singular(of unit: String) -> String {
-        let lowercased = unit.lowercased()
-        if lowercased.hasSuffix("ies") { return String(unit.dropLast(3)) + "y" }
-        if ["xes", "ches", "shes", "sses"].contains(where: { lowercased.hasSuffix($0) }) {
-            return String(unit.dropLast(2))
+        inflectingHead(of: unit) { head, word in
+            if word.hasSuffix("ies") { return String(head.dropLast(3)) + "y" }
+            if ["xes", "ches", "shes", "sses"].contains(where: word.hasSuffix) { return String(head.dropLast(2)) }
+            if word.hasSuffix("s") && !word.hasSuffix("ss") { return String(head.dropLast()) }
+            return head
         }
-        if lowercased.hasSuffix("s") && !lowercased.hasSuffix("ss") { return String(unit.dropLast()) }
-        return unit
     }
 
-    /// "boxes" for "box", "bottles" for "bottle", "pouches" for "pouch"; a word already plural ("packs") stays as it
-    /// is: enough for the pack units a clinic types (New product's pack sentence, Receive manually's quantity).
-    nonisolated static func plural(of word: String) -> String {
-        let lowercased = word.lowercased()
-        if lowercased.hasSuffix("s") { return word }
-        if ["x", "z", "ch", "sh"].contains(where: lowercased.hasSuffix) { return word + "es" }
-        return word + "s"
+    /// "boxes" for "box", "pouches" for "pouch", "batteries" for "battery", "packs of 10" for "pack of 10"; a word
+    /// already plural ("packs"), one the same in both ("each", an invoice's EA; "dozen") and an abbreviation without a
+    /// vowel ("pk", "ml") stay as they are. Enough for the pack units a clinic types (New product's pack sentence,
+    /// Receive manually's quantity) and the units an invoice is read in (Review invoice's "4 each").
+    nonisolated static func plural(of unit: String) -> String {
+        inflectingHead(of: unit) { head, word in
+            if word.hasSuffix("s") || unitsSameInBoth.contains(word) || !word.contains(where: vowels.contains) {
+                return head
+            }
+            if ["x", "z", "ch", "sh"].contains(where: word.hasSuffix) { return head + "es" }
+            if word.hasSuffix("y"), let before = word.dropLast().last, !vowels.contains(before) {
+                return String(head.dropLast()) + "ies"
+            }
+            return head + "s"
+        }
+    }
+
+    /// Units that read the same for one and for several: "1 each", "4 each".
+    private nonisolated static let unitsSameInBoth: Set<String> = ["each", "ea", "dozen", "oz"]
+    private nonisolated static let vowels: Set<Character> = ["a", "e", "i", "o", "u"]
+
+    /// Where the words that name what a unit counts end: " of 10", " (100)", "/100", " 100".
+    private nonisolated static let qualifier = #" of |[(/]|\s\d"#
+
+    /// `unit` with `inflect` applied to the words that name what it counts, those before a `qualifier` ("pack" of
+    /// "pack of 10", "box" of "box (100)", all of "4oz bottle"), given with the last of them in lower case. A unit
+    /// without a letter, or whose head does not end in one, stays as it is.
+    private nonisolated static func inflectingHead(
+        of unit: String, _ inflect: (_ head: String, _ word: String) -> String
+    ) -> String {
+        guard let firstLetter = unit.firstIndex(where: \.isLetter) else { return unit }
+        let qualified = unit[firstLetter...].range(of: qualifier, options: [.regularExpression, .caseInsensitive])
+        let named = unit[..<(qualified?.lowerBound ?? unit.endIndex)]
+        guard let last = named.lastIndex(where: { !$0.isWhitespace }) else { return unit }
+        let headEnd = unit.index(after: last)
+        let head = String(unit[..<headEnd])
+        guard let word = head.split(separator: " ").last?.lowercased(), word.last?.isLetter == true else {
+            return unit
+        }
+        return inflect(head, word) + String(unit[headEnd...])
     }
 
     /// "54", "2.5": at most two decimals, no trailing zeros.

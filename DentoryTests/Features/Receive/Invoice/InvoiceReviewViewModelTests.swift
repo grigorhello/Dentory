@@ -6,7 +6,7 @@ import Testing
 /// the server, a resolved line reopened in the state it was read in, the lot and expiry saved a moment after the last
 /// change and kept as typed, refusals and lost connections, read-only mode, and Confirm & receive waiting for every
 /// line (receiving itself is in `InvoiceReceiptViewModelTests`, the badge of a line read as Matched or of a Possible
-/// match in `InvoiceLineBadgeTests`).
+/// match in `InvoiceLineBadgeTests`, a line's quantity and price in `InvoiceReviewAmountTests`).
 @MainActor
 struct InvoiceReviewViewModelTests {
     private let formatters = ClinicFormatters(
@@ -68,17 +68,6 @@ struct InvoiceReviewViewModelTests {
             == ["Yes, match", "No, create new", "Add new", "Pick existing", "Ignore", "Pick product"])
         #expect(InvoiceReviewViewModel.isPrimary(.yesMatch) && InvoiceReviewViewModel.isPrimary(.addNew))
         #expect(!InvoiceReviewViewModel.isPrimary(.ignore), "Ignore is tertiary, as f23 draws it")
-    }
-
-    @Test func amountsReadInTheUnitAsReadAndThePriceOfOne() {
-        let viewModel = make(FakeInvoiceRepository())
-        let twoBoxes = InvoiceLine.line(9, "GLOVES", qty: 2, unit: "box", price: 12, .newProduct)
-        let oneBox = InvoiceLine.line(9, "GLOVES", qty: 1, unit: "boxes", price: nil, .newProduct)
-        let price = Decimal(string: "0.9960")
-        let noQuantity = InvoiceLine.line(9, "GLOVES", qty: nil, unit: "box", price: price, .newProduct)
-        #expect(viewModel.amount(for: twoBoxes) == "2 boxes\u{00A0}· $12.00")
-        #expect(viewModel.amount(for: oneBox) == "1 box")
-        #expect(viewModel.amount(for: noQuantity) == "$0.996", "A unit price keeps up to four decimals")
     }
 
     // MARK: - Choices
