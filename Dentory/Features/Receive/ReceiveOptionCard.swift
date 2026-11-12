@@ -1,14 +1,16 @@
 import SwiftUI
 
 /// One way to receive on Receive delivery (f22): an icon in a circle, the title over one line saying what it takes,
-/// and a chevron. Take a photo is the screen's dark featured card; the others sit on cream. The icon goes over the text
-/// at the accessibility text sizes, where beside it "manually" broke (MS-149).
+/// and a chevron, or a spinner while the pages it took are prepared and checked (MS-163). Take a photo is the screen's
+/// dark featured card; the others sit on cream. The icon goes over the text at the accessibility text sizes, where
+/// beside it "manually" broke (MS-149).
 struct ReceiveOptionCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let icon: Icon
     let title: String
     let detail: String
     var isFeatured = false
+    var isBusy = false
     let action: () -> Void
 
     var body: some View {
@@ -29,7 +31,13 @@ struct ReceiveOptionCard: View {
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: Spacing.sm)
-                IconView(.chevronRight, size: 24).foregroundStyle(foreground)
+                if isBusy {
+                    ProgressView()
+                        .tint(foreground)
+                        .frame(width: 24, height: 24)
+                } else {
+                    IconView(.chevronRight, size: 24).foregroundStyle(foreground)
+                }
             }
             .padding(.horizontal, Spacing.lg)
             .padding(.vertical, Spacing.lg + Spacing.xxs)

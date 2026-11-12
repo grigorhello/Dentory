@@ -247,12 +247,13 @@ extension View {
         interactiveDismissDisabled(isDisabled).environment(\.isSheetCloseDisabled, isDisabled)
     }
 
-    /// Presents `content` for the item as a Dentory bottom sheet.
+    /// Presents `content` for the item as a Dentory bottom sheet; `onDismiss` runs once it has closed.
     func msSheet<Item: Identifiable, Content: View>(
         item: Binding<Item?>,
+        onDismiss: (() -> Void)? = nil,
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
-        sheet(item: item) { item in
+        sheet(item: item, onDismiss: onDismiss) { item in
             MSSheetContainer { content(item) }
         }
     }

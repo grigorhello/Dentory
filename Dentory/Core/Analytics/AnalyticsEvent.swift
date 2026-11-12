@@ -81,6 +81,16 @@ nonisolated struct AnalyticsEvent: Equatable, Sendable {
         ])
     }
 
+    /// Retake on the sheet a captured page that looks unreadable opens (MS-163), and why the page was caught.
+    static func pageCheckRetaken(reason: InvoicePageProblem) -> Self {
+        Self(name: .checkRetake, properties: [.reason: .word(AnalyticsWord(reason))])
+    }
+
+    /// Use anyway on that sheet: the check overruled, and why it fired.
+    static func pageCheckOverruled(reason: InvoicePageProblem) -> Self {
+        Self(name: .checkUseAnyway, properties: [.reason: .word(AnalyticsWord(reason))])
+    }
+
     static func teammateInvited(role: MembershipRole) -> Self {
         Self(name: .teamInvite, properties: [.role: .word(AnalyticsWord(role))])
     }
@@ -117,6 +127,8 @@ nonisolated enum AnalyticsEventName: String, CaseIterable, Sendable {
     case countReview = "inv.count.review"
     case manualReceive = "manual.receive"
     case invoiceConfirm = "invoice.confirm"
+    case checkRetake = "receive.check.retake"
+    case checkUseAnyway = "receive.check.useAnyway"
 }
 
 /// Every property key an event may carry.
@@ -135,14 +147,22 @@ nonisolated enum AnalyticsProperty: String, CaseIterable, Sendable {
     case role
 }
 
-/// The words an event may carry: roles, directions and the adjustment reasons, nothing else.
+/// The words an event may carry: roles, directions, the adjustment reasons and why a page check fired, nothing else.
 nonisolated enum AnalyticsWord: String, CaseIterable, Sendable {
     case admin, staff, increase, decrease
     case physicalCount = "physical_count", expired, damaged, waste, missing, returned
     case dataCorrection = "data_correction", other
+    case blurry, dark
 
     init(_ role: MembershipRole) {
         self = role == .admin ? .admin : .staff
+    }
+
+    init(_ problem: InvoicePageProblem) {
+        self = switch problem {
+        case .blurry: .blurry
+        case .dark: .dark
+        }
     }
 
     init(_ reason: AdjustmentReason) {

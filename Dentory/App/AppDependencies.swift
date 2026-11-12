@@ -45,6 +45,8 @@ struct AppDependencies: Sendable {
     let push: PushNotifications
     /// Product analytics, PostHog when the build has a project token (MS-147); previews and tests send nothing.
     var analytics: Analytics = NoopAnalytics()
+    /// Receive delivery's check of captured photos on the device before they are read (MS-163), the same everywhere.
+    var invoicePageChecker: InvoicePageChecker = VisionInvoicePageChecker()
     /// Clinic settings' logo waiting for its retry, across a rebuild of the screens (MS-139).
     let pendingClinicLogo = PendingClinicLogo()
     /// The device's locale; previews and UI tests use en_US so the frames' figures render as drawn.

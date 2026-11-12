@@ -17,7 +17,7 @@ struct ReceiveViewModelTests {
     ) async -> ReceiveViewModel {
         let viewModel = ReceiveViewModel(
             repository: repository, cache: cache, formatters: formatters, clinicID: Session.demo.clinicID,
-            canScan: canScan
+            canScan: canScan, checker: FakeInvoicePageChecker(), analytics: NoopAnalytics()
         )
         if loads {
             await viewModel.load()
@@ -173,7 +173,7 @@ struct ReceiveViewModelTests {
         let viewModel = await make()
         let scanned = document(.camera, bytes: [1_200_000, 900_000])
         viewModel.takePhoto()
-        await viewModel.capture { () async throws(InvoiceCaptureError) in scanned }
+        await viewModel.capture(from: .camera) { () async throws(InvoiceCaptureError) in scanned }
         #expect(!viewModel.isScannerPresented)
         #expect(viewModel.pendingRoute == .newInvoice(scanned), "Review invoice gets the pages themselves (MS-129)")
         #expect(viewModel.message == nil)
@@ -184,7 +184,7 @@ struct ReceiveViewModelTests {
     @Test func aFileGoesToReviewInvoiceAsOnePage() async {
         let viewModel = await make()
         let file = InvoiceDocument(source: .file, pages: [InvoiceDocument.Page(kind: .pdf, data: Data(count: 10))])
-        await viewModel.capture { () async throws(InvoiceCaptureError) in file }
+        await viewModel.capture(from: .file) { () async throws(InvoiceCaptureError) in file }
         #expect(viewModel.pendingRoute == .newInvoice(file))
     }
 
@@ -207,7 +207,7 @@ struct ReceiveViewModelTests {
     @Test func aCaptureThatFailsSaysWhyAndGoesNowhere() async {
         let viewModel = await make()
         viewModel.takePhoto()
-        await viewModel.capture { () async throws(InvoiceCaptureError) in throw .unreadable(.camera) }
+        await viewModel.capture(from: .camera) { () async throws(InvoiceCaptureError) in throw .unreadable(.camera) }
         #expect(!viewModel.isScannerPresented)
         #expect(viewModel.pendingRoute == nil)
         #expect(viewModel.message == .init(title: "Couldn't read the pages", detail: "Try again."))
@@ -215,7 +215,7 @@ struct ReceiveViewModelTests {
         viewModel.failed(.unreadable(.file))
         #expect(viewModel.message?.title == "Couldn't open this file")
         #expect(viewModel.message?.detail == "Try again, or choose another one.")
-        await viewModel.capture { () async throws(InvoiceCaptureError) in throw .tooLarge(.file) }
+        await viewModel.capture(from: .file) { () async throws(InvoiceCaptureError) in throw .tooLarge(.file) }
         #expect(viewModel.message?.title == "This file is over 20 MB")
 
         viewModel.takePhoto()
@@ -245,7 +245,7 @@ struct ReceiveViewModelTests {
 
     @Test func thePickersWaitWhilePagesAreBeingPrepared() async {
         let viewModel = await make(canScan: false)
-        await viewModel.capture { () async throws(InvoiceCaptureError) in
+        await viewModel.capture(from: .camera) { () async throws(InvoiceCaptureError) in
             #expect(viewModel.isPreparing)
             viewModel.takePhoto()
             viewModel.uploadFile()

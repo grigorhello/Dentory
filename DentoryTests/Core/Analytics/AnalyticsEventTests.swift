@@ -14,7 +14,8 @@ struct AnalyticsEventTests {
         .markedOrdered(items: 2), .toBuyAdded, .batchDisposed, .teammateInvited(role: .admin), .exportStarted,
         .settingsSaved(digest: true, expiryWarningDays: 30), .productCreated,
         .countApplied(corrections: 3, seconds: 95), .manualReceived,
-        .invoiceConfirmed(lines: 4, matched: 1, created: 1, seconds: 300)
+        .invoiceConfirmed(lines: 4, matched: 1, created: 1, seconds: 300), .pageCheckRetaken(reason: .blurry),
+        .pageCheckOverruled(reason: .dark)
     ]
 
     @Test func everyEventIsAnAppendixBElementId() {
@@ -76,6 +77,14 @@ struct AnalyticsEventTests {
             "item_count": .number(4), "matched_count": .number(1), "created_count": .number(1),
             "duration_s": .number(300)
         ])
+    }
+
+    /// How often the page check fires and how often it is overruled, and why (MS-163).
+    @Test func aPageCheckAnswerCarriesWhyItFired() {
+        #expect(AnalyticsEvent.pageCheckRetaken(reason: .blurry).name.rawValue == "receive.check.retake")
+        #expect(AnalyticsEvent.pageCheckRetaken(reason: .blurry).payload == ["reason": .text("blurry")])
+        #expect(AnalyticsEvent.pageCheckOverruled(reason: .dark).name.rawValue == "receive.check.useAnyway")
+        #expect(AnalyticsEvent.pageCheckOverruled(reason: .dark).payload == ["reason": .text("dark")])
     }
 
     /// A build without a project token sends nothing (the test bundle has none, whatever the developer's Debug
