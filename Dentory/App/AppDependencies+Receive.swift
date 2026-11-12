@@ -4,12 +4,12 @@ import Foundation
 /// kept apart from the composition root's body.
 extension AppDependencies {
     /// Receive delivery of the signed-in clinic, for its admin (MS-126). `canScan` says whether Take a photo opens the
-    /// document scanner or, on a device without one, Photos.
+    /// document scanner or, on a device without one, Photos; captured photos are checked before they go on (MS-163).
     @MainActor
     func makeReceiveViewModel(session: Session, canScan: Bool) -> ReceiveViewModel {
         ReceiveViewModel(
             repository: receiveRepository, cache: cache, formatters: formatters(for: session),
-            clinicID: session.clinicID, canScan: canScan
+            clinicID: session.clinicID, canScan: canScan, checker: invoicePageChecker, analytics: analytics
         )
     }
 

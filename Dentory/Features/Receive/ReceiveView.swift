@@ -40,12 +40,12 @@ struct ReceiveView: View {
         VStack(spacing: Spacing.md) {
             ReceiveOptionCard(
                 icon: .camera, title: "Take a photo", detail: "Invoice or packing slip.", isFeatured: true,
-                action: takePhoto
+                isBusy: viewModel.preparing == .camera, action: takePhoto
             )
             .accessibilityIdentifier("receive.photo")
             ReceiveOptionCard(
                 icon: .upload, title: "Upload PDF or image", detail: "From files or email.",
-                action: uploadFile
+                isBusy: viewModel.preparing == .file, action: uploadFile
             )
             .accessibilityIdentifier("receive.upload")
             ReceiveOptionCard(
@@ -87,7 +87,7 @@ struct ReceiveView: View {
         if let path = UserDefaults.standard.string(forKey: "receiveFile") {
             let url = URL(filePath: path)
             writeAccess.perform {
-                Task { await viewModel.capture { () async throws(InvoiceCaptureError) in
+                Task { await viewModel.capture(from: .file) { () async throws(InvoiceCaptureError) in
                     try await InvoiceCapture.document(fileAt: url)
                 } }
             }
