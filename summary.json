@@ -1,0 +1,49 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "309F4F0C-F632-4F5C-BB25-BD783E57455C",
+        "deviceName" : "iPhone 16",
+        "modelName" : "iPhone 16",
+        "osBuildNumber" : "23C54",
+        "osVersion" : "26.2",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 1,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Dentory · Built with macOS 15.8.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1794456313.58,
+  "passedTests" : 1,
+  "result" : "Failed",
+  "skippedTests" : 0,
+  "startTime" : 1794455744.678,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Failed to get background assertion for target app with pid 28328: Timed out while acquiring background assertion.",
+      "targetName" : "DentoryUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "ReceiveCheckUITests/testADarkImageAsksForAnotherAndUseAnywayGoesOnToReviewInvoice()",
+      "testIdentifierURL" : "test://com.apple.xcode/Dentory/DentoryUITests/ReceiveCheckUITests/testADarkImageAsksForAnotherAndUseAnywayGoesOnToReviewInvoice",
+      "testName" : "testADarkImageAsksForAnotherAndUseAnywayGoesOnToReviewInvoice()"
+    }
+  ],
+  "title" : "Test - Dentory",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 2
+}

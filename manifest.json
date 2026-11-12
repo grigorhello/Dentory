@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "309F4F0C-F632-4F5C-BB25-BD783E57455C",
+        "deviceName" : "iPhone 16",
+        "exportedFileName" : "7C3B628C-C4C1-4B11-92DC-1024030E2F0B.mp4",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Screen Recording 2026-11-12 at 04.03.38 AM.mp4",
+        "timestamp" : 1794456218.521
+      }
+    ],
+    "testIdentifier" : "ReceiveCheckUITests/testADarkImageAsksForAnotherAndUseAnywayGoesOnToReviewInvoice()",
+    "testIdentifierURL" : "test://com.apple.xcode/Dentory/DentoryUITests/ReceiveCheckUITests/testADarkImageAsksForAnotherAndUseAnywayGoesOnToReviewInvoice"
+  }
+]
