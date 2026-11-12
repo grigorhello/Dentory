@@ -100,6 +100,7 @@ struct ReceiveCheckTests {
         viewModel.takePhoto()
         await capture(photos(), with: viewModel)
         #expect(!viewModel.isScannerPresented)
+        viewModel.scannerDismissed()
 
         viewModel.retake()
         #expect(viewModel.check == nil)
@@ -108,6 +109,58 @@ struct ReceiveCheckTests {
         viewModel.checkClosed()
         #expect(viewModel.isScannerPresented)
         #expect(viewModel.pendingRoute == nil, "The pages are dropped")
+    }
+
+    // MARK: - The scanner's cover
+
+    /// SwiftUI drops a sheet asked for while the scanner's full-screen cover is still going away.
+    @Test func aCheckFoundBeforeTheScannerHasGoneWaitsForIt() async {
+        let viewModel = make(FakeInvoicePageChecker(problems: [.dark]))
+        let scanned = photos()
+        viewModel.takePhoto()
+        await capture(scanned, with: viewModel)
+        #expect(!viewModel.isScannerPresented)
+        #expect(viewModel.check == nil, "Not while the cover is closing")
+        #expect(!viewModel.isPreparing)
+
+        viewModel.takePhoto()
+        viewModel.uploadFile()
+        #expect(!viewModel.isScannerPresented, "No new capture over the waiting pages")
+        #expect(!viewModel.isFileImporterPresented)
+
+        viewModel.scannerDismissed()
+        #expect(viewModel.check == ReceiveCheck(document: scanned, page: 1, problem: .dark))
+        #expect(viewModel.pendingRoute == nil)
+    }
+
+    @Test func aCheckFoundOnceTheScannerHasGoneOpensAtOnce() async {
+        let viewModel = make(FakeInvoicePageChecker(problems: [.blurry]))
+        let scanned = photos()
+        viewModel.takePhoto()
+        await viewModel.capture(from: .camera) { () async throws(InvoiceCaptureError) in
+            viewModel.scannerDismissed()
+            return scanned
+        }
+        #expect(viewModel.check == ReceiveCheck(document: scanned, page: 1, problem: .blurry))
+        viewModel.scannerDismissed()
+        #expect(viewModel.check?.document == scanned, "A second callback changes nothing")
+    }
+
+    @Test func aScannerCancelledOrFailedLeavesNothingWaiting() async {
+        let viewModel = make(FakeInvoicePageChecker(problems: [.blurry, .dark]))
+        viewModel.takePhoto()
+        viewModel.isScannerPresented = false
+        viewModel.scannerDismissed()
+        await capture(photos(.file), with: viewModel)
+        #expect(viewModel.check?.problem == .blurry, "Files after Cancel: the sheet opens at once")
+        viewModel.check = nil
+        viewModel.checkClosed()
+
+        viewModel.takePhoto()
+        viewModel.failed(.scannerFailed)
+        viewModel.scannerDismissed()
+        await capture(photos(.file), with: viewModel)
+        #expect(viewModel.check?.problem == .dark, "Files after a scanner failure: the sheet opens at once")
     }
 
     @Test func retakeOpensPhotosAgainWithoutAScanner() async {

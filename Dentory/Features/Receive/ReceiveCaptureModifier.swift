@@ -3,14 +3,15 @@ import SwiftUI
 
 /// The pickers behind Take a photo and Upload PDF or image (f22): VisionKit's scanner full screen, or Photos where the
 /// device has none, and Files for one PDF or image. What they hand over goes to the view model, which has it prepared
-/// and checked off the main actor and sends it on, or opens the check's sheet over the screen (MS-163).
+/// and checked off the main actor and sends it on, or opens the check's sheet over the screen (MS-163) once the
+/// scanner's cover has gone.
 struct ReceiveCaptureModifier: ViewModifier {
     @Bindable var viewModel: ReceiveViewModel
     @State private var photos: [PhotosPickerItem] = []
 
     func body(content: Content) -> some View {
         content
-            .fullScreenCover(isPresented: $viewModel.isScannerPresented) {
+            .fullScreenCover(isPresented: $viewModel.isScannerPresented, onDismiss: viewModel.scannerDismissed) {
                 DocumentScanner(
                     onScan: scanned, onCancel: { viewModel.isScannerPresented = false },
                     onFailure: { viewModel.failed(.scannerFailed) }

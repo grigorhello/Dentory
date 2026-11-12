@@ -30,6 +30,11 @@ final class ReceiveViewModel {
     private(set) var preparing: InvoiceDocument.Source?
     /// A captured page that looks unreadable: the sheet asking for a retake (MS-163), closed by setting it to nil.
     var check: ReceiveCheck?
+    /// A check found while the scanner's cover is still on screen or going away; it becomes `check` once the cover has
+    /// gone, since SwiftUI drops a sheet asked for while a full-screen cover is still being dismissed.
+    private var pendingCheck: ReceiveCheck?
+    /// From asking for the scanner until its cover has gone (`scannerDismissed`), after a scan, Cancel or a failure.
+    private var isScannerOnScreen = false
     private(set) var message: Message?
     /// Where the screen goes next (captured pages, or an invoice to continue); the view pushes it and clears it.
     private(set) var pendingRoute: ReceiveRoute?
@@ -97,8 +102,9 @@ final class ReceiveViewModel {
 
     /// Take a photo: the scanner, or Photos where the device has no scanner.
     func takePhoto() {
-        guard !isPreparing else { return }
+        guard !isPreparing, pendingCheck == nil else { return }
         if canScan {
+            isScannerOnScreen = true
             isScannerPresented = true
         } else {
             isPhotoPickerPresented = true
@@ -107,7 +113,7 @@ final class ReceiveViewModel {
 
     /// Upload PDF or image: Files, for a PDF, JPG, PNG or HEIC.
     func uploadFile() {
-        guard !isPreparing else { return }
+        guard !isPreparing, pendingCheck == nil else { return }
         isFileImporterPresented = true
     }
 
@@ -123,7 +129,7 @@ final class ReceiveViewModel {
         do {
             let document = try await prepare()
             if let check = await firstUnreadablePage(in: document) {
-                self.check = check
+                show(check)
             } else {
                 captured(document)
             }
@@ -166,6 +172,23 @@ final class ReceiveViewModel {
     }
 
     // MARK: - Check
+
+    /// The sheet opens now, or once the scanner's cover has gone.
+    private func show(_ check: ReceiveCheck) {
+        if isScannerOnScreen {
+            pendingCheck = check
+        } else {
+            self.check = check
+        }
+    }
+
+    /// The scanner's cover has finished going away, after a scan, Cancel or a failure: a check found meanwhile opens.
+    func scannerDismissed() {
+        isScannerOnScreen = false
+        guard let pendingCheck else { return }
+        self.pendingCheck = nil
+        check = pendingCheck
+    }
 
     /// Retake, or Choose another for a file: the pages are dropped, and once the sheet has closed the scanner, Photos
     /// or Files opens again.
