@@ -35,12 +35,16 @@ What the app tells PostHog about how clinics use it, and how to read the pilot's
 | `order.markOrdered` | Lines were marked as ordered | `item_count` lines |
 | `manual.receive` | A delivery was received by hand on Receive manually (sent applied or queued offline) | `item_count` 1 (one product a receipt) |
 | `invoice.confirm` | An invoice was received with Confirm & receive on Review invoice (sent applied or queued offline; MS-131) | `item_count` the invoice's lines, `matched_count` the lines read as `matched`, `created_count` the lines Created as new products, `duration_s` from the upload to Confirm & receive |
+| `receive.check.retake` | Retake (Choose another for a file) on the sheet a captured photo that looks unreadable opens on Receive delivery (MS-163) | `reason` (blurry, dark) |
+| `receive.check.useAnyway` | Use anyway on that sheet: the check overruled, and the pages sent on to Review invoice | `reason` (blurry, dark) |
 | `expiring.card.dispose` | A batch was disposed | |
 | `team.invite` | A teammate was invited | `role` (admin, staff) |
 | `more.export` | A CSV export was started | |
 | `settings.save` | Clinic settings were saved | `digest` (the weekly email stays on), `expiry_warning_days` (the first warning: 30, 60 or 90) |
 
 `invoice.confirm` (MS-131) reads what MS-129 keeps on the invoice: `invoices.created_at` is the moment the upload finished, and each line's `read_state` is the state matching gave it, which the admin's choices never change, so `matched_count` is the lines read as `matched`, a line the admin then changed to another product from its badge included (the MS-130 fix, #101); an Undo within 10 seconds sends nothing. A product created with New on Receive manually's Choose product, or for an invoice line on Review invoice (Add new, No, create new; MS-130), counts as `inv.newProduct`, the New product sheet's event.
+
+The page check's events (MS-163) show how often the check fires and how often it is overruled: the sheet opened as many times as the two events together, give or take sheets closed without an answer, which send nothing. Many `receive.check.useAnyway` for one `reason` means its threshold is too strict (`InvoicePageCheck`).
 
 ## The pilot dashboard
 

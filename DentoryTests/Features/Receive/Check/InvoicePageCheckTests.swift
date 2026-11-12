@@ -89,11 +89,11 @@ struct InvoicePageCheckTests {
     @Test func measureTheVariants() async throws {
         let sharp = try Self.fixture()
         var variants: [(String, CGImage)] = [("sharp", sharp)]
-        for radius in [2.0, 3, 4, 5, 6, 7, 8, 10, 12] {
+        for radius in [2.0, 3, 4, 5, 6, 8, 12] {
             let image = try Self.blurred(sharp, originalRadius: radius)
             variants.append(("blur r\(radius)", image))
         }
-        for ev in [-1.0, -1.5, -2, -2.5, -3, -4] {
+        for ev in [-2.0, -3, -4] {
             let image = try Self.darkened(sharp, ev: ev)
             variants.append(("dark \(ev) EV", image))
         }
@@ -108,12 +108,17 @@ struct InvoicePageCheckTests {
         for (name, image) in variants {
             Self.printMeasurements(of: image, named: name)
         }
-        let data = try Self.fixtureData()
-        for run in 1...3 {
-            let start = ContinuousClock.now
-            let problem = await InvoicePageCheck.problem(inJPEG: data)
-            let elapsed = Int(Self.milliseconds(ContinuousClock.now - start))
-            print("MS-163 whole check of the fixture JPEG, run \(run): \(elapsed) ms, \(problem?.rawValue ?? "pass")")
+        let sharpData = try Self.fixtureData()
+        let blurry = try Self.blurred(sharp, originalRadius: 8)
+        let sRGB = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+        let blurryData = try #require(Self.context.jpegRepresentation(of: CIImage(cgImage: blurry), colorSpace: sRGB))
+        for (name, data) in [("sharp", sharpData), ("blur r8", blurryData)] {
+            for run in 1...2 {
+                let start = ContinuousClock.now
+                let problem = await InvoicePageCheck.problem(inJPEG: data)
+                let elapsed = Int(Self.milliseconds(ContinuousClock.now - start))
+                print("MS-163 whole check, \(name) JPEG, run \(run): \(elapsed) ms, \(problem?.rawValue ?? "pass")")
+            }
         }
     }
 
@@ -125,26 +130,30 @@ struct InvoicePageCheckTests {
         #expect(problem == nil)
     }
 
-    /// Radius 4 on the original is still mostly readable.
-    @Test(arguments: [2.0, 4.0])
+    /// Up to radius 4 on the original the line items are still mostly readable.
+    @Test(arguments: [2.0, 3.0, 4.0])
     func aSlightBlurPasses(originalRadius: Double) throws {
         let sharp = try Self.fixture()
         let image = try Self.blurred(sharp, originalRadius: originalRadius)
         #expect(InvoicePageCheck.problem(in: image) == nil)
     }
 
-    /// From radius 8 on the original nobody can read the line items.
-    @Test(arguments: [8.0, 12.0])
+    /// By radius 6 on the original the line items are gone, and from 8 nobody reads anything.
+    @Test(arguments: [6.0, 8.0, 12.0])
     func aBlurThatHidesTheLinesIsHardToRead(originalRadius: Double) throws {
         let sharp = try Self.fixture()
         let image = try Self.blurred(sharp, originalRadius: originalRadius)
         #expect(InvoicePageCheck.problem(in: image) == .blurry)
     }
 
-    @Test func aDarkPhotoIsTooDark() throws {
+    /// Four stops under, the page is too dark; three stops under it is dim, still reads, and passes.
+    @Test func aDarkPhotoIsTooDarkAndADimOnePasses() throws {
         let sharp = try Self.fixture()
-        let image = try Self.darkened(sharp, ev: -3)
-        #expect(InvoicePageCheck.problem(in: image) == .dark)
+        let dark = try Self.darkened(sharp, ev: -4)
+        #expect((InvoicePageCheck.meanLuminance(of: dark) ?? 1) < InvoicePageCheck.darkLuminance)
+        #expect(InvoicePageCheck.problem(in: dark) == .dark)
+        let dim = try Self.darkened(sharp, ev: -3)
+        #expect(InvoicePageCheck.problem(in: dim) == nil)
     }
 
     @Test func aBlankPageIsHardToRead() throws {

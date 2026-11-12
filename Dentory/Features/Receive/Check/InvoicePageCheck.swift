@@ -5,9 +5,9 @@ import Vision
 
 /// Whether a captured page can be read, checked on the device before the invoice is uploaded (MS-163), off the main
 /// actor like `InvoiceCapture`: too dark when its mean luminance is low, hard to read when Vision makes out too few
-/// words with confidence. It leans towards passing, since a missed bad photo costs one failed reading and a false
-/// alarm a tap every time; anything that keeps the check from running passes the page. The thresholds come from
-/// `InvoicePageCheckTests`, which measure them on a photo of the sample invoice and print what they measured.
+/// words. It leans towards passing, since a missed bad photo costs one failed reading and a false alarm a tap every
+/// time; anything that keeps the check from running passes the page. The thresholds come from `InvoicePageCheckTests`,
+/// which measure them on a photo of the sample invoice and print what they measured (the PR of MS-163 has the table).
 nonisolated enum InvoicePageCheck {
     /// The page is checked at this long edge at most: about what the invoice reader looks at (the Claude API scales an
     /// image down to 1,568 pixels on its long edge), so a page passes when the reader can make it out, and the check
@@ -20,15 +20,13 @@ nonisolated enum InvoicePageCheck {
     /// The long edge of the thumbnail the luminance is averaged over.
     static let luminancePixelLength = 64
 
-    /// Vision's quick recognizer: it tells a sharp page from a blurry one with room to spare, and a scan of several
-    /// pages is checked page by page.
-    static let recognitionLevel = VNRequestTextRecognitionLevel.fast
+    /// A word counts when its line's top candidate is at least this confident (Vision's accurate recognizer answers
+    /// 0.3, 0.5 or 1 on these pages, and a line it doubts most is still a line a person can read).
+    static let confidenceFloor: Float = 0.3
 
-    /// A word counts when its line's top candidate is at least this confident.
-    static let confidenceFloor: Float = 0.5
-
-    /// Fewer readable words than this and the page is hard to read. A sharp invoice photo gives well over a hundred.
-    static let minimumWords = 20
+    /// Fewer readable words than this and the page is hard to read. The sample invoice's photo gives about 220 sharp,
+    /// 36 under a blur a person can still mostly read, and 6 or fewer once the line items are gone.
+    static let minimumWords = 15
 
     /// One line of text Vision found: its words and how sure it was of them.
     nonisolated struct RecognizedLine: Equatable, Sendable {
@@ -43,13 +41,17 @@ nonisolated enum InvoicePageCheck {
         return problem(in: image)
     }
 
-    /// Too dark first, which needs no text recognition; then too few readable words. A Vision error passes the page.
+    /// Too dark first, which needs no text recognition; then too few readable words. Vision's fast recognizer reads
+    /// a sharp page in a fraction of a second but gives up on a slight blur a person still reads, so only a page it
+    /// reads too little of goes on to the accurate recognizer, which decides. A Vision error passes the page.
     static func problem(in image: CGImage) -> InvoicePageProblem? {
         if let luminance = meanLuminance(of: image), luminance < darkLuminance {
             return .dark
         }
-        guard let lines = try? recognizedLines(in: image, level: recognitionLevel) else { return nil }
-        return readableWords(in: lines) < minimumWords ? .blurry : nil
+        guard let quick = try? recognizedLines(in: image, level: .fast) else { return nil }
+        guard readableWords(in: quick) < minimumWords else { return nil }
+        guard let careful = try? recognizedLines(in: image, level: .accurate) else { return nil }
+        return readableWords(in: careful) < minimumWords ? .blurry : nil
     }
 
     /// The page decoded upright at `checkedPixelLength` on its long edge at most.
