@@ -147,10 +147,9 @@ Mac checkout's packages.
 
 ## External testers
 
-Waits for `https://dentory.ca/privacy` and `https://dentory.ca/support` to serve `site/privacy.html` and
-`site/support.html` with their placeholders filled (GitHub Pages and the DNS, MS-161), for `https://app.dentory.ca`
-to serve the `applinks/` folder (the Staff invitation of step 1 opens from a link there; until then it leads nowhere,
-`supabase/README.md`), and for #107's week of internal use to end with no P0 or P1 left open.
+`https://dentory.ca/privacy`, `https://dentory.ca/support` and `https://app.dentory.ca` (the `applinks/` folder, where
+the Staff invitation of step 1 opens) are live since 2026-11-18 (Cloudflare Worker, `cloudflare/dentory-web/`, PR #238).
+Waits for #107's week of internal use to end with no P0 or P1 left open.
 
 1. **The review clinic on production**, the demo clinic of the App Review notes, made through the app on a TestFlight
    build, never with `supabase/seed-demo.sql`, which is for the local stack only and whose password is in this public
