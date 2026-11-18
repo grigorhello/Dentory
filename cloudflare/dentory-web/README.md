@@ -4,7 +4,7 @@ One Worker on Grigor's Cloudflare account serves the public web for Dentory:
 
 | Host | Serves | Notes |
 |---|---|---|
-| `https://dentory.ca` | `site/` | `/` is `index.html`, `/privacy` is `privacy.html`, `/support` is `support.html` (the App Store Connect URLs). `/privacy.html` redirects to `/privacy`. |
+| `https://dentory.ca` | `site/` | `/` is `index.html`, `/privacy` is `privacy.html`, `/support` is `support.html` (the App Store Connect URLs). `/privacy.html` redirects to `/privacy`; `/help` (Account's Help in the app, MS-137) redirects to `/support`. |
 | `https://www.dentory.ca` | redirect | 301 to the same path on `https://dentory.ca`. |
 | `https://app.dentory.ca` | `applinks/` | `/.well-known/apple-app-site-association` as `application/json` (universal links, team `886B9D4D6M`), `/invite`, `/reset-password`, `/open`, `/billing/done`. |
 | `https://dentory-web.ggrigorgrigoryan.workers.dev` | preview | `site/`, and `applinks/` under `/_app/`. |

@@ -20,6 +20,9 @@ const TYPES = {
 
 const AASA = "/.well-known/apple-app-site-association";
 
+// Short addresses the app or the listing use. Account's Help opens /help (MS-137).
+const ALIASES = { site: { "/help": "/support" } };
+
 // Which folder of the repository a host serves. Any other host (the workers.dev
 // preview) serves site/, and applinks/ under /_app/.
 function route(host, path) {
@@ -57,10 +60,14 @@ export default {
     const r = route(url.hostname, url.pathname);
     if (r.redirect) return Response.redirect(r.redirect + url.search, 301);
 
+    const prefix = url.pathname.slice(0, url.pathname.length - r.path.length);
+    const alias = ALIASES[r.folder]?.[r.path.replace(/\/+$/, "")];
+    if (alias) return Response.redirect(`${url.origin}${prefix}${alias}${url.search}`, 302);
+
     // /privacy.html becomes /privacy, so App Store links and the pages agree.
     if (r.path.endsWith(".html")) {
       const clean = r.path.replace(/(index)?\.html$/, "");
-      return Response.redirect(`${url.origin}${url.pathname.slice(0, url.pathname.length - r.path.length)}${clean}${url.search}`, 301);
+      return Response.redirect(`${url.origin}${prefix}${clean}${url.search}`, 301);
     }
 
     const list = candidates(r.folder, r.path);
