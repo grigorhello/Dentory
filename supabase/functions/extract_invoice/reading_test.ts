@@ -152,6 +152,17 @@ Deno.test("the request asks the current Sonnet for the schema's JSON, at low eff
   assertFalse("temperature" in request, "API version 2026-10-21 refuses sampling parameters");
 });
 
+Deno.test("a Claude Haiku reader's request has its effort and no server-side fallback, which Haiku does not offer", () => {
+  const reader = { model: "claude-haiku-5-5", effort: "medium" } as const;
+  const request = buildRequest([{ kind: "jpg", data: new Uint8Array([1, 2, 3]) }], reader);
+  assertEquals(request.model, "claude-haiku-5-5");
+  assertEquals(request.output_config, { effort: "medium", format: { type: "json_schema", schema: extractionSchema } });
+  assertFalse("betas" in request);
+  assertFalse("fallbacks" in request);
+  assertFalse("thinking" in request, "adaptive thinking is Haiku 5.5's default; a budget would be refused");
+  assertEquals(request.messages.length, 1, "no assistant prefill, which Haiku 5.5 refuses");
+});
+
 Deno.test("the schema is strict: every object closes its properties and requires each of them", () => {
   const visit = (node: unknown, path: string) => {
     if (Array.isArray(node)) return node.forEach((child, index) => visit(child, `${path}[${index}]`));

@@ -24,7 +24,7 @@ CHECK_SIM = $(if $(filter %id=,$(SIM_DESTINATION)),$(error No available simulato
 .PHONY: project build test uitest e2e lint release-check archive upload testflight db-start db-stop db-reset db-test \
 	seed-demo seed-load seed-catalog catalog-check seed-demo-history demo-history-check perf-report perf-concurrency \
 	functions-serve functions-check \
-	invite-links invoice-reading-live
+	invite-links invoice-reading-live invoice-model-compare
 
 project:
 	xcodegen generate
@@ -192,7 +192,8 @@ functions-serve:
 # Type-checks every Edge Function and runs their unit tests (`*_test.ts`; needs Deno: brew install deno). The tests read
 # their fixtures under supabase/ and nothing else.
 functions-check:
-	deno check supabase/functions/*/index.ts supabase/functions/extract_invoice/live_check.ts
+	deno check supabase/functions/*/index.ts supabase/functions/extract_invoice/live_check.ts \
+		supabase/functions/extract_invoice/model_compare.ts
 	deno test --allow-read=supabase supabase/functions
 
 # Reads the five fixture invoices with the real Claude API and checks what comes back and how fast (MS-129). Needs
@@ -201,6 +202,17 @@ functions-check:
 invoice-reading-live:
 	deno test --allow-read=supabase --allow-env --allow-net=api.anthropic.com \
 		--allow-write=supabase/functions/extract_invoice/fixtures supabase/functions/extract_invoice/live_check.ts
+
+# Reads the sample invoices with the current reader and with Claude Haiku 5.5 through the real API and compares each
+# reading with the invoice's known content (model_compare.ts). Asks for the key at a hidden prompt unless
+# ANTHROPIC_API_KEY is set; the key is never written anywhere. Spends well under a dollar.
+REPORT ?= $(CURDIR)/build/invoice-model-compare.json
+invoice-model-compare:
+	@mkdir -p "$(dir $(REPORT))"
+	@key="$$ANTHROPIC_API_KEY"; \
+	if [ -z "$$key" ]; then printf 'Anthropic API key (hidden): '; stty -echo; read -r key; stty echo; echo; fi; \
+	ANTHROPIC_API_KEY="$$key" REPORT="$(REPORT)" deno run --allow-read=supabase,docs --allow-env \
+		--allow-net=api.anthropic.com --allow-write="$(REPORT)" supabase/functions/extract_invoice/model_compare.ts
 
 # The local stack has no Resend key, so invite_member writes each invitation email to the function log
 # instead of sending it. This prints the links of the last invitations; open one on the simulator with
