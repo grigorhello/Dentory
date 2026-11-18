@@ -1,0 +1,13 @@
+{
+  // Same settings the Cloudflare connector deploys with; see README.md.
+  "name": "dentory-web",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "dentory.ca", "custom_domain": true },
+    { "pattern": "www.dentory.ca", "custom_domain": true },
+    { "pattern": "app.dentory.ca", "custom_domain": true }
+  ],
+  "vars": { "REF": "HEAD", "CACHE_SECONDS": "300" }
+}

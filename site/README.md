@@ -2,6 +2,6 @@
 
 Static site for the marketing plan: `index.html` (landing page with the trial sign-up form), `one-pager.html` (print to PDF, letter size, for clinic visits), `privacy.html` and `support.html` (the App Store listing links to them). Screenshots in `img/` are the design frames from `design/frames/` until captures from the shipped build replace them.
 
-Placeholders to fill before going live: `VIDEO_LINK` (Loom demo), `FORM_ACTION` (Tally form URL, free, or `https://formsubmit.co/hello@dentory.ca`), `EMAIL`, `PHONE`, `DATE` in privacy.html, and `SIGNUP_LINK` in the one-pager.
+The contact address on every page is `hello@dentory.ca` (Cloudflare Email Routing forwards it to Grigor). There is no sign-up form and no phone number: the trial button opens an email. To add a form later (Tally, free) or a phone number, change `index.html` and `one-pager.html`.
 
-Hosting: GitHub Pages from the `site/` folder through `.github/workflows/pages.yml`. Enable it once in the repo settings (Settings, Pages, Source: GitHub Actions), then every push to the default branch publishes. Point the domain at it with a CNAME (Settings, Pages, Custom domain), or move the folder to Cloudflare Pages later; nothing in it depends on the host.
+Hosting: the Cloudflare Worker in `cloudflare/dentory-web/` serves this folder at `https://dentory.ca` straight from the default branch, so a merged change is live within about 5 minutes. Pages are reached without `.html` (`/privacy`, `/support`), so link them that way.

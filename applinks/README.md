@@ -1,6 +1,6 @@
 # app.dentory.ca
 
-The files the invitation and password reset links need on `https://app.dentory.ca` (MS-100 D12, MS-112). Nothing here is served by the repository: host the folder as a static site at that domain (Cloudflare Pages, Netlify, a second GitHub Pages site; the marketing site at `dentory.ca` is a separate Pages site under `site/`).
+The files the invitation and password reset links need on `https://app.dentory.ca` (MS-100 D12, MS-112). The Cloudflare Worker in `cloudflare/dentory-web/` serves this folder at `https://app.dentory.ca` straight from the default branch (and `site/` at `https://dentory.ca`), so a merged change is live within about 5 minutes.
 
 | Path | What it does |
 |---|---|
