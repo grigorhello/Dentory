@@ -52,15 +52,15 @@ footer{padding:30px 0;color:var(--muted);font-size:.9rem;border-top:1px solid va
 <div class="wrap">
 <header>
   <a class="brand" href="#">Dentory</a>
-  <a class="btn secondary" href="#signup">Sign up</a>
+  <a class="btn secondary" href="#signup">Start a free trial</a>
 </header>
 
 <div class="hero">
   <div>
-    <span class="pill">3 months free for Oakville clinics this month</span>
+    <span class="pill">3 months free, then CAD 99 a month</span>
     <h1>Know what is running low and what is expiring. Without counting.</h1>
     <p class="lead">Dentory is an iPhone and iPad app for small dental clinics. The assistant starts a procedure and stock updates. You photograph the supplier invoice and the delivery is received. Expiring lots show up by themselves.</p>
-    <p><a class="btn" href="#signup">Sign up in 1 minute</a> &nbsp; <a class="btn secondary" href="VIDEO_LINK">Watch the 2-minute demo</a></p>
+    <p><a class="btn" href="#signup">Start a free trial</a></p>
     <p class="small">No card. Unlimited users. We come to your clinic and set it up for free.</p>
   </div>
   <img src="img/home.png" alt="Dentory Home screen: To buy, Expiring soon, Missing expiry, Start a procedure">
@@ -71,7 +71,7 @@ footer{padding:30px 0;color:var(--muted);font-size:.9rem;border-top:1px solid va
   <div class="steps">
     <div><img src="img/procedure.png" alt="Adjust, then start a procedure"><h3>1. The assistant taps the procedure</h3><p>Pick the procedure, adjust if needed, Start procedure. The supplies come off the shelf in the app. Nobody counts.</p></div>
     <div><img src="img/invoice.png" alt="Review invoice: one line per item, confirm each"><h3>2. A delivery arrives, photograph the invoice</h3><p>The app reads it, usually in under 20 seconds, and proposes one line per item. You confirm every line. Lots and expiry dates come in with it.</p></div>
-    <div><img src="img/product.png" alt="Product detail with expiry batches soonest first"><h3>3. Expiry is the headline</h3><p>Every product shows its batches, soonest first. Low stock goes on the To buy list by itself. Expiring soon shows the value at risk.</p></div>
+    <div><img src="img/product.png" alt="Product detail with expiry batches soonest first"><h3>3. Low stock and expiry show up by themselves</h3><p>Low stock goes on the To buy list by itself. Every product shows its batches, soonest first, and Expiring soon shows the value at risk.</p></div>
   </div>
 </section>
 
@@ -79,11 +79,11 @@ footer{padding:30px 0;color:var(--muted);font-size:.9rem;border-top:1px solid va
   <div class="dark">
     <h2>The offer for Oakville and Burlington clinics</h2>
     <div class="cards">
-      <div class="card" style="background:#2b2927"><div class="n">3</div><h3 style="color:#fff">months free</h3><p>No card. Unlimited users. Install it today.</p></div>
+      <div class="card" style="background:#2b2927"><div class="n">3</div><h3 style="color:#fff">months free</h3><p>No card. Unlimited users.</p></div>
       <div class="card" style="background:#2b2927"><div class="n">2 h</div><h3 style="color:#fff">free onboarding</h3><p>We come to your clinic, load your products from your last deliveries, set up your procedures, invite your team and train every assistant.</p></div>
-      <div class="card" style="background:#2b2927"><div class="n">50%</div><h3 style="color:#fff">off for life</h3><p>Sign up this month: CAD 49.50 a month instead of CAD 99, after the free months.</p></div>
+      <div class="card" style="background:#2b2927"><div class="n">50%</div><h3 style="color:#fff">off for life</h3><p>For our first pilot clinics: CAD 49.50 a month instead of CAD 99, after the free months.</p></div>
     </div>
-    <p><a class="btn" href="#signup">Sign up in 1 minute</a></p>
+    <p><a class="btn" href="#signup">Start a free trial</a></p>
   </div>
 </section>
 
@@ -110,27 +110,21 @@ footer{padding:30px 0;color:var(--muted);font-size:.9rem;border-top:1px solid va
 </section>
 
 <section id="signup">
-  <h2>Sign up for 3 months free</h2>
-  <p class="small">Clinic details only. We call within one working day to book your free onboarding.</p>
-  <!-- Form delivery: replace FORM_ACTION with the Tally form URL (free) or https://formsubmit.co/hello@dentory.ca once the domain exists. Until then the button sends an email. -->
-  <form action="FORM_ACTION" method="post">
-    <div><label for="clinic">Clinic name</label><input id="clinic" name="clinic" required autocomplete="organization"></div>
-    <div><label for="name">Your name</label><input id="name" name="name" required autocomplete="name"></div>
-    <div><label for="email">Email</label><input id="email" name="email" type="email" required autocomplete="email"></div>
-    <div><label for="phone">Phone</label><input id="phone" name="phone" type="tel" required autocomplete="tel"></div>
-    <div class="full"><button class="btn" type="submit">Sign up</button> <span class="small">&nbsp; Or call Grigor: PHONE</span></div>
-  </form>
+  <h2>Start a free trial</h2>
+  <p>Email <a href="mailto:hello@dentory.ca?subject=Dentory%20free%20trial">hello@dentory.ca</a> with your clinic name and a phone number. We call within one working day to book your free onboarding and send the app.</p>
+  <p><a class="btn" href="mailto:hello@dentory.ca?subject=Dentory%20free%20trial">Email us</a></p>
+  <p class="small">Clinic details only. iPhone and iPad, iOS 17 or later.</p>
 </section>
 
 <section>
   <h2>Pricing</h2>
-  <p>3 months free from the day the clinic is created, no card. Then CAD 99 per clinic per month, unlimited users. Clinics that sign up this month pay CAD 49.50 for life. If the trial ends without a card, the app keeps your data readable and stops taking new entries; nothing is charged.</p>
+  <p>3 months free from the day the clinic is created, no card. Then CAD 99 per clinic per month, unlimited users. Our first pilot clinics pay CAD 49.50 for life. If the trial ends without a card, the app keeps your data readable and stops taking new entries; nothing is charged.</p>
   <p class="small">Privacy: your clinic's data is isolated per clinic in the database. Invoice images belong to the clinic and an admin can delete them. Hosted on Supabase, payments on Stripe, email by Resend.</p>
 </section>
 
 <footer>
-  <p>Dentory · Oakville, Ontario · <a href="mailto:EMAIL">EMAIL</a> · PHONE</p>
-  <p><a href="privacy.html">Privacy</a> · <a href="support.html">Support</a></p>
+  <p>Dentory · Oakville, Ontario · <a href="mailto:hello@dentory.ca">hello@dentory.ca</a></p>
+  <p><a href="/privacy">Privacy</a> · <a href="/support">Support</a></p>
 </footer>
 </div>
 </body>
