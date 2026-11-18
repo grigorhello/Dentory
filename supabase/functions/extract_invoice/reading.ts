@@ -6,8 +6,15 @@
 // Nothing here logs: a failure carries one of our own sentences, never the invoice's text.
 import type Anthropic from "npm:@anthropic-ai/sdk@1.3.0";
 
-/** The current Claude Sonnet model, as the ticket asks for invoice reading. */
-export const readerModel = "claude-sonnet-5-5";
+/** The model that reads an invoice and how much it thinks. */
+export interface Reader {
+  model: string;
+  effort: "low" | "medium" | "high";
+}
+
+/** The current Claude Sonnet model, as the ticket asks for invoice reading, at low effort for speed. */
+export const defaultReader: Reader = { model: "claude-sonnet-5-5", effort: "low" };
+export const readerModel = defaultReader.model;
 
 /** Enough for an answer of a few hundred lines. */
 const maxAnswerTokens = 16_000;
@@ -149,9 +156,10 @@ export function base64(data: Uint8Array): string {
 /**
  * The request for an invoice's pages: a PDF as a document, JPEG pages as images labelled in order, then the ask.
  * Adaptive thinking at low effort keeps the reading quick (the target is under 20 seconds), structured outputs hold
- * the answer to the schema, and the server-side fallback answers a declined request from another model.
+ * the answer to the schema, and the server-side fallback answers a declined request from another model. Claude Haiku
+ * has no server-side fallback (a list of fallback models is refused), so its request goes without one.
  */
-export function buildRequest(pages: InvoicePage[]): ReadingRequest {
+export function buildRequest(pages: InvoicePage[], reader: Reader = defaultReader): ReadingRequest {
   const content: Anthropic.Beta.BetaContentBlockParam[] = [];
   pages.forEach((page, index) => {
     if (page.kind === "pdf") {
@@ -165,23 +173,30 @@ export function buildRequest(pages: InvoicePage[]): ReadingRequest {
     content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64(page.data) } });
   });
   content.push({ type: "text", text: "Read this invoice." });
+  const fallback = reader.model.startsWith("claude-haiku-")
+    ? {}
+    : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const };
   return {
-    model: readerModel,
+    model: reader.model,
     max_tokens: maxAnswerTokens,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
+    ...fallback,
     system: instructions,
-    output_config: { effort: "low", format: { type: "json_schema", schema: extractionSchema } },
+    output_config: { effort: reader.effort, format: { type: "json_schema", schema: extractionSchema } },
     messages: [{ role: "user", content }],
   };
 }
 
 /** Reads the invoice on `pages` through `call`; throws a `ReadingFailure` when it cannot. */
-export async function readInvoice(pages: InvoicePage[], call: ModelCall, signal: AbortSignal): Promise<Extraction> {
+export async function readInvoice(
+  pages: InvoicePage[],
+  call: ModelCall,
+  signal: AbortSignal,
+  reader: Reader = defaultReader,
+): Promise<Extraction> {
   if (pages.length === 0) throw new ReadingFailure("error", "no pages to read");
   let answer: ModelAnswer;
   try {
-    answer = await call(buildRequest(pages), signal);
+    answer = await call(buildRequest(pages, reader), signal);
   } catch (error) {
     if (signal.aborted) throw new ReadingFailure("timeout", "no answer within the time limit");
     if (error instanceof ReadingFailure) throw error;

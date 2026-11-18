@@ -37,3 +37,7 @@ swiftc -O source/camera.swift -o camera
 ./camera photo out/lakeshore-ls-58113.png lakeshore-ls-58113.jpg
 ./camera scan out/prairie-pdw-90412-page-1.png prairie-pdw-90412-page-1.jpg
 ```
+
+## Harder pages
+
+`hard/` holds pages made from these invoices and the demo invoice (`docs/demo`) by `hard/make_hard.py`: the demo photo as the app uploads it, tilted, dim and at 1,000 px; the French invoice photographed at an angle in poor light; the two-page invoice at 100 dpi; the scans at 1,000 px. They have no recorded answers: `make invoice-model-compare` (`../model_compare.ts`) reads them, with the documents above, through the real API and checks each reading against the known content of the invoice it was made from.
