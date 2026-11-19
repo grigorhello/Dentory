@@ -70,7 +70,7 @@ Any splash animation or wordmark on launch (Apple discourages both), the app ico
 meta: milestone=M2; priority=P1; type=feature; area=product; size=2; dod=web; depends=MS-157; assets=design/brand/logo/dentory-lockup.png,design/brand/logo/dentory-lockup.svg,design/brand/logo/dentory-lockup-reversed.png,design/brand/logo/dentory-lockup-reversed.svg,design/brand/web/favicon.svg,design/brand/web/icon-192.png,design/brand/web/apple-touch-icon.png,design/brand/web/maskable-512.png,design/brand/web/favicon.ico,design/brand/web/site.webmanifest,design/brand/logo/dentory-icon-rounded.png
 
 ### Why
-The landing page exists: `site/` (index, one-pager for print, privacy, support) from the marketing thread's PR #137, published by `.github/workflows/pages.yml` to GitHub Pages on every push to the default branch. It was built before the brand existed: the header is the word "Dentory" in Outfit, its blue is `#2457f5` and its ink `#1c1b1a` (not the product's `#1A63D6` and `#201515`), and it has no favicon. Grigor owns `dentory.ca` (bought 2026-10-17) and will ask for the page when he wants it; this ticket is that brief. It restyles the page with the real brand and puts it on the domain. It does not rebuild the site.
+The landing page exists: `site/` (index, one-pager for print, privacy, support) from the marketing thread's PR #137, served at `https://dentory.ca` since 2026-11-18 by the Cloudflare Worker in `cloudflare/dentory-web/`, which reads `site/` from the default branch, so a merge publishes (PR #238; GitHub Pages and `pages.yml` are gone). It was built before the brand existed: the header is the word "Dentory" in Outfit, its blue is `#2457f5` and its ink `#1c1b1a` (not the product's `#1A63D6` and `#201515`), and it has no favicon. Grigor owns `dentory.ca` (bought 2026-10-17) and will ask for the page when he wants it; this ticket is that brief. It restyles the page with the real brand and puts it on the domain. It does not rebuild the site.
 
 ### Scope
 1. **Brand files on the site.** Copy `design/brand/web/*` to the root of `site/` (`favicon.ico`, `favicon.svg`, `favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `maskable-512.png`, `site.webmanifest`) and `design/brand/logo/dentory-lockup.svg`, `dentory-lockup-reversed.svg`, `dentory-lockup.png`, `dentory-lockup-reversed.png` to `site/brand/`. The PNG lockups are what the emails of MS-162 link to, so they must stay at `https://dentory.ca/brand/…` once published.
@@ -78,17 +78,17 @@ The landing page exists: `site/` (index, one-pager for print, privacy, support) 
 3. **Header and footer.** The header shows the lockup (`brand/dentory-lockup.svg`, 32 px high, `alt="Dentory"`, linking to the top) instead of the text; the dark offer band and the footer use the reversed lockup at 28 px. Clear space of half the tooth's height around the lockup; nothing else changes in the layout.
 4. **Colours.** `:root` of each page: `--blue:#1a63d6`, `--page:#fffefb`, `--ink:#201515`, `--card:#f8f4f0`, `--line:#e6e1d6`, `--muted` a warm grey from the design system (`inkMid` or `inkSoft` in `Dentory/Resources/Assets.xcassets/Colors`), hover one step darker (`primaryHover`). Buttons keep the 12 px radius, Outfit stays the display font (loaded from Google Fonts; the lockup is outlined so it needs no font).
 5. **One-pager.** `one-pager.html` prints the lockup in its header at 40 px and keeps letter size.
-6. **Domain.** Add `site/CNAME` containing `dentory.ca`. In GitHub, Settings, Pages: source GitHub Actions (already), custom domain `dentory.ca`, Enforce HTTPS once the certificate is issued. DNS at the registrar (Grigor, listed in MS-157): four `A` records on the apex to GitHub Pages (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`) and a `CNAME` for `www` to `grigorhello.github.io`. The page is reachable on the github.io address until then.
+6. **Domain.** Done by PR #238 (2026-11-18): the Worker serves `site/` at `https://dentory.ca` and `www`; no `CNAME` file or DNS change is needed. Files added under `site/` are served once merged (the Worker serves `.svg`, `.png`, `.ico`; add `webmanifest` to its `TYPES` as `application/manifest+json` with this ticket).
 7. **Screenshots.** The four images in `site/img/` are cropped design frames; replace `home.png` with a capture of the shipped Home (MS-114) at the same crop, and the others as their screens ship. Leave the rest as it is.
-8. **Placeholders** stay Grigor's and the marketing thread's: `VIDEO_LINK`, `FORM_ACTION`, `EMAIL`, `PHONE`, `DATE`, `SIGNUP_LINK` (listed in `site/README.md`). Copy changes belong to the marketing thread, not to this ticket.
+8. **Placeholders** were filled by PR #238 (contact `hello@dentory.ca`, no phone, video or form). Copy changes belong to the marketing thread, not to this ticket.
 
 ### Out of scope
 New sections or copy, a blog, analytics, a form backend, an `og:image` card at 1200 × 630 (the export has none; compose one from the lockup on cream only if Grigor asks), the app's own screens.
 
 ### Acceptance criteria
 - [ ] Every page shows the lockup in the header, the favicon in the tab (Safari, Chrome, iOS home screen bookmark) and the brand colours; the mobile layout of PR #137 is unchanged at 390 px wide.
-- [ ] `site/site.webmanifest`, `site/CNAME` and `site/brand/dentory-lockup.png` are published; `https://dentory.ca/brand/dentory-lockup.png` returns the image once DNS points at GitHub Pages (until then the github.io address does).
-- [ ] The Pages workflow is green; Lighthouse on the published page reports no missing favicon or manifest error.
+- [ ] `site/site.webmanifest`, `site/CNAME` and `site/brand/dentory-lockup.png` are published; `https://dentory.ca/brand/dentory-lockup.png` returns the image.
+- [ ] Lighthouse on the published page reports no missing favicon or manifest error.
 - [ ] The one-pager prints with the lockup on one letter page.
 
 ## MS-162 · Brand in emails and link pages

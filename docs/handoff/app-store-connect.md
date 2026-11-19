@@ -66,7 +66,7 @@ Why free with no in-app purchase: the subscription is sold directly to clinics, 
 
 Sidebar, General, App Privacy.
 
-1. Privacy Policy URL: `https://dentory.ca/privacy`. The page is `site/privacy.html` in the repository and goes live with GitHub Pages and the domain (MS-161 and Grigor's DNS); Apple reads it at review time, not now. Its placeholders DATE and EMAIL are Grigor's to fill.
+1. Privacy Policy URL: `https://dentory.ca/privacy`. The page is `site/privacy.html` in the repository, live since 2026-11-18 (the Cloudflare Worker in `cloudflare/dentory-web/`, PR #238); a merged change to it is live within about 5 minutes.
 2. Get Started, then "Yes, we collect data from this app".
 3. Tick these data types and nothing else:
 
