@@ -11,7 +11,9 @@ One Worker on Grigor's Cloudflare account serves the public web for Dentory:
 
 ## How it works
 
-`worker.js` fetches each file from this repository on GitHub (`raw.githubusercontent.com/grigorhello/dentory/<REF>/…`), caches it at Cloudflare's edge for `CACHE_SECONDS` (300), and answers with its own content type and headers. `REF` is `HEAD`, which GitHub resolves to the default branch, so **merging a change to `site/` or `applinks/` publishes it within about 5 minutes**. Nothing to build or upload. It only serves `.html`, images, CSS, JS, `.txt`, `.pdf` and the association file; never Markdown, dotfiles or anything outside those two folders.
+`worker.js` fetches each file from this repository on GitHub (`raw.githubusercontent.com/grigorhello/dentory/<REF>/…`), caches it at Cloudflare's edge for `CACHE_SECONDS` (300), and answers with its own content type and headers. `REF` is `HEAD`, which GitHub resolves to the default branch, so **merging a change to `site/` or `applinks/` publishes it within about 5 minutes**. Nothing to build or upload. It only serves `.html`, images, CSS, JS, `.txt`, `.pdf`, `.mp4` and the association file; never Markdown, dotfiles or anything outside those two folders.
+
+`.mp4` files answer byte-range requests (206, `Accept-Ranges: bytes`), which Safari on iPhone needs before it plays a video. The demo video at `/demo` is `site/media/demo.mp4`, about 3.4 MB; keep videos small (H.264, 720 px wide, no audio track) since each one lives in git and the Worker reads it whole before slicing a range.
 
 ## Changing the Worker itself
 
@@ -20,5 +22,7 @@ Only `worker.js` needs a redeploy. A thread does it with the Cloudflare connecto
 The hostnames are Worker custom domains (`PUT /accounts/{account_id}/workers/domains`), which create the DNS records and certificates themselves. The zone's other records (Resend's `send`, `rsend`, `resend._domainkey`, and the Email Routing MX and TXT records) are independent of the Worker.
 
 ## Testing locally
+
+`node --test cloudflare/dentory-web/worker.test.mjs` checks the byte ranges and file types without the network.
 
 `node` 22 can run the Worker against GitHub: import `worker.js`, call `worker.fetch(new Request("https://dentory.ca/privacy"), { REF: "<branch>" })` and check status, content type and body (set `NODE_USE_ENV_PROXY=1` behind a proxy).

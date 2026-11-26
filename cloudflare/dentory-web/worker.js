@@ -16,6 +16,7 @@ const TYPES = {
   ico: "image/x-icon",
   txt: "text/plain; charset=utf-8",
   pdf: "application/pdf",
+  mp4: "video/mp4",
 };
 
 const AASA = "/.well-known/apple-app-site-association";
@@ -45,6 +46,44 @@ export function candidates(folder, path) {
   const base = path.replace(/\/+$/, "");
   const html = TYPES.html;
   return base === "" ? [{ file: "/index.html", type: html }] : [{ file: `${base}.html`, type: html }, { file: `${base}/index.html`, type: html }];
+}
+
+// A byte range of a file of `size` bytes: { start, end } (inclusive), null to send
+// the whole file (no header, or a form we do not serve such as several ranges), or
+// "invalid" for 416. Safari plays a video only when this works (it asks bytes=0-1 first).
+export function byteRange(header, size) {
+  const m = /^bytes=(\d*)-(\d*)$/.exec((header || "").trim());
+  if (!m || (m[1] === "" && m[2] === "")) return null;
+  let start;
+  let end;
+  if (m[1] === "") {
+    const suffix = Number(m[2]);
+    if (suffix === 0) return "invalid";
+    start = Math.max(0, size - suffix);
+    end = size - 1;
+  } else {
+    start = Number(m[1]);
+    end = m[2] === "" ? size - 1 : Math.min(Number(m[2]), size - 1);
+  }
+  if (start > end || start >= size) return "invalid";
+  return { start, end };
+}
+
+// Video goes out whole or as the requested byte range.
+async function video(request, upstream, headers) {
+  const body = await upstream.arrayBuffer();
+  const size = body.byteLength;
+  headers.set("accept-ranges", "bytes");
+  const range = byteRange(request.headers.get("range"), size);
+  if (range === "invalid") return new Response(null, { status: 416, headers: { "content-range": `bytes */${size}`, "accept-ranges": "bytes" } });
+  const head = request.method === "HEAD";
+  if (!range) {
+    headers.set("content-length", String(size));
+    return new Response(head ? null : body, { status: 200, headers });
+  }
+  headers.set("content-range", `bytes ${range.start}-${range.end}/${size}`);
+  headers.set("content-length", String(range.end - range.start + 1));
+  return new Response(head ? null : body.slice(range.start, range.end + 1), { status: 206, headers });
 }
 
 function page(status, title, text) {
@@ -81,6 +120,7 @@ export default {
       if (!upstream.ok) return page(502, "Try again in a minute", "The page could not be loaded just now.");
       // A fresh set of headers: GitHub's own (text/plain, nosniff, a sandbox CSP) must not reach the browser.
       const headers = new Headers({ "content-type": c.type, "cache-control": `public, max-age=${ttl}`, "x-content-type-options": "nosniff" });
+      if (c.type.startsWith("video/")) return video(request, upstream, headers);
       return new Response(request.method === "HEAD" ? null : upstream.body, { status: 200, headers });
     }
     return page(404, "Page not found", "This page does not exist.");
