@@ -21,7 +21,7 @@
   </main>
   <script>
     (function () {
-      // Stripe Checkout and the Customer Portal, opened from the billing email or Grigor's link (MS-140, MS-100 D18),
+      // Stripe Checkout and the Customer Portal, opened from the billing email or a link Dentory sends (MS-140, MS-100 D18),
       // send the admin here: ?checkout=done|canceled or ?portal=done.
       var query = new URLSearchParams(location.search);
       if (query.get("checkout") === "canceled") {
