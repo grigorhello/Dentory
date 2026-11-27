@@ -225,4 +225,5 @@ password reset links open the app for the reviewers.
 
 | Date | Version | Build | Commit | `make e2e` | Uploaded by | Internal testing | External testing | App Store |
 |---|---|---|---|---|---|---|---|---|
-| 2026-11-05 | 1.1.0 | 91 | `138f842` | 7 of 7 passed | Claude on Grigor's Mac | Processed 2026-11-05 | Waits for dentory.ca, app.dentory.ca and #107's week | Not submitted |
+| 2026-11-05 | 1.1.0 | 91 | `138f842` | 7 of 7 passed | Claude on Grigor's Mac | Processed 2026-11-05 | Pilot clinics, approved by Beta App Review | Not submitted |
+| 2026-11-27 | 1.1.0 | 111 | `a8b1cd8` | 7 of 7 passed (iOS 26.3 simulator) | Claude on Grigor's Mac | Uploaded 2026-11-27 | Waits for its submission to Pilot clinics | Not submitted |
